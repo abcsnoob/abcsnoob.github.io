@@ -5,11 +5,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Loading...</title>
     <style>
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background-color: black;
+            color: white;
+            font-family: Arial, sans-serif;
+        }
+
         p {
-            font-size: 20px;
+            font-size: 24px;
             font-weight: bold;
             text-align: center;
-            animation: spin 1s infinite;
+            animation: spin 1s infinite linear;
         }
 
         @keyframes spin {
@@ -19,18 +29,12 @@
     </style>
 </head>
 <body>
-    <p>loading...</p>
+    <p>Loading...</p>
 
-  <video id="myVideo" style="display: none;">
-    <source src="video.mp4" type="video/mp4">
-    Trình duyệt của bạn không hỗ trợ video.
-</video>
-
-<script>
-    setTimeout(function() {
-        document.getElementById("myVideo").play();
-    }, 1000);
-</script>
-
+    <script>
+        setTimeout(function() {
+            window.location.href = "/live"; // Chuyển hướng đến /live sau 2 giây
+        }, 2000);
+    </script>
 </body>
 </html>
