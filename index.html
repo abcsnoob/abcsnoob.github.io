@@ -21,17 +21,16 @@
 <body>
     <p>loading...</p>
 
-    <!-- Thẻ audio để phát nhạc -->
-    <audio id="myAudio">
-        <source src="iLoveYt.net_YouTube_Minecraft-Pixel-Remixes_Media_Jj74tRQuC9w_003_480p (1) (1).mp4" type="audio/mp4">
-        Trình duyệt của bạn không hỗ trợ âm thanh.
-    </audio>
+  <video id="myVideo" style="display: none;">
+    <source src="video.mp4" type="video/mp4">
+    Trình duyệt của bạn không hỗ trợ video.
+</video>
 
-    <script>
-        // Đợi 15 giây rồi phát nhạc
-        setTimeout(function() {
-            document.getElementById("myAudio").play();
-        }, 1500);
-    </script>
+<script>
+    setTimeout(function() {
+        document.getElementById("myVideo").play();
+    }, 1000);
+</script>
+
 </body>
 </html>
