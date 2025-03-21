@@ -1,40 +1,107 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="en">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Loading...</title>
-    <style>
-        body {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            background-color: black;
-            color: white;
-            font-family: Arial, sans-serif;
-        }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-        p {
-            font-size: 24px;
-            font-weight: bold;
-            text-align: center;
-            animation: spin 1s infinite linear;
-        }
+  <meta property="og:title" content="Abc's Noob Personal Website" /> 
+  <meta property="og:site_name" content="Abc's Noob" /> 
+  <meta property="og:type" content="website" />
+  <meta property="og:description" content="Abc's Noob is a YouTuber, C/C++ Programmer, and Minecraft fan!" /> 
+  <meta property="og:url" content="http://abcsnoobytb.github.io" /> 
+  <meta property="og:image" content="https://abcsnoobytb.github.io/abcsnoob.webp" /> 
+  <meta name="theme-color" content="#000000" />
 
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-    </style>
+  <meta name="twitter:title" content="Abc's Noob Personal Website"> 
+  <meta name="twitter:description" content="Abc's Noob is a YouTuber, C/C++ Programmer, and Minecraft fan!">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:site" content="@abcsnoob"> 
+  <meta name="twitter:creator" content="@abcsnoob"> 
+  <meta name="twitter:image:src" content="https://abcsnoobytb.github.io/abcsnoob.webp"> 
+
+  <title>Abc's Noob - Personal Website</title> 
+
+  <link rel="icon" href="abcsnoob.webp"> 
+
+  <style>
+    @font-face {
+      font-family: PixelSquare;
+      src: url('pixelsquare.ttf');
+    }
+
+    body {
+      background-color: black;
+      text-align: center;
+      font-family: PixelSquare;
+      color: lime;
+    }
+
+    .banner {
+      width: 100%;
+      height: 250px;
+      object-fit: cover;
+    }
+
+    .discord {
+      animation: bounce 0.1s linear infinite;
+    }
+
+    @keyframes bounce {
+      from { transform: scaleY(0%); }
+      50% { transform: scaleY(100%); }
+      to { transform: scaleY(0%); }
+    }
+  </style>
+
 </head>
-<body>
-    <p>Loading...</p>
 
-    <script>
-        setTimeout(function() {
-            window.location.href = "/live"; // Chuyển hướng đến /live sau 2 giây
-        }, 2000);
-    </script>
+<body>
+
+  <img alt="Abc's Noob" src="abcsnoob.webp" width="150"> 
+
+  <br><br>
+
+  <h1>INTRODUCTION</h1>
+  <h3>Hi, I'm <span style="color: yellow;">Abc's Noob</span>!</h3>
+  <h3>I'm a YouTuber, C/C++ Programmer, and a huge fan of Minecraft.</h3>
+  <h3><a href="lore.html">More info</a></h3>
+
+  <br><br>
+
+  <h1>My Best YouTube Videos</h1>
+  <h3 style="font-family:'Courier New'; color: yellow;">
+    <font size="40">LEGENDARY +1M VIEWS</font>
+  </h3>
+
+  <iframe width="320" height="180" src="https://www.youtube.com/embed/r3bEjsv9JFw" title="How DDoS Works" allowfullscreen></iframe>
+  <br>
+  <iframe width="320" height="180" src="https://www.youtube.com/embed/yfppUS0b0P8" title="Coding in China be like" allowfullscreen></iframe>
+  <br>
+  <iframe width="320" height="180" src="https://www.youtube.com/embed/MxbBgi6qorA" title="How Computer Works" allowfullscreen></iframe>
+  <br>
+  <iframe width="320" height="180" src="https://www.youtube.com/embed/0yXemasJL-c" title="How Computer Works" allowfullscreen></iframe>
+
+  <br><br>
+
+  <h1>Find me on...</h1><br>
+
+  <a href="https://www.youtube.com/@abcsnoob"><img src="https://sentry456123.github.io/youtube.webp" width="60" height="60"></a>
+  <a href="https://github.com/abcsnoobytb"><img src="https://sentry456123.github.io/github.webp" width="60" height="60"></a>
+  <a href="https://www.twitch.tv/abcsnoobcute"><img src="https://sentry456123.github.io/twitch.webp" width="60" height="60"></a>
+  <a href="https://discord.gg/uwDHaZ5j7a"><img class="discord" src="https://sentry456123.github.io/discord.webp" width="60" height="60"></a>
+
+  <br><br><br>
+
+  <h1>
+    <p>
+      <a href="chicken.html"> <!-- Giữ nguyên như yêu cầu -->
+        <img src="chicken.webp" width="60" height="60">
+      </a>
+      <a href="/live"> Các Live của tôi</a>
+    </p>
+  </h1>
+
 </body>
+
 </html>
