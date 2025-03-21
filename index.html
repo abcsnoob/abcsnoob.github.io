@@ -12,15 +12,26 @@
             animation: spin 1s infinite;
         }
 
-      @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
-
-        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body>
     <p>loading...</p>
+
+    <!-- Thẻ audio để phát nhạc -->
+    <audio id="myAudio">
+        <source src="iLoveYt.net_YouTube_Minecraft-Pixel-Remixes_Media_Jj74tRQuC9w_003_480p (1) (1).mp4" type="audio/mp4">
+        Trình duyệt của bạn không hỗ trợ âm thanh.
+    </audio>
+
+    <script>
+        // Đợi 15 giây rồi phát nhạc
+        setTimeout(function() {
+            document.getElementById("myAudio").play();
+        }, 15000);
+    </script>
 </body>
 </html>
