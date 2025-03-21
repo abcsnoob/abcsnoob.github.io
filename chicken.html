@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,28 +8,65 @@
         body {
             margin: 0;
             padding: 0;
-        }
-
-        canvas {
-            display: block;
-            margin: auto;
-            border: 0px;
-
+            overflow: hidden;
             background: repeating-linear-gradient(-90deg, red 0%, yellow 7.14%, lime, 21.4%, cyan 28.56%, blue 35.7%, magenta 42.84%, red 50%);
             background-size: 100vw 100vw;
-
             animation: slide 1s linear infinite;
         }
 
         @keyframes slide {
-            from {
-                background-position-x: 0vw;
-            }
-
-            to {
-                background-position-x: 100vw;
-            }
+            from { background-position-x: 0vw; }
+            to { background-position-x: 100vw; }
         }
+
+        .container {
+            position: absolute;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .face {
+            position: relative;
+            width: 250px;
+            height: 250px;
+            background: black;
+            border-radius: 50%;
+        }
+
+        .eye {
+            position: absolute;
+            width: 60px;
+            height: 20px;
+            background: white;
+            border-radius: 50%;
+            top: 70px;
+        }
+
+        .eye.left { left: 50px; }
+        .eye.right { right: 50px; }
+
+        .mouth {
+            position: absolute;
+            width: 60px;
+            height: 10px;
+            background: white;
+            border-radius: 50%;
+            bottom: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .chicken {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+        }
+
+        .chicken.left { left: 20px; top: 80px; transform: rotate(-20deg); }
+        .chicken.right { right: 20px; top: 100px; transform: rotate(20deg); }
 
         .bgm {
             position: absolute;
@@ -39,32 +75,17 @@
         }
     </style>
 </head>
-
 <body>
-    <canvas id="myCanvas" width="400" height="400"></canvas>
-    <img id="sentry" src="abcsnoob.webp" width="300" height="300" hidden>
-    <img id="chicken" src="https://sentry456123.github.io/chicken.webp" width="50" height="50" hidden>
-    <script>
-        const canvas = document.getElementById('myCanvas');
-        const ctx = canvas.getContext('2d');
-        const sentry = document.getElementById("sentry");
-        const chicken = document.getElementById("chicken");
-        let cOffset = 0;
+    <div class="container">
+        <div class="face">
+            <div class="eye left"></div>
+            <div class="eye right"></div>
+            <div class="mouth"></div>
+            <img class="chicken left" src="https://sentry456123.github.io/chicken.webp" alt="chicken">
+            <img class="chicken right" src="https://sentry456123.github.io/chicken.webp" alt="chicken">
+        </div>
+    </div>
 
-        let hintNeeded = true;TÔI", 350, 50);
-            }
-
-            cOffset += 5;
-        }
-
-        function hideHint() {
-            hintNeeded = false;
-            var bgm = document.getElementById("bgm");
-            bgm.controls = false;
-        }
-    </script>
-    <audio id="bgm" class="bgm" preload="auto" autoplay src="https://sentry456123.github.io/bgm.ogg" controls onplay="hideHint();" loop></audio> 
-    Music: Zalza - The Original 2204355 Chicken Man Song
+    <audio id="bgm" class="bgm" preload="auto" autoplay src="https://sentry456123.github.io/bgm.ogg" controls loop></audio> 
 </body>
-
 </html>
