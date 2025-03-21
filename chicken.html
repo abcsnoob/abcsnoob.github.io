@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chicken</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+        }
+
+        canvas {
+            display: block;
+            margin: auto;
+            border: 0px;
+
+            background: repeating-linear-gradient(-90deg, red 0%, yellow 7.14%, lime, 21.4%, cyan 28.56%, blue 35.7%, magenta 42.84%, red 50%);
+            background-size: 100vw 100vw;
+
+            animation: slide 1s linear infinite;
+        }
+
+        @keyframes slide {
+            from {
+                background-position-x: 0vw;
+            }
+
+            to {
+                background-position-x: 100vw;
+            }
+        }
+
+        .bgm {
+            position: absolute;
+            left: 10px;
+            top: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <canvas id="myCanvas" width="400" height="400"></canvas>
+    <img id="sentry" src="abcsnoob.webp" width="300" height="300" hidden>
+    <img id="chicken" src="https://sentry456123.github.io/chicken.webp" width="50" height="50" hidden>
+    <script>
+        const canvas = document.getElementById('myCanvas');
+        const ctx = canvas.getContext('2d');
+        const sentry = document.getElementById("sentry");
+        const chicken = document.getElementById("chicken");
+        let cOffset = 0;
+
+        let hintNeeded = true;TÔI", 350, 50);
+            }
+
+            cOffset += 5;
+        }
+
+        function hideHint() {
+            hintNeeded = false;
+            var bgm = document.getElementById("bgm");
+            bgm.controls = false;
+        }
+    </script>
+    <audio id="bgm" class="bgm" preload="auto" autoplay src="https://sentry456123.github.io/bgm.ogg" controls onplay="hideHint();" loop></audio> 
+    Music: Zalza - The Original 2204355 Chicken Man Song
+</body>
+
+</html>
