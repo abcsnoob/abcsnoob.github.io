@@ -26,114 +26,46 @@
 
   <style>
     @font-face {
-      font-family: sans-serif;
-     
+      font-family: 'CustomFont';
+      src: local('Arial'), sans-serif;
     }
 
     body {
       background-color: black;
       text-align: center;
-      font-family: sans-serif;
+      font-family: 'CustomFont', Arial, Helvetica, sans-serif;
       color: lime;
+    }
+
     .banner {
       border: 0;
       width: 100%;
       height: 250px;
       object-fit: cover;
-      padding-top: 0px;
-      padding-bottom: 0px;
-      padding-left: 0px;
-      padding-right: 0px;
+      padding: 0px;
     }
 
-    .sentry {
-      animation: rotate 3s linear infinite;
+    .icon {
+      width: 60px;
+      height: 60px;
+      transition: transform 0.3s ease-in-out;
     }
 
-    .youtube {
-      animation: rotate 3s linear infinite;
-    }
-
-    .tiktok {
-      animation: rotateCounterClockwise 3s linear infinite;
-    }
-
-    .twitter {
-      animation: rotate 3s linear infinite;
-    }
-
-    .bsky {
-      animation: rotateCounterClockwise 3s linear infinite;
-    }
-
-    .github {
-      animation: rotate 3s linear infinite;
-    }
-
-    .twitch {
-      animation: rotateCounterClockwise 3s linear infinite;
-    }
-
-    .itchio {
-      animation: rotate 3s linear infinite;
-    }
-
-    .kofi {
-      animation: rotateCounterClockwise 3s linear infinite;
-    }
-
-    .pixiv {
-      animation: rotate 3s linear infinite;
-    }
-
-    .amazon {
-      animation: rotateCounterClockwise 3s linear infinite;
+    .icon:hover {
+      transform: scale(1.2);
     }
 
     .discord {
-      animation: bounce 0.1s linear infinite;
-    }
-
-    @keyframes rotate {
-      from {
-        transform: rotate(0deg);
-      }
-
-      to {
-        transform: rotate(360deg);
-      }
-    }
-
-    @keyframes rotateCounterClockwise {
-      from {
-        transform: rotate(0deg);
-      }
-
-      to {
-        transform: rotate(-360deg);
-      }
+      animation: bounce 0.8s infinite alternate;
     }
 
     @keyframes bounce {
       from {
-        transform: scaleY(0%);
+        transform: translateY(0);
       }
-
-      50% {
-        transform: scaleY(100%);
-      }
-
       to {
-        transform: scaleY(0%);
+        transform: translateY(-5px);
       }
-    }
-
-    .more-info {
-      display: none;
-    }
-
-    p:hover .more-info {
-      display: inline-block;
     }
   </style>
 
@@ -157,37 +89,39 @@
     <font size="40">LEGENDARY +1M VIEWS</font>
   </h3>
 
-       <iframe class="video" src="https://www.youtube.com/embed/s5WyWlavN60" frameborder="0" allowfullscreen></iframe>
-<br>
-        <iframe class="video" src="https://www.youtube.com/embed/bh3CLRYnuWs" frameborder="0" allowfullscreen></iframe>
+  <iframe class="video" src="https://www.youtube.com/embed/s5WyWlavN60" frameborder="0" allowfullscreen></iframe>
   <br>
-        <iframe class="video" src="https://www.youtube.com/embed/CNq2r7bfPs4" frameborder="0" allowfullscreen></iframe>
+  <iframe class="video" src="https://www.youtube.com/embed/bh3CLRYnuWs" frameborder="0" allowfullscreen></iframe>
   <br>
-        <iframe class="video" src="https://www.youtube.com/embed/YV27My14M2Y" frameborder="0" allowfullscreen></iframe>
+  <iframe class="video" src="https://www.youtube.com/embed/CNq2r7bfPs4" frameborder="0" allowfullscreen></iframe>
   <br>
-        <iframe class="video" src="https://www.youtube.com/embed/ql-UZmdEBms" frameborder="0" allowfullscreen></iframe>
+  <iframe class="video" src="https://www.youtube.com/embed/YV27My14M2Y" frameborder="0" allowfullscreen></iframe>
   <br>
-        <iframe class="video" src="https://www.youtube.com/embed/kyjlCi3jDNY" frameborder="0" allowfullscreen></iframe>
+  <iframe class="video" src="https://www.youtube.com/embed/ql-UZmdEBms" frameborder="0" allowfullscreen></iframe>
   <br>
-        <iframe class="video" src="https://www.youtube.com/embed/15SDld5FIKc" frameborder="0" allowfullscreen></iframe>
+  <iframe class="video" src="https://www.youtube.com/embed/kyjlCi3jDNY" frameborder="0" allowfullscreen></iframe>
+  <br>
+  <iframe class="video" src="https://www.youtube.com/embed/15SDld5FIKc" frameborder="0" allowfullscreen></iframe>
 
   <br><br>
 
   <h1>Find me on...</h1><br>
 
-  <a href="https://www.youtube.com/@abcsnoob"><img src="https://sentry456123.github.io/youtube.webp" width="60" height="60"></a>
-  <a href="https://github.com/abcsnoobytb"><img src="https://sentry456123.github.io/github.webp" width="60" height="60"></a>
-  <a href="https://www.twitch.tv/abcsnoobcute"><img src="https://sentry456123.github.io/twitch.webp" width="60" height="60"></a>
-  <a href="https://discord.gg/QmGjzMUXGt"><img class="discord" src="https://sentry456123.github.io/discord.webp" width="60" height="60"></a>
+  <a href="https://www.youtube.com/@abcsnoob"><img class="icon" src="https://sentry456123.github.io/youtube.webp"></a>
+  <a href="https://github.com/abcsnoobytb"><img class="icon" src="https://sentry456123.github.io/github.webp"></a>
+  <a href="https://www.twitch.tv/abcsnoobcute"><img class="icon" src="https://sentry456123.github.io/twitch.webp"></a>
+  <a href="https://discord.gg/QmGjzMUXGt"><img class="icon discord" src="https://sentry456123.github.io/discord.webp"></a>
 
   <br><br><br>
 
   <h1>
     <p>
-      <a href="chicken.html"> <!-- Giữ nguyên như yêu cầu -->
-        <img src="https://sentry456123.github.io/chicken.webp" width="60" height="60">
+      <a href="chicken.html">
+        <img class="icon" src="https://sentry456123.github.io/chicken.webp">
       </a>
-      <a href="/live"> Các Live của tôi</a>
+      <a href="/live">
+        <img class="icon" src="https://pngimg.com/uploads/dot/dot_PNG44.png">
+      </a>
     </p>
   </h1>
 
