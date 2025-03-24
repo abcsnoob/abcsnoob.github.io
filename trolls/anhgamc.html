@@ -7,24 +7,54 @@
 
     <link rel="icon" href="https://cdn.beacons.ai/user_content/Dez8BLqNXjVIex4iHUNeVoIIBOk2/profile_anhgamc.png">
 
-    <script>
-        let tick = 0;
-        setInterval(step, 10000 / 600);
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden; /* Ẩn thanh cuộn */
+            background-color: black;
+            text-align: center;
+        }
 
+        #amogus {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 10px;
+            height: auto;
+        }
+    </style>
+
+    <script>
+        let tick = 10; // Bắt đầu từ 10px
         function step() {
             let amogus = document.getElementById("amogus");
+            tick *= 1.2; // Mỗi bước tăng kích thước nhanh hơn (tăng 20%)
             amogus.style.width = tick + "px";
-            amogus.style.height = tick + "px";
-
-            tick++;
         }
+
+        setInterval(step, 50); // Cứ mỗi 50ms tăng kích thước ảnh
     </script>
 </head>
 <body>
     <a href="anhgavirus.html">
-    <img id="amogus" src="https://cdn.beacons.ai/user_content/Dez8BLqNXjVIex4iHUNeVoIIBOk2/profile_anhgamc.png" width="0" height="0">
+        <img id="amogus" src="https://cdn.beacons.ai/user_content/Dez8BLqNXjVIex4iHUNeVoIIBOk2/profile_anhgamc.png">
     </a>
 
-    <audio autoplay loop src="https://abcsnoobytb.github.io/trolls/anhga.ogg"></audio>
+    <audio id="bgm" loop muted>
+        <source src="https://abcsnoobytb.github.io/trolls/anhga.ogg" type="audio/ogg">
+        Your browser does not support the audio element.
+    </audio>
+
+    <script>
+        function playAudio() {
+            let audio = document.getElementById("bgm");
+            audio.muted = false; // Bật tiếng
+            audio.play(); // Phát nhạc
+            document.removeEventListener("click", playAudio); // Chỉ chạy 1 lần
+        }
+        document.addEventListener("click", playAudio);
+    </script>
+
 </body>
-</html
+</html>
