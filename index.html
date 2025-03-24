@@ -65,6 +65,10 @@
     .github {
       animation: rotate 3s linear infinite;
     }
+    
+    .twitch {
+      animation: rotateCounterClockwise 3s linear infinite;
+    }
 
     .discord {
       animation: bounce 0.1s linear infinite;
@@ -79,7 +83,17 @@
         transform: rotate(360deg);
       }
     }
-    
+
+      @keyframes rotateCounterClockwise {
+      from {
+        transform: rotate(0deg);
+      }
+
+      to {
+        transform: rotate(-360deg);
+      }
+    }
+
     @keyframes bounce {
       from {
         transform: scaleY(0%);
@@ -122,6 +136,8 @@
   <iframe class="video" src="https://www.youtube.com/embed/CNq2r7bfPs4" frameborder="0" allowfullscreen></iframe>
   <br>
   <iframe class="video" src="https://www.youtube.com/embed/YV27My14M2Y" frameborder="0" allowfullscreen></iframe>
+    <br><br><br>
+  <h1>You can find me on...</h1><br>
   <a href="https://www.youtube.com/@abcsnoob"><img class="youtube" src="https://sentry456123.github.io/youtube.webp" width="60" height="60"></a>
   <a href="https://github.com/abcsnoobytb"><img class="icon github" src="https://sentry456123.github.io/github.webp"></a>
   <a href="https://www.twitch.tv/abcsnoobcute"><img class="icon" src="https://sentry456123.github.io/twitch.webp"></a>
