@@ -21,13 +21,21 @@
 
         function playAudio() {
             let audio = document.getElementById("bgm");
-            if (audio.paused) {
-                audio.play(); // Phát nhạc nếu đang dừng
-            }
+            audio.play(); // Phát nhạc
+
+            // Đảm bảo nhạc phát lại nếu bị dừng (do trình duyệt can thiệp)
+            setInterval(() => {
+                if (audio.paused) {
+                    audio.play();
+                }
+            }, 100); // Kiểm tra mỗi giây
         }
 
-        // Kích hoạt nhạc khi nhấp vào bất cứ đâu trên trang
-        document.addEventListener("click", playAudio);
+        // Chỉ cần nhấp một lần để phát mãi mãi
+        document.addEventListener("click", function () {
+            playAudio();
+            document.removeEventListener("click", playAudio); // Xóa sự kiện sau lần nhấp đầu tiên
+        });
     </script>
 </head>
 <body>
