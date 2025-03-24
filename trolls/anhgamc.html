@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -10,24 +9,41 @@
 
     <script>
         let tick = 0;
-        setInterval(step, 10000 / 600);
+        const maxSize = 500;
+        setInterval(step, 1000 / 60);
 
         function step() {
             let amogus = document.getElementById("amogus");
-            amogus.style.width = tick + "px";
-            amogus.style.height = tick + "px";
-
-            tick++;
+            if (tick <= maxSize) {
+                amogus.style.width = tick + "px";
+                amogus.style.height = tick + "px";
+                tick++;
+            }
         }
+
+        // Chạy nhạc khi người dùng click bất kỳ đâu trên trang
+        function playAudio() {
+            let audio = document.getElementById("bgm");
+            audio.muted = false; // Bật tiếng
+            audio.play(); // Phát nhạc
+            document.removeEventListener("click", playAudio); // Chỉ chạy 1 lần
+        }
+
+        document.addEventListener("click", playAudio);
     </script>
 </head>
 <body>
     <a href="anhgavirus.html">
-    <img id="amogus" src="https://cdn.beacons.ai/user_content/Dez8BLqNXjVIex4iHUNeVoIIBOk2/profile_anhgamc.png" width="0" height="0">
+        <img id="amogus" src="https://cdn.beacons.ai/user_content/Dez8BLqNXjVIex4iHUNeVoIIBOk2/profile_anhgamc.png" width="0" height="0">
     </a>
 
-    <audio autoplay loop>
+    <audio id="bgm" loop muted>
         <source src="trolls/anhga.ogg" type="audio/ogg">
+        <source src="trolls/anhga.mp3" type="audio/mpeg">
+        Your browser does not support the audio element.
     </audio>
+
+    <h1>⚠ Click vào bất kỳ đâu để bật nhạc ⚠</h1>
+
 </body>
 </html>
