@@ -55,16 +55,42 @@
       transform: scale(1.2);
     }
 
-    .discord {
-      animation: bounce 0.8s infinite alternate;
+    .abcsnoob {
+      animation: rotate 3s linear infinite;
+    }
+    .youtube {
+      animation: rotate 3s linear infinite;
     }
 
+    .github {
+      animation: rotate 3s linear infinite;
+    }
+
+    .discord {
+      animation: bounce 0.1s linear infinite;
+    }
+
+@keyframes rotate {
+      from {
+        transform: rotate(0deg);
+      }
+
+      to {
+        transform: rotate(360deg);
+      }
+    }
+    
     @keyframes bounce {
       from {
-        transform: translateY(0);
+        transform: scaleY(0%);
       }
+
+      50% {
+        transform: scaleY(100%);
+      }
+
       to {
-        transform: translateY(-5px);
+        transform: scaleY(0%);
       }
     }
   </style>
@@ -73,7 +99,7 @@
 
 <body>
 
-  <img alt="Abc's Noob" src="abcsnoob.webp" width="150"> 
+  <img class="icon" alt="Abc's Noob" src="abcsnoob.webp" width="150"> 
 
   <br><br>
 
@@ -96,19 +122,8 @@
   <iframe class="video" src="https://www.youtube.com/embed/CNq2r7bfPs4" frameborder="0" allowfullscreen></iframe>
   <br>
   <iframe class="video" src="https://www.youtube.com/embed/YV27My14M2Y" frameborder="0" allowfullscreen></iframe>
-  <br>
-  <iframe class="video" src="https://www.youtube.com/embed/ql-UZmdEBms" frameborder="0" allowfullscreen></iframe>
-  <br>
-  <iframe class="video" src="https://www.youtube.com/embed/kyjlCi3jDNY" frameborder="0" allowfullscreen></iframe>
-  <br>
-  <iframe class="video" src="https://www.youtube.com/embed/15SDld5FIKc" frameborder="0" allowfullscreen></iframe>
-
-  <br><br>
-
-  <h1>Find me on...</h1><br>
-
-  <a href="https://www.youtube.com/@abcsnoob"><img class="icon" src="https://sentry456123.github.io/youtube.webp"></a>
-  <a href="https://github.com/abcsnoobytb"><img class="icon" src="https://sentry456123.github.io/github.webp"></a>
+  <a href="https://www.youtube.com/@abcsnoob"><img class="youtube" src="https://sentry456123.github.io/youtube.webp" width="60" height="60"></a>
+  <a href="https://github.com/abcsnoobytb"><img class="icon github" src="https://sentry456123.github.io/github.webp"></a>
   <a href="https://www.twitch.tv/abcsnoobcute"><img class="icon" src="https://sentry456123.github.io/twitch.webp"></a>
   <a href="https://discord.gg/QmGjzMUXGt"><img class="icon discord" src="https://sentry456123.github.io/discord.webp"></a>
 
