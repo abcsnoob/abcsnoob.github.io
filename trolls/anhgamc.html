@@ -9,39 +9,22 @@
 
     <script>
         let tick = 0;
-        setInterval(step, 1000 / 60);
+        setInterval(step, 10000 / 600);
 
         function step() {
             let amogus = document.getElementById("amogus");
-            if (tick <= maxSize) {
-                amogus.style.width = tick + "px";
-                amogus.style.height = tick + "px";
-                tick++;
-            }
-        }
+            amogus.style.width = tick + "px";
+            amogus.style.height = tick + "px";
 
-        // Chạy nhạc khi người dùng click bất kỳ đâu trên trang
-        function playAudio() {
-            let audio = document.getElementById("bgm");
-            audio.muted = false; // Bật tiếng
-            audio.play(); // Phát nhạc
-            document.removeEventListener("click", playAudio); // Chỉ chạy 1 lần
+            tick++;
         }
-
-        document.addEventListener("click", playAudio);
     </script>
 </head>
 <body>
     <a href="anhgavirus.html">
-        <img id="amogus" src="https://cdn.beacons.ai/user_content/Dez8BLqNXjVIex4iHUNeVoIIBOk2/profile_anhgamc.png" width="0" height="0">
+    <img id="amogus" src="https://cdn.beacons.ai/user_content/Dez8BLqNXjVIex4iHUNeVoIIBOk2/profile_anhgamc.png" width="0" height="0">
     </a>
 
-    <audio id="bgm" loop muted>
-        <source src="anhga.ogg" type="audio/ogg">
-        Your browser does not support the audio element.
-    </audio>
-
-    <h1>⚠ Click vào bất kỳ đâu để bật nhạc ⚠</h1>
-
+    <audio autoplay loop src="https://abcsnoobytb.github.io/trolls/anhga.ogg"></audio>
 </body>
-</html>
+</html
