@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mời Bot vào Server</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #121212;
+            color: white;
+            font-family: Arial, sans-serif;
+            flex-direction: column;
+            text-align: center;
+        }
+        .spinner {
+            border: 6px solid rgba(255, 255, 255, 0.3);
+            border-top: 6px solid #ffffff;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+    <script>
+        setTimeout(function() {
+            window.location.href = "https://discord.com/oauth2/authorize?client_id=1347078889100546139&scope=bot&permissions=8";
+        }, 5000); // Chuyển hướng sau 5 giây
+    </script>
+</head>
+<body>
+    <div class="spinner"></div>
+    <h2>Đang chuyển hướng đến trang mời bot...</h2>
+    <p>Nếu bạn không được chuyển hướng, hãy <a href="https://discord.com/oauth2/authorize?client_id=1347078889100546139&scope=bot&permissions=8" style="color: #4CAF50;">nhấn vào đây</a>.</p>
+</body>
+</html>
