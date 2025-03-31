@@ -125,35 +125,48 @@
     </div>
     
     <script>
-        function openOverlay() {
-            document.getElementById("overlay").style.display = "flex";
-            document.getElementById("username").value = getCookie("username") || "";
-            updateLinks();
+        async function checkServerStatus() {
+            const ip = "abcsnoob.scalacube.net";
+            const url = `https://api.mcsrvstat.us/2/${ip}`;
+            try {
+                let response = await fetch(url);
+                let data = await response.json();
+                if (data.online) {
+                    document.getElementById("server-status").textContent = "Online";
+                    document.getElementById("server-status").classList.add("online");
+                    document.getElementById("player-count").textContent = `${data.players.online}/${data.players.max}`;
+                } else {
+                    document.getElementById("server-status").textContent = "Offline";
+                    document.getElementById("server-status").classList.add("offline");
+                }
+            } catch (error) {
+                document.getElementById("server-status").textContent = "Lỗi kết nối";
+                document.getElementById("server-status").classList.add("offline");
+            }
+        }
+
+        function saveUsername() {
+            let username = document.getElementById("username").value;
+            if (!username) return alert("Vui lòng nhập tên người dùng!");
+            let legacyContent = `@echo off\nstart \"\" \"C:\\Users\\${username}\\AppData\\Roaming\\.tlauncher\\legacy\\Minecraft\\TL.exe\"`;
+            let tlauncherContent = `@echo off\nstart \"\" \"C:\\Users\\${username}\\AppData\\Roaming\\.minecraft\\TLauncher.exe\"`;
+            
+            document.getElementById("legacyLauncher").setAttribute("href", 'data:text/plain;charset=utf-8,' + encodeURIComponent(legacyContent));
+            document.getElementById("legacyLauncher").setAttribute("download", "LegacyLauncher.bat");
+            
+            document.getElementById("tlauncher").setAttribute("href", 'data:text/plain;charset=utf-8,' + encodeURIComponent(tlauncherContent));
+            document.getElementById("tlauncher").setAttribute("download", "TLauncher.bat");
         }
         
+        function openOverlay() {
+            document.getElementById("overlay").style.display = "flex";
+        }
         function closeOverlay() {
             document.getElementById("overlay").style.display = "none";
         }
         
-        function saveUsername() {
-            let username = document.getElementById("username").value;
-            document.cookie = `username=${username}; path=/;`;
-            updateLinks();
-        }
-        
-        function getCookie(name) {
-            let match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
-            return match ? match[2] : "";
-        }
-        
-        function updateLinks() {
-            let username = getCookie("username");
-            let batContent = `@echo off\nstart "" "C:\\Users\\${username}\\AppData\\Roaming\\.minecraft\\TLauncher.exe"`;
-            let blob = new Blob([batContent], { type: "text/plain" });
-            let url = URL.createObjectURL(blob);
-            document.getElementById("tlauncher").href = url;
-            document.getElementById("legacyLauncher").href = url;
-        }
+        checkServerStatus();
+        setInterval(checkServerStatus, 30000);
     </script>
 </body>
 </html>
