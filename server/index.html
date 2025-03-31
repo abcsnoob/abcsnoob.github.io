@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Server Abc's Noob</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #222;
+            color: white;
+            margin: 0;
+            padding: 0;
+        }
+        .header img {
+            width: 100px;
+            height: auto;
+        }
+        .nav {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin: 10px 0;
+        }
+        .nav a {
+            color: #ffcc00;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        .status {
+            margin-top: 20px;
+            padding: 20px;
+            background-color: #333;
+            border-radius: 10px;
+            display: inline-block;
+        }
+        .status p {
+            margin: 10px 0;
+        }
+        .online {
+            color: #00ff00;
+        }
+        .offline {
+            color: #ff0000;
+        }
+        .footer {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #111;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <a href="https://abcsnoobytb.github.io">
+            <img src="https://abcsnoobytb.github.io/abcsnoob.webp" alt="Abc's Noob">
+          <h3>Abc's Noob™</h3>
+        </a>
+    </div>
+    <div class="nav">
+        <a href="/server">Home</a>
+        <a href="/server/connect">Connect</a>
+    </div>
+    <h1>Server Abc's Noob</h1>
+    <p>VUI VẺ - HAPPY - CHILL - THƯ GIÃN</p>
+    <div class="status">
+        <p><strong>IP:</strong> abcsnoob.scalacube.com</p>
+        <p><strong>Trạng thái:</strong> <span id="server-status">Đang tải...</span></p>
+        <p><strong>Người chơi:</strong> <span id="player-count">NA/NA</span></p>
+        <p><strong>Discord:</strong> <a href="https://discord.gg/QmGjzMUXGt" target="_blank">Tham gia</a></p>
+    </div>
+    <div class="footer">
+        &copy; Abc's Noob™, MỌI QUYỀN ĐƯỢC BẢO LƯU
+    </div>
+    <script>
+        async function fetchServerStatus() {
+            const response = await fetch("https://api.mcsrvstat.us/2/abcsnoob.scalacube.com");
+            const data = await response.json();
+            
+            if (data.online) {
+                document.getElementById("server-status").textContent = "Online";
+                document.getElementById("server-status").classList.add("online");
+                document.getElementById("server-status").classList.remove("offline");
+                document.getElementById("player-count").textContent = `${data.players.online}/${data.players.max}`;
+            } else {
+                document.getElementById("server-status").textContent = "Offline";
+                document.getElementById("server-status").classList.add("offline");
+                document.getElementById("server-status").classList.remove("online");
+            }
+        }
+        
+        fetchServerStatus();
+        setInterval(fetchServerStatus, 5000);
+    </script>
+</body>
+</html>
