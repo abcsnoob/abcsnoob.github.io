@@ -65,6 +65,30 @@
             background-color: #111;
             font-size: 14px;
         }
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            justify-content: center;
+            align-items: center;
+        }
+        .overlay-content {
+            background: white;
+            color: black;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        .overlay a {
+            display: block;
+            margin-top: 10px;
+            color: blue;
+            text-decoration: none;
+        }
     </style>
 </head>
 <body>
@@ -76,8 +100,9 @@
     </div>
     <div class="nav">
         <a href="/server">Home</a>
-        <a href="/server/connect">Connect</a>
+        <a href="#" onclick="openOverlay()">Connect</a>
     </div>
+    
     <h1>Server Abc's Noob</h1>
     <p>VUI VẺ - HAPPY - CHILL - THƯ GIÃN</p>
     <div class="status">
@@ -86,9 +111,25 @@
         <p><strong>Người chơi:</strong> <span id="player-count">NA/NA</span></p>
         <p><strong>Discord:</strong> <a href="https://discord.gg/QmGjzMUXGt" target="_blank">Tham gia</a></p>
     </div>
+    
     <div class="footer">
         &copy; Abc's Noob™, MỌI QUYỀN ĐƯỢC BẢO LƯU
     </div>
+
+    <div class="overlay" id="overlay">
+        <div class="overlay-content">
+            <h2>KẾT NỐI TỚI SERVER:</h2>
+            <p><strong>BẰNG MINECRAFT LAUNCHER:</strong> Chưa khả dụng hiện tại</p>
+            <p><strong>BẰNG LEGACY LAUNCHER:</strong> <a id="legacyLauncher" href="#">Mở</a></p>
+            <p><strong>BẰNG TLAUNCHER:</strong> <a id="tlauncher" href="#">Mở</a></p>
+            <p><strong>Tên người dùng PC/Laptop:</strong></p>
+            <input type="text" id="username" placeholder="Nhập tên người dùng PC/Laptop">
+            <button onclick="saveUsername()">Submit</button>
+            <br><br>
+            <button onclick="closeOverlay()">Đóng</button>
+        </div>
+    </div>
+    
     <script>
         async function fetchServerStatus() {
             const response = await fetch("https://api.mcsrvstat.us/2/abcsnoob.scalacube.net");
@@ -108,6 +149,33 @@
         
         fetchServerStatus();
         setInterval(fetchServerStatus, 5000);
+
+        function openOverlay() {
+            document.getElementById("overlay").style.display = "flex";
+            document.getElementById("username").value = getCookie("username") || "";
+            updateLinks();
+        }
+        
+        function closeOverlay() {
+            document.getElementById("overlay").style.display = "none";
+        }
+        
+        function saveUsername() {
+            let username = document.getElementById("username").value;
+            document.cookie = `username=${username}; path=/;`;
+            updateLinks();
+        }
+        
+        function getCookie(name) {
+            let match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+            return match ? match[2] : "";
+        }
+        
+        function updateLinks() {
+            let username = getCookie("username");
+            document.getElementById("legacyLauncher").href = `file:///C:/Users/${username}/AppData/Roaming/.tlauncher/legacy/Minecraft/TL.exe`;
+            document.getElementById("tlauncher").href = `file:///C:/Users/${username}/AppData/Roaming/.minecraft/TLauncher.exe`;
+        }
     </script>
 </body>
 </html>
