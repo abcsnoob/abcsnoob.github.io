@@ -83,12 +83,6 @@
             border-radius: 10px;
             text-align: center;
         }
-        .overlay a {
-            display: block;
-            margin-top: 10px;
-            color: blue;
-            text-decoration: none;
-        }
     </style>
 </head>
 <body>
@@ -120,8 +114,8 @@
         <div class="overlay-content">
             <h2>KẾT NỐI TỚI SERVER:</h2>
             <p><strong>BẰNG MINECRAFT LAUNCHER:</strong> Chưa khả dụng hiện tại</p>
-            <p><strong>BẰNG LEGACY LAUNCHER:</strong> <a id="legacyLauncher" href="#">Mở</a></p>
-            <p><strong>BẰNG TLAUNCHER:</strong> <a id="tlauncher" href="#">Mở</a></p>
+            <p><strong>BẰNG LEGACY LAUNCHER:</strong> <a id="legacyLauncher" href="#" download>Download .bat</a></p>
+            <p><strong>BẰNG TLAUNCHER:</strong> <a id="tlauncher" href="#" download>Download .bat</a></p>
             <p><strong>Tên người dùng PC/Laptop:</strong></p>
             <input type="text" id="username" placeholder="Nhập tên người dùng PC/Laptop">
             <button onclick="saveUsername()">Submit</button>
@@ -131,25 +125,6 @@
     </div>
     
     <script>
-        async function fetchServerStatus() {
-            const response = await fetch("https://api.mcsrvstat.us/2/abcsnoob.scalacube.net");
-            const data = await response.json();
-            
-            if (data.online) {
-                document.getElementById("server-status").textContent = "Online";
-                document.getElementById("server-status").classList.add("online");
-                document.getElementById("server-status").classList.remove("offline");
-                document.getElementById("player-count").textContent = `${data.players.online}/${data.players.max}`;
-            } else {
-                document.getElementById("server-status").textContent = "Offline";
-                document.getElementById("server-status").classList.add("offline");
-                document.getElementById("server-status").classList.remove("online");
-            }
-        }
-        
-        fetchServerStatus();
-        setInterval(fetchServerStatus, 5000);
-
         function openOverlay() {
             document.getElementById("overlay").style.display = "flex";
             document.getElementById("username").value = getCookie("username") || "";
@@ -173,8 +148,11 @@
         
         function updateLinks() {
             let username = getCookie("username");
-            document.getElementById("legacyLauncher").href = `file:///C:/Users/${username}/AppData/Roaming/.tlauncher/legacy/Minecraft/TL.exe`;
-            document.getElementById("tlauncher").href = `file:///C:/Users/${username}/AppData/Roaming/.minecraft/TLauncher.exe`;
+            let batContent = `@echo off\nstart "" "C:\\Users\\${username}\\AppData\\Roaming\\.minecraft\\TLauncher.exe"`;
+            let blob = new Blob([batContent], { type: "text/plain" });
+            let url = URL.createObjectURL(blob);
+            document.getElementById("tlauncher").href = url;
+            document.getElementById("legacyLauncher").href = url;
         }
     </script>
 </body>
