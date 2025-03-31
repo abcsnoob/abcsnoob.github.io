@@ -13,9 +13,24 @@
             margin: 0;
             padding: 0;
         }
+        .header {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+        }
         .header img {
             width: 100px;
             height: auto;
+        }
+        .header a {
+            text-decoration: none;
+            color: black;
+        }
+        .header h3 {
+            margin: 0;
+            font-size: 24px;
+            color: black;
         }
         .nav {
             display: flex;
@@ -56,8 +71,8 @@
     <div class="header">
         <a href="https://abcsnoobytb.github.io">
             <img src="https://abcsnoobytb.github.io/abcsnoob.webp" alt="Abc's Noob">
-          <h3>Abc's Noob™</h3>
         </a>
+        <h3>Abc's Noob</h3>
     </div>
     <div class="nav">
         <a href="/server">Home</a>
@@ -66,7 +81,7 @@
     <h1>Server Abc's Noob</h1>
     <p>VUI VẺ - HAPPY - CHILL - THƯ GIÃN</p>
     <div class="status">
-        <p><strong>IP:</strong> abcsnoob.scalacube.com</p>
+        <p><strong>IP:</strong> abcsnoob.scalacube.net</p>
         <p><strong>Trạng thái:</strong> <span id="server-status">Đang tải...</span></p>
         <p><strong>Người chơi:</strong> <span id="player-count">NA/NA</span></p>
         <p><strong>Discord:</strong> <a href="https://discord.gg/QmGjzMUXGt" target="_blank">Tham gia</a></p>
@@ -76,7 +91,7 @@
     </div>
     <script>
         async function fetchServerStatus() {
-            const response = await fetch("https://api.mcsrvstat.us/2/abcsnoob.scalacube.com");
+            const response = await fetch("https://api.mcsrvstat.us/2/abcsnoob.scalacube.net");
             const data = await response.json();
             
             if (data.online) {
