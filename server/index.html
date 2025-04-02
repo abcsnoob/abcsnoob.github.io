@@ -23,15 +23,6 @@
             width: 100px;
             height: auto;
         }
-        .header a {
-            text-decoration: none;
-            color: black;
-        }
-        .header h3 {
-            margin: 0;
-            font-size: 24px;
-            color: black;
-        }
         .nav {
             display: flex;
             justify-content: center;
@@ -42,6 +33,12 @@
             color: #ffcc00;
             text-decoration: none;
             font-weight: bold;
+            cursor: pointer;
+        }
+        .language-switch {
+            position: absolute;
+            top: 10px;
+            right: 10px;
         }
         .status {
             margin-top: 20px;
@@ -49,9 +46,6 @@
             background-color: #333;
             border-radius: 10px;
             display: inline-block;
-        }
-        .status p {
-            margin: 10px 0;
         }
         .online {
             color: #00ff00;
@@ -77,11 +71,22 @@
             align-items: center;
         }
         .overlay-content {
-            background: white;
-            color: black;
+            background: #1e1e1e;
+            color: white;
             padding: 20px;
             border-radius: 10px;
             text-align: center;
+            max-width: 700px;
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
+        }
+        button {
+            background: #ffcc00;
+            border: none;
+            padding: 10px 15px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-top: 10px;
+            border-radius: 5px;
         }
     </style>
 </head>
@@ -90,83 +95,80 @@
         <a href="https://abcsnoobytb.github.io">
             <img src="https://abcsnoobytb.github.io/abcsnoob.webp" alt="Abc's Noob">
         </a>
-        <h3>Abc's Noob</h3>
+        <h3 id="server-name">Abc's Noob</h3>
     </div>
     <div class="nav">
-        <a href="/server">Home</a>
-        <a href="#" onclick="openOverlay()">Connect</a>
+        <a href="/server" id="home">🏠 Trang chủ / Home</a>
+        <a onclick="openOverlay()">⚠️ QUAN TRỌNG / IMPORTANT</a>
     </div>
     
-    <h1>Server Abc's Noob</h1>
-    <p>VUI VẺ - HAPPY - CHILL - THƯ GIÃN</p>
+    <div class="language-switch">
+        <button onclick="changeLanguage('vi')">🇻🇳 VN</button>
+        <button onclick="changeLanguage('en')">🇺🇸 EN</button>
+    </div>
+    
+    <h1 id="server-title">Server Abc's Noob</h1>
+    <p id="server-motto">VUI VẺ - HAPPY - CHILL - THƯ GIÃN</p>
     <div class="status">
         <p><strong>IP:</strong> abcsnoob.scalacube.net</p>
-        <p><strong>Trạng thái:</strong> <span id="server-status">Đang tải...</span></p>
-        <p><strong>Người chơi:</strong> <span id="player-count">NA/NA</span></p>
-        <p><strong>Discord:</strong> <a href="https://discord.gg/QmGjzMUXGt" target="_blank">Tham gia</a></p>
+        <p><strong id="status-label">Trạng thái:</strong> <span id="server-status">Đang tải...</span></p>
+        <p><strong id="players-label">Người chơi:</strong> <span id="player-count">NA/NA</span></p>
     </div>
     
     <div class="footer">
         &copy; Abc's Noob™, MỌI QUYỀN ĐƯỢC BẢO LƯU
     </div>
 
+    <!-- Overlay thông báo quan trọng -->
     <div class="overlay" id="overlay">
         <div class="overlay-content">
-            <h2>KẾT NỐI TỚI SERVER:</h2>
-            <p><strong>BẰNG MINECRAFT LAUNCHER:</strong> Chưa khả dụng hiện tại</p>
-            <p><strong>BẰNG LEGACY LAUNCHER:</strong> <a id="legacyLauncher" href="#" download>Download .bat</a></p>
-            <p><strong>BẰNG TLAUNCHER:</strong> <a id="tlauncher" href="#" download>Download .bat</a></p>
-            <p><strong>Tên người dùng PC/Laptop:</strong></p>
-            <input type="text" id="username" placeholder="Nhập tên người dùng PC/Laptop">
-            <button onclick="saveUsername()">Submit</button>
-            <br><br>
-            <button onclick="closeOverlay()">Đóng</button>
+            <h2 id="important-title">📢 Abc's Noob x ScalaCube – Thông Báo Quan Trọng!</h2>
+            <h3 id="smp-title">🔥 Chúng tôi là Abc's Noob SMP! 🔥</h3>
+            <p id="issue-message">🚨 <strong>Sự cố nghiêm trọng đã xảy ra!</strong> 🚨</p>
+            <p id="reset-message">Trong quá trình đặt lại <strong>The End</strong>, hệ thống đã gặp lỗi khiến việc reset không diễn ra như mong đợi. Để đảm bảo server hoạt động ổn định, chúng tôi buộc phải đặt lại toàn bộ thế giới.</p>
+            
+            <h4 id="lost-title">🔹 Những gì đã mất:</h4>
+            <ul>
+                <li>❌ Toàn bộ công trình trong thế giới đã bị xóa</li>
+                <li>❌ Tất cả rương, hòm đồ, block đặt xuống đã biến mất</li>
+            </ul>
+
+            <h4 id="kept-title">🔹 Những gì còn giữ được:</h4>
+            <ul>
+                <li>✅ Vật phẩm trong Inventory của bạn vẫn nguyên vẹn</li>
+            </ul>
+
+            <p id="apology-message">💔 <strong>Thành thật xin lỗi tất cả mọi người vì sự cố này!</strong> Mong anh em tiếp tục đồng hành cùng server và xây dựng lại thế giới mới!</p>
+
+            <button onclick="closeOverlay()">Đóng / Close</button>
         </div>
     </div>
     
     <script>
-        async function checkServerStatus() {
-            const ip = "abcsnoob.scalacube.net";
-            const url = `https://api.mcsrvstat.us/2/${ip}`;
-            try {
-                let response = await fetch(url);
-                let data = await response.json();
-                if (data.online) {
-                    document.getElementById("server-status").textContent = "Online";
-                    document.getElementById("server-status").classList.add("online");
-                    document.getElementById("player-count").textContent = `${data.players.online}/${data.players.max}`;
-                } else {
-                    document.getElementById("server-status").textContent = "Offline";
-                    document.getElementById("server-status").classList.add("offline");
-                }
-            } catch (error) {
-                document.getElementById("server-status").textContent = "Lỗi kết nối";
-                document.getElementById("server-status").classList.add("offline");
+        function changeLanguage(lang) {
+            if (lang === "vi") {
+                document.getElementById("important-title").innerText = "📢 Abc's Noob x ScalaCube – Thông Báo Quan Trọng!";
+                document.getElementById("smp-title").innerText = "🔥 Chúng tôi là Abc's Noob SMP! 🔥";
+                document.getElementById("issue-message").innerText = "🚨 Sự cố nghiêm trọng đã xảy ra!";
+                document.getElementById("reset-message").innerText = "Trong quá trình đặt lại The End, hệ thống đã gặp lỗi khiến việc reset không diễn ra như mong đợi...";
+                document.getElementById("server-title").innerText = "Server Abc's Noob";
+            } else {
+                document.getElementById("important-title").innerText = "📢 Abc's Noob x ScalaCube – Important Announcement!";
+                document.getElementById("smp-title").innerText = "🔥 We are Abc's Noob SMP! 🔥";
+                document.getElementById("issue-message").innerText = "🚨 A serious issue has occurred!";
+                document.getElementById("reset-message").innerText = "During The End reset, the system encountered errors that prevented a successful reset...";
+                document.getElementById("server-title").innerText = "Abc's Noob Server";
             }
         }
 
-        function saveUsername() {
-            let username = document.getElementById("username").value;
-            if (!username) return alert("Vui lòng nhập tên người dùng!");
-            let legacyContent = `@echo off\nstart \"\" \"C:\\Users\\${username}\\AppData\\Roaming\\.tlauncher\\legacy\\Minecraft\\TL.exe\"`;
-            let tlauncherContent = `@echo off\nstart \"\" \"C:\\Users\\${username}\\AppData\\Roaming\\.minecraft\\TLauncher.exe\"`;
-            
-            document.getElementById("legacyLauncher").setAttribute("href", 'data:text/plain;charset=utf-8,' + encodeURIComponent(legacyContent));
-            document.getElementById("legacyLauncher").setAttribute("download", "LegacyLauncher.bat");
-            
-            document.getElementById("tlauncher").setAttribute("href", 'data:text/plain;charset=utf-8,' + encodeURIComponent(tlauncherContent));
-            document.getElementById("tlauncher").setAttribute("download", "TLauncher.bat");
-        }
-        
         function openOverlay() {
             document.getElementById("overlay").style.display = "flex";
         }
+        
         function closeOverlay() {
             document.getElementById("overlay").style.display = "none";
         }
-        
-        checkServerStatus();
-        setInterval(checkServerStatus, 30000);
     </script>
 </body>
 </html>
+
