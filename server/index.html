@@ -145,30 +145,50 @@
     </div>
     
     <script>
-        function changeLanguage(lang) {
-            if (lang === "vi") {
-                document.getElementById("important-title").innerText = "📢 Abc's Noob x ScalaCube – Thông Báo Quan Trọng!";
-                document.getElementById("smp-title").innerText = "🔥 Chúng tôi là Abc's Noob SMP! 🔥";
-                document.getElementById("issue-message").innerText = "🚨 Sự cố nghiêm trọng đã xảy ra!";
-                document.getElementById("reset-message").innerText = "Trong quá trình đặt lại The End, hệ thống đã gặp lỗi khiến việc reset không diễn ra như mong đợi...";
-                document.getElementById("server-title").innerText = "Server Abc's Noob";
-            } else {
-                document.getElementById("important-title").innerText = "📢 Abc's Noob x ScalaCube – Important Announcement!";
-                document.getElementById("smp-title").innerText = "🔥 We are Abc's Noob SMP! 🔥";
-                document.getElementById("issue-message").innerText = "🚨 A serious issue has occurred!";
-                document.getElementById("reset-message").innerText = "During The End reset, the system encountered errors that prevented a successful reset...";
-                document.getElementById("server-title").innerText = "Abc's Noob Server";
+        // Function kiểm tra trạng thái server
+        async function checkServerStatus() {
+            const ip = "abcsnoob.scalacube.net";
+            const url = `https://api.mcsrvstat.us/2/${ip}`;
+            try {
+                let response = await fetch(url);
+                let data = await response.json();
+                if (data.online) {
+                    document.getElementById("server-status").textContent = "Online";
+                    document.getElementById("server-status").classList.add("online");
+                    document.getElementById("player-count").textContent = `${data.players.online}/${data.players.max}`;
+                } else {
+                    document.getElementById("server-status").textContent = "Offline";
+                    document.getElementById("server-status").classList.add("offline");
+                }
+            } catch (error) {
+                document.getElementById("server-status").textContent = "Lỗi kết nối";
+                document.getElementById("server-status").classList.add("offline");
             }
         }
 
+        function saveUsername() {
+            let username = document.getElementById("username").value;
+            if (!username) return alert("Vui lòng nhập tên người dùng!");
+            let legacyContent = `@echo off\nstart \"\" \"C:\\Users\\${username}\\AppData\\Roaming\\.tlauncher\\legacy\\Minecraft\\TL.exe\"`;
+            let tlauncherContent = `@echo off\nstart \"\" \"C:\\Users\\${username}\\AppData\\Roaming\\.minecraft\\TLauncher.exe\"`;
+            
+            document.getElementById("legacyLauncher").setAttribute("href", 'data:text/plain;charset=utf-8,' + encodeURIComponent(legacyContent));
+            document.getElementById("legacyLauncher").setAttribute("download", "LegacyLauncher.bat");
+            
+            document.getElementById("tlauncher").setAttribute("href", 'data:text/plain;charset=utf-8,' + encodeURIComponent(tlauncherContent));
+            document.getElementById("tlauncher").setAttribute("download", "TLauncher.bat");
+        }
+        
         function openOverlay() {
             document.getElementById("overlay").style.display = "flex";
         }
-        
         function closeOverlay() {
             document.getElementById("overlay").style.display = "none";
         }
+        
+        // Tự động kiểm tra trạng thái server
+        checkServerStatus();
+        setInterval(checkServerStatus, 30000); // Kiểm tra mỗi 30 giây
     </script>
 </body>
 </html>
-
