@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Discord-like App</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header>
+        <h1>Welcome to the Chat!</h1>
+        <button id="logoutButton" hidden>Logout</button>
+    </header>
+
+    <main>
+        <!-- Spinner -->
+        <div id="spinner" class="spinner" hidden></div>
+
+        <!-- Login Form -->
+        <div id="loginForm" class="authForm">
+            <h2>Login</h2>
+            <input type="email" id="loginEmail" placeholder="Email" />
+            <input type="password" id="loginPassword" placeholder="Password" />
+            <button id="loginButton">Login</button>
+            <p>Don't have an account? <span id="switchToRegister">Register</span></p>
+        </div>
+
+        <!-- Register Form -->
+        <div id="registerForm" class="authForm" hidden>
+            <h2>Register</h2>
+            <input type="email" id="registerEmail" placeholder="Email" />
+            <input type="password" id="registerPassword" placeholder="Password" />
+            <button id="registerButton">Register</button>
+            <p>Already have an account? <span id="switchToLogin">Login</span></p>
+        </div>
+
+        <!-- Chat Section -->
+        <div id="chatSection" hidden>
+            <div id="messageList"></div>
+            <input type="text" id="messageInput" placeholder="Type a message..." />
+            <button id="sendMessageButton">Send</button>
+        </div>
+
+        <!-- Group Section -->
+        <div id="groupSection" hidden>
+            <h2>Groups</h2>
+            <ul id="groupList"></ul>
+            <button id="createGroupButton">Create Group</button>
+        </div>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
