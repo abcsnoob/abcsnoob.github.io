@@ -59,11 +59,11 @@
       animation: rotate 1s linear infinite;
     }
     .youtube {
-      animation: rotate 0.3s linear infinite;
+      animation: rotate 1s linear infinite;
     }
 
     .github {
-      animation: rotate 0.3s linear infinite;
+      animation: rotate 1s linear infinite;
     }
     
     .twitch {
@@ -84,15 +84,20 @@
       }
     }
 
-      @keyframes rotateCounterClockwise {
-      from {
-        transform: rotate(0deg);
-      }
+    @keyframes rotateCounterClockwise {
+  from {
+      transform: rotate(0deg);
+   }
 
-      to {
-        transform: rotate(-360deg);
-      }
+  to {
+      transform: rotate(-360deg);
     }
+  }
+
+   .icon.rotateCounterClockwise {
+     animation: rotateCounterClockwise 1s linear infinite;
+  }
+
 
     @keyframes bounce {
       from {
