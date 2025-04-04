@@ -47,6 +47,16 @@
       0% { transform: rotate(0deg); }
       100% { transform: rotate(360deg); }
     }
+
+    .toggle-link {
+      color: #3498db;
+      cursor: pointer;
+      text-decoration: underline;
+    }
+
+    #userSection {
+      display: none;
+    }
   </style>
 </head>
 <body>
@@ -57,19 +67,23 @@
 
   <!-- Authentication Section -->
   <div class="auth-section" id="authSection">
+    <!-- Form Đăng Ký -->
     <div id="signUpForm">
       <input type="email" id="signUpEmail" placeholder="Email" required>
       <input type="password" id="signUpPassword" placeholder="Password" required>
       <div class="h-captcha" data-sitekey="9e92809a-9836-46ae-91e6-5968d65c2120"></div>
       <button onclick="signUp()">Sign Up</button>
+      <p>Already have an account? <span class="toggle-link" onclick="toggleAuthForm('signIn')">Sign In</span></p>
     </div>
 
-    <div id="signInForm">
+    <!-- Form Đăng Nhập -->
+    <div id="signInForm" style="display: none;">
       <input type="email" id="signInEmail" placeholder="Email" required>
       <input type="password" id="signInPassword" placeholder="Password" required>
       <div class="h-captcha" data-sitekey="9e92809a-9836-46ae-91e6-5968d65c2120"></div>
       <button onclick="signIn()">Sign In</button>
       <button onclick="signInWithGoogle()">Sign In with Google</button>
+      <p>Don't have an account? <span class="toggle-link" onclick="toggleAuthForm('signUp')">Sign Up</span></p>
     </div>
 
     <button id="logoutBtn" style="display: none;" onclick="logout()">Logout</button>
@@ -95,10 +109,16 @@
 
     let currentUser = null;
 
-    document.getElementById('signInForm').style.display = 'block';
-    document.getElementById('signUpForm').style.display = 'block';
-    document.getElementById('userSection').style.display = 'none';
-    document.getElementById('logoutBtn').style.display = 'none';
+    // Chuyển đổi giữa form đăng nhập và đăng ký
+    function toggleAuthForm(formType) {
+      if (formType === 'signUp') {
+        document.getElementById('signUpForm').style.display = 'block';
+        document.getElementById('signInForm').style.display = 'none';
+      } else {
+        document.getElementById('signUpForm').style.display = 'none';
+        document.getElementById('signInForm').style.display = 'block';
+      }
+    }
 
     // Đăng ký người dùng
     async function signUp() {
@@ -115,14 +135,16 @@
 
       if (user) {
         console.log('User created:', user);
-        currentUser = user;
+        alert("A verification email has been sent. Please verify your email address.");
+
+        // Yêu cầu người dùng xác nhận email
         document.getElementById('signUpForm').style.display = 'none';
         document.getElementById('signInForm').style.display = 'none';
         document.getElementById('userSection').style.display = 'block';
         document.getElementById('logoutBtn').style.display = 'block';
-        loadGroups();
       } else {
         console.error('Error signing up:', error.message);
+        alert(error.message);
       }
     }
 
@@ -130,25 +152,24 @@
     async function signIn() {
       const email = document.getElementById('signInEmail').value;
       const password = document.getElementById('signInPassword').value;
-      const hcaptchaToken = hcaptcha.getResponse();
 
-      if (!hcaptchaToken) {
-        alert("Please complete the CAPTCHA.");
-        return;
-      }
+      const { user, session, error } = await supabase.auth.signIn({ email, password });
 
-      const { user, error } = await supabase.auth.signIn({ email, password });
-
-      if (user) {
-        console.log('User logged in:', user);
-        currentUser = user;
-        document.getElementById('signInForm').style.display = 'none';
-        document.getElementById('userSection').style.display = 'block';
-        document.getElementById('logoutBtn').style.display = 'block';
-        loadMessages();
-        loadGroups();
+      if (error) {
+        console.error('Error signing in:', error.message);
+        alert(error.message);
       } else {
-        console.error('Error logging in:', error.message);
+        console.log('User signed in:', user);
+        alert('Login successful!');
+
+        // Kiểm tra nếu email đã được xác thực
+        if (!user.email_confirmed_at) {
+          alert("Please verify your email before you can continue.");
+        } else {
+          document.getElementById('signInForm').style.display = 'none';
+          document.getElementById('userSection').style.display = 'block';
+          document.getElementById('logoutBtn').style.display = 'block';
+        }
       }
     }
 
@@ -158,81 +179,62 @@
         provider: 'google',
       });
 
-      if (user) {
-        console.log('User logged in with Google:', user);
-        currentUser = user;
-        document.getElementById('signInForm').style.display = 'none';
-        document.getElementById('userSection').style.display = 'block';
-        document.getElementById('logoutBtn').style.display = 'block';
-        loadMessages();
-        loadGroups();
-      } else {
+      if (error) {
         console.error('Error logging in with Google:', error.message);
+        alert(error.message);
+      } else {
+        console.log('User logged in with Google:', user);
+        alert('Google login successful!');
       }
     }
 
-    // Đăng xuất người dùng
+    // Đăng xuất
     async function logout() {
-      await supabase.auth.signOut();
-      currentUser = null;
-      document.getElementById('signInForm').style.display = 'block';
-      document.getElementById('userSection').style.display = 'none';
-      document.getElementById('logoutBtn').style.display = 'none';
+      const { error } = await supabase.auth.signOut();
+
+      if (error) {
+        console.error('Error logging out:', error.message);
+      } else {
+        document.getElementById('userSection').style.display = 'none';
+        document.getElementById('signInForm').style.display = 'block';
+        document.getElementById('logoutBtn').style.display = 'none';
+        alert('Logged out successfully!');
+      }
     }
 
-    // Tải tin nhắn
+    // Tải tin nhắn (ví dụ)
     async function loadMessages() {
-      const spinner = document.getElementById('spinner');
-      spinner.style.display = 'block';
+      document.getElementById('spinner').style.display = 'block';
 
-      const { data, error } = await supabase.from('messages').select('*');
-      spinner.style.display = 'none';
+      const { data, error } = await supabase
+        .from('messages')
+        .select('*');
 
       if (error) {
         console.error('Error loading messages:', error.message);
-        return;
+      } else {
+        document.getElementById('messages').innerHTML = data.map(msg => `<p>${msg.content}</p>`).join('');
       }
 
-      const messagesContainer = document.getElementById('messages');
-      messagesContainer.innerHTML = '';
-      data.forEach(message => {
-        const messageElement = document.createElement('div');
-        messageElement.textContent = message.content;
-        messagesContainer.appendChild(messageElement);
-      });
+      document.getElementById('spinner').style.display = 'none';
     }
 
-    // Tham gia nhóm
+    // Tham gia nhóm (ví dụ)
     async function joinGroup() {
       const groupCode = document.getElementById('groupSearch').value;
-      const { data, error } = await supabase.from('groups').select('*').eq('code', groupCode);
 
-      if (data.length === 0) {
-        alert('Group not found!');
-        return;
-      }
-
-      const group = data[0];
-      alert(`Joined group: ${group.name}`);
-      loadGroups();
-    }
-
-    // Tải danh sách nhóm
-    async function loadGroups() {
-      const { data, error } = await supabase.from('groups').select('*');
+      const { data, error } = await supabase
+        .from('groups')
+        .select('*')
+        .eq('code', groupCode);
 
       if (error) {
-        console.error('Error loading groups:', error.message);
-        return;
+        console.error('Error joining group:', error.message);
+      } else if (data.length > 0) {
+        alert(`Joined group: ${data[0].name}`);
+      } else {
+        alert('Group not found!');
       }
-
-      const groupsList = document.getElementById('groupsList');
-      groupsList.innerHTML = '';
-      data.forEach(group => {
-        const groupElement = document.createElement('div');
-        groupElement.textContent = group.name;
-        groupsList.appendChild(groupElement);
-      });
     }
   </script>
 </body>
