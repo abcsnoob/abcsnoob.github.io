@@ -4,9 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login/Register - Abc's Noob™</title>
-    <script src="https://www.hcaptcha.com/1/api.js" async defer></script>
     <style>
-        /* Styling */
         body {
             font-family: Arial, sans-serif;
             background-color: #f7f7f7;
@@ -29,7 +27,7 @@
             text-align: center;
         }
 
-        input[type="text"], input[type="password"] {
+        input[type="text"], input[type="password"], textarea {
             width: 100%;
             padding: 10px;
             margin: 10px 0;
@@ -63,7 +61,7 @@
 
         #spinner {
             display: none;
-            border: 3px solid #000000 transparent;
+            border: 3px solid transparent; 
             border-top: 3px solid #3498db;
             border-radius: 50%;
             width: 40px;
@@ -76,42 +74,14 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
-
-        /* Chat container */
-        .chat-container {
-            width: 100%;
-            max-width: 500px;
-            height: 400px;
-            border: 1px solid #ccc;
-            border-radius: 10px;
-            overflow-y: auto;
-            margin-top: 20px;
-            background-color: #f4f4f4;
-            padding: 10px;
-        }
-
-        .chat-box {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        .message {
-            padding: 10px;
-            background-color: #fff;
-            border-radius: 5px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-        }
     </style>
 </head>
 <body>
 
-    <!-- Login / Register Forms -->
     <div class="form-container" id="loginForm">
         <h2>Login</h2>
         <input type="text" id="loginUsername" placeholder="Username" required>
         <input type="password" id="loginPassword" placeholder="Password" required>
-        <div class="h-captcha" data-sitekey="9e92809a-9836-46ae-91e6-5968d65c2120"></div> <!-- hCaptcha -->
         <button id="loginBtn">Login</button>
         <div id="spinner"></div>
         <div class="switch-link">
@@ -123,7 +93,6 @@
         <h2>Sign Up</h2>
         <input type="text" id="registerUsername" placeholder="Username" required>
         <input type="password" id="registerPassword" placeholder="Password" required>
-        <div class="h-captcha" data-sitekey="9e92809a-9836-46ae-91e6-5968d65c2120"></div> <!-- hCaptcha -->
         <button id="registerBtn">Sign Up</button>
         <div id="spinner"></div>
         <div class="switch-link">
@@ -132,61 +101,67 @@
     </div>
 
     <script>
-        // Switch between Login and Register
-        document.getElementById('showRegister').onclick = function() {
-            document.getElementById('loginForm').style.display = 'none';
-            document.getElementById('registerForm').style.display = 'block';
-        };
+        document.getElementById("showRegister").addEventListener("click", function() {
+            document.getElementById("loginForm").style.display = "none";
+            document.getElementById("registerForm").style.display = "block";
+        });
 
-        document.getElementById('showLogin').onclick = function() {
-            document.getElementById('registerForm').style.display = 'none';
-            document.getElementById('loginForm').style.display = 'block';
-        };
+        document.getElementById("showLogin").addEventListener("click", function() {
+            document.getElementById("registerForm").style.display = "none";
+            document.getElementById("loginForm").style.display = "block";
+        });
 
-// Handle Login
-document.getElementById('loginBtn').onclick = function() {
-    const username = document.getElementById('loginUsername').value;
-    const password = document.getElementById('loginPassword').value;
-    const captchaResponse = grecaptcha.getResponse();
+        function handleRequest(url, data) {
+            document.getElementById('spinner').style.display = 'inline-block';
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('spinner').style.display = 'none';
+                alert(data.message);
+                if (data.status === 'success') {
+                    window.location.href = "/chat";
+                }
+            })
+            .catch(error => {
+                document.getElementById('spinner').style.display = 'none';
+                console.error('Error:', error);
+            });
+        }
 
-    // Kiểm tra xem captcha đã được hoàn thành chưa
-    if (!captchaResponse) {
-        alert("Please complete the captcha!");
-        return;
-    }
+        document.getElementById("loginBtn").addEventListener("click", function() {
+            const username = document.getElementById("loginUsername").value;
+            const password = document.getElementById("loginPassword").value;
 
-    if (username && password) {
-        document.getElementById('spinner').style.display = 'inline-block';
-        // Gửi yêu cầu đăng nhập vào API hoặc backend ở đây
-        setTimeout(function() {
-            document.getElementById('spinner').style.display = 'none';
-            alert("Logged in as AGuest");
-        }, 2000);
-    }
-};
+            if (username && password) {
+                handleRequest('/db-login.php', {
+                    username: username,
+                    password: password
+                });
+            } else {
+                alert("Please enter both username and password!");
+            }
+        });
 
-// Handle Register
-document.getElementById('registerBtn').onclick = function() {
-    const username = document.getElementById('registerUsername').value;
-    const password = document.getElementById('registerPassword').value;
-    const captchaResponse = grecaptcha.getResponse();
+        document.getElementById("registerBtn").addEventListener("click", function() {
+            const username = document.getElementById("registerUsername").value;
+            const password = document.getElementById("registerPassword").value;
 
-    // Kiểm tra xem captcha đã được hoàn thành chưa
-    if (!captchaResponse) {
-        alert("Please complete the captcha!");
-        return;
-    }
-
-    if (username && password) {
-        document.getElementById('spinner').style.display = 'inline-block';
-        // Gửi yêu cầu đăng ký vào API hoặc backend ở đây
-        setTimeout(function() {
-            document.getElementById('spinner').style.display = 'none';
-            alert("Account created successfully. Logged in as AGuest");
-        }, 2000);
-    }
-};
-
+            if (username && password) {
+                handleRequest('/db-register.php', {
+                    username: username,
+                    password: password
+                });
+            } else {
+                alert("Please enter both username and password!");
+            }
+        });
     </script>
+
 </body>
 </html>
