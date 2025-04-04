@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Website - Abc's Noob™</title>
+    <script src="https://www.hcaptcha.com/1/api.js" async defer></script> <!-- Tải hCaptcha -->
+    <style>
+        /* Styles remain the same as before */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f7f7f7;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        /* Additional CSS styles */
+        #loginSection, #chatSection, #guestInfo {
+            margin-top: 20px;
+        }
+
+        #messageInput {
+            width: 300px;
+            height: 50px;
+            padding: 10px;
+            font-size: 14px;
+        }
+
+        #sendMessageBtn {
+            margin-top: 10px;
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        #sendMessageBtn:hover {
+            background-color: #45a049;
+        }
+
+        #spinner {
+            display: none;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin-top: 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        #typingStatus {
+            margin-top: 10px;
+            font-size: 14px;
+            color: #999;
+        }
+
+        .message {
+            padding: 5px;
+            margin-bottom: 10px;
+            background-color: #f1f1f1;
+            border-radius: 5px;
+            max-width: 300px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <img src="http://abcsnoob.github.io/abcsnoob.webp" alt="Logo" id="logo">
+        <h1>Welcome to Abc's Noob™ Chat</h1>
+    </header>
+
+    <div id="loginSection">
+        <button id="googleLoginBtn">Login with Google</button>
+    </div>
+
+    <div id="chatSection" style="display:none;">
+        <div id="messagesContainer"></div>
+        <textarea id="messageInput" placeholder="Type a message..."></textarea>
+        <!-- hCaptcha widget -->
+        <div class="h-captcha" data-sitekey="9e92809a-9836-46ae-91e6-5968d65c2120"></div> <!-- Thay YOUR_SITE_KEY với Site Key của bạn -->
+        <button id="sendMessageBtn">Send Message</button>
+        <div id="spinner"></div> <!-- Spinner xoay -->
+        <div id="typingStatus" style="display: none;">User is typing...</div>
+    </div>
+
+    <div id="guestInfo" style="display:none;">
+        <p>You are logged in as <strong>AGuest™</strong>. Your IP is: <span id="userIp"></span></p>
+    </div>
+
+    <script>
+        // Mock function to simulate login
+        function loginWithGoogle() {
+            localStorage.setItem('userLoggedIn', 'true');
+            document.getElementById('loginSection').style.display = 'none';
+            document.getElementById('chatSection').style.display = 'block';
+        }
+
+        // Function to handle message sending
+        function sendMessage() {
+            const message = document.getElementById('messageInput').value;
+            const captchaResponse = grecaptcha.getResponse(); // Lấy kết quả của hCaptcha
+
+            if (!captchaResponse) {
+                alert("Please complete the captcha!");
+                return;
+            }
+
+            if (message) {
+                document.getElementById('spinner').style.display = 'inline-block';
+
+                fetch('https://db-0001.abcsnoob.42web.io/db.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ message: message, captchaResponse: captchaResponse })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('spinner').style.display = 'none';
+                    const messagesContainer = document.getElementById('messagesContainer');
+                    const newMessage = document.createElement('div');
+                    newMessage.classList.add('message');
+                    newMessage.textContent = message;
+                    messagesContainer.appendChild(newMessage);
+                    document.getElementById('messageInput').value = '';
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    document.getElementById('spinner').style.display = 'none';
+                });
+            }
+        }
+
+        // Event Listeners
+        document.getElementById('googleLoginBtn').addEventListener('click', loginWithGoogle);
+        document.getElementById('sendMessageBtn').addEventListener('click', sendMessage);
+
+        // Typing detection and showing status
+        const messageInput = document.getElementById('messageInput');
+        messageInput.addEventListener('input', () => {
+            document.getElementById('typingStatus').style.display = 'block';
+            clearTimeout(typingTimeout);
+            typingTimeout = setTimeout(() => {
+                document.getElementById('typingStatus').style.display = 'none';
+            }, 2000); 
+        });
+
+        let typingTimeout;
+
+        // Check if user is logged in or guest
+        if (!localStorage.getItem('userLoggedIn')) {
+            showGuestInfo();
+        } else {
+            document.getElementById('loginSection').style.display = 'none';
+            document.getElementById('chatSection').style.display = 'block';
+        }
+
+        function showGuestInfo() {
+            const ip = '123.45.67.89'; // Replace with actual IP logic
+            document.getElementById('userIp').textContent = ip;
+            document.getElementById('guestInfo').style.display = 'block';
+        }
+    </script>
+</body>
+</html>
