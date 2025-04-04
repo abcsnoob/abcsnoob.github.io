@@ -60,14 +60,14 @@
     <div id="signUpForm">
       <input type="email" id="signUpEmail" placeholder="Email" required>
       <input type="password" id="signUpPassword" placeholder="Password" required>
-      <div class="h-captcha" data-sitekey="YOUR_SITE_KEY"></div>
+      <div class="h-captcha" data-sitekey="9e92809a-9836-46ae-91e6-5968d65c2120"></div>
       <button onclick="signUp()">Sign Up</button>
     </div>
 
     <div id="signInForm">
       <input type="email" id="signInEmail" placeholder="Email" required>
       <input type="password" id="signInPassword" placeholder="Password" required>
-      <div class="h-captcha" data-sitekey="YOUR_SITE_KEY"></div>
+      <div class="h-captcha" data-sitekey="9e92809a-9836-46ae-91e6-5968d65c2120"></div>
       <button onclick="signIn()">Sign In</button>
       <button onclick="signInWithGoogle()">Sign In with Google</button>
     </div>
@@ -91,7 +91,7 @@
   </div>
 
   <script>
-    const supabase = createClient('YOUR_SUPABASE_URL', 'YOUR_ANON_KEY');
+    const supabase = createClient('https://kakbqeqyihbgioevzsrg.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imtha2JxZXF5aWhiZ2lvZXZ6c3JnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM2ODc4NjksImV4cCI6MjA1OTI2Mzg2OX0.LRiRpup89IKy1m4SrqikyVQFEbDK8Kbo1NvOJCePCTM');
 
     let currentUser = null;
 
