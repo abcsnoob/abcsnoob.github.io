@@ -68,7 +68,7 @@
         // Cấu hình Supabase
         const SUPABASE_URL = 'https://kakbqeqyihbgioevzsrg.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imtha2JxZXF5aWhiZ2lvZXZ6c3JnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM2ODc4NjksImV4cCI6MjA1OTI2Mzg2OX0.LRiRpup89IKy1m4SrqikyVQFEbDK8Kbo1NvOJCePCTM';
-        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
         const googleLoginBtn = document.getElementById('google-login');
         const signUpBtn = document.getElementById('sign-up-btn');
