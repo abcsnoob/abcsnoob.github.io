@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Diễn Đàn Supabase</title>
+    <title>Diễn Đàn Abc's Noob</title>
+    <!-- Import Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
     <script src="https://js.hcaptcha.com/1/api.js" async defer></script>
     <style>
@@ -19,11 +20,46 @@
         .form {
             margin-bottom: 20px;
         }
+
+        /* Style cho logo */
+        .logo {
+            width: 100px;
+            height: 100px;
+            margin-bottom: 20px;
+        }
+
+        /* Style cho spinner */
+        .spinner {
+            display: none;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 2s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Ẩn spinner khi không cần thiết */
+        .loading {
+            display: block;
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Diễn Đàn Supabase</h1>
+        <!-- Logo -->
+        <img src="https://abcsnoob.github.io/abcsnoob.webp" alt="Logo Abc's Noob" class="logo">
+
+        <h1>Diễn Đàn Abc's Noob</h1>
+
+        <!-- Spinner -->
+        <div id="spinner" class="spinner"></div>
 
         <!-- Đăng nhập Google -->
         <button id="google-login">Đăng nhập bằng Google</button>
@@ -68,7 +104,7 @@
         // Cấu hình Supabase
         const SUPABASE_URL = 'https://kakbqeqyihbgioevzsrg.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imtha2JxZXF5aWhiZ2lvZXZ6c3JnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM2ODc4NjksImV4cCI6MjA1OTI2Mzg2OX0.LRiRpup89IKy1m4SrqikyVQFEbDK8Kbo1NvOJCePCTM';
-        const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY); // Cần sử dụng supabase.createClient
 
         const googleLoginBtn = document.getElementById('google-login');
         const signUpBtn = document.getElementById('sign-up-btn');
@@ -76,7 +112,7 @@
         const createTopicBtn = document.getElementById('create-topic-btn');
         const createPostBtn = document.getElementById('create-post-btn');
         const topicSection = document.getElementById('topic-section');
-        const hcaptcha = document.getElementById('hcaptcha');
+        const spinner = document.getElementById('spinner');
 
         googleLoginBtn.addEventListener('click', async () => {
             const { user, session, error } = await supabase.auth.signInWithOAuth({
