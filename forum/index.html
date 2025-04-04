@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Diễn Đàn Abc's Noob</title>
-    <!-- Import Supabase -->
+    <title>Diễn Đàn Supabase</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
     <script src="https://js.hcaptcha.com/1/api.js" async defer></script>
     <style>
@@ -21,45 +20,30 @@
             margin-bottom: 20px;
         }
 
-        /* Style cho logo */
-        .logo {
-            width: 100px;
-            height: 100px;
-            margin-bottom: 20px;
-        }
-
-        /* Style cho spinner */
+        /* Spinner */
         .spinner {
             display: none;
-            border: 4px solid #f3f3f3;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 4px solid rgba(255, 255, 255, 0.3);
             border-top: 4px solid #3498db;
             border-radius: 50%;
             width: 50px;
             height: 50px;
-            animation: spin 2s linear infinite;
-            margin: 20px auto;
+            animation: spin 1s linear infinite;
         }
 
         @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        /* Ẩn spinner khi không cần thiết */
-        .loading {
-            display: block;
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <!-- Logo -->
-        <img src="https://abcsnoob.github.io/abcsnoob.webp" alt="Logo Abc's Noob" class="logo">
-
-        <h1>Diễn Đàn Abc's Noob</h1>
-
-        <!-- Spinner -->
-        <div id="spinner" class="spinner"></div>
+        <h1>Diễn Đàn Supabase</h1>
 
         <!-- Đăng nhập Google -->
         <button id="google-login">Đăng nhập bằng Google</button>
@@ -100,110 +84,122 @@
         </div>
     </div>
 
+    <!-- Spinner -->
+    <div id="spinner" class="spinner"></div>
+
     <script>
         // Cấu hình Supabase
         const SUPABASE_URL = 'https://kakbqeqyihbgioevzsrg.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imtha2JxZXF5aWhiZ2lvZXZ6c3JnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM2ODc4NjksImV4cCI6MjA1OTI2Mzg2OX0.LRiRpup89IKy1m4SrqikyVQFEbDK8Kbo1NvOJCePCTM';
-        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY); // Cần sử dụng supabase.createClient
 
-        const googleLoginBtn = document.getElementById('google-login');
-        const signUpBtn = document.getElementById('sign-up-btn');
-        const loginBtn = document.getElementById('login-btn');
-        const createTopicBtn = document.getElementById('create-topic-btn');
-        const createPostBtn = document.getElementById('create-post-btn');
-        const topicSection = document.getElementById('topic-section');
+        // Hiển thị spinner khi chờ Supabase khởi tạo
         const spinner = document.getElementById('spinner');
+        spinner.style.display = 'block';
 
-        googleLoginBtn.addEventListener('click', async () => {
-            const { user, session, error } = await supabase.auth.signInWithOAuth({
-                provider: 'google',
+        // Khởi tạo Supabase sau 15s để ngăn chặn việc dùng Supabase quá sớm
+        setTimeout(() => {
+            const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY); // Khởi tạo supabase client
+
+            // Ẩn spinner sau khi Supabase khởi tạo
+            spinner.style.display = 'none';
+
+            const googleLoginBtn = document.getElementById('google-login');
+            const signUpBtn = document.getElementById('sign-up-btn');
+            const loginBtn = document.getElementById('login-btn');
+            const createTopicBtn = document.getElementById('create-topic-btn');
+            const createPostBtn = document.getElementById('create-post-btn');
+            const topicSection = document.getElementById('topic-section');
+
+            googleLoginBtn.addEventListener('click', async () => {
+                const { user, session, error } = await supabase.auth.signInWithOAuth({
+                    provider: 'google',
+                });
+                if (error) {
+                    alert('Lỗi đăng nhập Google: ' + error.message);
+                } else {
+                    alert('Đăng nhập thành công');
+                    topicSection.style.display = 'block';  // Hiển thị section topic
+                }
             });
-            if (error) {
-                alert('Lỗi đăng nhập Google: ' + error.message);
-            } else {
-                alert('Đăng nhập thành công');
-                topicSection.style.display = 'block';  // Hiển thị section topic
+
+            // Đăng ký tài khoản
+            signUpBtn.addEventListener('click', async () => {
+                const email = document.getElementById('email').value;
+                const password = document.getElementById('password').value;
+
+                const { user, error } = await supabase.auth.signUp({ email, password });
+
+                if (error) {
+                    alert('Lỗi đăng ký: ' + error.message);
+                } else {
+                    alert('Đăng ký thành công! Kiểm tra email để xác thực.');
+                }
+            });
+
+            // Đăng nhập
+            loginBtn.addEventListener('click', async () => {
+                const email = document.getElementById('login-email').value;
+                const password = document.getElementById('login-password').value;
+
+                const { user, session, error } = await supabase.auth.signIn({ email, password });
+
+                if (error) {
+                    alert('Lỗi đăng nhập: ' + error.message);
+                } else {
+                    alert('Đăng nhập thành công');
+                    topicSection.style.display = 'block';  // Hiển thị section topic
+                }
+            });
+
+            // Tạo Topic
+            createTopicBtn.addEventListener('click', async () => {
+                const title = document.getElementById('topic-title').value;
+                const content = document.getElementById('topic-content').value;
+
+                const { data, error } = await supabase
+                    .from('topics')
+                    .insert([{ title, content }]);
+
+                if (error) {
+                    alert('Lỗi tạo topic: ' + error.message);
+                } else {
+                    alert('Topic tạo thành công');
+                }
+            });
+
+            // Tạo bài viết
+            createPostBtn.addEventListener('click', async () => {
+                const content = document.getElementById('post-content').value;
+
+                const { data, error } = await supabase
+                    .from('posts')
+                    .insert([{ content }]);
+
+                if (error) {
+                    alert('Lỗi tạo bài viết: ' + error.message);
+                } else {
+                    alert('Bài viết tạo thành công');
+                }
+            });
+
+            // Tải và hiển thị các bình luận
+            async function loadComments() {
+                const { data, error } = await supabase
+                    .from('comments')
+                    .select('*');
+
+                if (error) {
+                    console.error('Lỗi tải bình luận:', error.message);
+                } else {
+                    const commentSection = document.getElementById('comments-section');
+                    commentSection.innerHTML = data.map(comment => `
+                        <div>
+                            <p><strong>${comment.user_id}:</strong> ${comment.content}</p>
+                        </div>
+                    `).join('');
+                }
             }
-        });
-
-        // Đăng ký tài khoản
-        signUpBtn.addEventListener('click', async () => {
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-
-            const { user, error } = await supabase.auth.signUp({ email, password });
-
-            if (error) {
-                alert('Lỗi đăng ký: ' + error.message);
-            } else {
-                alert('Đăng ký thành công! Kiểm tra email để xác thực.');
-            }
-        });
-
-        // Đăng nhập
-        loginBtn.addEventListener('click', async () => {
-            const email = document.getElementById('login-email').value;
-            const password = document.getElementById('login-password').value;
-
-            const { user, session, error } = await supabase.auth.signIn({ email, password });
-
-            if (error) {
-                alert('Lỗi đăng nhập: ' + error.message);
-            } else {
-                alert('Đăng nhập thành công');
-                topicSection.style.display = 'block';  // Hiển thị section topic
-            }
-        });
-
-        // Tạo Topic
-        createTopicBtn.addEventListener('click', async () => {
-            const title = document.getElementById('topic-title').value;
-            const content = document.getElementById('topic-content').value;
-
-            const { data, error } = await supabase
-                .from('topics')
-                .insert([{ title, content }]);
-
-            if (error) {
-                alert('Lỗi tạo topic: ' + error.message);
-            } else {
-                alert('Topic tạo thành công');
-            }
-        });
-
-        // Tạo bài viết
-        createPostBtn.addEventListener('click', async () => {
-            const content = document.getElementById('post-content').value;
-
-            const { data, error } = await supabase
-                .from('posts')
-                .insert([{ content }]);
-
-            if (error) {
-                alert('Lỗi tạo bài viết: ' + error.message);
-            } else {
-                alert('Bài viết tạo thành công');
-            }
-        });
-
-        // Tải và hiển thị các bình luận
-        async function loadComments() {
-            const { data, error } = await supabase
-                .from('comments')
-                .select('*');
-
-            if (error) {
-                console.error('Lỗi tải bình luận:', error.message);
-            } else {
-                const commentSection = document.getElementById('comments-section');
-                commentSection.innerHTML = data.map(comment => `
-                    <div>
-                        <p><strong>${comment.user_id}:</strong> ${comment.content}</p>
-                    </div>
-                `).join('');
-            }
-        }
-
+        }, 15000); // Đợi 15 giây trước khi khởi tạo Supabase
     </script>
 </body>
 </html>
