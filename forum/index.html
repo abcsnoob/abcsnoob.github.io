@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Diễn Đàn Supabase</title>
+    <title>Diễn Đàn Abc's Noob</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
     <script src="https://js.hcaptcha.com/1/api.js" async defer></script>
     <style>
@@ -43,7 +43,7 @@
 </head>
 <body>
     <div class="container">
-        <h1>Diễn Đàn Supabase</h1>
+        <h1>Diễn Đàn Abc's NoobNoob</h1>
 
         <!-- Đăng nhập Google -->
         <button id="google-login">Đăng nhập bằng Google</button>
@@ -96,13 +96,12 @@
         const spinner = document.getElementById('spinner');
         spinner.style.display = 'block';
 
-        // Khởi tạo Supabase sau 15s để ngăn chặn việc dùng Supabase quá sớm
-        setTimeout(() => {
-            const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY); // Khởi tạo supabase client
+        async function initializeSupabase() {
+            // Khởi tạo Supabase
+            const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+            spinner.style.display = 'none'; // Ẩn spinner khi Supabase đã khởi tạo
 
-            // Ẩn spinner sau khi Supabase khởi tạo
-            spinner.style.display = 'none';
-
+            // Lấy các phần tử cần thiết
             const googleLoginBtn = document.getElementById('google-login');
             const signUpBtn = document.getElementById('sign-up-btn');
             const loginBtn = document.getElementById('login-btn');
@@ -199,7 +198,13 @@
                     `).join('');
                 }
             }
-        }, 15000); // Đợi 15 giây trước khi khởi tạo Supabase
+
+            // Gọi hàm loadComments nếu cần
+            loadComments();
+        }
+
+        // Khởi tạo Supabase sau 15 giây
+        setTimeout(initializeSupabase, 15000);
     </script>
 </body>
 </html>
