@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diễn Đàn Supabase</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+    <script src="https://js.hcaptcha.com/1/api.js" async defer></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            width: 80%;
+            margin: auto;
+        }
+        .form {
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Diễn Đàn Supabase</h1>
+
+        <!-- Đăng nhập Google -->
+        <button id="google-login">Đăng nhập bằng Google</button>
+
+        <!-- Form đăng ký -->
+        <div id="register-form" class="form">
+            <h2>Đăng Ký</h2>
+            <input type="email" id="email" placeholder="Email" required>
+            <input type="password" id="password" placeholder="Mật khẩu" required>
+            <button id="sign-up-btn">Đăng ký</button>
+        </div>
+
+        <!-- Form đăng nhập -->
+        <div id="login-form" class="form">
+            <h2>Đăng Nhập</h2>
+            <input type="email" id="login-email" placeholder="Email" required>
+            <input type="password" id="login-password" placeholder="Mật khẩu" required>
+            <button id="login-btn">Đăng nhập</button>
+        </div>
+
+        <!-- hCaptcha -->
+        <div id="hcaptcha" class="form">
+            <div class="h-captcha" data-sitekey="9e92809a-9836-46ae-91e6-5968d65c2120"></div>
+        </div>
+
+        <!-- Topic và bài viết -->
+        <div id="topic-section" style="display:none;">
+            <h2>Tạo Topic</h2>
+            <input type="text" id="topic-title" placeholder="Tiêu đề topic" required>
+            <textarea id="topic-content" placeholder="Nội dung topic" required></textarea>
+            <button id="create-topic-btn">Tạo Topic</button>
+
+            <h3>Bài viết</h3>
+            <textarea id="post-content" placeholder="Tạo bài viết" required></textarea>
+            <button id="create-post-btn">Tạo bài viết</button>
+
+            <div id="comments-section"></div>
+        </div>
+    </div>
+
+    <script>
+        // Cấu hình Supabase
+        const SUPABASE_URL = 'https://kakbqeqyihbgioevzsrg.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imtha2JxZXF5aWhiZ2lvZXZ6c3JnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM2ODc4NjksImV4cCI6MjA1OTI2Mzg2OX0.LRiRpup89IKy1m4SrqikyVQFEbDK8Kbo1NvOJCePCTM';
+        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        const googleLoginBtn = document.getElementById('google-login');
+        const signUpBtn = document.getElementById('sign-up-btn');
+        const loginBtn = document.getElementById('login-btn');
+        const createTopicBtn = document.getElementById('create-topic-btn');
+        const createPostBtn = document.getElementById('create-post-btn');
+        const topicSection = document.getElementById('topic-section');
+        const hcaptcha = document.getElementById('hcaptcha');
+
+        googleLoginBtn.addEventListener('click', async () => {
+            const { user, session, error } = await supabase.auth.signInWithOAuth({
+                provider: 'google',
+            });
+            if (error) {
+                alert('Lỗi đăng nhập Google: ' + error.message);
+            } else {
+                alert('Đăng nhập thành công');
+                topicSection.style.display = 'block';  // Hiển thị section topic
+            }
+        });
+
+        // Đăng ký tài khoản
+        signUpBtn.addEventListener('click', async () => {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            const { user, error } = await supabase.auth.signUp({ email, password });
+
+            if (error) {
+                alert('Lỗi đăng ký: ' + error.message);
+            } else {
+                alert('Đăng ký thành công! Kiểm tra email để xác thực.');
+            }
+        });
+
+        // Đăng nhập
+        loginBtn.addEventListener('click', async () => {
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+
+            const { user, session, error } = await supabase.auth.signIn({ email, password });
+
+            if (error) {
+                alert('Lỗi đăng nhập: ' + error.message);
+            } else {
+                alert('Đăng nhập thành công');
+                topicSection.style.display = 'block';  // Hiển thị section topic
+            }
+        });
+
+        // Tạo Topic
+        createTopicBtn.addEventListener('click', async () => {
+            const title = document.getElementById('topic-title').value;
+            const content = document.getElementById('topic-content').value;
+
+            const { data, error } = await supabase
+                .from('topics')
+                .insert([{ title, content }]);
+
+            if (error) {
+                alert('Lỗi tạo topic: ' + error.message);
+            } else {
+                alert('Topic tạo thành công');
+            }
+        });
+
+        // Tạo bài viết
+        createPostBtn.addEventListener('click', async () => {
+            const content = document.getElementById('post-content').value;
+
+            const { data, error } = await supabase
+                .from('posts')
+                .insert([{ content }]);
+
+            if (error) {
+                alert('Lỗi tạo bài viết: ' + error.message);
+            } else {
+                alert('Bài viết tạo thành công');
+            }
+        });
+
+        // Tải và hiển thị các bình luận
+        async function loadComments() {
+            const { data, error } = await supabase
+                .from('comments')
+                .select('*');
+
+            if (error) {
+                console.error('Lỗi tải bình luận:', error.message);
+            } else {
+                const commentSection = document.getElementById('comments-section');
+                commentSection.innerHTML = data.map(comment => `
+                    <div>
+                        <p><strong>${comment.user_id}:</strong> ${comment.content}</p>
+                    </div>
+                `).join('');
+            }
+        }
+
+    </script>
+</body>
+</html>
