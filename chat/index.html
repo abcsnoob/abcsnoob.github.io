@@ -100,70 +100,80 @@
         </div>
     </div>
 
-    <script>
-        document.getElementById("showRegister").addEventListener("click", function() {
-            document.getElementById("loginForm").style.display = "none";
-            document.getElementById("registerForm").style.display = "block";
+<script>
+    // Chuyển qua lại giữa Login và Register
+    document.getElementById("showRegister").addEventListener("click", function () {
+        document.getElementById("loginForm").style.display = "none";
+        document.getElementById("registerForm").style.display = "block";
+    });
+
+    document.getElementById("showLogin").addEventListener("click", function () {
+        document.getElementById("registerForm").style.display = "none";
+        document.getElementById("loginForm").style.display = "block";
+    });
+
+    // Hàm gửi request
+    function handleRequest(url, data) {
+        document.getElementById('spinner').style.display = 'inline-block';
+
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Server error: ' + response.status);
+            }
+            return response.json();
+        })
+        .then(data => {
+            document.getElementById('spinner').style.display = 'none';
+            alert(data.message);
+            if (data.status === 'success') {
+                window.location.href = "/chat"; // Chuyển sang trang chat sau khi đăng nhập thành công
+            }
+        })
+        .catch(error => {
+            document.getElementById('spinner').style.display = 'none';
+            console.error('Error:', error);
+            alert("Có lỗi xảy ra: " + error.message);
         });
-
-        document.getElementById("showLogin").addEventListener("click", function() {
-            document.getElementById("registerForm").style.display = "none";
-            document.getElementById("loginForm").style.display = "block";
-        });
-
-        function handleRequest(url, data) {
-            document.getElementById('spinner').style.display = 'inline-block';
-            fetch(url, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(data)
-            })
-            .then(response => response.json())
-            .then(data => {
-                document.getElementById('spinner').style.display = 'none';
-                alert(data.message);
-                if (data.status === 'success') {
-                    window.location.href = "/chat";
-                }
-            })
-            .catch(error => {
-                document.getElementById('spinner').style.display = 'none';
-                console.error('Error:', error);
-            });
-        }
-
-          document.getElementById("loginBtn").addEventListener("click", function() {
-              const username = document.getElementById("loginUsername").value;
-            const password = document.getElementById("loginPassword").value;
-  
-                if (username && password) {
-                 handleRequest('https://db-0001.abcsnoob.42web.io/proxy.php?to=https://db-0001.abcsnoob.42web.io/db-login.php', {
-            username: username,
-            password: password
-            });
-          } else {
-        alert("Please enter both username and password!");
-           }
-              });
-
-
-document.getElementById("registerBtn").addEventListener("click", function() {
-    const username = document.getElementById("registerUsername").value;
-    const password = document.getElementById("registerPassword").value;
-
-    if (username && password) {
-        handleRequest('https://db-0001.abcsnoob.42web.io/proxy.php?to=https://db-0001.abcsnoob.42web.io/db-register.php', {
-            username: username,
-            password: password
-        });
-    } else {
-        alert("Please enter both username and password!");
     }
-});
 
-    </script>
+    // Xử lý đăng nhập
+    document.getElementById("loginBtn").addEventListener("click", function () {
+        const username = document.getElementById("loginUsername").value;
+        const password = document.getElementById("loginPassword").value;
+
+        if (username && password) {
+            handleRequest('https://db-0001.abcsnoob.42web.io/db-login.php', {
+                username: username,
+                password: password
+            });
+        } else {
+            alert("Please enter both username and password!");
+        }
+    });
+
+    // Xử lý đăng ký
+    document.getElementById("registerBtn").addEventListener("click", function () {
+        const username = document.getElementById("registerUsername").value;
+        const password = document.getElementById("registerPassword").value;
+
+        if (username && password) {
+            handleRequest('https://db-0001.abcsnoob.42web.io/db-register.php', {
+                username: username,
+                password: password
+            });
+        } else {
+            alert("Please enter both username and password!");
+        }
+    });
+</script>
+
 
 </body>
 </html>
