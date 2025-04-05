@@ -134,33 +134,35 @@
             });
         }
 
-        document.getElementById("loginBtn").addEventListener("click", function() {
-            const username = document.getElementById("loginUsername").value;
+          document.getElementById("loginBtn").addEventListener("click", function() {
+              const username = document.getElementById("loginUsername").value;
             const password = document.getElementById("loginPassword").value;
+  
+                if (username && password) {
+                 handleRequest('https://db-0001.abcsnoob.42web.io/proxy.php?to=https://db-0001.abcsnoob.42web.io/db-login.php', {
+            username: username,
+            password: password
+            });
+          } else {
+        alert("Please enter both username and password!");
+           }
+              });
 
-            if (username && password) {
-                handleRequest('handleRequest(''https://db-0001.abcsnoob.42web.io/proxy.php?to=https://db-0001.abcsnoob.42web.io/db-login.php', {
-                    username: username,
-                    password: password
-                });
-            } else {
-                alert("Please enter both username and password!");
-            }
+
+document.getElementById("registerBtn").addEventListener("click", function() {
+    const username = document.getElementById("registerUsername").value;
+    const password = document.getElementById("registerPassword").value;
+
+    if (username && password) {
+        handleRequest('https://db-0001.abcsnoob.42web.io/proxy.php?to=https://db-0001.abcsnoob.42web.io/db-register.php', {
+            username: username,
+            password: password
         });
+    } else {
+        alert("Please enter both username and password!");
+    }
+});
 
-        document.getElementById("registerBtn").addEventListener("click", function() {
-            const username = document.getElementById("registerUsername").value;
-            const password = document.getElementById("registerPassword").value;
-
-            if (username && password) {
-                handleRequest('handleRequest(''https://db-0001.abcsnoob.42web.io/proxy.php?to=https://db-0001.abcsnoob.42web.io/db-register.php', {
-                    username: username,
-                    password: password
-                });
-            } else {
-                alert("Please enter both username and password!");
-            }
-        });
     </script>
 
 </body>
