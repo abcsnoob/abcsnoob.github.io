@@ -5,59 +5,76 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Chat App with Notifications</title>
-  <style>
-    /* Basic styles */
-    body {
-      font-family: Arial, sans-serif;
-      background-color: #f4f4f9;
-      padding: 20px;
-      text-align: center;
-    }
+<style>
+  html, body {
+    height: 100%;
+    margin: 0;
+    font-family: Arial, sans-serif;
+  }
 
-    #chatApp {
-      display: none;
-    }
+  body {
+    background-color: #f4f4f9;
+  }
 
-    #loginApp {
-      display: block;
-    }
+  #chatApp {
+    display: none;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
 
-    #chatBox {
-      background-color: #fff;
-      padding: 10px;
-      border-radius: 5px;
-      height: 300px;
-      overflow-y: scroll;
-      margin-top: 20px;
-      border: 1px solid #ddd;
-      width: 300px;
-      margin-left: auto;
-      margin-right: auto;
-    }
+  #loginApp {
+    display: block;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+  }
 
-    #msgInput {
-      width: 80%;
-      padding: 10px;
-      margin-top: 10px;
-      margin-bottom: 10px;
-      border-radius: 5px;
-      border: 1px solid #ddd;
-    }
+  #chatBox {
+    flex: 1;
+    background-color: #fff;
+    padding: 10px;
+    border-top: 1px solid #ddd;
+    overflow-y: scroll;
+  }
 
-    button {
-      padding: 10px 20px;
-      margin: 5px;
-      background-color: #4CAF50;
-      color: white;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-    }
+  #inputArea {
+    display: flex;
+    padding: 10px;
+    background: #f4f4f9;
+    border-top: 1px solid #ddd;
+  }
 
-    button:hover {
-      background-color: #45a049;
-    }
-  </style>
+  #msgInput {
+    flex: 1;
+    padding: 10px;
+    border-radius: 5px;
+    border: 1px solid #ddd;
+    margin-right: 10px;
+  }
+
+  button {
+    padding: 10px 20px;
+    margin-left: 5px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+
+  button:hover {
+    background-color: #45a049;
+  }
+
+  h2 {
+    text-align: center;
+    padding: 20px;
+  }
+</style>
+
 </head>
 
 <body>
@@ -70,13 +87,15 @@
     <button id="loginWithEmail">Login with Email</button>
   </div>
 
-  <!-- Chat section -->
-  <div id="chatApp">
-    <div id="chatBox"></div>
+<div id="chatApp">
+  <div id="chatBox"></div>
+  <div id="inputArea">
     <input type="text" id="msgInput" placeholder="Type message..." />
     <button id="sendBtn">Send</button>
     <button id="logoutBtn">Logout</button>
   </div>
+</div>
+
 
   <!-- Firebase Scripts (8.x.x) -->
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
