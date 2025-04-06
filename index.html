@@ -4,121 +4,74 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Abc's Noob - Personal Website</title>
 
-  <meta property="og:title" content="Abc's Noob Personal Website" /> 
-  <meta property="og:site_name" content="Abc's Noob" /> 
-  <meta property="og:type" content="website" />
-  <meta property="og:description" content="Abc's Noob is a YouTuber, C/C++ Programmer, and Minecraft fan!" /> 
-  <meta property="og:url" content="http://abcsnoobytb.github.io" /> 
-  <meta property="og:image" content="https://abcsnoobytb.github.io/abcsnoob.webp" /> 
-  <meta name="theme-color" content="#000000" />
+  <!-- Firebase v8.x.x SDK -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
 
-  <meta name="twitter:title" content="Abc's Noob Personal Website"> 
-  <meta name="twitter:description" content="Abc's Noob is a YouTuber, C/C++ Programmer, and Minecraft fan!">
-  <meta name="twitter:card" content="summary">
-  <meta name="twitter:site" content="@abcsnoob"> 
-  <meta name="twitter:creator" content="@abcsnoob"> 
-  <meta name="twitter:image:src" content="https://abcsnoobytb.github.io/abcsnoob.webp"> 
+  <script>
+    // Firebase config
+  var firebaseConfig = {
+  apiKey: "AIzaSyDtcs0XkNhf7yFRTzPY-A9WYet35YjQVT8",
+  authDomain: "abc-s-noob.firebaseapp.com",
+  projectId: "abc-s-noob",
+  storageBucket: "abc-s-noob.firebasestorage.app",
+  messagingSenderId: "196660846002",
+  appId: "1:196660846002:web:ce129820f388cc838658ab",
+  measurementId: "G-LG5SWH89MG"
+};
+    
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
 
-  <title>Abc's Noob - Personal Website</title> 
-
-  <link rel="icon" href="abcsnoob.webp"> 
-
-  <style>
-    @font-face {
-      font-family: 'CustomFont';
-      src: local('Arial'), sans-serif;
+    // Google sign-in
+    function googleLogin() {
+      var provider = new firebase.auth.GoogleAuthProvider();
+      firebase.auth().signInWithPopup(provider).then(function(result) {
+        var user = result.user;
+        alert("Hello, " + user.displayName);
+      }).catch(function(error) {
+        console.log(error.message);
+      });
     }
 
+  </script>
+
+  <style>
+    /* Styles cho nút đăng nhập Google */
+    .login-btn {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background-color: #4285F4;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+
+    .login-btn:hover {
+      background-color: #357ae8;
+    }
+
+    /* Các style khác */
     body {
       background-color: black;
       text-align: center;
-      font-family: 'CustomFont', Arial, Helvetica, sans-serif;
+      font-family: Arial, sans-serif;
       color: lime;
     }
-
-    .banner {
-      border: 0;
-      width: 100%;
-      height: 250px;
-      object-fit: cover;
-      padding: 0px;
-    }
-
-    .icon {
-      width: 60px;
-      height: 60px;
-      transition: transform 0.3s ease-in-out;
-    }
-
-    .icon:hover {
-      transform: scale(10);
-    }
-
-    .abcsnoob {
-      animation: rotate 1s linear infinite;
-    }
-    .youtube {
-      animation: rotate 1s linear infinite;
-    }
-
-    .github {
-      animation: rotate 1s linear infinite;
-    }
-    
-    .twitch {
-      animation: rotateCounterClockwise 0.3s linear infinite;
-    }
-
-    .discord {
-      animation: bounce 0.1s linear infinite;
-    }
-
-@keyframes rotate {
-      from {
-        transform: rotate(0deg);
-      }
-
-      to {
-        transform: rotate(360deg);
-      }
-    }
-
-    @keyframes rotateCounterClockwise {
-  from {
-      transform: rotate(0deg);
-   }
-
-  to {
-      transform: rotate(-360deg);
-    }
-  }
-
-   .icon.rotateCounterClockwise {
-     animation: rotateCounterClockwise 1s linear infinite;
-  }
-
-
-    @keyframes bounce {
-      from {
-        transform: scaleY(0%);
-      }
-
-      50% {
-        transform: scaleY(50%);
-      }
-
-      to {
-        transform: scaleY(100%);
-      }
-    }
   </style>
-
 </head>
 
 <body>
+  <!-- Nút đăng nhập Google -->
+  <button class="login-btn" onclick="googleLogin()">Đăng nhập với Google</button>
+
   <a href="https://abcsnoob.github.io">
-  <img class="abcsnoob" alt="Abc's Noob" src="abcsnoob.webp" width="150"> 
+    <img class="abcsnoob" alt="Abc's Noob" src="abcsnoob.webp" width="150">
   </a>
   <br><br>
 
@@ -141,7 +94,8 @@
   <iframe class="video" src="https://www.youtube.com/embed/CNq2r7bfPs4" frameborder="0" allowfullscreen></iframe>
   <br>
   <iframe class="video" src="https://www.youtube.com/embed/YV27My14M2Y" frameborder="0" allowfullscreen></iframe>
-    <br><br><br>
+  <br><br><br>
+
   <h1>You can find me on...</h1><br>
   <a href="https://www.youtube.com/@abcsnoob"><img class="youtube" src="https://sentry456123.github.io/youtube.webp" width="60" height="60"></a>
   <a href="https://github.com/abcsnoobytb"><img class="icon rotateCounterClockwise" src="https://sentry456123.github.io/github.webp"></a>
