@@ -1,9 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Chat App</title>
+  <title>Chat App with Notifications</title>
   <style>
     /* Basic styles */
     body {
@@ -58,8 +59,9 @@
     }
   </style>
 </head>
+
 <body>
-  <h2>Chat App</h2>
+  <h2>Chat App with Notifications</h2>
 
   <!-- Login section -->
   <div id="loginApp">
@@ -76,14 +78,14 @@
     <button id="logoutBtn">Logout</button>
   </div>
 
-  <!-- Firebase Scripts -->
-  <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
+  <!-- Firebase Scripts (8.x.x) -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
 
   <script>
     const firebaseConfig = {
-      apiKey: "AIzaSyDtcs0XkNhf7yFRTzPY-A9WYet35YjQVT8", 
+      apiKey: "AIzaSyDtcs0XkNhf7yFRTzPY-A9WYet35YjQVT8",
       authDomain: "abc-s-noob.firebaseapp.com",
       projectId: "abc-s-noob",
       storageBucket: "abc-s-noob.firebasestorage.app",
@@ -150,6 +152,7 @@
         snapshot.forEach(doc => {
           const data = doc.data();
           chatBox.innerHTML += `<p><b>${data.name}:</b> ${data.text}</p>`;
+          sendNotification("New message!", `${data.name}: ${data.text}`);
         });
       });
     }
@@ -168,6 +171,32 @@
         msgInput.value = '';
       }
     };
+
+    // Push Notification function
+    function sendNotification(title, body) {
+      if (Notification.permission === 'granted') {
+        const notification = new Notification(title, {
+          body: body,
+          icon: 'https://abcsnoob.github.io/abcsnoob/webp',  // Replace with your app icon
+        });
+
+        notification.onclick = function () {
+          window.open('https://abcsnoob.github.io/chat/');  // Replace with your website link
+        };
+      }
+    }
+
+    // Request permission for notifications
+    if ('Notification' in window) {
+      if (Notification.permission !== 'granted') {
+        Notification.requestPermission().then(function (permission) {
+          if (permission === 'granted') {
+            console.log('Notification permission granted');
+          }
+        });
+      }
+    }
   </script>
 </body>
+
 </html>
