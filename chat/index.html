@@ -1,179 +1,69 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login/Register - Abc's Noob™</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f7f7f7;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-        }
-
-        .form-container {
-            background-color: #fff;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-            width: 300px;
-        }
-
-        h2 {
-            text-align: center;
-        }
-
-        input[type="text"], input[type="password"], textarea {
-            width: 100%;
-            padding: 10px;
-            margin: 10px 0;
-            border-radius: 5px;
-            border: 1px solid #ccc;
-        }
-
-        button {
-            width: 100%;
-            padding: 10px;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            cursor: pointer;
-            border-radius: 5px;
-        }
-
-        button:hover {
-            background-color: #45a049;
-        }
-
-        .switch-link {
-            text-align: center;
-            margin-top: 10px;
-        }
-
-        .switch-link a {
-            text-decoration: none;
-            color: #4CAF50;
-        }
-
-        #spinner {
-            display: none;
-            border: 3px solid transparent; 
-            border-top: 3px solid #3498db;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 0.5s linear infinite;
-            margin-top: 10px;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-    </style>
+  <title>Chat App</title>
+  <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
 </head>
 <body>
-
-    <div class="form-container" id="loginForm">
-        <h2>Login</h2>
-        <input type="text" id="loginUsername" placeholder="Username" required>
-        <input type="password" id="loginPassword" placeholder="Password" required>
-        <button id="loginBtn">Login</button>
-        <div id="spinner"></div>
-        <div class="switch-link">
-            <p>Don't have an account? <a href="javascript:void(0);" id="showRegister">Sign Up</a></p>
-        </div>
-    </div>
-
-    <div class="form-container" id="registerForm" style="display:none;">
-        <h2>Sign Up</h2>
-        <input type="text" id="registerUsername" placeholder="Username" required>
-        <input type="password" id="registerPassword" placeholder="Password" required>
-        <button id="registerBtn">Sign Up</button>
-        <div id="spinner"></div>
-        <div class="switch-link">
-            <p>Already have an account? <a href="javascript:void(0);" id="showLogin">Login</a></p>
-        </div>
-    </div>
+  <h2>GitHub Chat</h2>
+  <button id="loginBtn">Login with GitHub</button>
+  <div id="chatBox"></div>
+  <input type="text" id="msgInput" placeholder="Type message..." />
+  <button id="sendBtn">Send</button>
 
 <script>
-    // Chuyển qua lại giữa Login và Register
-    document.getElementById("showRegister").addEventListener("click", function () {
-        document.getElementById("loginForm").style.display = "none";
-        document.getElementById("registerForm").style.display = "block";
-    });
+  const firebaseConfig = {
+    apiKey: "AIzaSyDtcs0XkNhf7yFRTzPY-A9WYet35YjQVT8",
+    authDomain: "abc-s-noob.firebaseapp.com",
+    projectId: "abc-s-noob",
+    storageBucket: "abc-s-noob.firebasestorage.app",
+    messagingSenderId: "196660846002",
+    appId: "1:196660846002:web:ce129820f388cc838658ab",
+    measurementId: "G-LG5SWH89MG"
+  };
 
-    document.getElementById("showLogin").addEventListener("click", function () {
-        document.getElementById("registerForm").style.display = "none";
-        document.getElementById("loginForm").style.display = "block";
-    });
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const db = firebase.firestore();
 
-    // Hàm gửi request
-    function handleRequest(url, data) {
-        document.getElementById('spinner').style.display = 'inline-block';
+  document.getElementById('loginBtn').onclick = () => {
+    const provider = new firebase.auth.GithubAuthProvider();
+    auth.signInWithPopup(provider);
+  };
 
-        fetch(url, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(data)
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Server error: ' + response.status);
-            }
-            return response.json();
-        })
-        .then(data => {
-            document.getElementById('spinner').style.display = 'none';
-            alert(data.message);
-            if (data.status === 'success') {
-                window.location.href = "/chat"; // Chuyển sang trang chat sau khi đăng nhập thành công
-            }
-        })
-        .catch(error => {
-            document.getElementById('spinner').style.display = 'none';
-            console.error('Error:', error);
-            alert("Có lỗi xảy ra: " + error.message);
-        });
+  auth.onAuthStateChanged(user => {
+    if (user) {
+      document.getElementById('loginBtn').style.display = 'none';
+      listenMessages();
     }
+  });
 
-    // Xử lý đăng nhập
-    document.getElementById("loginBtn").addEventListener("click", function () {
-        const username = document.getElementById("loginUsername").value;
-        const password = document.getElementById("loginPassword").value;
-
-        if (username && password) {
-            handleRequest('https://db-0001.abcsnoob.42web.io/db-login.php', {
-                username: username,
-                password: password
-            });
-        } else {
-            alert("Please enter both username and password!");
-        }
+  function listenMessages() {
+    db.collection("messages").orderBy("timestamp").onSnapshot(snapshot => {
+      const chatBox = document.getElementById("chatBox");
+      chatBox.innerHTML = "";
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        chatBox.innerHTML += `<p><b>${data.name}:</b> ${data.text}</p>`;
+      });
     });
+  }
 
-    // Xử lý đăng ký
-    document.getElementById("registerBtn").addEventListener("click", function () {
-        const username = document.getElementById("registerUsername").value;
-        const password = document.getElementById("registerPassword").value;
-
-        if (username && password) {
-            handleRequest('https://db-0001.abcsnoob.42web.io/db-register.php', {
-                username: username,
-                password: password
-            });
-        } else {
-            alert("Please enter both username and password!");
-        }
-    });
+  document.getElementById("sendBtn").onclick = () => {
+    const msg = document.getElementById("msgInput").value;
+    const user = auth.currentUser;
+    if (msg.trim()) {
+      db.collection("messages").add({
+        text: msg,
+        name: user.displayName,
+        uid: user.uid,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      document.getElementById("msgInput").value = "";
+    }
+  };
 </script>
-
-
 </body>
 </html>
