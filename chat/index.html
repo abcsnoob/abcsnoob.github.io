@@ -2,10 +2,106 @@
 <html>
 <head>
   <title>Chat App</title>
-  <!-- Firebase SDK mới --><!-- Firebase SDK v8 (Firebase 8.x) -->
+<!-- Firebase SDK v8 (Firebase 8.x) -->
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+
+  <!-- CSS -->
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f9;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+    }
+
+    h2 {
+      color: #333;
+      font-size: 2em;
+      margin-bottom: 20px;
+    }
+
+    button {
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      margin: 10px;
+      cursor: pointer;
+      border-radius: 5px;
+      font-size: 16px;
+      transition: background-color 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #45a049;
+    }
+
+    #emailLoginDiv {
+      margin-top: 20px;
+    }
+
+    #emailLoginDiv input {
+      padding: 10px;
+      margin: 5px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      font-size: 16px;
+      width: 200px;
+    }
+
+    #chatBox {
+      width: 80%;
+      max-width: 600px;
+      height: 300px;
+      margin-top: 20px;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      background-color: white;
+      overflow-y: scroll;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    #msgInput {
+      padding: 10px;
+      width: 70%;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      font-size: 16px;
+    }
+
+    #sendBtn {
+      padding: 10px 20px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      cursor: pointer;
+      border-radius: 5px;
+      font-size: 16px;
+      margin-left: 10px;
+    }
+
+    #sendBtn:hover {
+      background-color: #45a049;
+    }
+
+    p {
+      margin: 10px 0;
+      padding: 5px;
+      border-bottom: 1px solid #f0f0f0;
+    }
+
+    b {
+      color: #4CAF50;
+    }
+  </style>
 </head>
 <body>
   <h2>GitHub Chat</h2>
@@ -25,7 +121,7 @@
 
 <script>
   const firebaseConfig = {
-    apiKey: "AIzaSyDtcs0XkNhf7yFRTzPY-A9WYet35YjQVT8", 
+    apiKey: "...", 
     authDomain: "abc-s-noob.firebaseapp.com",
     projectId: "abc-s-noob",
     storageBucket: "abc-s-noob.firebasestorage.app",
