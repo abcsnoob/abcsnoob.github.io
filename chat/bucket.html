@@ -3,59 +3,36 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Chat Bucket</title>
+  <title>Nhóm - Chat</title>
   <style>
     body {
-      display: flex;
       font-family: Arial, sans-serif;
+      padding: 20px;
       background-color: #f4f4f9;
     }
     #sidePanel {
-      width: 250px;
-      background-color: #2196f3;
-      color: white;
+      width: 200px;
+      float: left;
+      margin-right: 20px;
+      border-right: 1px solid #ccc;
       padding: 20px;
-      height: 100vh;
-      overflow-y: auto;
     }
-    #sidePanel h3 {
-      color: white;
-      margin-top: 0;
-    }
-    #sidePanel ul {
-      list-style-type: none;
-      padding: 0;
-    }
-    #sidePanel ul li {
+    #sidePanel button {
       margin: 10px 0;
-      cursor: pointer;
-    }
-    #sidePanel ul li:hover {
-      background-color: #45a049;
-    }
-    #chatApp {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      padding: 20px;
     }
     #chatBox {
-      flex: 1;
+      margin-left: 220px;
+      padding: 20px;
       background-color: #fff;
-      padding: 10px;
-      border: 1px solid #ccc;
-      overflow-y: scroll;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
     }
     #msgInput {
-      padding: 10px;
       width: 80%;
-      border-radius: 5px;
-      border: 1px solid #ccc;
-    }
-    #chatControls {
-      display: flex;
-      justify-content: space-between;
       padding: 10px;
+      margin: 10px;
+      border-radius: 5px;
+      border: 1px solid #ddd;
     }
     button {
       padding: 10px 20px;
@@ -65,24 +42,21 @@
       border-radius: 5px;
       cursor: pointer;
     }
-    button:hover {
-      background-color: #45a049;
-    }
   </style>
 </head>
 <body>
 
   <div id="sidePanel">
     <h3>Danh Sách Nhóm</h3>
+    <button onclick="window.location.href='create_group.html'">Tạo Nhóm Mới</button><br><br>
     <ul id="groupList"></ul>
   </div>
 
-  <div id="chatApp">
-    <div id="chatBox"></div>
-    <div id="chatControls">
-      <input type="text" id="msgInput" placeholder="Nhập tin nhắn..." />
-      <button id="sendBtn">Gửi</button>
-    </div>
+  <div id="chatBox">
+    <h2 id="groupName"></h2>
+    <div id="messages"></div>
+    <input type="text" id="msgInput" placeholder="Nhập tin nhắn..." />
+    <button id="sendBtn">Gửi</button>
   </div>
 
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
@@ -100,57 +74,36 @@
     };
 
     firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
     const db = firebase.firestore();
 
-    const userId = new URLSearchParams(window.location.search).get("bucket");
-    const chatBox = document.getElementById('chatBox');
-    const msgInput = document.getElementById('msgInput');
-    const sendBtn = document.getElementById('sendBtn');
-    const groupList = document.getElementById('groupList');
+    // Lấy id nhóm từ URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const groupId = urlParams.get("bucket");
 
-    function listenMessages(groupId) {
-      db.collection("groups").doc(groupId).collection("messages")
-        .orderBy("timestamp")
-        .onSnapshot(snapshot => {
-          chatBox.innerHTML = '';
-          snapshot.forEach(doc => {
-            const d = doc.data();
-            chatBox.innerHTML += `<p><b>${d.user}:</b> ${d.text}</p>`;
-          });
-          chatBox.scrollTop = chatBox.scrollHeight;
-        });
-    }
-
-    function loadGroups() {
-      db.collection("groups").get().then(snapshot => {
-        snapshot.forEach(doc => {
-          const groupId = doc.id;
-          const groupName = doc.data().name;
-          const listItem = document.createElement("li");
-          listItem.textContent = groupName;
-          listItem.onclick = () => {
-            listenMessages(groupId);
-          };
-          groupList.appendChild(listItem);
-        });
+    // Hiển thị nhóm và tin nhắn
+    db.collection("groups").doc(groupId).get().then(doc => {
+      const group = doc.data();
+      document.getElementById("groupName").innerText = group.name;
+      db.collection("groups").doc(groupId).collection("messages").orderBy("createdAt").onSnapshot(snapshot => {
+        const messages = snapshot.docs.map(doc => `<p>${doc.data().message}</p>`).join('');
+        document.getElementById("messages").innerHTML = messages;
       });
-    }
+    });
 
-    sendBtn.onclick = () => {
-      const msg = msgInput.value.trim();
-      if (!msg) return;
-      const groupId = "default";  // Can be dynamic based on group
-      db.collection("groups").doc(groupId).collection("messages").add({
-        text: msg,
-        user: auth.currentUser.displayName || "Người dùng",
-        timestamp: firebase.firestore.FieldValue.serverTimestamp()
-      }).then(() => {
-        msgInput.value = '';
-      });
+    // Gửi tin nhắn
+    document.getElementById("sendBtn").onclick = () => {
+      const message = document.getElementById("msgInput").value.trim();
+      if (message) {
+        db.collection("groups").doc(groupId).collection("messages").add({
+          message: message,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        }).then(() => {
+          document.getElementById("msgInput").value = "";
+        }).catch(error => {
+          console.error("Lỗi gửi tin nhắn: ", error);
+        });
+      }
     };
-
-    loadGroups();
   </script>
 
 </body>
