@@ -65,7 +65,7 @@
       const password = prompt("Nhập Mật khẩu:");
       if (email && password) {
         auth.signInWithEmailAndPassword(email, password).then(() => {
-          window.location.href = "bucket.html?bucket=" + auth.currentUser.uid;
+          window.location.href = "bucket?=" + auth.currentUser.uid;
         });
       }
     };
