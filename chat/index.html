@@ -3,191 +3,39 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Chat App - Dark Mode + Custom Name</title>
+  <title>Chat App - Đăng Nhập</title>
   <style>
-    :root {
-      --bg-color: #f4f4f9;
-      --text-color: #000;
-      --box-bg: rgba(255, 255, 255, 0.6);
-      --btn-bg: #4CAF50;
-      --btn-hover: #45a049;
-    }
-
-    body.dark {
-      --bg-color: #121212;
-      --text-color: #fff;
-      --box-bg: rgba(30, 30, 30, 0.6);
-      --btn-bg: #555;
-      --btn-hover: #777;
-    }
-
     body {
-      margin: 0;
-      padding: 0;
-      height: 100vh;
-      display: flex;
-      flex-direction: column;
-      background-color: var(--bg-color);
-      color: var(--text-color);
       font-family: Arial, sans-serif;
-    }
-
-.spinner {
-  border: 2px solid #f3f3f3;
-  border-top: 2px solid rgba(52, 152, 219, 0.8); /* Đổi border-top thành màu xanh với độ trong suốt */
-  border-radius: 50%;
-  width: 30px;
-  height: 30px;
-  animation: spin 0.5s linear infinite;
-}
-
-
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-
-    .spinner-wrapper {
-      display: none;
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-    }
-
-    .spinner-wrapper.active {
-      display: block;
-    }
-
-    #loginApp {
-      padding: 20px;
       text-align: center;
+      padding: 50px;
+      background-color: #f4f4f9;
     }
-
-    #chatApp {
-      display: none;
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-    }
-
-    #chatBox {
-      flex: 1;
-      background-color: var(--box-bg);
-      padding: 10px;
-      overflow-y: scroll;
-      border-top: 1px solid #ccc;
-    }
-
-    #msgInput {
-      width: 80%;
-      padding: 10px;
-      margin: 10px;
-      border-radius: 5px;
-      border: 1px solid #ddd;
-    }
-
-    #chatControls {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      padding-bottom: 10px;
-    }
-
     button {
-      padding: 10px 20px;
-      margin: 5px;
-      background-color: var(--btn-bg);
+      padding: 15px 30px;
+      font-size: 16px;
+      background-color: #4CAF50;
       color: white;
       border: none;
       border-radius: 5px;
       cursor: pointer;
     }
-
     button:hover {
-      background-color: var(--btn-hover);
-    }
-
-    #settingsBox {
-      position: fixed;
-      top: 10px;
-      right: 10px;
-      width: 300px;
-      background-color: var(--bg-color);
-      border: 1px solid #ddd;
-      border-radius: 8px;
-      padding: 10px;
-      z-index: 1000;
-      display: none;
-    }
-
-    #settingsBox h3 {
-      margin-top: 10px;
-      text-align: left;
-    }
-
-    #settingsBox input, #themeSelect {
-      width: 90%;
-      padding: 5px;
-      margin: 5px 0;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-      background-color: var(--box-bg);
-      color: var(--text-color);
-    }
-
-    #settingsBtn {
-      position: fixed;
-      top: 10px;
-      right: 10px;
-      background-color: #2196f3;
+      background-color: #45a049;
     }
   </style>
 </head>
 <body>
 
-  <div id="loginApp">
-    <h2>Chat App</h2>
-    <div class="spinner-wrapper" id="loginSpinner"><div class="spinner"></div></div>
-    <button id="loginWithGoogle">Login with Google</button>
-    <button id="loginWithGitHub">Login with GitHub</button>
-    <button id="loginWithEmail">Login with Email</button>
-  </div>
+  <h2>Đăng Nhập vào Chat App</h2>
+  <button id="loginWithGoogle">Đăng Nhập với Google</button><br><br>
+  <button id="loginWithGitHub">Đăng Nhập với GitHub</button><br><br>
+  <button id="loginWithEmail">Đăng Nhập với Email</button>
 
-  <div id="chatApp">
-    <div class="spinner-wrapper" id="chatSpinner"><div class="spinner"></div></div>
-    <div id="chatBox"></div>
-    <div id="chatControls">
-      <input type="text" id="msgInput" placeholder="Type message..." />
-      <button id="sendBtn">Send</button>
-      <button id="logoutBtn">Logout</button>
-    </div>
-  </div>
-
-  <button id="settingsBtn">⚙️</button>
-
-  <div id="settingsBox">
-    <div class="spinner-wrapper" id="settingsSpinner"><div class="spinner"></div></div>
-    <h3>CHUNG</h3>
-    Tên:<br><input type="text" id="username"><br>
-    Giao diện:<br>
-    <select id="themeSelect">
-      <option value="light">Sáng</option>
-      <option value="dark">Tối</option>
-    </select>
-
-    <h3>TÀI KHOẢN</h3>
-    Mật khẩu:<br><input type="password"><br>
-    Email:<br><input type="email"><br><br>
-    <button id="saveSettingsBtn">LƯU</button>
-  </div>
-
-  <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
 
   <script>
-    // Firebase cấu hình
     const firebaseConfig = {
       apiKey: "AIzaSyDtcs0XkNhf7yFRTzPY-A9WYet35YjQVT8",
       authDomain: "abc-s-noob.firebaseapp.com",
@@ -199,137 +47,29 @@
 
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
-    const db = firebase.firestore();
 
-    // DOM elements
-    const loginApp = document.getElementById('loginApp');
-    const chatApp = document.getElementById('chatApp');
-    const loginWithGoogle = document.getElementById('loginWithGoogle');
-    const loginWithGitHub = document.getElementById('loginWithGitHub');
-    const loginWithEmail = document.getElementById('loginWithEmail');
-    const sendBtn = document.getElementById('sendBtn');
-    const msgInput = document.getElementById('msgInput');
-    const chatBox = document.getElementById('chatBox');
-    const logoutBtn = document.getElementById('logoutBtn');
-    const loginSpinner = document.getElementById('loginSpinner');
-    const chatSpinner = document.getElementById('chatSpinner');
-    const settingsBtn = document.getElementById('settingsBtn');
-    const settingsBox = document.getElementById('settingsBox');
-    const settingsSpinner = document.getElementById('settingsSpinner');
-    const usernameInput = document.getElementById('username');
-    const themeSelect = document.getElementById('themeSelect');
-    const saveSettingsBtn = document.getElementById('saveSettingsBtn');
-
-    // Hiện / Ẩn loading cho từng phần
-    function showSpinner(element) {
-      element.classList.add('active');
-    }
-
-    function hideSpinner(element) {
-      element.classList.remove('active');
-    }
-
-    // Đổi theme
-    function applyTheme(theme) {
-      if (theme === 'dark') {
-        document.body.classList.add('dark');
-      } else {
-        document.body.classList.remove('dark');
-      }
-    }
-
-    // Lưu settings
-    saveSettingsBtn.onclick = () => {
-      showSpinner(settingsSpinner);
-      const name = usernameInput.value.trim();
-      const theme = themeSelect.value;
-      if (name) localStorage.setItem('customName', name);
-      localStorage.setItem('theme', theme);
-      applyTheme(theme);
-      setTimeout(() => {
-        alert("Đã lưu cài đặt!");
-        hideSpinner(settingsSpinner);
-      }, 5000);
+    document.getElementById("loginWithGoogle").onclick = () => {
+      auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).then(() => {
+        window.location.href = "bucket.html?bucket=" + auth.currentUser.uid;
+      });
     };
 
-    // Mở cài đặt
-    settingsBtn.onclick = () => {
-      showSpinner(settingsSpinner);
-      setTimeout(() => {
-        settingsBox.style.display = settingsBox.style.display === 'block' ? 'none' : 'block';
-        hideSpinner(settingsSpinner);
-      }, 3500);
+    document.getElementById("loginWithGitHub").onclick = () => {
+      auth.signInWithPopup(new firebase.auth.GithubAuthProvider()).then(() => {
+        window.location.href = "bucket.html?bucket=" + auth.currentUser.uid;
+      });
     };
 
-    // Login
-    loginWithGoogle.onclick = () => {
-      showSpinner(loginSpinner);
-      auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).finally(() => hideSpinner(loginSpinner));
-    };
-
-    loginWithGitHub.onclick = () => {
-      showSpinner(loginSpinner);
-      auth.signInWithPopup(new firebase.auth.GithubAuthProvider()).finally(() => hideSpinner(loginSpinner));
-    };
-
-    loginWithEmail.onclick = () => {
-      const email = prompt("Email:");
-      const password = prompt("Password:");
+    document.getElementById("loginWithEmail").onclick = () => {
+      const email = prompt("Nhập Email:");
+      const password = prompt("Nhập Mật khẩu:");
       if (email && password) {
-        showSpinner(loginSpinner);
-        auth.signInWithEmailAndPassword(email, password).finally(() => hideSpinner(loginSpinner));
-      }
-    };
-
-    logoutBtn.onclick = () => {
-      showSpinner(chatSpinner);
-      auth.signOut().finally(() => hideSpinner(chatSpinner));
-    };
-
-    // Chat
-    sendBtn.onclick = () => {
-      const msg = msgInput.value.trim();
-      if (!msg) return;
-      showSpinner(chatSpinner);
-      const name = localStorage.getItem('customName') || auth.currentUser.displayName || "Người dùng";
-      db.collection("messages").add({
-        text: msg,
-        user: name,
-        timestamp: firebase.firestore.FieldValue.serverTimestamp()
-      }).then(() => {
-        msgInput.value = '';
-        msgInput.focus();
-      }).finally(() => hideSpinner(chatSpinner));
-    };
-
-    function listenMessages() {
-      db.collection("messages").orderBy("timestamp")
-        .onSnapshot(snapshot => {
-          chatBox.innerHTML = '';
-          snapshot.forEach(doc => {
-            const d = doc.data();
-            chatBox.innerHTML += `<p><b>${d.user}:</b> ${d.text}</p>`;
-          });
-          chatBox.scrollTop = chatBox.scrollHeight;
-          hideSpinner(chatSpinner);
+        auth.signInWithEmailAndPassword(email, password).then(() => {
+          window.location.href = "bucket.html?bucket=" + auth.currentUser.uid;
         });
-    }
-
-    // Tự động đăng nhập
-    auth.onAuthStateChanged(user => {
-      if (user) {
-        loginApp.style.display = 'none';
-        chatApp.style.display = 'flex';
-        usernameInput.value = localStorage.getItem('customName') || '';
-        themeSelect.value = localStorage.getItem('theme') || 'light';
-        applyTheme(themeSelect.value);
-        showSpinner(chatSpinner);
-        listenMessages();
-      } else {
-        chatApp.style.display = 'none';
-        loginApp.style.display = 'block';
       }
-    });
+    };
   </script>
+
 </body>
 </html>
