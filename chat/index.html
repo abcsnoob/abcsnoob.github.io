@@ -1,213 +1,173 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Chat App</title>
-<!-- Firebase SDK v8 (Firebase 8.x) -->
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
-
-  <!-- CSS -->
   <style>
+    /* Basic styles */
     body {
       font-family: Arial, sans-serif;
       background-color: #f4f4f9;
-      margin: 0;
-      padding: 0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
+      padding: 20px;
+      text-align: center;
     }
 
-    h2 {
-      color: #333;
-      font-size: 2em;
-      margin-bottom: 20px;
+    #chatApp {
+      display: none;
+    }
+
+    #loginApp {
+      display: block;
+    }
+
+    #chatBox {
+      background-color: #fff;
+      padding: 10px;
+      border-radius: 5px;
+      height: 300px;
+      overflow-y: scroll;
+      margin-top: 20px;
+      border: 1px solid #ddd;
+      width: 300px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    #msgInput {
+      width: 80%;
+      padding: 10px;
+      margin-top: 10px;
+      margin-bottom: 10px;
+      border-radius: 5px;
+      border: 1px solid #ddd;
     }
 
     button {
+      padding: 10px 20px;
+      margin: 5px;
       background-color: #4CAF50;
       color: white;
       border: none;
-      padding: 10px 20px;
-      margin: 10px;
-      cursor: pointer;
       border-radius: 5px;
-      font-size: 16px;
-      transition: background-color 0.3s ease;
+      cursor: pointer;
     }
 
     button:hover {
       background-color: #45a049;
     }
-
-    #emailLoginDiv {
-      margin-top: 20px;
-    }
-
-    #emailLoginDiv input {
-      padding: 10px;
-      margin: 5px;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-      font-size: 16px;
-      width: 200px;
-    }
-
-    #chatBox {
-      width: 80%;
-      max-width: 600px;
-      height: 300px;
-      margin-top: 20px;
-      padding: 10px;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-      background-color: white;
-      overflow-y: scroll;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    }
-
-    #msgInput {
-      padding: 10px;
-      width: 70%;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-      font-size: 16px;
-    }
-
-    #sendBtn {
-      padding: 10px 20px;
-      background-color: #4CAF50;
-      color: white;
-      border: none;
-      cursor: pointer;
-      border-radius: 5px;
-      font-size: 16px;
-      margin-left: 10px;
-    }
-
-    #sendBtn:hover {
-      background-color: #45a049;
-    }
-
-    p {
-      margin: 10px 0;
-      padding: 5px;
-      border-bottom: 1px solid #f0f0f0;
-    }
-
-    b {
-      color: #4CAF50;
-    }
   </style>
 </head>
 <body>
-  <h2>GitHub Chat</h2>
+  <h2>Chat App</h2>
 
-  <!-- Các nút đăng nhập -->
-  <button id="loginBtn">Login with GitHub</button>
-  <button id="googleLoginBtn">Login with Google</button>
-  <div id="emailLoginDiv">
-    <input type="email" id="email" placeholder="Email" />
-    <input type="password" id="password" placeholder="Password" />
-    <button id="emailLoginBtn">Login with Email</button>
+  <!-- Login section -->
+  <div id="loginApp">
+    <button id="loginWithGoogle">Login with Google</button>
+    <button id="loginWithGitHub">Login with GitHub</button>
+    <button id="loginWithEmail">Login with Email</button>
   </div>
-  
-  <div id="chatBox"></div>
-  <input type="text" id="msgInput" placeholder="Type message..." />
-  <button id="sendBtn">Send</button>
 
-<script>
-  const firebaseConfig = {
-    apiKey: "AIzaSyDtcs0XkNhf7yFRTzPY-A9WYet35YjQVT8", 
-    authDomain: "abc-s-noob.firebaseapp.com",
-    projectId: "abc-s-noob",
-    storageBucket: "abc-s-noob.firebasestorage.app",
-    messagingSenderId: "196660846002",
-    appId: "1:196660846002:web:ce129820f388cc838658ab",
-    measurementId: "G-LG5SWH89MG"
-  };
+  <!-- Chat section -->
+  <div id="chatApp">
+    <div id="chatBox"></div>
+    <input type="text" id="msgInput" placeholder="Type message..." />
+    <button id="sendBtn">Send</button>
+    <button id="logoutBtn">Logout</button>
+  </div>
 
-  // Khởi tạo Firebase App
-  const app = firebase.initializeApp(firebaseConfig);
+  <!-- Firebase Scripts -->
+  <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
 
-  // Firebase Authentication và Firestore
-  const auth = firebase.auth();
-  const db = firebase.firestore();
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyDtcs0XkNhf7yFRTzPY-A9WYet35YjQVT8", 
+      authDomain: "abc-s-noob.firebaseapp.com",
+      projectId: "abc-s-noob",
+      storageBucket: "abc-s-noob.firebasestorage.app",
+      messagingSenderId: "196660846002",
+      appId: "1:196660846002:web:ce129820f388cc838658ab",
+      measurementId: "G-LG5SWH89MG"
+    };
 
-  // Đăng nhập với GitHub
-  document.getElementById('loginBtn').onclick = () => {
-    const provider = new firebase.auth.GithubAuthProvider();
-    auth.signInWithPopup(provider).then(result => {
-      const user = result.user;
-      document.getElementById('loginBtn').style.display = 'none';
-      listenMessages();
-    }).catch(error => {
-      console.error(error.message);
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    // DOM elements
+    const loginApp = document.getElementById('loginApp');
+    const chatApp = document.getElementById('chatApp');
+    const loginWithGoogle = document.getElementById('loginWithGoogle');
+    const loginWithGitHub = document.getElementById('loginWithGitHub');
+    const loginWithEmail = document.getElementById('loginWithEmail');
+    const sendBtn = document.getElementById('sendBtn');
+    const msgInput = document.getElementById('msgInput');
+    const chatBox = document.getElementById('chatBox');
+    const logoutBtn = document.getElementById('logoutBtn');
+
+    // Login with Google
+    loginWithGoogle.onclick = () => {
+      const provider = new firebase.auth.GoogleAuthProvider();
+      auth.signInWithPopup(provider);
+    };
+
+    // Login with GitHub
+    loginWithGitHub.onclick = () => {
+      const provider = new firebase.auth.GithubAuthProvider();
+      auth.signInWithPopup(provider);
+    };
+
+    // Login with Email
+    loginWithEmail.onclick = () => {
+      const email = prompt("Enter your email:");
+      const password = prompt("Enter your password:");
+      auth.signInWithEmailAndPassword(email, password);
+    };
+
+    // Logout
+    logoutBtn.onclick = () => {
+      auth.signOut();
+    };
+
+    // Listen for auth state changes
+    auth.onAuthStateChanged(user => {
+      if (user) {
+        loginApp.style.display = 'none';
+        chatApp.style.display = 'block';
+        listenMessages();
+      } else {
+        loginApp.style.display = 'block';
+        chatApp.style.display = 'none';
+      }
     });
-  };
 
-  // Đăng nhập với Google
-  document.getElementById('googleLoginBtn').onclick = () => {
-    const provider = new firebase.auth.GoogleAuthProvider();
-    auth.signInWithPopup(provider).then(result => {
-      const user = result.user;
-      document.getElementById('googleLoginBtn').style.display = 'none';
-      listenMessages();
-    }).catch(error => {
-      console.error(error.message);
-    });
-  };
-
-  // Đăng nhập với Email và Password
-  document.getElementById('emailLoginBtn').onclick = () => {
-    const email = document.getElementById('email').value;
-    const password = document.getElementById('password').value;
-    auth.signInWithEmailAndPassword(email, password).then(result => {
-      const user = result.user;
-      document.getElementById('emailLoginDiv').style.display = 'none';
-      listenMessages();
-    }).catch(error => {
-      console.error(error.message);
-    });
-  };
-
-  // Lắng nghe trạng thái người dùng (đăng nhập/đăng xuất)
-  auth.onAuthStateChanged(user => {
-    if (user) {
-      console.log('Logged in as:', user.displayName);
-      listenMessages();
-    }
-  });
-
-  // Lắng nghe và hiển thị tin nhắn
-  function listenMessages() {
-    db.collection("messages").orderBy("timestamp").onSnapshot(snapshot => {
-      const chatBox = document.getElementById("chatBox");
-      chatBox.innerHTML = "";
-      snapshot.forEach(doc => {
-        const data = doc.data();
-        chatBox.innerHTML += `<p><b>${data.name}:</b> ${data.text}</p>`;
+    // Listen for new messages
+    function listenMessages() {
+      db.collection("messages").orderBy("timestamp").onSnapshot(snapshot => {
+        chatBox.innerHTML = '';
+        snapshot.forEach(doc => {
+          const data = doc.data();
+          chatBox.innerHTML += `<p><b>${data.name}:</b> ${data.text}</p>`;
+        });
       });
-    });
-  }
-
-  // Gửi tin nhắn
-  document.getElementById("sendBtn").onclick = () => {
-    const msg = document.getElementById("msgInput").value;
-    const user = auth.currentUser;
-    if (msg.trim()) {
-      db.collection("messages").add({
-        text: msg,
-        name: user.displayName,
-        uid: user.uid,
-        timestamp: firebase.firestore.FieldValue.serverTimestamp()
-      });
-      document.getElementById("msgInput").value = "";
     }
-  };
-</script>
+
+    // Send message
+    sendBtn.onclick = () => {
+      const msg = msgInput.value;
+      const user = auth.currentUser;
+      if (msg.trim()) {
+        db.collection("messages").add({
+          text: msg,
+          name: user.displayName,
+          uid: user.uid,
+          timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        msgInput.value = '';
+      }
+    };
+  </script>
 </body>
 </html>
