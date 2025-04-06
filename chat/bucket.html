@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Chat Bucket</title>
+  <style>
+    body {
+      display: flex;
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f9;
+    }
+    #sidePanel {
+      width: 250px;
+      background-color: #2196f3;
+      color: white;
+      padding: 20px;
+      height: 100vh;
+      overflow-y: auto;
+    }
+    #sidePanel h3 {
+      color: white;
+      margin-top: 0;
+    }
+    #sidePanel ul {
+      list-style-type: none;
+      padding: 0;
+    }
+    #sidePanel ul li {
+      margin: 10px 0;
+      cursor: pointer;
+    }
+    #sidePanel ul li:hover {
+      background-color: #45a049;
+    }
+    #chatApp {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      padding: 20px;
+    }
+    #chatBox {
+      flex: 1;
+      background-color: #fff;
+      padding: 10px;
+      border: 1px solid #ccc;
+      overflow-y: scroll;
+    }
+    #msgInput {
+      padding: 10px;
+      width: 80%;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+    #chatControls {
+      display: flex;
+      justify-content: space-between;
+      padding: 10px;
+    }
+    button {
+      padding: 10px 20px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="sidePanel">
+    <h3>Danh Sách Nhóm</h3>
+    <ul id="groupList"></ul>
+  </div>
+
+  <div id="chatApp">
+    <div id="chatBox"></div>
+    <div id="chatControls">
+      <input type="text" id="msgInput" placeholder="Nhập tin nhắn..." />
+      <button id="sendBtn">Gửi</button>
+    </div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyDtcs0XkNhf7yFRTzPY-A9WYet35YjQVT8",
+      authDomain: "abc-s-noob.firebaseapp.com",
+      projectId: "abc-s-noob",
+      storageBucket: "abc-s-noob.appspot.com",
+      messagingSenderId: "196660846002",
+      appId: "1:196660846002:web:ce129820f388cc838658ab"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    const userId = new URLSearchParams(window.location.search).get("bucket");
+    const chatBox = document.getElementById('chatBox');
+    const msgInput = document.getElementById('msgInput');
+    const sendBtn = document.getElementById('sendBtn');
+    const groupList = document.getElementById('groupList');
+
+    function listenMessages(groupId) {
+      db.collection("groups").doc(groupId).collection("messages")
+        .orderBy("timestamp")
+        .onSnapshot(snapshot => {
+          chatBox.innerHTML = '';
+          snapshot.forEach(doc => {
+            const d = doc.data();
+            chatBox.innerHTML += `<p><b>${d.user}:</b> ${d.text}</p>`;
+          });
+          chatBox.scrollTop = chatBox.scrollHeight;
+        });
+    }
+
+    function loadGroups() {
+      db.collection("groups").get().then(snapshot => {
+        snapshot.forEach(doc => {
+          const groupId = doc.id;
+          const groupName = doc.data().name;
+          const listItem = document.createElement("li");
+          listItem.textContent = groupName;
+          listItem.onclick = () => {
+            listenMessages(groupId);
+          };
+          groupList.appendChild(listItem);
+        });
+      });
+    }
+
+    sendBtn.onclick = () => {
+      const msg = msgInput.value.trim();
+      if (!msg) return;
+      const groupId = "default";  // Can be dynamic based on group
+      db.collection("groups").doc(groupId).collection("messages").add({
+        text: msg,
+        user: auth.currentUser.displayName || "Người dùng",
+        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+      }).then(() => {
+        msgInput.value = '';
+      });
+    };
+
+    loadGroups();
+  </script>
+
+</body>
+</html>
