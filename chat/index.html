@@ -1,116 +1,195 @@
+<!-- Dán toàn bộ code này vào 1 file HTML -->
 <!DOCTYPE html>
-<html lang="en">
-
+<html lang="vi">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Chat App with Notifications</title>
-<style>
-  html, body {
-    height: 100%;
-    margin: 0;
-    font-family: Arial, sans-serif;
-  }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Chat App - Dark Mode + Custom Name</title>
+  <style>
+    :root {
+      --bg-color: #f4f4f9;
+      --text-color: #000;
+      --box-bg: rgba(255, 255, 255, 0.6);
+      --btn-bg: #4CAF50;
+      --btn-hover: #45a049;
+    }
 
-  body {
-    background-color: #f4f4f9;
-  }
+    body.dark {
+      --bg-color: #121212;
+      --text-color: #fff;
+      --box-bg: rgba(30, 30, 30, 0.6);
+      --btn-bg: #555;
+      --btn-hover: #777;
+    }
 
-  #chatApp {
-    display: none;
-    height: 100vh;
-    display: flex;
-    flex-direction: column;
-  }
+    body {
+      margin: 0;
+      padding: 0;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      font-family: Arial, sans-serif;
+    }
 
-  #loginApp {
-    display: block;
-    height: 100vh;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-  }
+    #spinner {
+      position: fixed;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 9999;
+      display: none;
+    }
 
-  #chatBox {
-    flex: 1;
-    background-color: #fff;
-    padding: 10px;
-    border-top: 1px solid #ddd;
-    overflow-y: scroll;
-  }
+    .spinner-border {
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #3498db;
+      border-radius: 50%;
+      width: 30px;
+      height: 30px;
+      animation: spin 1s linear infinite;
+    }
 
-  #inputArea {
-    display: flex;
-    padding: 10px;
-    background: #f4f4f9;
-    border-top: 1px solid #ddd;
-  }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
 
-  #msgInput {
-    flex: 1;
-    padding: 10px;
-    border-radius: 5px;
-    border: 1px solid #ddd;
-    margin-right: 10px;
-  }
+    #loginApp {
+      padding: 20px;
+      text-align: center;
+    }
 
-  button {
-    padding: 10px 20px;
-    margin-left: 5px;
-    background-color: #4CAF50;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-  }
+    #chatApp {
+      display: none;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
 
-  button:hover {
-    background-color: #45a049;
-  }
+    #chatBox {
+      flex: 1;
+      background-color: var(--box-bg);
+      padding: 10px;
+      overflow-y: scroll;
+      border-top: 1px solid #ccc;
+    }
 
-  h2 {
-    text-align: center;
-    padding: 20px;
-  }
-</style>
+    #msgInput {
+      width: 80%;
+      padding: 10px;
+      margin: 10px;
+      border-radius: 5px;
+      border: 1px solid #ddd;
+    }
 
+    #chatControls {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding-bottom: 10px;
+    }
+
+    button {
+      padding: 10px 20px;
+      margin: 5px;
+      background-color: var(--btn-bg);
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: var(--btn-hover);
+    }
+
+    #settingsBox {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      width: 300px;
+      background-color: var(--bg-color);
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 10px;
+      z-index: 1000;
+      display: none;
+    }
+
+    #settingsBox h3 {
+      margin-top: 10px;
+      text-align: left;
+    }
+
+    #settingsBox input, #themeSelect {
+      width: 90%;
+      padding: 5px;
+      margin: 5px 0;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      background-color: var(--box-bg);
+      color: var(--text-color);
+    }
+
+    #settingsBtn {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      background-color: #2196f3;
+    }
+  </style>
 </head>
-
 <body>
-  <h2>Chat App with Notifications</h2>
+  <div id="spinner"><div class="spinner-border"></div></div>
 
-  <!-- Login section -->
   <div id="loginApp">
+    <h2>Chat App</h2>
     <button id="loginWithGoogle">Login with Google</button>
     <button id="loginWithGitHub">Login with GitHub</button>
     <button id="loginWithEmail">Login with Email</button>
   </div>
 
-<div id="chatApp">
-  <div id="chatBox"></div>
-  <div id="inputArea">
-    <input type="text" id="msgInput" placeholder="Type message..." />
-    <button id="sendBtn">Send</button>
-    <button id="logoutBtn">Logout</button>
+  <div id="chatApp">
+    <div id="chatBox"></div>
+    <div id="chatControls">
+      <input type="text" id="msgInput" placeholder="Type message..." />
+      <button id="sendBtn">Send</button>
+      <button id="logoutBtn">Logout</button>
+    </div>
   </div>
-</div>
 
+  <button id="settingsBtn">⚙️</button>
 
-  <!-- Firebase Scripts (8.x.x) -->
+  <div id="settingsBox">
+    <h3>CHUNG</h3>
+    Tên:<br><input type="text" id="username"><br>
+    Giao diện:<br>
+    <select id="themeSelect">
+      <option value="light">Sáng</option>
+      <option value="dark">Tối</option>
+    </select>
+
+    <h3>TÀI KHOẢN</h3>
+    Mật khẩu:<br><input type="password"><br>
+    Email:<br><input type="email"><br><br>
+    <button id="saveSettingsBtn">LƯU</button>
+  </div>
+
+  <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
 
   <script>
+    // Firebase cấu hình
     const firebaseConfig = {
       apiKey: "AIzaSyDtcs0XkNhf7yFRTzPY-A9WYet35YjQVT8",
       authDomain: "abc-s-noob.firebaseapp.com",
       projectId: "abc-s-noob",
-      storageBucket: "abc-s-noob.firebasestorage.app",
+      storageBucket: "abc-s-noob.appspot.com",
       messagingSenderId: "196660846002",
-      appId: "1:196660846002:web:ce129820f388cc838658ab",
-      measurementId: "G-LG5SWH89MG"
+      appId: "1:196660846002:web:ce129820f388cc838658ab"
     };
 
     firebase.initializeApp(firebaseConfig);
@@ -127,95 +206,115 @@
     const msgInput = document.getElementById('msgInput');
     const chatBox = document.getElementById('chatBox');
     const logoutBtn = document.getElementById('logoutBtn');
+    const spinner = document.getElementById('spinner');
+    const settingsBtn = document.getElementById('settingsBtn');
+    const settingsBox = document.getElementById('settingsBox');
+    const usernameInput = document.getElementById('username');
+    const themeSelect = document.getElementById('themeSelect');
+    const saveSettingsBtn = document.getElementById('saveSettingsBtn');
 
-    // Login with Google
+    // Hiện / Ẩn loading
+    function showSpinner() { spinner.style.display = 'block'; }
+    function hideSpinner() { spinner.style.display = 'none'; }
+
+    // Đổi theme
+    function applyTheme(theme) {
+      if (theme === 'dark') {
+        document.body.classList.add('dark');
+      } else {
+        document.body.classList.remove('dark');
+      }
+    }
+
+    // Lưu settings
+    saveSettingsBtn.onclick = () => {
+      showSpinner();
+      const name = usernameInput.value.trim();
+      const theme = themeSelect.value;
+      if (name) localStorage.setItem('customName', name);
+      localStorage.setItem('theme', theme);
+      applyTheme(theme);
+      setTimeout(() => {
+        alert("Đã lưu cài đặt!");
+        hideSpinner();
+      }, 500);
+    };
+
+    // Mở cài đặt
+    settingsBtn.onclick = () => {
+      showSpinner();
+      setTimeout(() => {
+        settingsBox.style.display = settingsBox.style.display === 'block' ? 'none' : 'block';
+        hideSpinner();
+      }, 300);
+    };
+
+    // Login
     loginWithGoogle.onclick = () => {
-      const provider = new firebase.auth.GoogleAuthProvider();
-      auth.signInWithPopup(provider);
+      showSpinner();
+      auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).finally(hideSpinner);
     };
-
-    // Login with GitHub
     loginWithGitHub.onclick = () => {
-      const provider = new firebase.auth.GithubAuthProvider();
-      auth.signInWithPopup(provider);
+      showSpinner();
+      auth.signInWithPopup(new firebase.auth.GithubAuthProvider()).finally(hideSpinner);
     };
-
-    // Login with Email
     loginWithEmail.onclick = () => {
-      const email = prompt("Enter your email:");
-      const password = prompt("Enter your password:");
-      auth.signInWithEmailAndPassword(email, password);
+      const email = prompt("Email:");
+      const password = prompt("Password:");
+      if (email && password) {
+        showSpinner();
+        auth.signInWithEmailAndPassword(email, password).finally(hideSpinner);
+      }
     };
 
-    // Logout
     logoutBtn.onclick = () => {
-      auth.signOut();
+      showSpinner();
+      auth.signOut().finally(hideSpinner);
     };
 
-    // Listen for auth state changes
+    // Chat
+    sendBtn.onclick = () => {
+      const msg = msgInput.value.trim();
+      if (!msg) return;
+      showSpinner();
+      const name = localStorage.getItem('customName') || auth.currentUser.displayName || "Người dùng";
+      db.collection("messages").add({
+        text: msg,
+        user: name,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+      }).then(() => {
+        msgInput.value = '';
+      }).finally(hideSpinner);
+    };
+
+    function listenMessages() {
+      db.collection("messages").orderBy("timestamp")
+        .onSnapshot(snapshot => {
+          chatBox.innerHTML = '';
+          snapshot.forEach(doc => {
+            const d = doc.data();
+            chatBox.innerHTML += `<p><b>${d.user}:</b> ${d.text}</p>`;
+          });
+          chatBox.scrollTop = chatBox.scrollHeight;
+          hideSpinner();
+        });
+    }
+
+    // Tự động đăng nhập
     auth.onAuthStateChanged(user => {
       if (user) {
         loginApp.style.display = 'none';
-        chatApp.style.display = 'block';
+        chatApp.style.display = 'flex';
+        usernameInput.value = localStorage.getItem('customName') || '';
+        themeSelect.value = localStorage.getItem('theme') || 'light';
+        applyTheme(themeSelect.value);
+        showSpinner();
         listenMessages();
       } else {
-        loginApp.style.display = 'block';
         chatApp.style.display = 'none';
+        loginApp.style.display = 'block';
       }
     });
-
-    // Listen for new messages
-    function listenMessages() {
-      db.collection("messages").orderBy("timestamp").onSnapshot(snapshot => {
-        chatBox.innerHTML = '';
-        snapshot.forEach(doc => {
-          const data = doc.data();
-          chatBox.innerHTML += `<p><b>${data.name}:</b> ${data.text}</p>`;
-          sendNotification("New message!", `${data.name}: ${data.text}`);
-        });
-      });
-    }
-
-    // Send message
-    sendBtn.onclick = () => {
-      const msg = msgInput.value;
-      const user = auth.currentUser;
-      if (msg.trim()) {
-        db.collection("messages").add({
-          text: msg,
-          name: user.displayName,
-          uid: user.uid,
-          timestamp: firebase.firestore.FieldValue.serverTimestamp()
-        });
-        msgInput.value = '';
-      }
-    };
-
-    // Push Notification function
-    function sendNotification(title, body) {
-      if (Notification.permission === 'granted') {
-        const notification = new Notification(title, {
-          body: body,
-          icon: 'https://abcsnoob.github.io/abcsnoob/webp',  // Replace with your app icon
-        });
-
-        notification.onclick = function () {
-          window.open('https://abcsnoob.github.io/chat/');  // Replace with your website link
-        };
-      }
-    }
-
-    // Request permission for notifications
-    if ('Notification' in window) {
-      if (Notification.permission !== 'granted') {
-        Notification.requestPermission().then(function (permission) {
-          if (permission === 'granted') {
-            console.log('Notification permission granted');
-          }
-        });
-      }
-    }
   </script>
 </body>
-
 </html>
