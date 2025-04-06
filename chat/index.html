@@ -2,20 +2,30 @@
 <html>
 <head>
   <title>Chat App</title>
-  <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
+  <!-- Firebase SDK mới -->
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js"></script>
 </head>
 <body>
   <h2>GitHub Chat</h2>
+
+  <!-- Các nút đăng nhập -->
   <button id="loginBtn">Login with GitHub</button>
+  <button id="googleLoginBtn">Login with Google</button>
+  <div id="emailLoginDiv">
+    <input type="email" id="email" placeholder="Email" />
+    <input type="password" id="password" placeholder="Password" />
+    <button id="emailLoginBtn">Login with Email</button>
+  </div>
+  
   <div id="chatBox"></div>
   <input type="text" id="msgInput" placeholder="Type message..." />
   <button id="sendBtn">Send</button>
 
 <script>
   const firebaseConfig = {
-    apiKey: "AIzaSyDtcs0XkNhf7yFRTzPY-A9WYet35YjQVT8",
+    apiKey: "AIzaSyDtcs0XkNhf7yFRTzPY-A9WYet35YjQVT8", 
     authDomain: "abc-s-noob.firebaseapp.com",
     projectId: "abc-s-noob",
     storageBucket: "abc-s-noob.firebasestorage.app",
@@ -24,22 +34,59 @@
     measurementId: "G-LG5SWH89MG"
   };
 
-  firebase.initializeApp(firebaseConfig);
+  // Khởi tạo Firebase App
+  const app = firebase.initializeApp(firebaseConfig);
+
+  // Firebase Authentication và Firestore
   const auth = firebase.auth();
   const db = firebase.firestore();
 
+  // Đăng nhập với GitHub
   document.getElementById('loginBtn').onclick = () => {
     const provider = new firebase.auth.GithubAuthProvider();
-    auth.signInWithPopup(provider);
+    auth.signInWithPopup(provider).then(result => {
+      const user = result.user;
+      document.getElementById('loginBtn').style.display = 'none';
+      listenMessages();
+    }).catch(error => {
+      console.error(error.message);
+    });
   };
 
+  // Đăng nhập với Google
+  document.getElementById('googleLoginBtn').onclick = () => {
+    const provider = new firebase.auth.GoogleAuthProvider();
+    auth.signInWithPopup(provider).then(result => {
+      const user = result.user;
+      document.getElementById('googleLoginBtn').style.display = 'none';
+      listenMessages();
+    }).catch(error => {
+      console.error(error.message);
+    });
+  };
+
+  // Đăng nhập với Email và Password
+  document.getElementById('emailLoginBtn').onclick = () => {
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+    auth.signInWithEmailAndPassword(email, password).then(result => {
+      const user = result.user;
+      document.getElementById('emailLoginDiv').style.display = 'none';
+      listenMessages();
+    }).catch(error => {
+      console.error(error.message);
+    });
+  };
+
+  // Lắng nghe trạng thái người dùng (đăng nhập/đăng xuất)
   auth.onAuthStateChanged(user => {
     if (user) {
-      document.getElementById('loginBtn').style.display = 'none';
+      console.log('Logged in as:', user.displayName);
       listenMessages();
     }
   });
 
+  // Lắng nghe và hiển thị tin nhắn
   function listenMessages() {
     db.collection("messages").orderBy("timestamp").onSnapshot(snapshot => {
       const chatBox = document.getElementById("chatBox");
@@ -51,6 +98,7 @@
     });
   }
 
+  // Gửi tin nhắn
   document.getElementById("sendBtn").onclick = () => {
     const msg = document.getElementById("msgInput").value;
     const user = auth.currentUser;
