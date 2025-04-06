@@ -41,15 +41,15 @@
 
   <script>
     // Firebase cấu hình
-const firebaseConfig = {
-  apiKey: "AIzaSyDtcs0XkNhf7yFRTzPY-A9WYet35YjQVT8",
-  authDomain: "abc-s-noob.firebaseapp.com",
-  projectId: "abc-s-noob",
-  storageBucket: "abc-s-noob.firebasestorage.app",
-  messagingSenderId: "196660846002",
-  appId: "1:196660846002:web:ce129820f388cc838658ab",
-  measurementId: "G-LG5SWH89MG"
-};
+    const firebaseConfig = {
+      apiKey: "AIzaSyDtcs0XkNhf7yFRTzPY-A9WYet35YjQVT8",
+      authDomain: "abc-s-noob.firebaseapp.com",
+      projectId: "abc-s-noob",
+      storageBucket: "abc-s-noob.firebasestorage.app",
+      messagingSenderId: "196660846002",
+      appId: "1:196660846002:web:ce129820f388cc838658ab",
+      measurementId: "G-LG5SWH89MG"
+    };
 
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
@@ -61,7 +61,10 @@ const firebaseConfig = {
           name: groupName,
           createdAt: firebase.firestore.FieldValue.serverTimestamp()
         }).then((docRef) => {
-          alert("Nhóm đã được tạo thành công!");
+          // Hiển thị ID của nhóm đã được tạo
+          console.log("Group ID: ", docRef.id);
+
+          // Chuyển đến trang nhóm mới, truyền ID nhóm trong URL
           window.location.href = "bucket.html?bucket=" + docRef.id; // Chuyển đến nhóm vừa tạo
         }).catch((error) => {
           console.error("Lỗi khi tạo nhóm: ", error);
