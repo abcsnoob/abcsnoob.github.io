@@ -1,1 +1,39 @@
-Abc's Noob ADS đang phát triển
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Chọn Ngẫu Nhiên URL</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      text-align: center;
+      background-color: #f4f4f9;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Trang này sẽ tự động chuyển hướng đến một URL ngẫu nhiên</h1>
+  <p>Đang chuyển hướng...</p>
+
+  <script>
+    // Danh sách các URL để chọn ngẫu nhiên
+    const urls = [
+      "ads1.html",
+    ];
+
+    // Hàm chọn ngẫu nhiên và mở URL
+    function openRandomUrl() {
+      const randomIndex = Math.floor(Math.random() * urls.length);
+      const randomUrl = urls[randomIndex];
+      window.location.href = randomUrl;  // Chuyển hướng trang hiện tại tới URL ngẫu nhiên
+    }
+
+    // Tự động chọn URL và chuyển hướng ngay khi trang tải
+    window.onload = openRandomUrl;
+  </script>
+
+</body>
+</html>
