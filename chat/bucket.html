@@ -73,45 +73,50 @@
       appId: "1:196660846002:web:ce129820f388cc838658ab",
       measurementId: "G-LG5SWH89MG"
     };
+
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    // Kiểm tra trạng thái đăng nhập của người dùng
-    firebase.auth().onAuthStateChanged(user => {
-      if (!user) {
-        // Nếu người dùng chưa đăng nhập, chuyển hướng đến trang đăng nhập
-        window.location.href = "login.html";
-      } else {
-        // Nếu người dùng đã đăng nhập, tiếp tục với ứng dụng
-        const urlParams = new URLSearchParams(window.location.search);
-        const groupId = urlParams.get("bucket");
+    // Lấy ID nhóm từ URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const groupId = urlParams.get("bucket");
 
-        // Hiển thị nhóm và tin nhắn
-        db.collection("groups").doc(groupId).get().then(doc => {
+    if (groupId) {
+      // Truy vấn nhóm từ Firestore
+      db.collection("groups").doc(groupId).get().then(doc => {
+        if (doc.exists) {
           const group = doc.data();
           document.getElementById("groupName").innerText = group.name;
+
+          // Lấy tin nhắn của nhóm
           db.collection("groups").doc(groupId).collection("messages").orderBy("createdAt").onSnapshot(snapshot => {
             const messages = snapshot.docs.map(doc => `<p>${doc.data().message}</p>`).join('');
             document.getElementById("messages").innerHTML = messages;
           });
-        });
+        } else {
+          console.error("Không tìm thấy nhóm");
+        }
+      }).catch(error => {
+        console.error("Lỗi khi truy vấn nhóm: ", error);
+      });
+    } else {
+      console.error("ID nhóm không có trong URL");
+    }
 
-        // Gửi tin nhắn
-        document.getElementById("sendBtn").onclick = () => {
-          const message = document.getElementById("msgInput").value.trim();
-          if (message) {
-            db.collection("groups").doc(groupId).collection("messages").add({
-              message: message,
-              createdAt: firebase.firestore.FieldValue.serverTimestamp()
-            }).then(() => {
-              document.getElementById("msgInput").value = "";
-            }).catch(error => {
-              console.error("Lỗi gửi tin nhắn: ", error);
-            });
-          }
-        };
+    // Gửi tin nhắn
+    document.getElementById("sendBtn").onclick = () => {
+      const message = document.getElementById("msgInput").value.trim();
+      if (message) {
+        db.collection("groups").doc(groupId).collection("messages").add({
+          message: message,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        }).then(() => {
+          document.getElementById("msgInput").value = "";
+        }).catch(error => {
+          console.error("Lỗi gửi tin nhắn: ", error);
+        });
       }
-    });
+    };
   </script>
 
 </body>
