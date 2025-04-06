@@ -1,4 +1,3 @@
-<!-- Dán toàn bộ code này vào 1 file HTML -->
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -33,18 +32,9 @@
       font-family: Arial, sans-serif;
     }
 
-    #spinner {
-      position: fixed;
-      top: 10px;
-      left: 50%;
-      transform: translateX(-50%);
-      z-index: 9999;
-      display: none;
-    }
-
-    .spinner-border {
+    .spinner {
       border: 4px solid #f3f3f3;
-      border-top: 4px solid #3498db transparency;
+      border-top: 4px solid #3498db;
       border-radius: 50%;
       width: 30px;
       height: 30px;
@@ -53,6 +43,18 @@
 
     @keyframes spin {
       to { transform: rotate(360deg); }
+    }
+
+    .spinner-wrapper {
+      display: none;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    .spinner-wrapper.active {
+      display: block;
     }
 
     #loginApp {
@@ -142,17 +144,16 @@
 </head>
 <body>
 
-
   <div id="loginApp">
     <h2>Chat App</h2>
-    <div id="spinner"><div class="spinner-border"></div></div>
+    <div class="spinner-wrapper" id="loginSpinner"><div class="spinner"></div></div>
     <button id="loginWithGoogle">Login with Google</button>
     <button id="loginWithGitHub">Login with GitHub</button>
     <button id="loginWithEmail">Login with Email</button>
   </div>
 
   <div id="chatApp">
-    <div id="spinner"><div class="spinner-border"></div></div>
+    <div class="spinner-wrapper" id="chatSpinner"><div class="spinner"></div></div>
     <div id="chatBox"></div>
     <div id="chatControls">
       <input type="text" id="msgInput" placeholder="Type message..." />
@@ -164,7 +165,7 @@
   <button id="settingsBtn">⚙️</button>
 
   <div id="settingsBox">
-    <div id="spinner"><div class="spinner-border"></div></div>
+    <div class="spinner-wrapper" id="settingsSpinner"><div class="spinner"></div></div>
     <h3>CHUNG</h3>
     Tên:<br><input type="text" id="username"><br>
     Giao diện:<br>
@@ -174,7 +175,6 @@
     </select>
 
     <h3>TÀI KHOẢN</h3>
-    <div id="spinner"><div class="spinner-border"></div></div>
     Mật khẩu:<br><input type="password"><br>
     Email:<br><input type="email"><br><br>
     <button id="saveSettingsBtn">LƯU</button>
@@ -210,16 +210,23 @@
     const msgInput = document.getElementById('msgInput');
     const chatBox = document.getElementById('chatBox');
     const logoutBtn = document.getElementById('logoutBtn');
-    const spinner = document.getElementById('spinner');
+    const loginSpinner = document.getElementById('loginSpinner');
+    const chatSpinner = document.getElementById('chatSpinner');
     const settingsBtn = document.getElementById('settingsBtn');
     const settingsBox = document.getElementById('settingsBox');
+    const settingsSpinner = document.getElementById('settingsSpinner');
     const usernameInput = document.getElementById('username');
     const themeSelect = document.getElementById('themeSelect');
     const saveSettingsBtn = document.getElementById('saveSettingsBtn');
 
-    // Hiện / Ẩn loading
-    function showSpinner() { spinner.style.display = 'block'; }
-    function hideSpinner() { spinner.style.display = 'none'; }
+    // Hiện / Ẩn loading cho từng phần
+    function showSpinner(element) {
+      element.classList.add('active');
+    }
+
+    function hideSpinner(element) {
+      element.classList.remove('active');
+    }
 
     // Đổi theme
     function applyTheme(theme) {
@@ -232,7 +239,7 @@
 
     // Lưu settings
     saveSettingsBtn.onclick = () => {
-      showSpinner();
+      showSpinner(settingsSpinner);
       const name = usernameInput.value.trim();
       const theme = themeSelect.value;
       if (name) localStorage.setItem('customName', name);
@@ -240,47 +247,49 @@
       applyTheme(theme);
       setTimeout(() => {
         alert("Đã lưu cài đặt!");
-        hideSpinner();
-      }, 500);
+        hideSpinner(settingsSpinner);
+      }, 5000);
     };
 
     // Mở cài đặt
     settingsBtn.onclick = () => {
-      showSpinner();
+      showSpinner(settingsSpinner);
       setTimeout(() => {
         settingsBox.style.display = settingsBox.style.display === 'block' ? 'none' : 'block';
-        hideSpinner();
-      }, 300);
+        hideSpinner(settingsSpinner);
+      }, 3500);
     };
 
     // Login
     loginWithGoogle.onclick = () => {
-      showSpinner();
-      auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).finally(hideSpinner);
+      showSpinner(loginSpinner);
+      auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).finally(() => hideSpinner(loginSpinner));
     };
+
     loginWithGitHub.onclick = () => {
-      showSpinner();
-      auth.signInWithPopup(new firebase.auth.GithubAuthProvider()).finally(hideSpinner);
+      showSpinner(loginSpinner);
+      auth.signInWithPopup(new firebase.auth.GithubAuthProvider()).finally(() => hideSpinner(loginSpinner));
     };
+
     loginWithEmail.onclick = () => {
       const email = prompt("Email:");
       const password = prompt("Password:");
       if (email && password) {
-        showSpinner();
-        auth.signInWithEmailAndPassword(email, password).finally(hideSpinner);
+        showSpinner(loginSpinner);
+        auth.signInWithEmailAndPassword(email, password).finally(() => hideSpinner(loginSpinner));
       }
     };
 
     logoutBtn.onclick = () => {
-      showSpinner();
-      auth.signOut().finally(hideSpinner);
+      showSpinner(chatSpinner);
+      auth.signOut().finally(() => hideSpinner(chatSpinner));
     };
 
     // Chat
     sendBtn.onclick = () => {
       const msg = msgInput.value.trim();
       if (!msg) return;
-      showSpinner();
+      showSpinner(chatSpinner);
       const name = localStorage.getItem('customName') || auth.currentUser.displayName || "Người dùng";
       db.collection("messages").add({
         text: msg,
@@ -288,7 +297,8 @@
         timestamp: firebase.firestore.FieldValue.serverTimestamp()
       }).then(() => {
         msgInput.value = '';
-      }).finally(hideSpinner);
+        msgInput.focus();
+      }).finally(() => hideSpinner(chatSpinner));
     };
 
     function listenMessages() {
@@ -300,7 +310,7 @@
             chatBox.innerHTML += `<p><b>${d.user}:</b> ${d.text}</p>`;
           });
           chatBox.scrollTop = chatBox.scrollHeight;
-          hideSpinner();
+          hideSpinner(chatSpinner);
         });
     }
 
@@ -312,7 +322,7 @@
         usernameInput.value = localStorage.getItem('customName') || '';
         themeSelect.value = localStorage.getItem('theme') || 'light';
         applyTheme(themeSelect.value);
-        showSpinner();
+        showSpinner(chatSpinner);
         listenMessages();
       } else {
         chatApp.style.display = 'none';
