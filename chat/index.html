@@ -98,7 +98,7 @@
 
         localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
 
-        // Firebase signaling
+        // Firebase signaling: add the user to the voice chat
         const signalRef = firebase.database().ref('voiceChat');
         const newSignal = signalRef.push();
         newSignal.set({ uid: auth.currentUser.uid, status: 'active' });
@@ -158,6 +158,15 @@
       } catch (err) {
         console.error('Error sharing screen:', err);
         Swal.fire('Error', 'Could not share screen', 'error');
+      }
+    });
+
+    // Firebase Listener: Listen for new participants in the voice chat
+    firebase.database().ref('voiceChat').on('child_added', (snapshot) => {
+      const participant = snapshot.val();
+      if (participant.uid !== auth.currentUser.uid) {
+        // Logic to handle when a new participant joins
+        console.log(`${participant.uid} has joined the voice chat`);
       }
     });
   </script>
