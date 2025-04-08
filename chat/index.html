@@ -126,7 +126,7 @@
           name: groupNameValue,
           members: [auth.currentUser.uid]
         }).then(() => {
-          Swal.fire('Đã tạo nhóm', `Nhóm ${groupNameValue} đã tạo thành công!`, 'success');
+          Swal.fire('Đã tạo nhóm', `Nhóm ${groupNameValue} đã tạo thành công!`, 'thành công');
           groupName.value = '';
           loadGroups(); // Reload the group list
         }).catch((error) => {
