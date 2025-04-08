@@ -1,158 +1,230 @@
-<script>
-    // Firebase Configuration
-    const firebaseConfig = {
-        apiKey: "AIzaSyDtcs0XkNhf7yFRTzPY-A9WYet35YjQVT8",
-        authDomain: "abc-s-noob.firebaseapp.com",
-        projectId: "abc-s-noob",
-        storageBucket: "abc-s-noob.appspot.com",
-        messagingSenderId: "196660846002",
-        appId: "1:196660846002:web:ce129820f388cc838658ab",
-        measurementId: "G-LG5SWH89MG"
-    };
-    firebase.initializeApp(firebaseConfig);
-    
-    const auth = firebase.auth();
-    const firestore = firebase.firestore();
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voice Chat Room</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            color: #333;
+        }
+        #auth-section {
+            text-align: center;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 10px;
+            font-size: 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        input[type="text"] {
+            padding: 10px;
+            margin-bottom: 20px;
+            font-size: 16px;
+            width: 300px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+        #chat-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .hidden {
+            display: none;
+        }
+        #voiceTab {
+            margin: 20px;
+        }
+        #status {
+            font-size: 18px;
+            color: #555;
+        }
+    </style>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+</head>
+<body>
+    <div id="auth-section">
+        <button id="googleSignInButton">Sign In with Google</button>
+    </div>
 
-    let localStream;
-    let peerConnections = {};
-    let currentRoom = "general_room"; // Tạo room mặc định
+    <div id="chat-section" class="hidden">
+        <div id="voiceTab" class="hidden">
+            <button id="muteButton">Mute</button>
+            <button id="leaveButton">Leave Room</button>
+            <button id="shareScreenButton">Share Screen</button>
+        </div>
+        <div id="status"></div>
+    </div>
 
-    // DOM elements
-    const googleSignInButton = document.getElementById('googleSignInButton');
-    const muteButton = document.getElementById('muteButton');
-    const leaveButton = document.getElementById('leaveButton');
-    const chatSection = document.getElementById('chat-section');
-    const authSection = document.getElementById('auth-section');
-    const voiceTab = document.getElementById('voiceTab');
-    const statusDiv = document.getElementById('status');
+    <script>
+        // Firebase Configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyDtcs0XkNhf7yFRTzPY-A9WYet35YjQVT8",
+            authDomain: "abc-s-noob.firebaseapp.com",
+            projectId: "abc-s-noob",
+            storageBucket: "abc-s-noob.firebasestorage.app",
+            messagingSenderId: "196660846002",
+            appId: "1:196660846002:web:ce129820f388cc838658ab",
+            measurementId: "G-LG5SWH89MG"
+        };
 
-    // Firebase Auth - Sign in with Google
-    googleSignInButton.addEventListener('click', () => {
-        const provider = new firebase.auth.GoogleAuthProvider();
-        auth.signInWithPopup(provider)
-            .then((result) => {
-                const user = result.user;
-                statusDiv.innerHTML = `Logged in as ${user.displayName}`;
-                authSection.classList.add('hidden');
-                chatSection.classList.remove('hidden');
-                joinRoom(); // Tự động tham gia phòng trò chuyện
-            }).catch((error) => {
-                console.error("Error during Google sign-in: ", error);
-            });
-    });
+        firebase.initializeApp(firebaseConfig);
 
-    // Join Room (phòng trò chuyện chung)
-    function joinRoom() {
-        chatSection.classList.add('hidden');
-        voiceTab.classList.remove('hidden');
-        // Thiết lập WebRTC cho trò chuyện âm thanh
-        setupWebRTC();
-    }
+        const auth = firebase.auth();
+        const firestore = firebase.firestore();
 
-    // WebRTC setup để xử lý trò chuyện âm thanh giữa người dùng
-    function setupWebRTC() {
-        navigator.mediaDevices.getUserMedia({ audio: true })
-            .then((stream) => {
-                localStream = stream;
-                const audioTrack = localStream.getAudioTracks()[0];
+        // DOM elements
+        const googleSignInButton = document.getElementById('googleSignInButton');
+        const muteButton = document.getElementById('muteButton');
+        const leaveButton = document.getElementById('leaveButton');
+        const shareScreenButton = document.getElementById('shareScreenButton');
+        const chatSection = document.getElementById('chat-section');
+        const authSection = document.getElementById('auth-section');
+        const voiceTab = document.getElementById('voiceTab');
+        const statusDiv = document.getElementById('status');
 
-                // Tạo kết nối peer và xử lý ICE candidates
-                const peerConnection = new RTCPeerConnection();
-                peerConnection.addTrack(audioTrack);
+        let localStream;
+        let peerConnections = {};
+        let currentRoom = "voiceRoom";  // Tên phòng chat
 
-                peerConnection.onicecandidate = (event) => {
-                    if (event.candidate) {
-                        // Gửi ICE candidate cho người khác qua Firestore
-                        firestore.collection("rooms").doc(currentRoom).collection("candidates")
-                            .add({
-                                candidate: event.candidate,
-                                uid: firebase.auth().currentUser.uid
-                            });
-                    }
-                };
-
-                peerConnections[firebase.auth().currentUser.uid] = peerConnection;
-
-                // Gửi thông tin về peer mới vào Firestore
-                firestore.collection("rooms").doc(currentRoom).collection("peers")
-                    .add({ uid: firebase.auth().currentUser.uid })
-                    .then(() => {
-                        // Lấy offer từ người khác và trả lời bằng một answer
-                        getOffersFromFirestore();
-                    })
-                    .catch((error) => {
-                        console.error("Error sending peer info to Firestore: ", error);
-                    });
-
-                // Thêm stream của người dùng vào kết nối
-                peerConnection.createOffer()
-                    .then(offer => {
-                        return peerConnection.setLocalDescription(offer);
-                    })
-                    .then(() => {
-                        // Gửi offer cho người khác qua Firestore
-                        firestore.collection("rooms").doc(currentRoom).collection("offers")
-                            .add({
-                                offer: peerConnection.localDescription,
-                                uid: firebase.auth().currentUser.uid
-                            });
-                    })
-                    .catch((error) => {
-                        console.error("Error with WebRTC offer: ", error);
-                    });
-            })
-            .catch((error) => {
-                console.error("Error getting user media: ", error);
-            });
-    }
-
-    // Lấy offer từ Firestore để trả lời với peer
-    function getOffersFromFirestore() {
-        firestore.collection("rooms").doc(currentRoom).collection("offers")
-            .onSnapshot((snapshot) => {
-                snapshot.forEach(doc => {
-                    const offer = doc.data().offer;
-                    if (offer && !peerConnections[doc.data().uid]) {
-                        // Tạo peer connection và trả lời offer
-                        const peerConnection = new RTCPeerConnection();
-                        peerConnection.setRemoteDescription(offer);
-
-                        peerConnection.createAnswer()
-                            .then(answer => {
-                                return peerConnection.setLocalDescription(answer);
-                            })
-                            .then(() => {
-                                firestore.collection("rooms").doc(currentRoom).collection("answers")
-                                    .add({
-                                        answer: peerConnection.localDescription,
-                                        uid: firebase.auth().currentUser.uid
-                                    });
-                            })
-                            .catch((error) => {
-                                console.error("Error with WebRTC answer: ", error);
-                            });
-                    }
+        // Firebase Auth - Sign in with Google
+        googleSignInButton.addEventListener('click', () => {
+            const provider = new firebase.auth.GoogleAuthProvider();
+            auth.signInWithPopup(provider)
+                .then((result) => {
+                    const user = result.user;
+                    statusDiv.innerHTML = `Logged in as ${user.displayName}`;
+                    authSection.classList.add('hidden');
+                    chatSection.classList.remove('hidden');
+                    joinRoom(); // Tự động tham gia phòng trò chuyện
+                }).catch((error) => {
+                    console.error("Error during Google sign-in: ", error);
                 });
-            });
-    }
+        });
 
-    // Mute / Unmute
-    muteButton.addEventListener('click', () => {
-        if (localStream) {
-            const audioTrack = localStream.getAudioTracks()[0];
-            audioTrack.enabled = !audioTrack.enabled;
-            muteButton.innerText = audioTrack.enabled ? 'Mute' : 'Unmute';
+        // Join Room (phòng trò chuyện chung)
+        function joinRoom() {
+            chatSection.classList.add('hidden');
+            voiceTab.classList.remove('hidden');
+            setupWebRTC();
         }
-    });
 
-    // Leave Room
-    leaveButton.addEventListener('click', () => {
-        if (localStream) {
-            localStream.getTracks().forEach(track => track.stop());
-            localStream = null;
-            voiceTab.classList.add('hidden');
-            chatSection.classList.remove('hidden');
+        // WebRTC setup để xử lý trò chuyện âm thanh giữa người dùng
+        function setupWebRTC() {
+            navigator.mediaDevices.getUserMedia({ audio: true })
+                .then((stream) => {
+                    localStream = stream;
+                    const audioTrack = localStream.getAudioTracks()[0];
+
+                    // Tạo kết nối peer và xử lý ICE candidates
+                    const peerConnection = new RTCPeerConnection();
+                    peerConnection.addTrack(audioTrack);
+
+                    peerConnection.onicecandidate = (event) => {
+                        if (event.candidate) {
+                            // Gửi ICE candidate cho người khác (sử dụng Firebase hoặc server signaling)
+                        }
+                    };
+
+                    peerConnections[firebase.auth().currentUser.uid] = peerConnection;
+
+                    // Thêm stream của người dùng vào kết nối
+                    peerConnection.createOffer()
+                        .then(offer => {
+                            return peerConnection.setLocalDescription(offer);
+                        })
+                        .then(() => {
+                            // Gửi offer cho người khác qua signaling (Firebase hoặc WebRTC signaling)
+                        })
+                        .catch((error) => {
+                            console.error("Error with WebRTC offer: ", error);
+                        });
+                })
+                .catch((error) => {
+                    console.error("Error getting user media: ", error);
+                });
         }
-    });
-</script>
+
+        // Mute / Unmute
+        muteButton.addEventListener('click', () => {
+            if (localStream) {
+                const audioTrack = localStream.getAudioTracks()[0];
+                audioTrack.enabled = !audioTrack.enabled;
+                muteButton.innerText = audioTrack.enabled ? 'Mute' : 'Unmute';
+            }
+        });
+
+        // Leave Room
+        leaveButton.addEventListener('click', () => {
+            if (localStream) {
+                localStream.getTracks().forEach(track => track.stop());
+                localStream = null;
+                voiceTab.classList.add('hidden');
+                chatSection.classList.remove('hidden');
+            }
+        });
+
+        // Chia sẻ màn hình Full HD
+        shareScreenButton.addEventListener('click', () => {
+            const constraints = {
+                video: {
+                    width: { ideal: 1920 },  // Full HD
+                    height: { ideal: 1080 }
+                },
+                audio: false // Không cần âm thanh khi chia sẻ màn hình
+            };
+
+            navigator.mediaDevices.getDisplayMedia(constraints)
+                .then((stream) => {
+                    localStream = stream;
+                    const videoTrack = localStream.getVideoTracks()[0];
+
+                    // Tạo kết nối peer và xử lý ICE candidates
+                    const peerConnection = new RTCPeerConnection();
+                    peerConnection.addTrack(videoTrack);
+
+                    peerConnection.onicecandidate = (event) => {
+                        if (event.candidate) {
+                            // Gửi ICE candidate cho người khác (sử dụng Firebase hoặc server signaling)
+                        }
+                    };
+
+                    peerConnections[firebase.auth().currentUser.uid] = peerConnection;
+
+                    // Thêm stream của người dùng vào kết nối
+                    peerConnection.createOffer()
+                        .then(offer => {
+                            return peerConnection.setLocalDescription(offer);
+                        })
+                        .then(() => {
+                            // Gửi offer cho người khác qua signaling (Firebase hoặc WebRTC signaling)
+                        })
+                        .catch((error) => {
+                            console.error("Error with WebRTC offer: ", error);
+                        });
+                })
+                .catch((error) => {
+                    console.error("Error sharing screen: ", error);
+                });
+        });
+    </script>
+</body>
+</html>
