@@ -104,54 +104,67 @@
 
         // Firebase Auth - Sign in with Google
         googleSignInButton.addEventListener('click', () => {
-            const provider = new firebase.auth.GoogleAuthProvider();
-            firebase.auth().signInWithPopup(provider)
-                .then((result) => {
-                    const user = result.user;
-                    statusDiv.innerHTML = `Logged in as ${user.displayName}`;
-                    authSection.classList.add('hidden');
-                    chatSection.classList.remove('hidden');
-                    joinRoom(); // Automatically join the common room
-                })
-                .catch((error) => {
-                    console.error("Error signing in: ", error);
-                });
+            // Mở tab đăng nhập Google
+            const googleAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=YOUR_CLIENT_ID&redirect_uri=http://localhost:8000&response_type=token&scope=email`;
+            const authWindow = window.open(googleAuthUrl, '_blank', 'width=600,height=800');
+
+            // Lắng nghe tin nhắn từ tab mới
+            window.addEventListener('message', (event) => {
+                if (event.origin !== 'http://localhost:8000') return; // Kiểm tra origin đúng
+
+                const token = event.data.token;
+                if (token) {
+                    // Đăng nhập với Firebase bằng token
+                    auth.signInWithCustomToken(token).then((userCredential) => {
+                        const user = userCredential.user;
+                        statusDiv.innerHTML = `Logged in as ${user.displayName}`;
+                        authSection.classList.add('hidden');
+                        chatSection.classList.remove('hidden');
+                        joinRoom(); // Tự động tham gia phòng trò chuyện
+                    }).catch((error) => {
+                        console.error("Error with Firebase login: ", error);
+                    });
+
+                    // Đóng tab đăng nhập khi đã xác thực thành công
+                    authWindow.close();
+                }
+            });
         });
 
-        // Join Room (common room for all)
+        // Join Room (phòng trò chuyện chung)
         function joinRoom() {
             chatSection.classList.add('hidden');
             voiceTab.classList.remove('hidden');
-            // Call WebRTC setup for voice chat
+            // Thiết lập WebRTC cho trò chuyện âm thanh
             setupWebRTC();
         }
 
-        // WebRTC setup to handle voice chat between users
+        // WebRTC setup để xử lý trò chuyện âm thanh giữa người dùng
         function setupWebRTC() {
             navigator.mediaDevices.getUserMedia({ audio: true })
                 .then((stream) => {
                     localStream = stream;
                     const audioTrack = localStream.getAudioTracks()[0];
 
-                    // Create peer connection and handle ICE candidates
+                    // Tạo kết nối peer và xử lý ICE candidates
                     const peerConnection = new RTCPeerConnection();
                     peerConnection.addTrack(audioTrack);
 
                     peerConnection.onicecandidate = (event) => {
                         if (event.candidate) {
-                            // Send the ICE candidate to others (use Firebase or signaling server)
+                            // Gửi ICE candidate cho người khác (sử dụng Firebase hoặc server signaling)
                         }
                     };
 
                     peerConnections[firebase.auth().currentUser.uid] = peerConnection;
 
-                    // Add the local stream to the connection
+                    // Thêm stream của người dùng vào kết nối
                     peerConnection.createOffer()
                         .then(offer => {
                             return peerConnection.setLocalDescription(offer);
                         })
                         .then(() => {
-                            // Send the offer to others via signaling (Firebase or WebRTC signaling)
+                            // Gửi offer cho người khác qua signaling (Firebase hoặc WebRTC signaling)
                         })
                         .catch((error) => {
                             console.error("Error with WebRTC offer: ", error);
