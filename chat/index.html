@@ -3,50 +3,51 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Voice Chat Room</title>
+    <title>Voice Chat & Screen Share</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: Arial, sans-serif;
-            background-color: #36393F;
-            display: flex;
-            height: 100vh;
+            background-color: #2F3136;
             color: white;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
         }
-        #auth-section {
-            text-align: center;
-            flex: 1;
+        #auth-section, #chat-section {
             display: flex;
             justify-content: center;
             align-items: center;
             flex-direction: column;
+            margin-top: 20px;
         }
         button {
             padding: 10px 20px;
             margin: 10px;
-            font-size: 16px;
             background-color: #7289DA;
             color: white;
             border: none;
             border-radius: 5px;
             cursor: pointer;
-            transition: background-color 0.3s;
+            font-size: 16px;
         }
-        #chat-section {
+        button:hover {
+            background-color: #5b6e98;
+        }
+        #voiceTab {
+            margin-top: 20px;
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
         }
         .hidden {
             display: none;
         }
-        #voiceTab {
-            margin: 20px;
-        }
-        #status {
-            font-size: 18px;
-            color: #bbb;
+        video {
+            margin-top: 10px;
+            width: 300px;
+            height: 200px;
         }
     </style>
 </head>
@@ -57,17 +58,20 @@
 
     <div id="chat-section" class="hidden">
         <div id="voiceTab" class="hidden">
+            <video id="localVideo" autoplay muted></video>
+            <video id="remoteVideo" autoplay></video>
+            <button id="startVoice">Start Voice</button>
             <button id="muteButton">Mute</button>
             <button id="shareScreenButton">Share Screen</button>
             <button id="leaveButton">Leave Room</button>
         </div>
-        <div id="status"></div>
     </div>
 
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <script>
+        // Firebase Configuration
         const firebaseConfig = {
             apiKey: "AIzaSyDtcs0XkNhf7yFRTzPY-A9WYet35YjQVT8",
             authDomain: "abc-s-noob.firebaseapp.com",
@@ -77,76 +81,47 @@
             appId: "1:196660846002:web:ce129820f388cc838658ab",
             measurementId: "G-LG5SWH89MG"
         };
-        firebase.initializeApp(firebaseConfig);
 
+        firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
         const firestore = firebase.firestore();
 
         // DOM elements
         const googleSignInButton = document.getElementById('googleSignInButton');
+        const startVoiceButton = document.getElementById('startVoice');
         const muteButton = document.getElementById('muteButton');
         const leaveButton = document.getElementById('leaveButton');
         const shareScreenButton = document.getElementById('shareScreenButton');
         const chatSection = document.getElementById('chat-section');
         const authSection = document.getElementById('auth-section');
         const voiceTab = document.getElementById('voiceTab');
-        const statusDiv = document.getElementById('status');
+        const localVideo = document.getElementById('localVideo');
+        const remoteVideo = document.getElementById('remoteVideo');
 
         let localStream;
-        let peerConnections = {};
+        let peerConnection;
+        let screenStream;
 
+        // Sign in with Google
         googleSignInButton.addEventListener('click', () => {
             const provider = new firebase.auth.GoogleAuthProvider();
             auth.signInWithPopup(provider)
                 .then((result) => {
                     const user = result.user;
-                    statusDiv.innerHTML = `Logged in as ${user.displayName}`;
                     authSection.classList.add('hidden');
                     chatSection.classList.remove('hidden');
-                    joinRoom();
+                    startVoiceButton.classList.remove('hidden');
                 }).catch((error) => {
                     console.error("Error during Google sign-in: ", error);
                 });
         });
 
-        function joinRoom() {
-            voiceTab.classList.remove('hidden');
-            setupWebRTC();
-        }
+        // Start voice chat
+        startVoiceButton.addEventListener('click', () => {
+            startVoiceChat();
+        });
 
-        function setupWebRTC() {
-            navigator.mediaDevices.getUserMedia({ audio: true })
-                .then((stream) => {
-                    localStream = stream;
-                    const audioTrack = localStream.getAudioTracks()[0];
-
-                    const peerConnection = new RTCPeerConnection();
-                    peerConnection.addTrack(audioTrack);
-
-                    peerConnection.onicecandidate = (event) => {
-                        if (event.candidate) {
-                            // Gửi ICE candidate cho người khác
-                        }
-                    };
-
-                    peerConnections[firebase.auth().currentUser.uid] = peerConnection;
-
-                    peerConnection.createOffer()
-                        .then(offer => {
-                            return peerConnection.setLocalDescription(offer);
-                        })
-                        .then(() => {
-                            // Gửi offer cho người khác qua signaling
-                        })
-                        .catch((error) => {
-                            console.error("Error with WebRTC offer: ", error);
-                        });
-                })
-                .catch((error) => {
-                    console.error("Error getting user media: ", error);
-                });
-        }
-
+        // Mute / Unmute button
         muteButton.addEventListener('click', () => {
             if (localStream) {
                 const audioTrack = localStream.getAudioTracks()[0];
@@ -155,27 +130,76 @@
             }
         });
 
+        // Share screen button
         shareScreenButton.addEventListener('click', () => {
-            navigator.mediaDevices.getDisplayMedia({ video: true })
-                .then((stream) => {
-                    localStream.getTracks().forEach(track => track.stop());
-                    localStream = stream;
-                    const videoTrack = stream.getVideoTracks()[0];
-                    peerConnections[firebase.auth().currentUser.uid].addTrack(videoTrack);
-                    statusDiv.innerHTML = "Screen sharing enabled.";
-                }).catch((error) => {
-                    console.error("Error sharing screen: ", error);
-                });
+            shareScreen();
         });
 
+        // Leave the room
         leaveButton.addEventListener('click', () => {
+            leaveRoom();
+        });
+
+        function startVoiceChat() {
+            navigator.mediaDevices.getUserMedia({ video: false, audio: true })
+                .then((stream) => {
+                    localStream = stream;
+                    localVideo.srcObject = localStream;
+                    const audioTrack = localStream.getAudioTracks()[0];
+
+                    peerConnection = new RTCPeerConnection();
+
+                    peerConnection.addTrack(audioTrack);
+
+                    peerConnection.onicecandidate = (event) => {
+                        if (event.candidate) {
+                            // Send ICE candidate to the remote peer
+                        }
+                    };
+
+                    peerConnection.createOffer()
+                        .then(offer => {
+                            return peerConnection.setLocalDescription(offer);
+                        })
+                        .then(() => {
+                            // Send the offer to remote peer via signaling server
+                        })
+                        .catch((error) => {
+                            console.error("Error during WebRTC offer:", error);
+                        });
+                }).catch((error) => {
+                    console.error("Error getting user media:", error);
+                });
+        }
+
+        // Share screen function
+        function shareScreen() {
+            navigator.mediaDevices.getDisplayMedia({ video: true })
+                .then((stream) => {
+                    screenStream = stream;
+                    const screenTrack = screenStream.getVideoTracks()[0];
+                    localVideo.srcObject = screenStream;
+
+                    // Update peer connection with new screen track
+                    const sender = peerConnection.getSenders().find(sender => sender.track.kind === "video");
+                    sender.replaceTrack(screenTrack);
+                }).catch((error) => {
+                    console.error("Error sharing screen:", error);
+                });
+        }
+
+        // Leave room and stop streams
+        function leaveRoom() {
             if (localStream) {
                 localStream.getTracks().forEach(track => track.stop());
-                localStream = null;
-                voiceTab.classList.add('hidden');
-                chatSection.classList.remove('hidden');
             }
-        });
+            if (screenStream) {
+                screenStream.getTracks().forEach(track => track.stop());
+            }
+            peerConnection.close();
+            voiceTab.classList.add('hidden');
+            chatSection.classList.remove('hidden');
+        }
     </script>
 </body>
 </html>
