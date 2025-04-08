@@ -3,11 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Voice Chat with Google Login, Screen Sharing and Group Creation</title>
+  <title>Voice Chat with Google Login and Group Creation</title>
 
+  <!-- Thêm các SDK của Firebase 8.x -->
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
   <script src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
@@ -28,30 +29,30 @@
     #startBtn, #stopBtn {
       margin-top: 20px;
     }
-    #groupContainer {
-      margin-top: 30px;
+    #screenShareBtn {
+      margin-top: 20px;
+    }
+    #createGroupBtn {
+      margin-top: 20px;
     }
   </style>
 </head>
 <body>
-  <h1>Voice Chat with Google Login, Screen Sharing and Group Creation</h1>
+  <h1>Voice Chat with Google Login and Group Creation</h1>
 
+  <!-- Buttons for Login, Start, Stop, Screen Share, and Create Group -->
   <button id="loginBtn">Login with Google</button>
   <button id="startBtn" disabled>Start Voice Chat</button>
   <button id="stopBtn" disabled>Stop Voice Chat</button>
   <button id="screenShareBtn" disabled>Share Screen</button>
+  <br>
+  <button id="createGroupBtn" disabled>Create Group</button>
 
-  <!-- Group creation section -->
-  <div id="groupContainer">
-    <h3>Create a New Group</h3>
-    <input type="text" id="groupName" placeholder="Group Name">
-    <textarea id="groupDescription" placeholder="Group Description"></textarea>
-    <button id="createGroupBtn">Create Group</button>
+  <!-- Inputs for creating a group -->
+  <div>
+    <input type="text" id="groupName" placeholder="Group Name" />
+    <input type="text" id="groupDescription" placeholder="Group Description" />
   </div>
-
-  <!-- Display groups -->
-  <h3>Public Groups</h3>
-  <div id="groupsList"></div>
 
   <div id="videoContainer">
     <video id="localVideo" autoplay muted></video>
@@ -59,6 +60,7 @@
   </div>
 
   <script>
+    // Firebase config (v8.x)
     const firebaseConfig = {
       apiKey: "AIzaSyDtcs0XkNhf7yFRTzPY-A9WYet35YjQVT8",
       authDomain: "abc-s-noob.firebaseapp.com",
@@ -69,21 +71,23 @@
       measurementId: "G-LG5SWH89MG"
     };
 
+    // Initialize Firebase
     firebase.initializeApp(firebaseConfig);
+
+    // Initialize Firebase Auth and Firestore
     const auth = firebase.auth();
-    const database = firebase.database();
+    const db = firebase.firestore();
 
     // Elements
     const loginBtn = document.getElementById('loginBtn');
     const startBtn = document.getElementById('startBtn');
     const stopBtn = document.getElementById('stopBtn');
     const screenShareBtn = document.getElementById('screenShareBtn');
-    const localVideo = document.getElementById('localVideo');
-    const remoteVideo = document.getElementById('remoteVideo');
     const createGroupBtn = document.getElementById('createGroupBtn');
     const groupNameInput = document.getElementById('groupName');
     const groupDescriptionInput = document.getElementById('groupDescription');
-    const groupsList = document.getElementById('groupsList');
+    const localVideo = document.getElementById('localVideo');
+    const remoteVideo = document.getElementById('remoteVideo');
 
     let localStream;
     let peerConnection;
@@ -96,6 +100,7 @@
         Swal.fire('Logged in successfully!', `Hello ${result.user.displayName}`, 'success');
         loginBtn.disabled = true;
         startBtn.disabled = false;
+        createGroupBtn.disabled = false;
       }).catch((error) => {
         console.error(error);
         Swal.fire('Error', 'Could not login with Google', 'error');
@@ -111,7 +116,7 @@
 
         localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
 
-        // Firebase signaling: add the user to the voice chat
+        // Firebase signaling
         const signalRef = firebase.database().ref('voiceChat');
         const newSignal = signalRef.push();
         newSignal.set({ uid: auth.currentUser.uid, status: 'active' });
@@ -175,71 +180,32 @@
     });
 
     // Create Group
-    createGroupBtn.addEventListener('click', () => {
-      const groupName = groupNameInput.value;
-      const groupDescription = groupDescriptionInput.value;
+    createGroupBtn.addEventListener('click', async () => {
+      const groupName = groupNameInput.value.trim();
+      const groupDescription = groupDescriptionInput.value.trim();
 
       if (!groupName) {
         Swal.fire('Error', 'Group name is required', 'error');
         return;
       }
 
-      const groupRef = firebase.database().ref('groups');
-      const newGroup = groupRef.push();
-      newGroup.set({
+      const groupData = {
         name: groupName,
-        description: groupDescription,
-        createdBy: auth.currentUser.uid,
-        members: [auth.currentUser.uid]
-      }).then(() => {
-        Swal.fire('Group Created!', `Group "${groupName}" has been created successfully.`, 'success');
+        description: groupDescription || 'No description provided',
+        creatorId: auth.currentUser.uid,
+        members: [auth.currentUser.uid],
+      };
+
+      // Save group to Firestore
+      try {
+        await db.collection('groups').add(groupData);
+        Swal.fire('Group Created', `Group "${groupName}" has been created successfully`, 'success');
         groupNameInput.value = '';
         groupDescriptionInput.value = '';
-        loadGroups();
-      }).catch((error) => {
-        console.error(error);
-        Swal.fire('Error', 'Could not create group', 'error');
-      });
+      } catch (error) {
+        Swal.fire('Error', `Could not create group: ${error.message}`, 'error');
+      }
     });
-
-    // Load and Display Groups
-    function loadGroups() {
-      const groupsRef = firebase.database().ref('groups');
-      groupsRef.once('value').then((snapshot) => {
-        groupsList.innerHTML = '';
-        snapshot.forEach((childSnapshot) => {
-          const group = childSnapshot.val();
-          const groupElement = document.createElement('div');
-          groupElement.classList.add('group');
-          groupElement.innerHTML = `
-            <h4>${group.name}</h4>
-            <p>${group.description}</p>
-            <button onclick="joinGroup('${childSnapshot.key}')">Join Group</button>
-          `;
-          groupsList.appendChild(groupElement);
-        });
-      });
-    }
-
-    // Join Group
-    function joinGroup(groupId) {
-      const groupRef = firebase.database().ref('groups/' + groupId);
-      groupRef.once('value').then((snapshot) => {
-        const group = snapshot.val();
-        if (!group.members.includes(auth.currentUser.uid)) {
-          group.members.push(auth.currentUser.uid);
-          groupRef.update({ members: group.members }).then(() => {
-            Swal.fire('Joined Group', `You have joined the group "${group.name}"`, 'success');
-            loadGroups();
-          });
-        } else {
-          Swal.fire('Already in Group', 'You are already a member of this group.', 'info');
-        }
-      });
-    }
-
-    // Load existing groups when the page loads
-    loadGroups();
   </script>
 </body>
 </html>
