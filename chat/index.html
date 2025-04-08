@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Voice Chat with Google Login and Group Creation</title>
+  <title>Voice Chat with Google Login and Public Group Creation</title>
 
   <!-- Thêm các SDK của Firebase 8.x -->
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
@@ -38,7 +38,7 @@
   </style>
 </head>
 <body>
-  <h1>Voice Chat with Google Login and Group Creation</h1>
+  <h1>Voice Chat with Google Login and Public Group Creation</h1>
 
   <!-- Buttons for Login, Start, Stop, Screen Share, and Create Group -->
   <button id="loginBtn">Login with Google</button>
@@ -179,7 +179,7 @@
       }
     });
 
-    // Create Group
+    // Create Public Group (No Limits)
     createGroupBtn.addEventListener('click', async () => {
       const groupName = groupNameInput.value.trim();
       const groupDescription = groupDescriptionInput.value.trim();
@@ -193,13 +193,14 @@
         name: groupName,
         description: groupDescription || 'No description provided',
         creatorId: auth.currentUser.uid,
-        members: [auth.currentUser.uid],
+        members: [auth.currentUser.uid], // Adding the creator as the first member
+        public: true, // This group is public, so no restrictions on joining
       };
 
       // Save group to Firestore
       try {
         await db.collection('groups').add(groupData);
-        Swal.fire('Group Created', `Group "${groupName}" has been created successfully`, 'success');
+        Swal.fire('Group Created', `Group "${groupName}" has been created successfully. It's open for everyone to join!`, 'success');
         groupNameInput.value = '';
         groupDescriptionInput.value = '';
       } catch (error) {
