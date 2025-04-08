@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Voice Chat with Google Login and Screen Sharing</title>
 
-  <!-- Firebase SDK v8.x -->
+  <!-- Thêm các SDK của Firebase 8.x -->
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
@@ -26,37 +26,38 @@
       font-size: 16px;
       margin-top: 20px;
     }
-    #startBtn, #stopBtn, #createGroupBtn {
+    #startBtn, #stopBtn {
       margin-top: 20px;
     }
-    #groupsList {
-      margin-top: 30px;
+    #groupList {
+      margin-top: 20px;
+      text-align: left;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+    .groupItem {
+      padding: 10px;
+      border: 1px solid #ccc;
+      margin-bottom: 10px;
+      cursor: pointer;
     }
   </style>
 </head>
 <body>
   <h1>Voice Chat with Google Login and Screen Sharing</h1>
 
-  <!-- Buttons for Login, Start, Stop, and Create Group -->
+  <!-- Buttons for Login, Start, and Stop -->
   <button id="loginBtn">Login with Google</button>
   <button id="startBtn" disabled>Start Voice Chat</button>
   <button id="stopBtn" disabled>Stop Voice Chat</button>
   <button id="screenShareBtn" disabled>Share Screen</button>
-  <button id="createGroupBtn" disabled>Create Group</button>
-
-  <!-- Group name input for creating a new group -->
-  <input type="text" id="groupNameInput" placeholder="Group Name">
-  <textarea id="groupDescriptionInput" placeholder="Group Description"></textarea>
 
   <div id="videoContainer">
     <video id="localVideo" autoplay muted></video>
     <video id="remoteVideo" autoplay></video>
   </div>
 
-  <div id="groupsList">
-    <h3>Available Groups</h3>
-    <ul id="groupList"></ul>
-  </div>
+  <div id="groupList"></div>
 
   <script>
     // Firebase config (v8.x)
@@ -76,19 +77,16 @@
     // Initialize Firebase Auth and Firestore
     const auth = firebase.auth();
     const db = firebase.firestore();
-    
+
     // Elements
     const loginBtn = document.getElementById('loginBtn');
     const startBtn = document.getElementById('startBtn');
     const stopBtn = document.getElementById('stopBtn');
     const screenShareBtn = document.getElementById('screenShareBtn');
-    const createGroupBtn = document.getElementById('createGroupBtn');
-    const groupNameInput = document.getElementById('groupNameInput');
-    const groupDescriptionInput = document.getElementById('groupDescriptionInput');
-    const groupList = document.getElementById('groupList');
     const localVideo = document.getElementById('localVideo');
     const remoteVideo = document.getElementById('remoteVideo');
-    
+    const groupList = document.getElementById('groupList');
+
     let localStream;
     let peerConnection;
     const configuration = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
@@ -100,8 +98,7 @@
         Swal.fire('Logged in successfully!', `Hello ${result.user.displayName}`, 'success');
         loginBtn.disabled = true;
         startBtn.disabled = false;
-        createGroupBtn.disabled = false;
-        loadGroups(); // Load available groups after login
+        loadGroups();
       }).catch((error) => {
         console.error(error);
         Swal.fire('Error', 'Could not login with Google', 'error');
@@ -117,9 +114,14 @@
 
         localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
 
+        // Firebase signaling
+        const signalRef = db.collection('voiceChat');
+        const newSignal = signalRef.doc();
+        newSignal.set({ uid: auth.currentUser.uid, status: 'active' });
+
         peerConnection.onicecandidate = (event) => {
           if (event.candidate) {
-            // Handle ICE candidates
+            newSignal.collection("candidates").add(event.candidate.toJSON());
           }
         };
 
@@ -158,6 +160,7 @@
         const screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true });
         const screenTrack = screenStream.getTracks()[0];
 
+        // Replace video track with screen sharing track
         localStream.getTracks().forEach(track => track.stop());
         localStream.addTrack(screenTrack);
 
@@ -174,52 +177,26 @@
       }
     });
 
-    // Create Group
-    createGroupBtn.addEventListener('click', async () => {
-      const groupName = groupNameInput.value.trim();
-      const groupDescription = groupDescriptionInput.value.trim();
-
-      if (!groupName) {
-        Swal.fire('Error', 'Group name is required', 'error');
-        return;
-      }
-
-      const groupData = {
-        name: groupName,
-        description: groupDescription || 'No description provided',
-        creatorId: auth.currentUser.uid,
-        members: [auth.currentUser.uid],
-        public: true,
-      };
-
-      try {
-        const groupRef = await db.collection('groups').add(groupData);
-        Swal.fire('Group Created', `Group "${groupName}" has been created successfully. It's open for everyone to join!`, 'success');
-        groupNameInput.value = '';
-        groupDescriptionInput.value = '';
-        loadGroups(); // Reload groups after creation
-      } catch (error) {
-        console.error('Error creating group:', error);
-        Swal.fire('Error', `Could not create group: ${error.message}`, 'error');
-      }
-    });
-
-    // Load available groups
+    // Load groups from Firestore
     function loadGroups() {
-      db.collection('groups').where('public', '==', true).get().then((snapshot) => {
+      db.collection('groups').onSnapshot((snapshot) => {
         groupList.innerHTML = '';
-        snapshot.forEach((doc) => {
+        snapshot.forEach(doc => {
           const groupData = doc.data();
-          const li = document.createElement('li');
-          li.textContent = `Group: ${groupData.name} - ${groupData.description}`;
-          groupList.appendChild(li);
+          const groupItem = document.createElement('div');
+          groupItem.classList.add('groupItem');
+          groupItem.textContent = groupData.name;
+          groupItem.addEventListener('click', () => joinGroup(groupData));
+          groupList.appendChild(groupItem);
         });
-      }).catch((error) => {
-        console.error('Error loading groups:', error);
-        Swal.fire('Error', 'Could not load groups', 'error');
       });
     }
 
+    // Join group
+    function joinGroup(groupData) {
+      Swal.fire('Joined Group', `You joined the group: ${groupData.name}`, 'success');
+      // Logic for joining a group (e.g., joining a voice channel)
+    }
   </script>
 </body>
 </html>
