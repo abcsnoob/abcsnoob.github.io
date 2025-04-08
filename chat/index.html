@@ -8,42 +8,35 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: Arial, sans-serif;
-            background-color: #f4f4f9;
+            background-color: #36393F;
             display: flex;
-            justify-content: center;
-            align-items: center;
             height: 100vh;
-            color: #333;
+            color: white;
         }
         #auth-section {
             text-align: center;
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
         }
         button {
             padding: 10px 20px;
             margin: 10px;
             font-size: 16px;
-            background-color: #4CAF50;
+            background-color: #7289DA;
             color: white;
             border: none;
             border-radius: 5px;
             cursor: pointer;
             transition: background-color 0.3s;
         }
-        button:hover {
-            background-color: #45a049;
-        }
-        input[type="text"] {
-            padding: 10px;
-            margin-bottom: 20px;
-            font-size: 16px;
-            width: 300px;
-            border-radius: 5px;
-            border: 1px solid #ccc;
-        }
         #chat-section {
             display: flex;
             flex-direction: column;
             align-items: center;
+            justify-content: center;
         }
         .hidden {
             display: none;
@@ -53,12 +46,9 @@
         }
         #status {
             font-size: 18px;
-            color: #555;
+            color: #bbb;
         }
     </style>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
 </head>
 <body>
     <div id="auth-section">
@@ -68,13 +58,16 @@
     <div id="chat-section" class="hidden">
         <div id="voiceTab" class="hidden">
             <button id="muteButton">Mute</button>
+            <button id="shareScreenButton">Share Screen</button>
             <button id="leaveButton">Leave Room</button>
         </div>
         <div id="status"></div>
     </div>
 
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <script>
-        // Firebase Configuration
         const firebaseConfig = {
             apiKey: "AIzaSyDtcs0XkNhf7yFRTzPY-A9WYet35YjQVT8",
             authDomain: "abc-s-noob.firebaseapp.com",
@@ -84,7 +77,6 @@
             appId: "1:196660846002:web:ce129820f388cc838658ab",
             measurementId: "G-LG5SWH89MG"
         };
-
         firebase.initializeApp(firebaseConfig);
 
         const auth = firebase.auth();
@@ -94,6 +86,7 @@
         const googleSignInButton = document.getElementById('googleSignInButton');
         const muteButton = document.getElementById('muteButton');
         const leaveButton = document.getElementById('leaveButton');
+        const shareScreenButton = document.getElementById('shareScreenButton');
         const chatSection = document.getElementById('chat-section');
         const authSection = document.getElementById('auth-section');
         const voiceTab = document.getElementById('voiceTab');
@@ -102,7 +95,6 @@
         let localStream;
         let peerConnections = {};
 
-        // Firebase Auth - Sign in with Google
         googleSignInButton.addEventListener('click', () => {
             const provider = new firebase.auth.GoogleAuthProvider();
             auth.signInWithPopup(provider)
@@ -111,46 +103,40 @@
                     statusDiv.innerHTML = `Logged in as ${user.displayName}`;
                     authSection.classList.add('hidden');
                     chatSection.classList.remove('hidden');
-                    joinRoom(); // Tự động tham gia phòng trò chuyện
+                    joinRoom();
                 }).catch((error) => {
                     console.error("Error during Google sign-in: ", error);
                 });
         });
 
-        // Join Room (phòng trò chuyện chung)
         function joinRoom() {
-            chatSection.classList.add('hidden');
             voiceTab.classList.remove('hidden');
-            // Thiết lập WebRTC cho trò chuyện âm thanh
             setupWebRTC();
         }
 
-        // WebRTC setup để xử lý trò chuyện âm thanh giữa người dùng
         function setupWebRTC() {
             navigator.mediaDevices.getUserMedia({ audio: true })
                 .then((stream) => {
                     localStream = stream;
                     const audioTrack = localStream.getAudioTracks()[0];
 
-                    // Tạo kết nối peer và xử lý ICE candidates
                     const peerConnection = new RTCPeerConnection();
                     peerConnection.addTrack(audioTrack);
 
                     peerConnection.onicecandidate = (event) => {
                         if (event.candidate) {
-                            // Gửi ICE candidate cho người khác (sử dụng Firebase hoặc server signaling)
+                            // Gửi ICE candidate cho người khác
                         }
                     };
 
                     peerConnections[firebase.auth().currentUser.uid] = peerConnection;
 
-                    // Thêm stream của người dùng vào kết nối
                     peerConnection.createOffer()
                         .then(offer => {
                             return peerConnection.setLocalDescription(offer);
                         })
                         .then(() => {
-                            // Gửi offer cho người khác qua signaling (Firebase hoặc WebRTC signaling)
+                            // Gửi offer cho người khác qua signaling
                         })
                         .catch((error) => {
                             console.error("Error with WebRTC offer: ", error);
@@ -161,7 +147,6 @@
                 });
         }
 
-        // Mute / Unmute
         muteButton.addEventListener('click', () => {
             if (localStream) {
                 const audioTrack = localStream.getAudioTracks()[0];
@@ -170,7 +155,19 @@
             }
         });
 
-        // Leave Room
+        shareScreenButton.addEventListener('click', () => {
+            navigator.mediaDevices.getDisplayMedia({ video: true })
+                .then((stream) => {
+                    localStream.getTracks().forEach(track => track.stop());
+                    localStream = stream;
+                    const videoTrack = stream.getVideoTracks()[0];
+                    peerConnections[firebase.auth().currentUser.uid].addTrack(videoTrack);
+                    statusDiv.innerHTML = "Screen sharing enabled.";
+                }).catch((error) => {
+                    console.error("Error sharing screen: ", error);
+                });
+        });
+
         leaveButton.addEventListener('click', () => {
             if (localStream) {
                 localStream.getTracks().forEach(track => track.stop());
