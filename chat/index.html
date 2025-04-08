@@ -38,26 +38,26 @@
   <h1>Voice Chat with Google Login and Group Features</h1>
 
   <!-- Buttons for Login -->
-  <button id="loginBtn">Login with Google</button>
+  <button id="loginBtn">Đăng nhập với Google</button>
   
   <!-- Sections for Group Features -->
   <div id="createGroupDiv">
     <input type="text" id="groupName" placeholder="Enter group name" />
-    <button id="createGroupBtn">Create Group</button>
-    <h3>Existing Groups:</h3>
+    <button id="createGroupBtn">Tạo nhóm</button>
+    <h3>Các nhóm tồn tại:</h3>
     <ul id="groupList"></ul>
   </div>
 
   <div id="joinGroupDiv">
-    <h3>Join Group:</h3>
-    <button id="joinGroupBtn">Join Group</button>
+    <h3>Vô nhóm:</h3>
+    <button id="joinGroupBtn">Vô nhóm</button>
   </div>
 
   <!-- Voice Chat -->
   <div id="voiceChatDiv">
-    <button id="startBtn" disabled>Start Voice Chat</button>
-    <button id="stopBtn" disabled>Stop Voice Chat</button>
-    <button id="screenShareBtn" disabled>Share Screen</button>
+    <button id="startBtn" disabled>Bắt đầu Voice Chat</button>
+    <button id="stopBtn" disabled>Dừng Voice Chat</button>
+    <button id="screenShareBtn" disabled>Share Màn hình</button>
 
     <div id="videoContainer">
       <video id="localVideo" autoplay muted></video>
@@ -107,14 +107,14 @@
     loginBtn.addEventListener('click', () => {
       const provider = new firebase.auth.GoogleAuthProvider();
       auth.signInWithPopup(provider).then((result) => {
-        Swal.fire('Logged in successfully!', `Hello ${result.user.displayName}`, 'success');
+        Swal.fire('Đăng nhập thành công!', `Chào ${result.user.displayName}`, 'success');
         loginBtn.disabled = true;
         createGroupDiv.style.display = 'block';
         joinGroupDiv.style.display = 'block';
         loadGroups();  // Gọi lại hàm loadGroups để tải các nhóm sau khi đăng nhập
       }).catch((error) => {
         console.error(error);
-        Swal.fire('Error', 'Could not login with Google', 'error');
+        Swal.fire('Lỗi', 'Không thể đăng nhập bằng Google', 'lỗi');
       });
     });
 
@@ -126,7 +126,7 @@
           name: groupNameValue,
           members: [auth.currentUser.uid]
         }).then(() => {
-          Swal.fire('Group Created', `Group ${groupNameValue} created successfully!`, 'success');
+          Swal.fire('Đã tạo nhóm', `Nhóm ${groupNameValue} đã tạo thành công!`, 'success');
           groupName.value = '';
           loadGroups(); // Reload the group list
         }).catch((error) => {
@@ -145,7 +145,7 @@
 
         if (querySnapshot.empty) {
           const li = document.createElement('li');
-          li.innerText = 'No groups available.';
+          li.innerText = 'Không có nhóm nào có sẵn.';
           groupList.appendChild(li);
         } else {
           querySnapshot.forEach((doc) => {
@@ -173,13 +173,13 @@
       groupRef.update({
         members: firebase.firestore.FieldValue.arrayUnion(auth.currentUser.uid)
       }).then(() => {
-        Swal.fire('Joined Group', 'You have successfully joined the group!', 'success');
+        Swal.fire('Đã tham gia nhóm', 'Bạn đã tham gia nhóm thành công!', 'thành công');
         createGroupDiv.style.display = 'none';
         joinGroupDiv.style.display = 'none';
         voiceChatDiv.style.display = 'block';
       }).catch((error) => {
         console.error(error);
-        Swal.fire('Error', 'Could not join group', 'error');
+        Swal.fire('Lỗi', 'Không thể tham gia nhóm', 'lỗi');
       });
     }
 
