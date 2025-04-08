@@ -102,15 +102,23 @@
         let peerConnection;
         let screenStream;
 
+        // Check if user is already logged in
+        if(localStorage.getItem("user")) {
+            authSection.classList.add('hidden');
+            chatSection.classList.remove('hidden');
+            voiceTab.classList.remove('hidden');
+        }
+
         // Sign in with Google
         googleSignInButton.addEventListener('click', () => {
             const provider = new firebase.auth.GoogleAuthProvider();
             auth.signInWithPopup(provider)
                 .then((result) => {
                     const user = result.user;
+                    localStorage.setItem("user", JSON.stringify(user)); // Save user in localStorage
                     authSection.classList.add('hidden');
                     chatSection.classList.remove('hidden');
-                    startVoiceButton.classList.remove('hidden');
+                    voiceTab.classList.remove('hidden');
                 }).catch((error) => {
                     console.error("Error during Google sign-in: ", error);
                 });
@@ -140,6 +148,7 @@
             leaveRoom();
         });
 
+        // Start voice chat function
         function startVoiceChat() {
             navigator.mediaDevices.getUserMedia({ video: false, audio: true })
                 .then((stream) => {
@@ -199,6 +208,7 @@
             peerConnection.close();
             voiceTab.classList.add('hidden');
             chatSection.classList.remove('hidden');
+            localStorage.removeItem("user"); // Remove user from localStorage on leave
         }
     </script>
 </body>
