@@ -104,31 +104,17 @@
 
         // Firebase Auth - Sign in with Google
         googleSignInButton.addEventListener('click', () => {
-            // Mở tab đăng nhập Google
-            const googleAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=YOUR_CLIENT_ID&redirect_uri=http://localhost:8000&response_type=token&scope=email`;
-            const authWindow = window.open(googleAuthUrl, '_blank', 'width=600,height=800');
-
-            // Lắng nghe tin nhắn từ tab mới
-            window.addEventListener('message', (event) => {
-                if (event.origin !== 'http://localhost:8000') return; // Kiểm tra origin đúng
-
-                const token = event.data.token;
-                if (token) {
-                    // Đăng nhập với Firebase bằng token
-                    auth.signInWithCustomToken(token).then((userCredential) => {
-                        const user = userCredential.user;
-                        statusDiv.innerHTML = `Logged in as ${user.displayName}`;
-                        authSection.classList.add('hidden');
-                        chatSection.classList.remove('hidden');
-                        joinRoom(); // Tự động tham gia phòng trò chuyện
-                    }).catch((error) => {
-                        console.error("Error with Firebase login: ", error);
-                    });
-
-                    // Đóng tab đăng nhập khi đã xác thực thành công
-                    authWindow.close();
-                }
-            });
+            const provider = new firebase.auth.GoogleAuthProvider();
+            auth.signInWithPopup(provider)
+                .then((result) => {
+                    const user = result.user;
+                    statusDiv.innerHTML = `Logged in as ${user.displayName}`;
+                    authSection.classList.add('hidden');
+                    chatSection.classList.remove('hidden');
+                    joinRoom(); // Tự động tham gia phòng trò chuyện
+                }).catch((error) => {
+                    console.error("Error during Google sign-in: ", error);
+                });
         });
 
         // Join Room (phòng trò chuyện chung)
