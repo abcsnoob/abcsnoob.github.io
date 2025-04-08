@@ -1,29 +1,159 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Voice Group Chat</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Voice Chat with Google Login and Group Features</title>
+
+  <!-- Firebase SDK 8.x -->
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
   <script src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
   <style>
-    body { font-family: Arial; padding: 20px; }
-    .hidden { display: none; }
+    body { font-family: Arial; text-align: center; }
+    video { width: 60%; margin-top: 20px; }
+    button { padding: 10px 20px; font-size: 16px; margin: 5px; }
+    #createGroupDiv, #joinGroupDiv, #voiceChatDiv { display: none; }
   </style>
 </head>
 <body>
-  <h2>Voice Chat Nhóm (Mesh)</h2>
-  <button id="loginBtn">Đăng nhập Google</button>
-  <div id="mainUI" class="hidden">
-    <input id="groupInput" placeholder="Tên nhóm" />
-    <button id="joinBtn">Vào nhóm</button>
-    <h3>Thành viên trong nhóm:</h3>
-    <ul id="memberList"></ul>
-    <button id="startCallBtn">Bắt đầu gọi</button>
-    <button id="hangupBtn">Tắt</button>
+  <h1>Voice Chat với Đăng nhập Google & Nhóm</h1>
+  <button id="loginBtn">Đăng nhập với Google</button>
+
+  <div id="createGroupDiv">
+    <input type="text" id="groupName" placeholder="Tên nhóm" />
+    <button id="createGroupBtn">Tạo nhóm</button>
+    <h3>Nhóm đang có:</h3>
+    <ul id="groupList"></ul>
   </div>
 
-  <script src="app.js"></script>
+  <div id="joinGroupDiv">
+    <h3>Tham gia nhóm:</h3>
+    <button id="joinGroupBtn">Vô nhóm</button>
+  </div>
+
+  <div id="voiceChatDiv">
+    <button id="startBtn" disabled>Bắt đầu Chat</button>
+    <button id="stopBtn" disabled>Dừng Chat</button>
+    <button id="screenShareBtn" disabled>Chia sẻ màn hình</button>
+    <div id="videoContainer">
+      <video id="localVideo" autoplay muted></video>
+      <video id="remoteVideo" autoplay></video>
+    </div>
+  </div>
+
+  <script>
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDtcs0XkNhf7yFRTzPY-A9WYet35YjQVT8",
+      authDomain: "abc-s-noob.firebaseapp.com",
+      projectId: "abc-s-noob",
+      storageBucket: "abc-s-noob.firebasestorage.app",
+      messagingSenderId: "196660846002",
+      appId: "1:196660846002:web:ce129820f388cc838658ab",
+      measurementId: "G-LG5SWH89MG"
+    };
+
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+    const auth = firebase.auth();
+
+    const loginBtn = document.getElementById('loginBtn');
+    const createGroupDiv = document.getElementById('createGroupDiv');
+    const joinGroupDiv = document.getElementById('joinGroupDiv');
+    const groupList = document.getElementById('groupList');
+    const groupName = document.getElementById('groupName');
+    const createGroupBtn = document.getElementById('createGroupBtn');
+    const joinGroupBtn = document.getElementById('joinGroupBtn');
+    const voiceChatDiv = document.getElementById('voiceChatDiv');
+    const startBtn = document.getElementById('startBtn');
+    const stopBtn = document.getElementById('stopBtn');
+    const screenShareBtn = document.getElementById('screenShareBtn');
+    const localVideo = document.getElementById('localVideo');
+    const remoteVideo = document.getElementById('remoteVideo');
+
+    let localStream, peerConnection;
+    const config = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
+
+    loginBtn.onclick = () => {
+      const provider = new firebase.auth.GoogleAuthProvider();
+      auth.signInWithPopup(provider).then(res => {
+        Swal.fire('Đăng nhập thành công!', `Chào ${res.user.displayName}`, 'success');
+        loginBtn.disabled = true;
+        createGroupDiv.style.display = 'block';
+        joinGroupDiv.style.display = 'block';
+        loadGroups();
+      }).catch(() => Swal.fire('Lỗi', 'Không thể đăng nhập Google', 'error'));
+    };
+
+    createGroupBtn.onclick = () => {
+      const name = groupName.value.trim();
+      if (!name) return Swal.fire('Nhập tên nhóm!');
+      db.collection('groups').add({ name, members: [auth.currentUser.uid] })
+        .then(() => {
+          Swal.fire('Tạo thành công', `Nhóm ${name} đã tạo`, 'success');
+          groupName.value = '';
+          loadGroups();
+        });
+    };
+
+    function loadGroups() {
+      db.collection('groups').get().then(snapshot => {
+        groupList.innerHTML = '';
+        if (snapshot.empty) return groupList.innerHTML = '<li>Không có nhóm.</li>';
+        snapshot.forEach(doc => {
+          const li = document.createElement('li');
+          li.textContent = doc.data().name;
+          li.onclick = () => joinGroup(doc.id);
+          groupList.appendChild(li);
+        });
+      });
+    }
+
+    function joinGroup(id) {
+      db.collection('groups').doc(id).update({
+        members: firebase.firestore.FieldValue.arrayUnion(auth.currentUser.uid)
+      }).then(() => {
+        Swal.fire('Đã tham gia nhóm', '', 'success');
+        createGroupDiv.style.display = 'none';
+        joinGroupDiv.style.display = 'none';
+        voiceChatDiv.style.display = 'block';
+        startBtn.disabled = false;
+      });
+    }
+
+    startBtn.onclick = async () => {
+      localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      localVideo.srcObject = localStream;
+      peerConnection = new RTCPeerConnection(config);
+      localStream.getTracks().forEach(t => peerConnection.addTrack(t, localStream));
+      startBtn.disabled = true;
+      stopBtn.disabled = false;
+      screenShareBtn.disabled = false;
+    };
+
+    stopBtn.onclick = () => {
+      localStream.getTracks().forEach(t => t.stop());
+      peerConnection && peerConnection.close();
+      startBtn.disabled = false;
+      stopBtn.disabled = true;
+      screenShareBtn.disabled = true;
+      localVideo.srcObject = null;
+      remoteVideo.srcObject = null;
+    };
+
+    screenShareBtn.onclick = async () => {
+      const screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true });
+      const screenTrack = screenStream.getTracks()[0];
+      peerConnection.getSenders().forEach(sender => {
+        if (sender.track.kind === 'video') sender.replaceTrack(screenTrack);
+      });
+      localVideo.srcObject = screenStream;
+    };
+  </script>
 </body>
 </html>
