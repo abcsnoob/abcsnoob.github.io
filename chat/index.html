@@ -1,230 +1,162 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Voice Chat Room</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f9;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            color: #333;
-        }
-        #auth-section {
-            text-align: center;
-        }
-        button {
-            padding: 10px 20px;
-            margin: 10px;
-            font-size: 16px;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: background-color 0.3s;
-        }
-        button:hover {
-            background-color: #45a049;
-        }
-        input[type="text"] {
-            padding: 10px;
-            margin-bottom: 20px;
-            font-size: 16px;
-            width: 300px;
-            border-radius: 5px;
-            border: 1px solid #ccc;
-        }
-        #chat-section {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-        .hidden {
-            display: none;
-        }
-        #voiceTab {
-            margin: 20px;
-        }
-        #status {
-            font-size: 18px;
-            color: #555;
-        }
-    </style>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Voice Chat with Google Login and Screen Sharing</title>
+
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js"></script>
+  <script src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+    }
+    video {
+      width: 60%;
+      margin-top: 20px;
+    }
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      margin-top: 20px;
+    }
+    #startBtn, #stopBtn {
+      margin-top: 20px;
+    }
+  </style>
 </head>
 <body>
-    <div id="auth-section">
-        <button id="googleSignInButton">Sign In with Google</button>
-    </div>
+  <h1>Voice Chat with Google Login and Screen Sharing</h1>
 
-    <div id="chat-section" class="hidden">
-        <div id="voiceTab" class="hidden">
-            <button id="muteButton">Mute</button>
-            <button id="leaveButton">Leave Room</button>
-            <button id="shareScreenButton">Share Screen</button>
-        </div>
-        <div id="status"></div>
-    </div>
+  <!-- Buttons for Login, Start, and Stop -->
+  <button id="loginBtn">Login with Google</button>
+  <button id="startBtn" disabled>Start Voice Chat</button>
+  <button id="stopBtn" disabled>Stop Voice Chat</button>
+  <button id="screenShareBtn" disabled>Share Screen</button>
+  
+  <div id="videoContainer">
+    <video id="localVideo" autoplay muted></video>
+    <video id="remoteVideo" autoplay></video>
+  </div>
 
-    <script>
-        // Firebase Configuration
-        const firebaseConfig = {
-            apiKey: "AIzaSyDtcs0XkNhf7yFRTzPY-A9WYet35YjQVT8",
-            authDomain: "abc-s-noob.firebaseapp.com",
-            projectId: "abc-s-noob",
-            storageBucket: "abc-s-noob.firebasestorage.app",
-            messagingSenderId: "196660846002",
-            appId: "1:196660846002:web:ce129820f388cc838658ab",
-            measurementId: "G-LG5SWH89MG"
+  <script>
+    // Firebase config
+    const firebaseConfig = {
+      apiKey: "AIzaSyDtcs0XkNhf7yFRTzPY-A9WYet35YjQVT8",
+      authDomain: "abc-s-noob.firebaseapp.com",
+      projectId: "abc-s-noob",
+      storageBucket: "abc-s-noob.firebasestorage.app",
+      messagingSenderId: "196660846002",
+      appId: "1:196660846002:web:ce129820f388cc838658ab",
+      measurementId: "G-LG5SWH89MG"
+    };
+
+    // Initialize Firebase
+    const app = firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const database = firebase.database(app);
+
+    // Elements
+    const loginBtn = document.getElementById('loginBtn');
+    const startBtn = document.getElementById('startBtn');
+    const stopBtn = document.getElementById('stopBtn');
+    const screenShareBtn = document.getElementById('screenShareBtn');
+    const localVideo = document.getElementById('localVideo');
+    const remoteVideo = document.getElementById('remoteVideo');
+
+    let localStream;
+    let peerConnection;
+    const configuration = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
+
+    // Google Sign-In
+    loginBtn.addEventListener('click', () => {
+      const provider = new firebase.auth.GoogleAuthProvider();
+      auth.signInWithPopup(provider).then((result) => {
+        Swal.fire('Logged in successfully!', `Hello ${result.user.displayName}`, 'success');
+        loginBtn.disabled = true;
+        startBtn.disabled = false;
+      }).catch((error) => {
+        console.error(error);
+        Swal.fire('Error', 'Could not login with Google', 'error');
+      });
+    });
+
+    // Start Voice Chat
+    startBtn.addEventListener('click', async () => {
+      try {
+        localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+        localVideo.srcObject = localStream;
+        peerConnection = new RTCPeerConnection(configuration);
+
+        localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
+
+        // Firebase signaling
+        const signalRef = firebase.database().ref('voiceChat');
+        const newSignal = signalRef.push();
+        newSignal.set({ uid: auth.currentUser.uid, status: 'active' });
+
+        peerConnection.onicecandidate = (event) => {
+          if (event.candidate) {
+            newSignal.child("candidates").push(event.candidate.toJSON());
+          }
         };
 
-        firebase.initializeApp(firebaseConfig);
+        peerConnection.ontrack = (event) => {
+          const remoteStream = event.streams[0];
+          remoteVideo.srcObject = remoteStream;
+        };
 
-        const auth = firebase.auth();
-        const firestore = firebase.firestore();
+        startBtn.disabled = true;
+        stopBtn.disabled = false;
+        screenShareBtn.disabled = false;
+      } catch (err) {
+        console.error('Error starting voice chat:', err);
+        Swal.fire('Error', 'Could not start voice chat', 'error');
+      }
+    });
 
-        // DOM elements
-        const googleSignInButton = document.getElementById('googleSignInButton');
-        const muteButton = document.getElementById('muteButton');
-        const leaveButton = document.getElementById('leaveButton');
-        const shareScreenButton = document.getElementById('shareScreenButton');
-        const chatSection = document.getElementById('chat-section');
-        const authSection = document.getElementById('auth-section');
-        const voiceTab = document.getElementById('voiceTab');
-        const statusDiv = document.getElementById('status');
+    // Stop Voice Chat
+    stopBtn.addEventListener('click', () => {
+      if (localStream) {
+        localStream.getTracks().forEach(track => track.stop());
+      }
+      if (peerConnection) {
+        peerConnection.close();
+      }
+      stopBtn.disabled = true;
+      startBtn.disabled = false;
+      screenShareBtn.disabled = true;
+      localVideo.srcObject = null;
+      remoteVideo.srcObject = null;
+    });
 
-        let localStream;
-        let peerConnections = {};
-        let currentRoom = "voiceRoom";  // Tên phòng chat
+    // Share Screen
+    screenShareBtn.addEventListener('click', async () => {
+      try {
+        const screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true });
+        const screenTrack = screenStream.getTracks()[0];
 
-        // Firebase Auth - Sign in with Google
-        googleSignInButton.addEventListener('click', () => {
-            const provider = new firebase.auth.GoogleAuthProvider();
-            auth.signInWithPopup(provider)
-                .then((result) => {
-                    const user = result.user;
-                    statusDiv.innerHTML = `Logged in as ${user.displayName}`;
-                    authSection.classList.add('hidden');
-                    chatSection.classList.remove('hidden');
-                    joinRoom(); // Tự động tham gia phòng trò chuyện
-                }).catch((error) => {
-                    console.error("Error during Google sign-in: ", error);
-                });
+        // Replace video track with screen sharing track
+        localStream.getTracks().forEach(track => track.stop());
+        localStream.addTrack(screenTrack);
+
+        peerConnection.getSenders().forEach(sender => {
+          if (sender.track.kind === 'video') {
+            sender.replaceTrack(screenTrack);
+          }
         });
 
-        // Join Room (phòng trò chuyện chung)
-        function joinRoom() {
-            chatSection.classList.add('hidden');
-            voiceTab.classList.remove('hidden');
-            setupWebRTC();
-        }
-
-        // WebRTC setup để xử lý trò chuyện âm thanh giữa người dùng
-        function setupWebRTC() {
-            navigator.mediaDevices.getUserMedia({ audio: true })
-                .then((stream) => {
-                    localStream = stream;
-                    const audioTrack = localStream.getAudioTracks()[0];
-
-                    // Tạo kết nối peer và xử lý ICE candidates
-                    const peerConnection = new RTCPeerConnection();
-                    peerConnection.addTrack(audioTrack);
-
-                    peerConnection.onicecandidate = (event) => {
-                        if (event.candidate) {
-                            // Gửi ICE candidate cho người khác (sử dụng Firebase hoặc server signaling)
-                        }
-                    };
-
-                    peerConnections[firebase.auth().currentUser.uid] = peerConnection;
-
-                    // Thêm stream của người dùng vào kết nối
-                    peerConnection.createOffer()
-                        .then(offer => {
-                            return peerConnection.setLocalDescription(offer);
-                        })
-                        .then(() => {
-                            // Gửi offer cho người khác qua signaling (Firebase hoặc WebRTC signaling)
-                        })
-                        .catch((error) => {
-                            console.error("Error with WebRTC offer: ", error);
-                        });
-                })
-                .catch((error) => {
-                    console.error("Error getting user media: ", error);
-                });
-        }
-
-        // Mute / Unmute
-        muteButton.addEventListener('click', () => {
-            if (localStream) {
-                const audioTrack = localStream.getAudioTracks()[0];
-                audioTrack.enabled = !audioTrack.enabled;
-                muteButton.innerText = audioTrack.enabled ? 'Mute' : 'Unmute';
-            }
-        });
-
-        // Leave Room
-        leaveButton.addEventListener('click', () => {
-            if (localStream) {
-                localStream.getTracks().forEach(track => track.stop());
-                localStream = null;
-                voiceTab.classList.add('hidden');
-                chatSection.classList.remove('hidden');
-            }
-        });
-
-        // Chia sẻ màn hình Full HD
-        shareScreenButton.addEventListener('click', () => {
-            const constraints = {
-                video: {
-                    width: { ideal: 1920 },  // Full HD
-                    height: { ideal: 1080 }
-                },
-                audio: false // Không cần âm thanh khi chia sẻ màn hình
-            };
-
-            navigator.mediaDevices.getDisplayMedia(constraints)
-                .then((stream) => {
-                    localStream = stream;
-                    const videoTrack = localStream.getVideoTracks()[0];
-
-                    // Tạo kết nối peer và xử lý ICE candidates
-                    const peerConnection = new RTCPeerConnection();
-                    peerConnection.addTrack(videoTrack);
-
-                    peerConnection.onicecandidate = (event) => {
-                        if (event.candidate) {
-                            // Gửi ICE candidate cho người khác (sử dụng Firebase hoặc server signaling)
-                        }
-                    };
-
-                    peerConnections[firebase.auth().currentUser.uid] = peerConnection;
-
-                    // Thêm stream của người dùng vào kết nối
-                    peerConnection.createOffer()
-                        .then(offer => {
-                            return peerConnection.setLocalDescription(offer);
-                        })
-                        .then(() => {
-                            // Gửi offer cho người khác qua signaling (Firebase hoặc WebRTC signaling)
-                        })
-                        .catch((error) => {
-                            console.error("Error with WebRTC offer: ", error);
-                        });
-                })
-                .catch((error) => {
-                    console.error("Error sharing screen: ", error);
-                });
-        });
-    </script>
+        localVideo.srcObject = localStream;
+      } catch (err) {
+        console.error('Error sharing screen:', err);
+        Swal.fire('Error', 'Could not share screen', 'error');
+      }
+    });
+  </script>
 </body>
 </html>
