@@ -111,6 +111,7 @@
         loginBtn.disabled = true;
         createGroupDiv.style.display = 'block';
         joinGroupDiv.style.display = 'block';
+        loadGroups();  // Gọi lại hàm loadGroups để tải các nhóm sau khi đăng nhập
       }).catch((error) => {
         console.error(error);
         Swal.fire('Error', 'Could not login with Google', 'error');
@@ -140,16 +141,29 @@
     // Load Groups
     function loadGroups() {
       db.collection('groups').get().then((querySnapshot) => {
-        groupList.innerHTML = '';
-        querySnapshot.forEach((doc) => {
-          const groupData = doc.data();
+        groupList.innerHTML = '';  // Xóa danh sách nhóm cũ
+
+        if (querySnapshot.empty) {
           const li = document.createElement('li');
-          li.innerText = groupData.name;
-          li.addEventListener('click', () => {
-            joinGroup(doc.id);
-          });
+          li.innerText = 'No groups available.';
           groupList.appendChild(li);
-        });
+        } else {
+          querySnapshot.forEach((doc) => {
+            const groupData = doc.data();
+            const li = document.createElement('li');
+            li.innerText = groupData.name;
+
+            // Thêm sự kiện cho mỗi nhóm khi người dùng click
+            li.addEventListener('click', () => {
+              joinGroup(doc.id);
+            });
+
+            groupList.appendChild(li);
+          });
+        }
+      }).catch((error) => {
+        console.error("Error fetching groups: ", error);
+        Swal.fire('Error', 'Could not load groups', 'error');
       });
     }
 
