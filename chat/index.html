@@ -17,6 +17,10 @@
     video { width: 60%; margin-top: 20px; }
     button { padding: 10px 20px; font-size: 16px; margin: 5px; }
     #createGroupDiv, #joinGroupDiv, #voiceChatDiv { display: none; }
+    #systemStats { margin-top: 20px; }
+    #participantCount { font-weight: bold; }
+    #videoContainer { display: flex; justify-content: space-around; margin-top: 20px; }
+    video { width: 30%; }
   </style>
 </head>
 <body>
@@ -39,14 +43,20 @@
     <button id="startBtn" disabled>Bắt đầu Chat</button>
     <button id="stopBtn" disabled>Dừng Chat</button>
     <button id="screenShareBtn" disabled>Chia sẻ màn hình</button>
+    <button id="toggleCameraBtn" disabled>Bật/Tắt Camera</button>
     <div id="videoContainer">
       <video id="localVideo" autoplay muted></video>
       <video id="remoteVideo" autoplay></video>
     </div>
   </div>
 
-  <script>
+  <div id="systemStats">
+    <p>CPU Cores: <span id="cpuCores"></span></p>
+    <p>Bộ nhớ sử dụng: <span id="ramUsage"></span> MB</p>
+    <p>Số người tham gia: <span id="participantCount">0</span></p>
+  </div>
 
+  <script>
     const firebaseConfig = {
       apiKey: "AIzaSyDtcs0XkNhf7yFRTzPY-A9WYet35YjQVT8",
       authDomain: "abc-s-noob.firebaseapp.com",
@@ -56,7 +66,6 @@
       appId: "1:196660846002:web:ce129820f388cc838658ab",
       measurementId: "G-LG5SWH89MG"
     };
-
 
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
@@ -73,11 +82,17 @@
     const startBtn = document.getElementById('startBtn');
     const stopBtn = document.getElementById('stopBtn');
     const screenShareBtn = document.getElementById('screenShareBtn');
+    const toggleCameraBtn = document.getElementById('toggleCameraBtn');
     const localVideo = document.getElementById('localVideo');
     const remoteVideo = document.getElementById('remoteVideo');
+    const participantCount = document.getElementById('participantCount');
+    const cpuCores = document.getElementById('cpuCores');
+    const ramUsage = document.getElementById('ramUsage');
 
     let localStream, peerConnection;
+    let isCameraOn = true;
     const config = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
+    let userCount = 0;
 
     loginBtn.onclick = () => {
       const provider = new firebase.auth.GoogleAuthProvider();
@@ -123,17 +138,24 @@
         joinGroupDiv.style.display = 'none';
         voiceChatDiv.style.display = 'block';
         startBtn.disabled = false;
+        userCount++;
+        participantCount.textContent = userCount;
       });
     }
 
     startBtn.onclick = async () => {
-      localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
       localVideo.srcObject = localStream;
       peerConnection = new RTCPeerConnection(config);
       localStream.getTracks().forEach(t => peerConnection.addTrack(t, localStream));
       startBtn.disabled = true;
       stopBtn.disabled = false;
       screenShareBtn.disabled = false;
+      toggleCameraBtn.disabled = false;
+
+      // Cập nhật thông tin CPU và RAM
+      cpuCores.textContent = navigator.hardwareConcurrency;
+      ramUsage.textContent = (window.performance.memory.usedJSHeapSize / 1024 / 1024).toFixed(2); // MB
     };
 
     stopBtn.onclick = () => {
@@ -142,6 +164,7 @@
       startBtn.disabled = false;
       stopBtn.disabled = true;
       screenShareBtn.disabled = true;
+      toggleCameraBtn.disabled = true;
       localVideo.srcObject = null;
       remoteVideo.srcObject = null;
     };
@@ -153,6 +176,15 @@
         if (sender.track.kind === 'video') sender.replaceTrack(screenTrack);
       });
       localVideo.srcObject = screenStream;
+    };
+
+    toggleCameraBtn.onclick = () => {
+      const videoTrack = localStream.getVideoTracks()[0];
+      if (videoTrack) {
+        videoTrack.enabled = !videoTrack.enabled;
+        isCameraOn = !isCameraOn;
+        toggleCameraBtn.textContent = isCameraOn ? 'Tắt Camera' : 'Bật Camera';
+      }
     };
   </script>
 </body>
