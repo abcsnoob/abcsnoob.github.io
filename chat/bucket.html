@@ -59,17 +59,20 @@
     });
 
     function loadMessages() {
-      messagesRef.where("bucket_id", "==", bucketId).orderBy("timestamp").onSnapshot(snapshot => {
-        const messagesContainer = document.getElementById('messages');
-        messagesContainer.innerHTML = "";
-        snapshot.forEach(doc => {
-          const message = doc.data();
-          const messageElement = document.createElement('div');
-          messageElement.classList.add('message');
-          messageElement.innerText = message.text;
-          messagesContainer.appendChild(messageElement);
+      // Truy vấn đơn giản không sử dụng `orderBy` để tránh yêu cầu chỉ mục
+      messagesRef.where("bucket_id", "==", bucketId)
+        .limit(50) // Giới hạn số lượng tin nhắn tải xuống mỗi lần
+        .onSnapshot(snapshot => {
+          const messagesContainer = document.getElementById('messages');
+          messagesContainer.innerHTML = ""; // Xóa tin nhắn cũ
+          snapshot.forEach(doc => {
+            const message = doc.data();
+            const messageElement = document.createElement('div');
+            messageElement.classList.add('message');
+            messageElement.innerText = message.text;
+            messagesContainer.appendChild(messageElement);
+          });
         });
-      });
     }
 
     function sendMessage() {
