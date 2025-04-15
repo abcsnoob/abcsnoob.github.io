@@ -1,64 +1,26 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Nhóm - Chat</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chat - Abc's Noob</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      padding: 20px;
-      background-color: #f4f4f9;
-    }
-    #sidePanel {
-      width: 200px;
-      float: left;
-      margin-right: 20px;
-      border-right: 1px solid #ccc;
-      padding: 20px;
-    }
-    #sidePanel button {
-      margin: 10px 0;
-    }
-    #chatBox {
-      margin-left: 220px;
-      padding: 20px;
-      background-color: #fff;
-      border-radius: 8px;
-      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    }
-    #msgInput {
-      width: 80%;
-      padding: 10px;
-      margin: 10px;
-      border-radius: 5px;
-      border: 1px solid #ddd;
-    }
-    button {
-      padding: 10px 20px;
-      background-color: #4CAF50;
-      color: white;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-    }
+    body { background: #121212; color: white; font-family: Arial, sans-serif; padding: 20px; }
+    .chat-container { background: #1f1f1f; padding: 20px; border-radius: 10px; display: flex; flex-direction: column; }
+    .message-box { height: 300px; overflow-y: auto; margin-bottom: 10px; background: #333; padding: 10px; border-radius: 5px; }
+    .message { margin: 10px 0; padding: 10px; background: #444; border-radius: 5px; }
+    input, button { padding: 10px; margin: 5px; border-radius: 5px; border: none; }
+    button { background: #1e88e5; color: white; cursor: pointer; }
   </style>
 </head>
 <body>
-
-  <div id="sidePanel">
-    <h3>Danh Sách Nhóm</h3>
-    <button onclick="window.location.href='create_group.html'">Tạo Nhóm Mới</button><br><br>
-    <ul id="groupList"></ul>
+  <h2>Welcome to Abc's Noob Chat</h2>
+  <div class="chat-container">
+    <div class="message-box" id="messages"></div>
+    <input type="text" id="messageInput" placeholder="Type a message...">
+    <button onclick="sendMessage()">Send</button>
   </div>
-
-  <div id="chatBox">
-    <h2 id="groupName"></h2>
-    <div id="messages"></div>
-    <input type="text" id="msgInput" placeholder="Nhập tin nhắn..." />
-    <button id="sendBtn">Gửi</button>
-  </div>
-
+  
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
@@ -76,48 +38,54 @@
 
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
+    const messagesRef = db.collection("messages");
 
-    // Lấy ID nhóm từ URL
+    // Lấy tham số từ URL
     const urlParams = new URLSearchParams(window.location.search);
-    const groupId = urlParams.get("bucket");
+    const ssid = urlParams.get('ssid'); // Lấy ssid từ URL
+    const bucketId = urlParams.get('bucket_id'); // Lấy bucket_id từ URL
 
-    if (groupId) {
-      // Truy vấn nhóm từ Firestore
-      db.collection("groups").doc(groupId).get().then(doc => {
-        if (doc.exists) {
-          const group = doc.data();
-          document.getElementById("groupName").innerText = group.name;
-
-          // Lấy tin nhắn của nhóm
-          db.collection("groups").doc(groupId).collection("messages").orderBy("createdAt").onSnapshot(snapshot => {
-            const messages = snapshot.docs.map(doc => `<p>${doc.data().message}</p>`).join('');
-            document.getElementById("messages").innerHTML = messages;
-          });
-        } else {
-          console.error("Không tìm thấy nhóm");
-        }
-      }).catch(error => {
-        console.error("Lỗi khi truy vấn nhóm: ", error);
-      });
-    } else {
-      console.error("ID nhóm không có trong URL");
+    if (!ssid || !bucketId) {
+      alert('Missing ssid or bucket_id parameter!');
+      window.location.href = "/chat/"; // Chuyển về trang đăng nhập nếu không có tham số
     }
 
-    // Gửi tin nhắn
-    document.getElementById("sendBtn").onclick = () => {
-      const message = document.getElementById("msgInput").value.trim();
-      if (message) {
-        db.collection("groups").doc(groupId).collection("messages").add({
-          message: message,
-          createdAt: firebase.firestore.FieldValue.serverTimestamp()
-        }).then(() => {
-          document.getElementById("msgInput").value = "";
-        }).catch(error => {
-          console.error("Lỗi gửi tin nhắn: ", error);
-        });
+    firebase.auth().onAuthStateChanged(user => {
+      if (user) {
+        loadMessages();
+      } else {
+        window.location.href = "/chat/"; // Quay lại trang đăng nhập nếu chưa đăng nhập
       }
-    };
-  </script>
+    });
 
+    function loadMessages() {
+      messagesRef.where("bucket_id", "==", bucketId).orderBy("timestamp").onSnapshot(snapshot => {
+        const messagesContainer = document.getElementById('messages');
+        messagesContainer.innerHTML = "";
+        snapshot.forEach(doc => {
+          const message = doc.data();
+          const messageElement = document.createElement('div');
+          messageElement.classList.add('message');
+          messageElement.innerText = message.text;
+          messagesContainer.appendChild(messageElement);
+        });
+      });
+    }
+
+    function sendMessage() {
+      const messageInput = document.getElementById('messageInput');
+      const messageText = messageInput.value;
+      if (messageText.trim() === "") return;
+
+      messagesRef.add({
+        text: messageText,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+        userId: firebase.auth().currentUser.uid,
+        bucket_id: bucketId // Lưu bucket_id khi gửi tin nhắn
+      });
+
+      messageInput.value = ""; // Clear the input
+    }
+  </script>
 </body>
 </html>
