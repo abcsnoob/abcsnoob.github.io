@@ -8,7 +8,7 @@
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
 
     <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -113,7 +113,7 @@
     // Initialize Firebase
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
-    const db = firebase.database();
+    const db = firebase.firestore();  // Use Firestore instead of Realtime Database
 
     // References to DOM elements
     const emailInput = document.getElementById('email');
@@ -195,14 +195,14 @@
             });
     });
 
-    // Send message to Firebase
+    // Send message to Firestore
     sendMsgBtn.addEventListener('click', () => {
         const message = chatInput.value;
         if (message.trim()) {
-            db.ref('messages').push({
+            db.collection('messages').add({
                 message: message,
                 sender: auth.currentUser.email,
-                timestamp: Date.now()
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
             });
             chatInput.value = '';
         }
@@ -213,15 +213,18 @@
         auth.signOut();
     });
 
-    // Load messages from Firebase
+    // Load messages from Firestore
     function loadMessages() {
-        db.ref('messages').orderByChild('timestamp').on('child_added', snapshot => {
-            const data = snapshot.val();
-            const messageDiv = document.createElement('div');
-            messageDiv.classList.add('message');
-            messageDiv.textContent = `${data.sender}: ${data.message}`;
-            messagesDiv.appendChild(messageDiv);
-            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        db.collection('messages').orderBy('timestamp').onSnapshot(snapshot => {
+            messagesDiv.innerHTML = '';
+            snapshot.forEach(doc => {
+                const data = doc.data();
+                const messageDiv = document.createElement('div');
+                messageDiv.classList.add('message');
+                messageDiv.textContent = `${data.sender}: ${data.message}`;
+                messagesDiv.appendChild(messageDiv);
+                messagesDiv.scrollTop = messagesDiv.scrollHeight;
+            });
         });
     }
 </script>
