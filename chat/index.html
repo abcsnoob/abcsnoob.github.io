@@ -1,8 +1,9 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Abc's Noob ACCOUNTS</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Abc's Noob Chat - Login</title>
   <style>
     body { background: #121212; color: white; font-family: Arial; text-align: center; padding: 20px; }
     input, button { padding: 10px; margin: 5px; border: none; border-radius: 5px; }
@@ -57,17 +58,12 @@
           name: name,
           email: user.email
         }).then(() => {
-          // Tạo bucket mới cho người dùng
-          const bucketId = `bucket_${user.uid}`;
-          db.collection("buckets").doc(bucketId).set({
-            userId: user.uid,
-            name: `${name}'s Bucket`
-          }).then(() => {
-            // Sau khi tạo bucket, chuyển hướng đến trang bucket.html
-            window.location.href = `/chat/bucket?ssid=${user.uid}&bucket_id=${bucketId}`;
-          });
+          alert("Đăng nhập thành công: " + name);
+          // Chuyển hướng đến chat (bucket.html) sau khi đăng nhập
+          window.location.href = `/chat/bucket?ssid=${user.uid}&bucket_id=${user.uid}`;
+        }).catch(error => {
+          console.error("Lỗi khi lưu dữ liệu người dùng: ", error);
         });
-        alert("Đăng nhập thành công: " + name);
       }
     });
 
