@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Abc's Noob Chat - Login</title>
+  <title>Abc's Noob ACCOUNTS</title>
   <style>
     body { background: #121212; color: white; font-family: Arial; text-align: center; padding: 20px; }
     input, button { padding: 10px; margin: 5px; border: none; border-radius: 5px; }
@@ -56,9 +56,18 @@
         db.collection("users").doc(user.uid).set({
           name: name,
           email: user.email
+        }).then(() => {
+          // Tạo bucket mới cho người dùng
+          const bucketId = `bucket_${user.uid}`;
+          db.collection("buckets").doc(bucketId).set({
+            userId: user.uid,
+            name: `${name}'s Bucket`
+          }).then(() => {
+            // Sau khi tạo bucket, chuyển hướng đến trang bucket.html
+            window.location.href = `/chat/bucket.html?ssid=${user.uid}&bucket_id=${bucketId}`;
+          });
         });
         alert("Đăng nhập thành công: " + name);
-        // Chuyển sang giao diện chat nếu cần
       }
     });
 
