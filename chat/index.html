@@ -64,7 +64,7 @@
             name: `${name}'s Bucket`
           }).then(() => {
             // Sau khi tạo bucket, chuyển hướng đến trang bucket.html
-            window.location.href = `/chat/bucket.html?ssid=${user.uid}&bucket_id=${bucketId}`;
+            window.location.href = `/chat/bucket?ssid=${user.uid}&bucket_id=${bucketId}`;
           });
         });
         alert("Đăng nhập thành công: " + name);
