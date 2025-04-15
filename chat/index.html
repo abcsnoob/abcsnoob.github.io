@@ -8,53 +8,154 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
-        body { font-family: Arial, sans-serif; text-align: center; }
-        .container { margin: 20px; }
-        input { padding: 10px; margin: 5px; width: 80%; }
-        button { padding: 10px 20px; font-size: 16px; margin: 5px; }
-        .hidden { display: none; }
-        .logo { margin-top: 10px; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f7fc;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            width: 100%;
+        }
+
+        .auth-box {
+            background-color: #fff;
+            padding: 30px;
+            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            width: 400px;
+            text-align: center;
+        }
+
+        h2 {
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+
+        .auth-form input {
+            width: 90%;
+            padding: 12px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+
+        .auth-form button {
+            padding: 12px 30px;
+            border: none;
+            background-color: #3498db;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+
+        .auth-form button:hover {
+            background-color: #2980b9;
+        }
+
+        .auth-footer {
+            margin-top: 20px;
+        }
+
+        .social-btn {
+            width: 90%;
+            padding: 12px;
+            border: none;
+            background-color: #f1f1f1;
+            font-size: 16px;
+            margin-top: 10px;
+            border-radius: 4px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .social-btn img {
+            width: 20px;
+            height: 20px;
+            margin-right: 10px;
+        }
+
+        .password-reset-box {
+            margin-top: 20px;
+            width: 400px;
+            text-align: center;
+            padding: 20px;
+            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            background-color: #fff;
+        }
+
+        .hidden {
+            display: none;
+        }
     </style>
 </head>
 <body>
-
-    <!-- Login & Register Form -->
     <div class="container">
-        <h2>Abc's Noob - ACCOUNTS</h2>
-        <div id="loginForm">
-            <h3>Login</h3>
-            <input type="email" id="loginEmail" placeholder="Email" />
-            <input type="password" id="loginPassword" placeholder="Password" />
-            <button id="loginBtn">Login</button>
-            <p>Don't have an account? <a href="#" id="goToRegister">Register</a></p>
-        </div>
+        <div class="auth-box">
+            <h2>Abc's Noob - ACCOUNTS</h2>
 
-        <div id="registerForm" class="hidden">
-            <h3>Register</h3>
-            <input type="text" id="registerName" placeholder="Username" />
-            <input type="email" id="registerEmail" placeholder="Email" />
-            <input type="password" id="registerPassword" placeholder="Password" />
-            <button id="registerBtn">Register</button>
-            <p>Already have an account? <a href="#" id="goToLogin">Login</a></p>
-        </div>
+            <!-- Login Form -->
+            <div id="loginForm" class="auth-form">
+                <h3>Login</h3>
+                <input type="email" id="loginEmail" placeholder="Email" required />
+                <input type="password" id="loginPassword" placeholder="Password" required />
+                <button id="loginBtn">Login</button>
+                <p>Don't have an account? <a href="#" id="goToRegister">Register</a></p>
+            </div>
 
-        <!-- Google and GitHub login buttons -->
-        <div>
-            <button id="googleLoginBtn">Login with Google</button>
-            <button id="githubLoginBtn">Login with GitHub</button>
+            <!-- Register Form -->
+            <div id="registerForm" class="auth-form hidden">
+                <h3>Register</h3>
+                <input type="text" id="registerName" placeholder="Username" required />
+                <input type="email" id="registerEmail" placeholder="Email" required />
+                <input type="password" id="registerPassword" placeholder="Password" required />
+                <button id="registerBtn">Register</button>
+                <p>Already have an account? <a href="#" id="goToLogin">Login</a></p>
+            </div>
+
+            <div class="auth-footer">
+                <button id="googleLoginBtn" class="social-btn">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" alt="Google logo" />
+                    Login with Google
+                </button>
+                <button id="githubLoginBtn" class="social-btn">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/e/ec/GitHub_Logo_2018.png" alt="GitHub logo" />
+                    Login with GitHub
+                </button>
+            </div>
         </div>
     </div>
 
-    <!-- Password Reset -->
     <div class="container">
-        <h3>Password Reset</h3>
-        <input type="email" id="resetEmail" placeholder="Enter your email to reset password" />
-        <button id="resetPasswordBtn">Send Reset Link</button>
+        <div class="password-reset-box">
+            <h3>Password Reset</h3>
+            <input type="email" id="resetEmail" placeholder="Enter your email to reset password" />
+            <button id="resetPasswordBtn">Send Reset Link</button>
+        </div>
     </div>
 
-    <!-- Firebase Initialization -->
     <script>
-        // Firebase Configuration
+        // Firebase configuration
         const firebaseConfig = {
             apiKey: "YOUR_FIREBASE_API_KEY",
             authDomain: "YOUR_FIREBASE_PROJECT_ID.firebaseapp.com",
@@ -67,6 +168,7 @@
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
 
+        // DOM Elements
         const loginBtn = document.getElementById("loginBtn");
         const registerBtn = document.getElementById("registerBtn");
         const goToRegister = document.getElementById("goToRegister");
@@ -169,6 +271,5 @@
                 .catch((error) => Swal.fire('Error', error.message, 'error'));
         });
     </script>
-
 </body>
 </html>
