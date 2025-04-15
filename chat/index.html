@@ -85,6 +85,7 @@
 
         <div class="social-btns">
             <button id="google-login">Login with Google</button>
+            <button id="github-login">Login with GitHub</button>
         </div>
     </div>
 
@@ -120,6 +121,7 @@
     const loginBtn = document.getElementById('login-btn');
     const registerBtn = document.getElementById('register-btn');
     const googleLoginBtn = document.getElementById('google-login');
+    const githubLoginBtn = document.getElementById('github-login');
     const chatSection = document.getElementById('chat-section');
     const messagesDiv = document.getElementById('messages');
     const chatInput = document.getElementById('chat-input');
@@ -175,6 +177,18 @@
         auth.signInWithPopup(provider)
             .then(() => {
                 Swal.fire('Success', 'Logged in with Google', 'success');
+            })
+            .catch(error => {
+                Swal.fire('Error', error.message, 'error');
+            });
+    });
+
+    // Login with GitHub
+    githubLoginBtn.addEventListener('click', () => {
+        const provider = new firebase.auth.GithubAuthProvider();
+        auth.signInWithPopup(provider)
+            .then(() => {
+                Swal.fire('Success', 'Logged in with GitHub', 'success');
             })
             .catch(error => {
                 Swal.fire('Error', error.message, 'error');
