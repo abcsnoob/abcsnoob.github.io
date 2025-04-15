@@ -88,14 +88,15 @@
       overflow-y: scroll;
       border: 1px solid #ddd;
       padding: 10px;
-      background-color: #fff;
+      background-color: #333; /* Dark background */
+      color: white; /* White text */
       margin-top: 20px;
       border-radius: 5px;
     }
     #chatDiv .message {
       margin-bottom: 10px;
       padding: 5px;
-      background-color: #f0f0f0;
+      background-color: #444; /* Slightly lighter for messages */
       border-radius: 4px;
     }
     #chatInput {
@@ -104,6 +105,11 @@
       border-radius: 4px;
       margin-top: 10px;
       border: 1px solid #ddd;
+      background-color: #555; /* Darker input field */
+      color: white; /* White text in input */
+    }
+    #chatInput::placeholder {
+      color: #bbb; /* Light placeholder text */
     }
   </style>
 </head>
@@ -152,7 +158,6 @@
 
   <!-- Chat Window -->
   <div id="chatDiv">
-    <h2>Chat</h2>
     <div id="messages"></div>
     <input type="text" id="chatInput" placeholder="Type a message..." onkeyup="sendMessage(event)">
   </div>
@@ -208,8 +213,12 @@
 
       auth.createUserWithEmailAndPassword(email, password)
         .then((userCredential) => {
-          userCredential.user.updateProfile({ displayName: name });
-          Swal.fire('Success', 'Account created!', 'success');
+          const user = userCredential.user;
+          db.ref('users/' + user.uid).set({
+            name: name,
+            email: email
+          });
+          Swal.fire('Success', 'You are registered!', 'success');
           showChat();
         })
         .catch((error) => {
@@ -217,65 +226,22 @@
         });
     }
 
-    // Google Login
-    function googleLogin() {
-      const provider = new firebase.auth.GoogleAuthProvider();
-      auth.signInWithPopup(provider)
-        .then((result) => {
-          Swal.fire('Success', 'You are logged in with Google!', 'success');
-          showChat();
-        })
-        .catch((error) => {
-          Swal.fire('Error', error.message, 'error');
-        });
-    }
-
-    // GitHub Login
-    function githubLogin() {
-      const provider = new firebase.auth.GithubAuthProvider();
-      auth.signInWithPopup(provider)
-        .then((result) => {
-          Swal.fire('Success', 'You are logged in with GitHub!', 'success');
-          showChat();
-        })
-        .catch((error) => {
-          Swal.fire('Error', error.message, 'error');
-        });
-    }
-
-    // Show Chat
+    // Show Chat window
     function showChat() {
       document.getElementById('loginDiv').style.display = 'none';
       document.getElementById('registerDiv').style.display = 'none';
       document.getElementById('chatDiv').style.display = 'block';
-
-      const user = auth.currentUser;
-      if (user) {
-        db.ref('messages').on('child_added', (snapshot) => {
-          const message = snapshot.val();
-          const messageElement = document.createElement('div');
-          messageElement.classList.add('message');
-          messageElement.textContent = message.text;
-          document.getElementById('messages').appendChild(messageElement);
-        });
-      }
     }
 
-    // Send Message
+    // Send message to the chat
     function sendMessage(event) {
-      if (event.keyCode === 13) {
-        const messageText = document.getElementById('chatInput').value;
-        if (messageText.trim() !== '') {
-          const user = auth.currentUser;
-          if (user) {
-            db.ref('messages').push({
-              user: user.displayName,
-              text: messageText,
-              timestamp: Date.now(),
-            });
-            document.getElementById('chatInput').value = '';
-          }
-        }
+      if (event.key === 'Enter' && event.target.value.trim()) {
+        const message = event.target.value;
+        const messageDiv = document.createElement('div');
+        messageDiv.classList.add('message');
+        messageDiv.textContent = message;
+        document.getElementById('messages').appendChild(messageDiv);
+        event.target.value = ''; // Clear input field
       }
     }
   </script>
