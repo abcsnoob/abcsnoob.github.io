@@ -1,277 +1,216 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Abc's Noob - Login/Register</title>
+    <title>Abc's Noob Chat</title>
+
+    <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+
+    <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
     <style>
-        * {
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
             margin: 0;
             padding: 0;
-            box-sizing: border-box;
         }
-
-        body {
-            font-family: 'Arial', sans-serif;
-            background-color: #f4f7fc;
-            color: #333;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-        }
-
         .container {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            flex-direction: column;
-            width: 100%;
-        }
-
-        .auth-box {
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
             background-color: #fff;
-            padding: 30px;
-            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
-            border-radius: 8px;
-            width: 400px;
-            text-align: center;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
         }
-
-        h2 {
-            font-size: 24px;
+        h1 {
+            text-align: center;
             margin-bottom: 20px;
         }
-
-        .auth-form input {
-            width: 90%;
-            padding: 12px;
+        input, button {
+            width: 100%;
+            padding: 10px;
             margin: 10px 0;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 16px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
         }
-
-        .auth-form button {
-            padding: 12px 30px;
-            border: none;
-            background-color: #3498db;
-            color: white;
-            font-size: 16px;
-            cursor: pointer;
-            border-radius: 4px;
-            margin-top: 10px;
-        }
-
-        .auth-form button:hover {
-            background-color: #2980b9;
-        }
-
-        .auth-footer {
-            margin-top: 20px;
-        }
-
-        .social-btn {
-            width: 90%;
-            padding: 12px;
-            border: none;
-            background-color: #f1f1f1;
-            font-size: 16px;
-            margin-top: 10px;
-            border-radius: 4px;
+        .social-btns {
             display: flex;
             justify-content: center;
-            align-items: center;
+            margin-top: 10px;
+        }
+        .social-btns button {
+            padding: 10px;
+            margin: 5px;
+            width: 100px;
+            border-radius: 5px;
+            border: none;
             cursor: pointer;
         }
-
-        .social-btn img {
-            width: 20px;
-            height: 20px;
-            margin-right: 10px;
-        }
-
-        .password-reset-box {
-            margin-top: 20px;
-            width: 400px;
-            text-align: center;
-            padding: 20px;
-            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
-            border-radius: 8px;
-            background-color: #fff;
-        }
-
-        .hidden {
+        .chat-box {
             display: none;
+        }
+        .messages {
+            height: 300px;
+            overflow-y: scroll;
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+        .message {
+            background-color: #f1f1f1;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 5px;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="auth-box">
-            <h2>Abc's Noob - ACCOUNTS</h2>
 
-            <!-- Login Form -->
-            <div id="loginForm" class="auth-form">
-                <h3>Login</h3>
-                <input type="email" id="loginEmail" placeholder="Email" required />
-                <input type="password" id="loginPassword" placeholder="Password" required />
-                <button id="loginBtn">Login</button>
-                <p>Don't have an account? <a href="#" id="goToRegister">Register</a></p>
-            </div>
+<div class="container">
+    <h1>Abc's Noob Chat</h1>
 
-            <!-- Register Form -->
-            <div id="registerForm" class="auth-form hidden">
-                <h3>Register</h3>
-                <input type="text" id="registerName" placeholder="Username" required />
-                <input type="email" id="registerEmail" placeholder="Email" required />
-                <input type="password" id="registerPassword" placeholder="Password" required />
-                <button id="registerBtn">Register</button>
-                <p>Already have an account? <a href="#" id="goToLogin">Login</a></p>
-            </div>
+    <div id="auth-section">
+        <input type="email" id="email" placeholder="Email" required>
+        <input type="password" id="password" placeholder="Password" required>
+        <button id="login-btn">Login</button>
+        <button id="register-btn">Register</button>
 
-            <div class="auth-footer">
-                <button id="googleLoginBtn" class="social-btn">
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" alt="Google logo" />
-                    Login with Google
-                </button>
-                <button id="githubLoginBtn" class="social-btn">
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/c/c2/GitHub_Invertocat_Logo.svg" alt="GitHub logo" />
-                    Login with GitHub
-                </button>
-            </div>
+        <p>Or</p>
+
+        <div class="social-btns">
+            <button id="google-login">Login with Google</button>
         </div>
     </div>
 
-    <div class="container">
-        <div class="password-reset-box">
-            <h3>Password Reset</h3>
-            <input type="email" id="resetEmail" placeholder="Enter your email to reset password" />
-            <button id="resetPasswordBtn">Send Reset Link</button>
-        </div>
+    <div id="chat-section" class="chat-box">
+        <div class="messages" id="messages"></div>
+        <input type="text" id="chat-input" placeholder="Type a message" />
+        <button id="send-msg">Send</button>
+        <button id="logout-btn">Logout</button>
     </div>
+</div>
 
-    <script>
-        // Firebase configuration
-         const firebaseConfig = {
-             apiKey: "AIzaSyDtcs0XkNhf7yFRTzPY-A9WYet35YjQVT8",
-             authDomain: "abc-s-noob.firebaseapp.com",
-             databaseURL: "https://abc-s-noob-default-rtdb.asia-southeast1.firebasedatabase.app",
-             projectId: "abc-s-noob",
-             storageBucket: "abc-s-noob.firebasestorage.app",
-             messagingSenderId: "196660846002",
-             appId: "1:196660846002:web:ce129820f388cc838658ab",
-             measurementId: "G-LG5SWH89MG"
-         };
+<script>
+    // Firebase config
+    const firebaseConfig = {
+        apiKey: "AIzaSyDtcs0XkNhf7yFRTzPY-A9WYet35YjQVT8",
+        authDomain: "abc-s-noob.firebaseapp.com",
+        databaseURL: "https://abc-s-noob-default-rtdb.asia-southeast1.firebasedatabase.app",
+        projectId: "abc-s-noob",
+        storageBucket: "abc-s-noob.firebasestorage.app",
+        messagingSenderId: "196660846002",
+        appId: "1:196660846002:web:ce129820f388cc838658ab",
+        measurementId: "G-LG5SWH89MG"
+    };
 
-        firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.database();
 
-        // DOM Elements
-        const loginBtn = document.getElementById("loginBtn");
-        const registerBtn = document.getElementById("registerBtn");
-        const goToRegister = document.getElementById("goToRegister");
-        const goToLogin = document.getElementById("goToLogin");
-        const googleLoginBtn = document.getElementById("googleLoginBtn");
-        const githubLoginBtn = document.getElementById("githubLoginBtn");
-        const resetPasswordBtn = document.getElementById("resetPasswordBtn");
+    // References to DOM elements
+    const emailInput = document.getElementById('email');
+    const passwordInput = document.getElementById('password');
+    const loginBtn = document.getElementById('login-btn');
+    const registerBtn = document.getElementById('register-btn');
+    const googleLoginBtn = document.getElementById('google-login');
+    const chatSection = document.getElementById('chat-section');
+    const messagesDiv = document.getElementById('messages');
+    const chatInput = document.getElementById('chat-input');
+    const sendMsgBtn = document.getElementById('send-msg');
+    const logoutBtn = document.getElementById('logout-btn');
 
-        const loginForm = document.getElementById("loginForm");
-        const registerForm = document.getElementById("registerForm");
+    // Authentication state change listener
+    auth.onAuthStateChanged(user => {
+        if (user) {
+            // Hide login/register, show chat
+            document.getElementById('auth-section').style.display = 'none';
+            chatSection.style.display = 'block';
+            loadMessages();
+        } else {
+            // Show login/register, hide chat
+            document.getElementById('auth-section').style.display = 'block';
+            chatSection.style.display = 'none';
+        }
+    });
 
-        const registerName = document.getElementById("registerName");
-        const registerEmail = document.getElementById("registerEmail");
-        const registerPassword = document.getElementById("registerPassword");
+    // Login with email and password
+    loginBtn.addEventListener('click', () => {
+        const email = emailInput.value;
+        const password = passwordInput.value;
 
-        const loginEmail = document.getElementById("loginEmail");
-        const loginPassword = document.getElementById("loginPassword");
-        const resetEmail = document.getElementById("resetEmail");
+        auth.signInWithEmailAndPassword(email, password)
+            .then(() => {
+                Swal.fire('Success', 'Logged in successfully', 'success');
+            })
+            .catch(error => {
+                Swal.fire('Error', error.message, 'error');
+            });
+    });
 
-        // Handle Register
-        registerBtn.addEventListener("click", () => {
-            const name = registerName.value;
-            const email = registerEmail.value;
-            const password = registerPassword.value;
+    // Register with email and password
+    registerBtn.addEventListener('click', () => {
+        const email = emailInput.value;
+        const password = passwordInput.value;
 
-            auth.createUserWithEmailAndPassword(email, password)
-                .then((userCredential) => {
-                    const user = userCredential.user;
-                    user.updateProfile({
-                        displayName: name
-                    }).then(() => {
-                        user.sendEmailVerification()
-                            .then(() => {
-                                Swal.fire('Success', 'Registration successful! Please verify your email.', 'success');
-                                registerForm.classList.add('hidden');
-                                loginForm.classList.remove('hidden');
-                            })
-                            .catch((error) => Swal.fire('Error', error.message, 'error'));
-                    });
-                })
-                .catch((error) => Swal.fire('Error', error.message, 'error'));
+        auth.createUserWithEmailAndPassword(email, password)
+            .then(() => {
+                Swal.fire('Success', 'Account created successfully', 'success');
+                auth.currentUser.sendEmailVerification();
+            })
+            .catch(error => {
+                Swal.fire('Error', error.message, 'error');
+            });
+    });
+
+    // Login with Google
+    googleLoginBtn.addEventListener('click', () => {
+        const provider = new firebase.auth.GoogleAuthProvider();
+        auth.signInWithPopup(provider)
+            .then(() => {
+                Swal.fire('Success', 'Logged in with Google', 'success');
+            })
+            .catch(error => {
+                Swal.fire('Error', error.message, 'error');
+            });
+    });
+
+    // Send message to Firebase
+    sendMsgBtn.addEventListener('click', () => {
+        const message = chatInput.value;
+        if (message.trim()) {
+            db.ref('messages').push({
+                message: message,
+                sender: auth.currentUser.email,
+                timestamp: Date.now()
+            });
+            chatInput.value = '';
+        }
+    });
+
+    // Logout
+    logoutBtn.addEventListener('click', () => {
+        auth.signOut();
+    });
+
+    // Load messages from Firebase
+    function loadMessages() {
+        db.ref('messages').orderByChild('timestamp').on('child_added', snapshot => {
+            const data = snapshot.val();
+            const messageDiv = document.createElement('div');
+            messageDiv.classList.add('message');
+            messageDiv.textContent = `${data.sender}: ${data.message}`;
+            messagesDiv.appendChild(messageDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
         });
+    }
+</script>
 
-        // Handle Login
-        loginBtn.addEventListener("click", () => {
-            const email = loginEmail.value;
-            const password = loginPassword.value;
-
-            auth.signInWithEmailAndPassword(email, password)
-                .then(() => {
-                    const user = auth.currentUser;
-                    if (!user.emailVerified) {
-                        Swal.fire('Please verify your email', 'A verification link has been sent to your email address.', 'info');
-                    } else {
-                        Swal.fire('Success', 'Logged in successfully!', 'success');
-                    }
-                })
-                .catch((error) => Swal.fire('Error', error.message, 'error'));
-        });
-
-        // Switch to Register Form
-        goToRegister.addEventListener("click", () => {
-            loginForm.classList.add('hidden');
-            registerForm.classList.remove('hidden');
-        });
-
-        // Switch to Login Form
-        goToLogin.addEventListener("click", () => {
-            registerForm.classList.add('hidden');
-            loginForm.classList.remove('hidden');
-        });
-
-        // Handle Google Login
-        googleLoginBtn.addEventListener("click", () => {
-            const provider = new firebase.auth.GoogleAuthProvider();
-            auth.signInWithPopup(provider)
-                .then((result) => {
-                    Swal.fire('Success', 'Logged in with Google!', 'success');
-                })
-                .catch((error) => Swal.fire('Error', error.message, 'error'));
-        });
-
-        // Handle GitHub Login
-        githubLoginBtn.addEventListener("click", () => {
-            const provider = new firebase.auth.GithubAuthProvider();
-            auth.signInWithPopup(provider)
-                .then((result) => {
-                    Swal.fire('Success', 'Logged in with GitHub!', 'success');
-                })
-                .catch((error) => Swal.fire('Error', error.message, 'error'));
-        });
-
-        // Handle Password Reset
-        resetPasswordBtn.addEventListener("click", () => {
-            const email = resetEmail.value;
-            auth.sendPasswordResetEmail(email)
-                .then(() => {
-                    Swal.fire('Success', 'Password reset email sent!', 'success');
-                })
-                .catch((error) => Swal.fire('Error', error.message, 'error'));
-        });
-    </script>
 </body>
 </html>
