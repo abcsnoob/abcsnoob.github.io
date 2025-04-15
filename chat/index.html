@@ -17,10 +17,7 @@
     video { width: 60%; margin-top: 20px; }
     button { padding: 10px 20px; font-size: 16px; margin: 5px; }
     #createGroupDiv, #joinGroupDiv, #voiceChatDiv { display: none; }
-    #systemStats { margin-top: 20px; }
-    #participantCount { font-weight: bold; }
-    #videoContainer { display: flex; justify-content: space-around; margin-top: 20px; }
-    video { width: 30%; }
+    #participantCount { font-size: 20px; margin-top: 20px; }
   </style>
 </head>
 <body>
@@ -43,18 +40,15 @@
     <button id="startBtn" disabled>Bắt đầu Chat</button>
     <button id="stopBtn" disabled>Dừng Chat</button>
     <button id="screenShareBtn" disabled>Chia sẻ màn hình</button>
-    <button id="toggleCameraBtn" disabled>Bật/Tắt Camera</button>
+    <button id="toggleCameraBtn">Tắt/Mở Camera</button>
+    <button id="toggleMicBtn">Tắt/Mở Mic</button>
     <div id="videoContainer">
       <video id="localVideo" autoplay muted></video>
       <video id="remoteVideo" autoplay></video>
     </div>
   </div>
 
-  <div id="systemStats">
-    <p>CPU Cores: <span id="cpuCores"></span></p>
-    <p>Bộ nhớ sử dụng: <span id="ramUsage"></span> MB</p>
-    <p>Số người tham gia: <span id="participantCount">0</span></p>
-  </div>
+  <p id="participantCount">Số người tham gia: 0/500</p>
 
   <script>
     const firebaseConfig = {
@@ -82,17 +76,14 @@
     const startBtn = document.getElementById('startBtn');
     const stopBtn = document.getElementById('stopBtn');
     const screenShareBtn = document.getElementById('screenShareBtn');
-    const toggleCameraBtn = document.getElementById('toggleCameraBtn');
     const localVideo = document.getElementById('localVideo');
     const remoteVideo = document.getElementById('remoteVideo');
+    const toggleCameraBtn = document.getElementById('toggleCameraBtn');
+    const toggleMicBtn = document.getElementById('toggleMicBtn');
     const participantCount = document.getElementById('participantCount');
-    const cpuCores = document.getElementById('cpuCores');
-    const ramUsage = document.getElementById('ramUsage');
 
-    let localStream, peerConnection;
-    let isCameraOn = true;
+    let localStream, peerConnections = [], groupMembers = [], localStreamTracks = {};
     const config = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
-    let userCount = 0;
 
     loginBtn.onclick = () => {
       const provider = new firebase.auth.GoogleAuthProvider();
@@ -130,61 +121,94 @@
     }
 
     function joinGroup(id) {
-      db.collection('groups').doc(id).update({
-        members: firebase.firestore.FieldValue.arrayUnion(auth.currentUser.uid)
-      }).then(() => {
-        Swal.fire('Đã tham gia nhóm', '', 'success');
-        createGroupDiv.style.display = 'none';
-        joinGroupDiv.style.display = 'none';
-        voiceChatDiv.style.display = 'block';
-        startBtn.disabled = false;
-        userCount++;
-        participantCount.textContent = userCount;
+      db.collection('groups').doc(id).get().then(doc => {
+        const groupData = doc.data();
+        if (groupData.members.length < 500) {
+          // Nếu nhóm chưa đủ 500 người, thêm người vào nhóm
+          db.collection('groups').doc(id).update({
+            members: firebase.firestore.FieldValue.arrayUnion(auth.currentUser.uid)
+          }).then(() => {
+            Swal.fire('Đã tham gia nhóm', '', 'success');
+            voiceChatDiv.style.display = 'block';
+            startBtn.disabled = false;
+            updateParticipantCount();
+            setupGroupConnection(id);
+          });
+        } else {
+          Swal.fire('Lỗi', 'Nhóm đã đầy (500 người)', 'error');
+        }
       });
     }
 
-    startBtn.onclick = async () => {
+    function updateParticipantCount() {
+      const groupsRef = db.collection('groups');
+      groupsRef.get().then(snapshot => {
+        let totalMembers = 0;
+        snapshot.forEach(doc => {
+          totalMembers += doc.data().members.length;
+        });
+        participantCount.textContent = `${totalMembers}/500`;
+      });
+    }
+
+    async function setupGroupConnection(groupId) {
+      const groupRef = db.collection('groups').doc(groupId);
+      const groupDoc = await groupRef.get();
+      groupMembers = groupDoc.data().members;
+
+      // Khởi tạo kết nối WebRTC cho mỗi thành viên trong nhóm
       localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
       localVideo.srcObject = localStream;
-      peerConnection = new RTCPeerConnection(config);
-      localStream.getTracks().forEach(t => peerConnection.addTrack(t, localStream));
-      startBtn.disabled = true;
-      stopBtn.disabled = false;
-      screenShareBtn.disabled = false;
-      toggleCameraBtn.disabled = false;
 
-      // Cập nhật thông tin CPU và RAM
-      cpuCores.textContent = navigator.hardwareConcurrency;
-      ramUsage.textContent = (window.performance.memory.usedJSHeapSize / 1024 / 1024).toFixed(2); // MB
+      for (let memberId of groupMembers) {
+        const peerConnection = new RTCPeerConnection(config);
+        peerConnections.push(peerConnection);
+
+        // Thêm các track của người tham gia vào PeerConnection
+        localStream.getTracks().forEach(track => {
+          peerConnection.addTrack(track, localStream);
+        });
+
+        peerConnection.onicecandidate = (event) => {
+          if (event.candidate) {
+            sendIceCandidate(groupId, event.candidate);
+          }
+        };
+
+        peerConnection.ontrack = (event) => {
+          remoteVideo.srcObject = event.streams[0];
+        };
+      }
+    }
+
+    function sendIceCandidate(groupId, candidate) {
+      db.collection('groups').doc(groupId).update({
+        iceCandidates: firebase.firestore.FieldValue.arrayUnion(candidate)
+      });
+    }
+
+    // Tắt/Mở Camera và Mic
+    toggleCameraBtn.onclick = () => {
+      const videoTrack = localStream.getVideoTracks()[0];
+      videoTrack.enabled = !videoTrack.enabled;
+      toggleCameraBtn.textContent = videoTrack.enabled ? 'Tắt Camera' : 'Mở Camera';
     };
 
+    toggleMicBtn.onclick = () => {
+      const audioTrack = localStream.getAudioTracks()[0];
+      audioTrack.enabled = !audioTrack.enabled;
+      toggleMicBtn.textContent = audioTrack.enabled ? 'Tắt Mic' : 'Mở Mic';
+    };
+
+    // Kết thúc chat
     stopBtn.onclick = () => {
       localStream.getTracks().forEach(t => t.stop());
-      peerConnection && peerConnection.close();
+      peerConnections.forEach(pc => pc.close());
       startBtn.disabled = false;
       stopBtn.disabled = true;
       screenShareBtn.disabled = true;
       toggleCameraBtn.disabled = true;
-      localVideo.srcObject = null;
-      remoteVideo.srcObject = null;
-    };
-
-    screenShareBtn.onclick = async () => {
-      const screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true });
-      const screenTrack = screenStream.getTracks()[0];
-      peerConnection.getSenders().forEach(sender => {
-        if (sender.track.kind === 'video') sender.replaceTrack(screenTrack);
-      });
-      localVideo.srcObject = screenStream;
-    };
-
-    toggleCameraBtn.onclick = () => {
-      const videoTrack = localStream.getVideoTracks()[0];
-      if (videoTrack) {
-        videoTrack.enabled = !videoTrack.enabled;
-        isCameraOn = !isCameraOn;
-        toggleCameraBtn.textContent = isCameraOn ? 'Tắt Camera' : 'Bật Camera';
-      }
+      toggleMicBtn.disabled = true;
     };
   </script>
 </body>
