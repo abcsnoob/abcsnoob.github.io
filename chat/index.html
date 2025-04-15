@@ -3,63 +3,87 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Voice Chat with Firebase & WebRTC</title>
+  <title>Firebase Authentication</title>
 
   <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
 
-  <!-- WebRTC Adapter -->
-  <script src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
-  
   <!-- SweetAlert2 -->
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
   <style>
-    body { font-family: Arial, sans-serif; text-align: center; }
-    video { width: 60%; margin-top: 20px; }
-    button { padding: 10px 20px; font-size: 16px; margin: 5px; }
-    #loginDiv, #createGroupDiv, #joinGroupDiv, #voiceChatDiv { display: none; }
-    #videoContainer { display: flex; justify-content: center; }
-    #localVideo, #remoteVideo { width: 45%; margin: 10px; }
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 20px;
+      background-color: #f4f4f9;
+    }
+
+    h2 {
+      color: #333;
+    }
+
+    input {
+      padding: 10px;
+      margin: 10px;
+      width: 200px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+
+    button {
+      padding: 10px 20px;
+      margin: 10px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #45a049;
+    }
+
+    #userInfoSection {
+      margin-top: 20px;
+    }
   </style>
+
 </head>
 <body>
-  <h1>Voice Chat with Google Login & Group</h1>
 
-  <!-- Login Section -->
-  <div id="loginDiv">
-    <button id="loginBtn">Login with Google</button>
-  </div>
+  <div id="authSection">
+    <h2>Đăng nhập vào ứng dụng</h2>
 
-  <!-- Create Group Section -->
-  <div id="createGroupDiv">
-    <input type="text" id="groupName" placeholder="Enter Group Name" />
-    <button id="createGroupBtn">Create Group</button>
-    <h3>Available Groups:</h3>
-    <ul id="groupList"></ul>
-  </div>
+    <!-- Form đăng nhập bằng Email/Password -->
+    <div id="emailLoginSection">
+      <input type="email" id="email" placeholder="Email" required>
+      <input type="password" id="password" placeholder="Mật khẩu" required>
+      <button id="loginWithEmailBtn">Đăng nhập bằng Email</button>
+      <button id="registerWithEmailBtn">Đăng ký</button>
+    </div>
 
-  <!-- Join Group Section -->
-  <div id="joinGroupDiv">
-    <h3>Join a Group:</h3>
-    <button id="joinGroupBtn">Join</button>
-  </div>
+    <div id="googleLoginSection">
+      <button id="loginWithGoogleBtn">Đăng nhập với Google</button>
+    </div>
 
-  <!-- Voice Chat Section -->
-  <div id="voiceChatDiv">
-    <button id="startBtn" disabled>Start Chat</button>
-    <button id="stopBtn" disabled>Stop Chat</button>
-    <button id="screenShareBtn" disabled>Share Screen</button>
-    <div id="videoContainer">
-      <video id="localVideo" autoplay muted></video>
-      <video id="remoteVideo" autoplay></video>
+    <div id="githubLoginSection">
+      <button id="loginWithGitHubBtn">Đăng nhập với GitHub</button>
+    </div>
+
+    <div id="userInfoSection" style="display:none;">
+      <h3>Thông tin người dùng</h3>
+      <p id="userName"></p>
+      <p id="userEmail"></p>
+      <button id="logoutBtn">Đăng xuất</button>
     </div>
   </div>
 
   <script>
-    // Firebase configuration
+    // Firebase Config
     const firebaseConfig = {
       apiKey: "AIzaSyDtcs0XkNhf7yFRTzPY-A9WYet35YjQVT8",
       authDomain: "abc-s-noob.firebaseapp.com",
@@ -69,110 +93,97 @@
       appId: "1:196660846002:web:ce129820f388cc838658ab",
       measurementId: "G-LG5SWH89MG"
     };
-
     // Initialize Firebase
     firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
     const auth = firebase.auth();
+    const db = firebase.firestore();
 
-    // DOM Elements
-    const loginBtn = document.getElementById('loginBtn');
-    const createGroupDiv = document.getElementById('createGroupDiv');
-    const joinGroupDiv = document.getElementById('joinGroupDiv');
-    const groupList = document.getElementById('groupList');
-    const groupName = document.getElementById('groupName');
-    const createGroupBtn = document.getElementById('createGroupBtn');
-    const joinGroupBtn = document.getElementById('joinGroupBtn');
-    const voiceChatDiv = document.getElementById('voiceChatDiv');
-    const startBtn = document.getElementById('startBtn');
-    const stopBtn = document.getElementById('stopBtn');
-    const screenShareBtn = document.getElementById('screenShareBtn');
-    const localVideo = document.getElementById('localVideo');
-    const remoteVideo = document.getElementById('remoteVideo');
+    // Elements
+    const loginWithEmailBtn = document.getElementById('loginWithEmailBtn');
+    const registerWithEmailBtn = document.getElementById('registerWithEmailBtn');
+    const loginWithGoogleBtn = document.getElementById('loginWithGoogleBtn');
+    const loginWithGitHubBtn = document.getElementById('loginWithGitHubBtn');
+    const logoutBtn = document.getElementById('logoutBtn');
+    const email = document.getElementById('email');
+    const password = document.getElementById('password');
+    const userInfoSection = document.getElementById('userInfoSection');
+    const userName = document.getElementById('userName');
+    const userEmail = document.getElementById('userEmail');
 
-    let localStream, peerConnection;
-    const config = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
+    // Đăng nhập với Email/Password
+    loginWithEmailBtn.addEventListener('click', () => {
+      const userEmail = email.value;
+      const userPassword = password.value;
 
-    // Login Functionality
-    loginBtn.onclick = () => {
+      auth.signInWithEmailAndPassword(userEmail, userPassword)
+        .then(userCredential => {
+          Swal.fire('Đăng nhập thành công', `Chào ${userCredential.user.displayName}`, 'success');
+          displayUserInfo(userCredential.user);
+        })
+        .catch(error => Swal.fire('Lỗi', error.message, 'error'));
+    });
+
+    // Đăng ký với Email/Password
+    registerWithEmailBtn.addEventListener('click', () => {
+      const userEmail = email.value;
+      const userPassword = password.value;
+
+      auth.createUserWithEmailAndPassword(userEmail, userPassword)
+        .then(userCredential => {
+          Swal.fire('Đăng ký thành công', 'Vui lòng kiểm tra email để xác thực tài khoản!', 'success');
+          sendEmailVerification(userCredential.user);
+        })
+        .catch(error => Swal.fire('Lỗi', error.message, 'error'));
+    });
+
+    // Đăng nhập với Google
+    loginWithGoogleBtn.addEventListener('click', () => {
       const provider = new firebase.auth.GoogleAuthProvider();
-      auth.signInWithPopup(provider).then(res => {
-        Swal.fire('Login successful!', `Hello, ${res.user.displayName}`, 'success');
-        loginBtn.disabled = true;
-        createGroupDiv.style.display = 'block';
-        joinGroupDiv.style.display = 'block';
-        loadGroups();
-      }).catch(() => Swal.fire('Error', 'Could not log in with Google', 'error'));
-    };
+      auth.signInWithPopup(provider)
+        .then(result => {
+          Swal.fire('Đăng nhập thành công', `Chào ${result.user.displayName}`, 'success');
+          displayUserInfo(result.user);
+        })
+        .catch(error => Swal.fire('Lỗi', error.message, 'error'));
+    });
 
-    // Create Group Functionality
-    createGroupBtn.onclick = () => {
-      const name = groupName.value.trim();
-      if (!name) return Swal.fire('Please enter a group name!');
-      db.ref('groups').push({ name, members: [auth.currentUser.uid] })
+    // Đăng nhập với GitHub
+    loginWithGitHubBtn.addEventListener('click', () => {
+      const provider = new firebase.auth.GithubAuthProvider();
+      auth.signInWithPopup(provider)
+        .then(result => {
+          Swal.fire('Đăng nhập thành công', `Chào ${result.user.displayName}`, 'success');
+          displayUserInfo(result.user);
+        })
+        .catch(error => Swal.fire('Lỗi', error.message, 'error'));
+    });
+
+    // Đăng xuất
+    logoutBtn.addEventListener('click', () => {
+      auth.signOut()
         .then(() => {
-          Swal.fire('Group Created!', `Group ${name} has been created`, 'success');
-          groupName.value = '';
-          loadGroups();
-        });
-    };
+          userInfoSection.style.display = 'none';
+          Swal.fire('Đã đăng xuất', '', 'success');
+        })
+        .catch(error => Swal.fire('Lỗi', error.message, 'error'));
+    });
 
-    // Load Groups
-    function loadGroups() {
-      db.ref('groups').once('value', snapshot => {
-        groupList.innerHTML = '';
-        if (!snapshot.exists()) return groupList.innerHTML = '<li>No groups available.</li>';
-        snapshot.forEach(group => {
-          const li = document.createElement('li');
-          li.textContent = group.val().name;
-          li.onclick = () => joinGroup(group.key);
-          groupList.appendChild(li);
-        });
-      });
+    // Hiển thị thông tin người dùng
+    function displayUserInfo(user) {
+      userInfoSection.style.display = 'block';
+      userName.textContent = `Tên: ${user.displayName}`;
+      userEmail.textContent = `Email: ${user.email}`;
     }
 
-    // Join Group
-    function joinGroup(id) {
-      db.ref('groups/' + id + '/members').push(auth.currentUser.uid).then(() => {
-        Swal.fire('You have joined the group!', '', 'success');
-        createGroupDiv.style.display = 'none';
-        joinGroupDiv.style.display = 'none';
-        voiceChatDiv.style.display = 'block';
-        startBtn.disabled = false;
-      });
+    // Gửi email xác nhận sau khi đăng ký
+    function sendEmailVerification(user) {
+      user.sendEmailVerification()
+        .then(() => {
+          Swal.fire('Vui lòng kiểm tra email để xác thực tài khoản!', '', 'info');
+        })
+        .catch(error => Swal.fire('Lỗi', error.message, 'error'));
     }
-
-    // Start Voice Chat
-    startBtn.onclick = async () => {
-      localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
-      localVideo.srcObject = localStream;
-      peerConnection = new RTCPeerConnection(config);
-      localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
-      startBtn.disabled = true;
-      stopBtn.disabled = false;
-      screenShareBtn.disabled = false;
-    };
-
-    // Stop Voice Chat
-    stopBtn.onclick = () => {
-      localStream.getTracks().forEach(track => track.stop());
-      if (peerConnection) peerConnection.close();
-      startBtn.disabled = false;
-      stopBtn.disabled = true;
-      screenShareBtn.disabled = true;
-      localVideo.srcObject = null;
-      remoteVideo.srcObject = null;
-    };
-
-    // Screen Share Functionality
-    screenShareBtn.onclick = async () => {
-      const screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true });
-      const screenTrack = screenStream.getTracks()[0];
-      peerConnection.getSenders().forEach(sender => {
-        if (sender.track.kind === 'video') sender.replaceTrack(screenTrack);
-      });
-      localVideo.srcObject = screenStream;
-    };
   </script>
+
 </body>
 </html>
