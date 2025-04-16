@@ -9,22 +9,18 @@
     .chat-container { background: #1f1f1f; padding: 20px; border-radius: 10px; display: flex; flex-direction: column; }
     .message-box { height: 300px; overflow-y: auto; margin-bottom: 10px; background: #333; padding: 10px; border-radius: 5px; }
     .message { margin: 10px 0; padding: 10px; background: #444; border-radius: 5px; }
-    .message .username { font-weight: bold; color: #1e88e5; }
     input, button { padding: 10px; margin: 5px; border-radius: 5px; border: none; }
     button { background: #1e88e5; color: white; cursor: pointer; }
-    .typing-indicator { color: #bbb; font-style: italic; margin-bottom: 10px; }
-    h6 { margin-top: 20px; text-align: center; color: #888; }
   </style>
 </head>
 <body>
   <h2>Welcome to Abc's Noob Chat</h2>
   <div class="chat-container">
     <div class="message-box" id="messages"></div>
-    <div class="typing-indicator" id="typingIndicator"></div>
-    <input type="text" id="messageInput" placeholder="Nhập tin...">
-    <button onclick="sendMessage()">GỬI</button>
+    <input type="text" id="messageInput" placeholder="Type a message...">
+    <button onclick="sendMessage()">Send</button>
   </div>
-  <h6>support by Abcjira</h6>
+  <h6>Support by Abcjira</h6>
 
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
@@ -45,42 +41,24 @@
     const db = firebase.firestore();
     const messagesRef = db.collection("messages");
 
+    // Lấy tham số từ URL
     const urlParams = new URLSearchParams(window.location.search);
-    const ssid = urlParams.get('ssid');
-    const bucketId = urlParams.get('bucket_id');
+    const ssid = urlParams.get('ssid'); // Lấy ssid từ URL
+    const bucketId = urlParams.get('bucket_id'); // Lấy bucket_id từ URL
 
     if (!ssid || !bucketId) {
       alert('Missing ssid or bucket_id parameter!');
-      window.location.href = "/chat/"; 
+      window.location.href = "/chat/"; // Chuyển về trang đăng nhập nếu không có tham số
     }
 
     firebase.auth().onAuthStateChanged(user => {
       if (user) {
         loadMessages();
-        listenForTyping();
       } else {
-        window.location.href = "/chat/"; 
+        window.location.href = "/chat/"; // Quay lại trang đăng nhập nếu chưa đăng nhập
       }
     });
 
-    // Lắng nghe người dùng nhập tin
-    let typingTimeout;
-    function listenForTyping() {
-      const messageInput = document.getElementById('messageInput');
-      messageInput.addEventListener('input', () => {
-        clearTimeout(typingTimeout);
-        const user = firebase.auth().currentUser;
-        db.collection('typing').doc(bucketId).set({
-          userId: user.uid,
-          typing: true
-        });
-        typingTimeout = setTimeout(() => {
-          db.collection('typing').doc(bucketId).set({ typing: false });
-        }, 2000);
-      });
-    }
-
-    // Lấy danh sách tin nhắn
     function loadMessages() {
       messagesRef.where("bucket_id", "==", bucketId).orderBy("timestamp").onSnapshot(snapshot => {
         const messagesContainer = document.getElementById('messages');
@@ -89,64 +67,32 @@
           const message = doc.data();
           const messageElement = document.createElement('div');
           messageElement.classList.add('message');
+          
+          const userName = message.userName || "Anonymous"; // Nếu không có tên người gửi, hiển thị là "Anonymous"
+          const messageText = message.text;
 
-          // Tạo phần tên người dùng và tin nhắn
-          const username = message.userName || "Unknown User";
-          const usernameElement = document.createElement('span');
-          usernameElement.classList.add('username');
-          usernameElement.innerText = username;
-
-          const textElement = document.createElement('span');
-          textElement.innerText = ": " + message.text;
-
-          // Thêm tên người dùng và tin nhắn vào phần tử tin nhắn
-          messageElement.appendChild(usernameElement);
-          messageElement.appendChild(textElement);
-
+          messageElement.innerHTML = `<strong>${userName}:</strong> ${messageText}`;
           messagesContainer.appendChild(messageElement);
         });
-
-        // Thông báo push khi có tin nhắn mới
-        if (Notification.permission === "granted") {
-          new Notification("Bạn có tin nhắn mới!");
-        }
-      });
-
-      // Lắng nghe người đang nhập
-      db.collection('typing').doc(bucketId).onSnapshot(doc => {
-        const data = doc.data();
-        const typingIndicator = document.getElementById('typingIndicator');
-        if (data && data.typing) {
-          typingIndicator.innerText = `${data.userId} đang nhập...`;
-        } else {
-          typingIndicator.innerText = "";
-        }
       });
     }
 
-    // Gửi tin nhắn
     function sendMessage() {
       const messageInput = document.getElementById('messageInput');
       const messageText = messageInput.value;
       if (messageText.trim() === "") return;
 
-      const user = firebase.auth().currentUser;
-      const userName = user.displayName || "Unknown User";  // Lấy tên người dùng
+      const userName = firebase.auth().currentUser.displayName || firebase.auth().currentUser.uid; // Sử dụng UID nếu không có displayName
 
       messagesRef.add({
         text: messageText,
         timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-        userId: user.uid,
-        userName: userName,  // Lưu tên người dùng
-        bucket_id: bucketId
+        userId: firebase.auth().currentUser.uid,
+        userName: userName, // Thêm trường userName
+        bucket_id: bucketId // Lưu bucket_id khi gửi tin nhắn
       });
 
-      messageInput.value = "";
-    }
-
-    // Cấp phép thông báo push khi lần đầu vào trang
-    if (Notification.permission !== "granted") {
-      Notification.requestPermission();
+      messageInput.value = ""; // Clear the input
     }
   </script>
 </body>
