@@ -11,12 +11,14 @@
     .message { margin: 10px 0; padding: 10px; background: #444; border-radius: 5px; }
     input, button { padding: 10px; margin: 5px; border-radius: 5px; border: none; }
     button { background: #1e88e5; color: white; cursor: pointer; }
+    .load-more { background: #333; color: #ccc; border-radius: 5px; cursor: pointer; padding: 10px; margin-top: 10px; text-align: center; }
+    .load-more:hover { background: #444; }
   </style>
 </head>
 <body>
   <h2>Welcome to Abc's Noob Chat</h2>
   <div class="chat-container">
-    <div class="message-box" id="messages"></div>
+    <div class="message-box" id="messages" onscroll="checkScroll()"></div>
     <input type="text" id="messageInput" placeholder="Type a message...">
     <button onclick="sendMessage()">Send</button>
   </div>
@@ -51,30 +53,92 @@
       window.location.href = "/chat/"; // Chuyển về trang đăng nhập nếu không có tham số
     }
 
+    let lastVisible = null; // Biến lưu trữ tin nhắn cuối cùng đã tải
+    let loading = false; // Đảm bảo không tải lại khi đang tải
+
     firebase.auth().onAuthStateChanged(user => {
       if (user) {
-        loadMessages();
+        loadMessages(); // Tải tin nhắn lần đầu
       } else {
         window.location.href = "/chat/"; // Quay lại trang đăng nhập nếu chưa đăng nhập
       }
     });
 
+    // Tải tin nhắn ban đầu (50 tin nhắn mới nhất)
     function loadMessages() {
-      messagesRef.where("bucket_id", "==", bucketId).orderBy("timestamp").onSnapshot(snapshot => {
-        const messagesContainer = document.getElementById('messages');
-        messagesContainer.innerHTML = "";
-        snapshot.forEach(doc => {
-          const message = doc.data();
-          const messageElement = document.createElement('div');
-          messageElement.classList.add('message');
-          
-          const userName = message.userName || "Anonymous"; // Nếu không có tên người gửi, hiển thị là "Anonymous"
-          const messageText = message.text;
+      loading = true;
+      messagesRef
+        .where("bucket_id", "==", bucketId)
+        .orderBy("timestamp", "desc")
+        .limit(50)
+        .get()
+        .then(snapshot => {
+          const messagesContainer = document.getElementById('messages');
+          messagesContainer.innerHTML = ""; // Xóa hết tin nhắn hiện tại
 
-          messageElement.innerHTML = `<strong>${userName}:</strong> ${messageText}`;
-          messagesContainer.appendChild(messageElement);
+          const messages = [];
+          snapshot.forEach(doc => {
+            const message = doc.data();
+            messages.push(message);
+          });
+
+          // Hiển thị tin nhắn từ mới nhất đến cũ nhất
+          messages.reverse().forEach(message => {
+            const messageElement = document.createElement('div');
+            messageElement.classList.add('message');
+            const userName = message.userName || "Anonymous";
+            const messageText = message.text;
+            messageElement.innerHTML = `<strong>${userName}:</strong> ${messageText}`;
+            messagesContainer.appendChild(messageElement);
+          });
+
+          lastVisible = snapshot.docs[snapshot.docs.length - 1]; // Lưu tin nhắn cuối cùng đã tải
+          loading = false;
+          
+          // Cuộn xuống dưới cùng khi tải xong
+          messagesContainer.scrollTop = messagesContainer.scrollHeight;
         });
-      });
+    }
+
+    // Kiểm tra khi cuộn lên để tải thêm tin nhắn
+    function checkScroll() {
+      const messagesContainer = document.getElementById('messages');
+      if (messagesContainer.scrollTop === 0 && !loading && lastVisible) {
+        loadMoreMessages(); // Tải thêm khi người dùng cuộn lên trên cùng
+      }
+    }
+
+    // Tải thêm tin nhắn khi cuộn lên
+    function loadMoreMessages() {
+      loading = true;
+      messagesRef
+        .where("bucket_id", "==", bucketId)
+        .orderBy("timestamp", "desc")
+        .startAfter(lastVisible) // Tiếp tục từ tin nhắn cuối cùng đã tải
+        .limit(50)
+        .get()
+        .then(snapshot => {
+          const messagesContainer = document.getElementById('messages');
+
+          const messages = [];
+          snapshot.forEach(doc => {
+            const message = doc.data();
+            messages.push(message);
+          });
+
+          // Hiển thị tin nhắn từ mới nhất đến cũ nhất
+          messages.reverse().forEach(message => {
+            const messageElement = document.createElement('div');
+            messageElement.classList.add('message');
+            const userName = message.userName || "Anonymous";
+            const messageText = message.text;
+            messageElement.innerHTML = `<strong>${userName}:</strong> ${messageText}`;
+            messagesContainer.insertBefore(messageElement, messagesContainer.firstChild);
+          });
+
+          lastVisible = snapshot.docs[snapshot.docs.length - 1]; // Cập nhật tin nhắn cuối cùng
+          loading = false;
+        });
     }
 
     function sendMessage() {
