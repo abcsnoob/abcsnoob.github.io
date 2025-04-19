@@ -1,39 +1,21 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Abc's Noob - Personal Website</title>
+  <link rel="icon" href="abcsnoob.webp">
 
-  <meta property="og:title" content="Abc's Noob Personal Website" /> 
-  <meta property="og:site_name" content="Abc's Noob" /> 
-  <meta property="og:type" content="website" />
-  <meta property="og:description" content="Abc's Noob is a YouTuber, C/C++ Programmer, and Minecraft fan!" /> 
-  <meta property="og:url" content="http://abcsnoobytb.github.io" /> 
-  <meta property="og:image" content="https://abcsnoobytb.github.io/abcsnoob.webp" /> 
-  <meta name="theme-color" content="#000000" />
-
-  <meta name="twitter:title" content="Abc's Noob Personal Website"> 
-  <meta name="twitter:description" content="Abc's Noob is a YouTuber, C/C++ Programmer, and Minecraft fan!">
-  <meta name="twitter:card" content="summary">
-  <meta name="twitter:site" content="@abcsnoob"> 
-  <meta name="twitter:creator" content="@abcsnoob"> 
-  <meta name="twitter:image:src" content="https://abcsnoobytb.github.io/abcsnoob.webp"> 
-
-  <title>Abc's Noob - Personal Website</title> 
-
-  <link rel="icon" href="abcsnoob.webp"> 
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/8.3.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.3.0/firebase-auth.js"></script>
 
   <style>
-    @font-face {
-      font-family: 'CustomFont';
-      src: local('Arial'), sans-serif;
-    }
-
     body {
       background-color: black;
       text-align: center;
-      font-family: 'CustomFont', Arial, Helvetica, sans-serif;
+      font-family: Arial, Helvetica, sans-serif;
       color: lime;
     }
 
@@ -55,64 +37,6 @@
       transform: scale(10);
     }
 
-    .abcsnoob {
-      animation: rotate 1s linear infinite;
-    }
-    .youtube {
-      animation: rotate 1s linear infinite;
-    }
-
-    .github {
-      animation: rotate 1s linear infinite;
-    }
-    
-    .twitch {
-      animation: rotateCounterClockwise 0.3s linear infinite;
-    }
-
-    .discord {
-      animation: bounce 0.1s linear infinite;
-    }
-
-@keyframes rotate {
-      from {
-        transform: rotate(0deg);
-      }
-
-      to {
-        transform: rotate(360deg);
-      }
-    }
-
-    @keyframes rotateCounterClockwise {
-  from {
-      transform: rotate(0deg);
-   }
-
-  to {
-      transform: rotate(-360deg);
-    }
-  }
-
-   .icon.rotateCounterClockwise {
-     animation: rotateCounterClockwise 1s linear infinite;
-  }
-
-
-    @keyframes bounce {
-      from {
-        transform: scaleY(0%);
-      }
-
-      50% {
-        transform: scaleY(50%);
-      }
-
-      to {
-        transform: scaleY(100%);
-      }
-    }
-
     .login-form {
       margin-top: 50px;
       display: none;
@@ -121,64 +45,67 @@
     .user-info {
       display: none;
     }
-
   </style>
 
   <script>
-    // login.js
-    function setCookie(name, value, days) {
-      const expires = new Date();
-      expires.setTime(expires.getTime() + (days * 24 * 60 * 60 * 1000));
-      document.cookie = `${name}=${value};expires=${expires.toUTCString()};path=/`;
-    }
+    // Firebase config
+const firebaseConfig = {
+  apiKey: "AIzaSyDtcs0XkNhf7yFRTzPY-A9WYet35YjQVT8",
+  authDomain: "abc-s-noob.firebaseapp.com",
+  databaseURL: "https://abc-s-noob-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "abc-s-noob",
+  storageBucket: "abc-s-noob.firebasestorage.app",
+  messagingSenderId: "196660846002",
+  appId: "1:196660846002:web:ce129820f388cc838658ab",
+  measurementId: "G-LG5SWH89MG"
+};
 
-    function getCookie(name) {
-      const nameEQ = name + "=";
-      const ca = document.cookie.split(';');
-      for (let i = 0; i < ca.length; i++) {
-        let c = ca[i].trim();
-        if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
-      }
-      return null;
-    }
 
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+
+    // Check if user is already logged in
     function checkLogin() {
-      const username = getCookie('username');
-      if (username) {
-        document.querySelector('.login-form').style.display = 'none';
-        document.querySelector('.user-info').style.display = 'block';
-        document.getElementById('username-display').textContent = username;
-      } else {
-        document.querySelector('.login-form').style.display = 'block';
-        document.querySelector('.user-info').style.display = 'none';
-      }
+      firebase.auth().onAuthStateChanged(function(user) {
+        if (user) {
+          document.querySelector('.login-form').style.display = 'none';
+          document.querySelector('.user-info').style.display = 'block';
+          document.getElementById('username-display').textContent = user.displayName || user.email;
+        } else {
+          document.querySelector('.login-form').style.display = 'block';
+          document.querySelector('.user-info').style.display = 'none';
+        }
+      });
     }
 
-    function login() {
-      const username = document.getElementById('username').value;
-      const password = document.getElementById('password').value;
-      
-      if (username && password) {
-        setCookie('username', username, 7); // Store username in cookie for 7 days
-        checkLogin(); // Re-check login status
-      } else {
-        alert('Please enter both username and password');
-      }
+    // Google login
+    function googleLogin() {
+      var provider = new firebase.auth.GoogleAuthProvider();
+      firebase.auth().signInWithPopup(provider).then(function(result) {
+        var user = result.user;
+        console.log(user.displayName);
+        checkLogin();
+      }).catch(function(error) {
+        console.log(error.message);
+      });
     }
 
+    // Logout
     function logout() {
-      document.cookie = "username=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/"; // Delete cookie
-      checkLogin(); // Re-check login status
+      firebase.auth().signOut().then(function() {
+        checkLogin();
+      }).catch(function(error) {
+        console.log(error.message);
+      });
     }
 
     window.onload = checkLogin;
   </script>
-
 </head>
 
 <body>
   <a href="https://abcsnoob.github.io">
-    <img class="abcsnoob" alt="Abc's Noob" src="abcsnoob.webp" width="150"> 
+    <img class="abcsnoob" alt="Abc's Noob" src="abcsnoob.webp" width="150">
   </a>
   <br><br>
 
@@ -192,9 +119,7 @@
   <!-- Login Form -->
   <div class="login-form">
     <h2>Please Log In</h2>
-    <input type="text" id="username" placeholder="Username"><br><br>
-    <input type="password" id="password" placeholder="Password"><br><br>
-    <button onclick="login()">Login</button>
+    <button onclick="googleLogin()">Login with Google</button>
   </div>
 
   <!-- User Info after Login -->
