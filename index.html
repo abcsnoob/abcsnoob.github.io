@@ -112,13 +112,73 @@
         transform: scaleY(100%);
       }
     }
+
+    .login-form {
+      margin-top: 50px;
+      display: none;
+    }
+
+    .user-info {
+      display: none;
+    }
+
   </style>
+
+  <script>
+    // login.js
+    function setCookie(name, value, days) {
+      const expires = new Date();
+      expires.setTime(expires.getTime() + (days * 24 * 60 * 60 * 1000));
+      document.cookie = `${name}=${value};expires=${expires.toUTCString()};path=/`;
+    }
+
+    function getCookie(name) {
+      const nameEQ = name + "=";
+      const ca = document.cookie.split(';');
+      for (let i = 0; i < ca.length; i++) {
+        let c = ca[i].trim();
+        if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
+      }
+      return null;
+    }
+
+    function checkLogin() {
+      const username = getCookie('username');
+      if (username) {
+        document.querySelector('.login-form').style.display = 'none';
+        document.querySelector('.user-info').style.display = 'block';
+        document.getElementById('username-display').textContent = username;
+      } else {
+        document.querySelector('.login-form').style.display = 'block';
+        document.querySelector('.user-info').style.display = 'none';
+      }
+    }
+
+    function login() {
+      const username = document.getElementById('username').value;
+      const password = document.getElementById('password').value;
+      
+      if (username && password) {
+        setCookie('username', username, 7); // Store username in cookie for 7 days
+        checkLogin(); // Re-check login status
+      } else {
+        alert('Please enter both username and password');
+      }
+    }
+
+    function logout() {
+      document.cookie = "username=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/"; // Delete cookie
+      checkLogin(); // Re-check login status
+    }
+
+    window.onload = checkLogin;
+  </script>
 
 </head>
 
 <body>
   <a href="https://abcsnoob.github.io">
-  <img class="abcsnoob" alt="Abc's Noob" src="abcsnoob.webp" width="150"> 
+    <img class="abcsnoob" alt="Abc's Noob" src="abcsnoob.webp" width="150"> 
   </a>
   <br><br>
 
@@ -126,6 +186,22 @@
   <h3>Hi, I'm <span style="color: yellow;">Abc's Noob</span>!</h3>
   <h3>I'm a YouTuber, C/C++ Programmer, and a huge fan of Minecraft.</h3>
   <h3><a href="lore.html">More info</a></h3>
+
+  <br><br>
+
+  <!-- Login Form -->
+  <div class="login-form">
+    <h2>Please Log In</h2>
+    <input type="text" id="username" placeholder="Username"><br><br>
+    <input type="password" id="password" placeholder="Password"><br><br>
+    <button onclick="login()">Login</button>
+  </div>
+
+  <!-- User Info after Login -->
+  <div class="user-info">
+    <h3>Welcome, <span id="username-display"></span>!</h3>
+    <button onclick="logout()">Logout</button>
+  </div>
 
   <br><br>
 
@@ -141,7 +217,8 @@
   <iframe class="video" src="https://www.youtube.com/embed/CNq2r7bfPs4" frameborder="0" allowfullscreen></iframe>
   <br>
   <iframe class="video" src="https://www.youtube.com/embed/YV27My14M2Y" frameborder="0" allowfullscreen></iframe>
-    <br><br><br>
+  <br><br><br>
+
   <h1>You can find me on...</h1><br>
   <a href="https://www.youtube.com/@abcsnoob"><img class="youtube" src="https://sentry456123.github.io/youtube.webp" width="60" height="60"></a>
   <a href="https://github.com/abcsnoobytb"><img class="icon rotateCounterClockwise" src="https://sentry456123.github.io/github.webp"></a>
