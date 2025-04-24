@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Abc's Noob - Personal Website</title>
   <link rel="icon" href="abcsnoob.webp">
-  
+
   <!-- Simple Styling -->
   <style>
     body {
@@ -44,25 +44,112 @@
       transform: scale(1.2);
     }
 
-    .audio-player {
-      display: none; /* Ẩn audio player */
+    /* Lớp phủ */
+    .overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
     }
 
-  </style>
+    /* Loading Spinner */
+    .spinner {
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #3498db;
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+      animation: spin 2s linear infinite;
+    }
 
+    /* Progress Bar */
+    .progress-bar-container {
+      width: 80%;
+      height: 30px;
+      background-color: #444;
+      border-radius: 5px;
+      margin-top: 20px;
+      display: none;
+    }
+
+    .progress-bar {
+      width: 0%;
+      height: 100%;
+      background-color: lime;
+      border-radius: 5px;
+    }
+
+    /* Số % */
+    .progress-text {
+      color: lime;
+      font-size: 20px;
+      margin-top: 10px;
+    }
+
+    /* Loading Animation */
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
 </head>
 
 <body>
+
   <!-- Audio Player (ẩn đi nhưng vẫn phát) -->
-  <audio class="audio-player" autoplay loop>
+  <audio id="background-audio" loop>
     <source src="https://abcsnoob.github.io/files/Two-Steps-From-Hell-Live-Victory.mp3" type="audio/mp3">
     Your browser does not support the audio element.
   </audio>
 
-  <a href="https://abcsnoob.github.io">
-    <img class="abcsnoob" alt="Abc's Noob" src="abcsnoob.webp" width="150">
-  </a>
-  <br><br>
+  <!-- Overlay (Lớp phủ) -->
+  <div class="overlay" id="overlay" onclick="startProcess()">
+    <div>
+      <div class="spinner" id="spinner"></div>
+      <h3 style="color: white;">Click anywhere to start...</h3>
+    </div>
+  </div>
+
+  <!-- Progress Bar và Số % -->
+  <div class="progress-bar-container" id="progress-bar-container">
+    <div class="progress-bar" id="progress-bar"></div>
+    <div class="progress-text" id="progress-text">0%</div>
+  </div>
+
+  <script>
+    // Hàm để bắt đầu quá trình khi ấn vào lớp phủ
+    function startProcess() {
+      // Ẩn overlay và hiển thị progress bar
+      document.getElementById('overlay').style.display = 'none';
+      document.getElementById('progress-bar-container').style.display = 'block';
+
+      // Lấy phần audio
+      var audio = document.getElementById('background-audio');
+      audio.play();
+
+      // Bắt đầu thanh tiến trình
+      var progressBar = document.getElementById('progress-bar');
+      var progressText = document.getElementById('progress-text');
+      var width = 0;
+
+      // Interval để cập nhật progress bar và text % mỗi 150ms
+      var interval = setInterval(function() {
+        if (width >= 100) {
+          clearInterval(interval);
+        } else {
+          width++;
+          progressBar.style.width = width + '%';
+          progressText.textContent = width + '%'; // Cập nhật số %
+        }
+      }, 150); // 15s để hoàn thành 100%
+    }
+  </script>
 
   <h1>INTRODUCTION</h1>
   <h3>Hi, I'm <span style="color: yellow;">Abc's Noob</span>!</h3>
