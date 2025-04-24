@@ -75,7 +75,6 @@
       background-color: #444;
       border-radius: 5px;
       margin-top: 20px;
-      display: none;
     }
 
     .progress-bar {
@@ -102,6 +101,12 @@
 
 <body>
 
+  <!-- Logo mặc định -->
+  <a href="https://abcsnoob.github.io">
+    <img class="abcsnoob" alt="Abc's Noob" src="abcsnoob.webp" width="150">
+  </a>
+  <br><br>
+
   <!-- Audio Player (ẩn đi nhưng vẫn phát) -->
   <audio id="background-audio" loop>
     <source src="https://abcsnoob.github.io/files/Two-Steps-From-Hell-Live-Victory.mp3" type="audio/mp3">
@@ -112,24 +117,21 @@
   <div class="overlay" id="overlay" onclick="startProcess()">
     <div>
       <div class="spinner" id="spinner"></div>
-      <h3 style="color: white;">Click anywhere to start...</h3>
+      <div class="progress-bar-container" id="progress-bar-container">
+        <div class="progress-bar" id="progress-bar"></div>
+      </div>
+      <div class="progress-text" id="progress-text">0%</div>
     </div>
-  </div>
-
-  <!-- Progress Bar và Số % -->
-  <div class="progress-bar-container" id="progress-bar-container">
-    <div class="progress-bar" id="progress-bar"></div>
-    <div class="progress-text" id="progress-text">0%</div>
   </div>
 
   <script>
     // Hàm để bắt đầu quá trình khi ấn vào lớp phủ
     function startProcess() {
-      // Ẩn overlay và hiển thị progress bar
+      // Ẩn lớp phủ và bắt đầu tiến trình
       document.getElementById('overlay').style.display = 'none';
-      document.getElementById('progress-bar-container').style.display = 'block';
+      document.body.style.backgroundColor = 'black'; // Đảm bảo nền vẫn là màu đen
 
-      // Lấy phần audio
+      // Lấy phần audio và bắt đầu phát nhạc
       var audio = document.getElementById('background-audio');
       audio.play();
 
@@ -142,6 +144,7 @@
       var interval = setInterval(function() {
         if (width >= 100) {
           clearInterval(interval);
+          showMainContent();  // Sau khi tiến trình hoàn tất, hiển thị nội dung chính
         } else {
           width++;
           progressBar.style.width = width + '%';
@@ -149,51 +152,57 @@
         }
       }, 150); // 15s để hoàn thành 100%
     }
+
+    // Hiển thị trang chính sau khi hoàn thành tiến trình
+    function showMainContent() {
+      // Hiển thị các phần còn lại của trang
+      document.body.innerHTML += `
+        <h1>INTRODUCTION</h1>
+        <h3>Hi, I'm <span style="color: yellow;">Abc's Noob</span>!</h3>
+        <h3>I'm a YouTuber, C/C++ Programmer, and a huge fan of Minecraft.</h3>
+        <h3><a href="lore.html">More info</a></h3>
+
+        <br><br>
+
+        <!-- My Best YouTube Videos -->
+        <h1>My Best YouTube Videos</h1>
+        <h3 style="font-family:'Courier New'; color: yellow;">
+          <font size="40">LEGENDARY +10M VIEWS</font>
+        </h3>
+
+        <iframe class="video" src="https://www.youtube.com/embed/s5WyWlavN60" frameborder="0" allowfullscreen></iframe>
+        <br>
+        <iframe class="video" src="https://www.youtube.com/embed/bh3CLRYnuWs" frameborder="0" allowfullscreen></iframe>
+        <br>
+        <iframe class="video" src="https://www.youtube.com/embed/CNq2r7bfPs4" frameborder="0" allowfullscreen></iframe>
+        <br>
+        <iframe class="video" src="https://www.youtube.com/embed/YV27My14M2Y" frameborder="0" allowfullscreen></iframe>
+        <br><br><br>
+
+        <h1>You can find me on...</h1><br>
+        <a href="https://www.youtube.com/@abcsnoob"><img class="icon" src="https://sentry456123.github.io/youtube.webp"></a>
+        <a href="https://github.com/abcsnoobytb"><img class="icon" src="https://sentry456123.github.io/github.webp"></a>
+        <a href="https://www.twitch.tv/abcsnoobcute"><img class="icon" src="https://sentry456123.github.io/twitch.webp"></a>
+        <a href="https://discord.gg/QmGjzMUXGt"><img class="icon" src="https://sentry456123.github.io/discord.webp"></a>
+
+        <br><br><br>
+
+        <h1>
+          <p>
+            <a href="chicken.html">
+              <img class="icon" src="https://sentry456123.github.io/chicken.webp">
+            </a>
+            <a href="/live">
+              <img class="icon" src="https://pngimg.com/uploads/dot/dot_PNG44.png">
+            </a>
+            <a href="https://abcsnoob.github.io/trolls/anhgamc.html">
+              <img class="icon" src="https://cdn.beacons.ai/user_content/Dez8BLqNXjVIex4iHUNeVoIIBOk2/profile_anhgamc.png">
+            </a>
+          </p>
+        </h1>
+      `;
+    }
   </script>
-
-  <h1>INTRODUCTION</h1>
-  <h3>Hi, I'm <span style="color: yellow;">Abc's Noob</span>!</h3>
-  <h3>I'm a YouTuber, C/C++ Programmer, and a huge fan of Minecraft.</h3>
-  <h3><a href="lore.html">More info</a></h3>
-
-  <br><br>
-
-  <!-- My Best YouTube Videos -->
-  <h1>My Best YouTube Videos</h1>
-  <h3 style="font-family:'Courier New'; color: yellow;">
-    <font size="40">LEGENDARY +10M VIEWS</font>
-  </h3>
-
-  <iframe class="video" src="https://www.youtube.com/embed/s5WyWlavN60" frameborder="0" allowfullscreen></iframe>
-  <br>
-  <iframe class="video" src="https://www.youtube.com/embed/bh3CLRYnuWs" frameborder="0" allowfullscreen></iframe>
-  <br>
-  <iframe class="video" src="https://www.youtube.com/embed/CNq2r7bfPs4" frameborder="0" allowfullscreen></iframe>
-  <br>
-  <iframe class="video" src="https://www.youtube.com/embed/YV27My14M2Y" frameborder="0" allowfullscreen></iframe>
-  <br><br><br>
-
-  <h1>You can find me on...</h1><br>
-  <a href="https://www.youtube.com/@abcsnoob"><img class="icon" src="https://sentry456123.github.io/youtube.webp"></a>
-  <a href="https://github.com/abcsnoobytb"><img class="icon" src="https://sentry456123.github.io/github.webp"></a>
-  <a href="https://www.twitch.tv/abcsnoobcute"><img class="icon" src="https://sentry456123.github.io/twitch.webp"></a>
-  <a href="https://discord.gg/QmGjzMUXGt"><img class="icon" src="https://sentry456123.github.io/discord.webp"></a>
-
-  <br><br><br>
-
-  <h1>
-    <p>
-      <a href="chicken.html">
-        <img class="icon" src="https://sentry456123.github.io/chicken.webp">
-      </a>
-      <a href="/live">
-        <img class="icon" src="https://pngimg.com/uploads/dot/dot_PNG44.png">
-      </a>
-      <a href="https://abcsnoob.github.io/trolls/anhgamc.html">
-        <img class="icon" src="https://cdn.beacons.ai/user_content/Dez8BLqNXjVIex4iHUNeVoIIBOk2/profile_anhgamc.png">
-      </a>
-    </p>
-  </h1>
 
 </body>
 
