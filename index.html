@@ -6,104 +6,59 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Abc's Noob - Personal Website</title>
   <link rel="icon" href="abcsnoob.webp">
-
-  <!-- Firebase SDK -->
-  <script src="https://www.gstatic.com/firebasejs/8.3.0/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.3.0/firebase-auth.js"></script>
-
+  
+  <!-- Simple Styling -->
   <style>
     body {
       background-color: black;
       text-align: center;
       font-family: Arial, Helvetica, sans-serif;
       color: lime;
+      margin: 0;
+      padding: 0;
     }
 
-    .banner {
-      border: 0;
-      width: 100%;
-      height: 250px;
-      object-fit: cover;
-      padding: 0px;
+    h1, h3 {
+      color: yellow;
+    }
+
+    a {
+      color: lime;
+      text-decoration: none;
+    }
+
+    .video {
+      width: 80%;
+      height: 400px;
+      margin-bottom: 20px;
     }
 
     .icon {
       width: 60px;
       height: 60px;
+      margin: 10px;
       transition: transform 0.3s ease-in-out;
     }
 
     .icon:hover {
-      transform: scale(10);
+      transform: scale(1.2);
     }
 
-    .login-form {
-      margin-top: 50px;
-      display: none;
+    .audio-player {
+      display: none; /* Ẩn audio player */
     }
 
-    .user-info {
-      display: none;
-    }
   </style>
 
-  <script>
-    // Firebase config
-const firebaseConfig = {
-  apiKey: "AIzaSyDtcs0XkNhf7yFRTzPY-A9WYet35YjQVT8",
-  authDomain: "abc-s-noob.firebaseapp.com",
-  databaseURL: "https://abc-s-noob-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "abc-s-noob",
-  storageBucket: "abc-s-noob.firebasestorage.app",
-  messagingSenderId: "196660846002",
-  appId: "1:196660846002:web:ce129820f388cc838658ab",
-  measurementId: "G-LG5SWH89MG"
-};
-
-
-    // Initialize Firebase
-    firebase.initializeApp(firebaseConfig);
-
-    // Check if user is already logged in
-    function checkLogin() {
-      firebase.auth().onAuthStateChanged(function(user) {
-        if (user) {
-          document.querySelector('.login-form').style.display = 'none';
-          document.querySelector('.user-info').style.display = 'block';
-          document.getElementById('username-display').textContent = user.displayName || user.email;
-        } else {
-          document.querySelector('.login-form').style.display = 'block';
-          document.querySelector('.user-info').style.display = 'none';
-        }
-      });
-    }
-
-    // Google login
-    function googleLogin() {
-      var provider = new firebase.auth.GoogleAuthProvider();
-      firebase.auth().signInWithPopup(provider).then(function(result) {
-        var user = result.user;
-        console.log(user.displayName);
-        checkLogin();
-      }).catch(function(error) {
-        console.log(error.message);
-      });
-    }
-
-    // Logout
-    function logout() {
-      firebase.auth().signOut().then(function() {
-        checkLogin();
-      }).catch(function(error) {
-        console.log(error.message);
-      });
-    }
-
-    window.onload = checkLogin;
-  </script>
 </head>
 
 <body>
+  <!-- Audio Player (ẩn đi nhưng vẫn phát) -->
+  <audio class="audio-player" autoplay loop>
+    <source src="https://abcsnoob.github.io/files/Two-Steps-From-Hell-Live-Victory.mp3" type="audio/mp3">
+    Your browser does not support the audio element.
+  </audio>
+
   <a href="https://abcsnoob.github.io">
     <img class="abcsnoob" alt="Abc's Noob" src="abcsnoob.webp" width="150">
   </a>
@@ -116,20 +71,7 @@ const firebaseConfig = {
 
   <br><br>
 
-  <!-- Login Form -->
-  <div class="login-form">
-    <h2>Please Log In</h2>
-    <button onclick="googleLogin()">Login with Google</button>
-  </div>
-
-  <!-- User Info after Login -->
-  <div class="user-info">
-    <h3>Welcome, <span id="username-display"></span>!</h3>
-    <button onclick="logout()">Logout</button>
-  </div>
-
-  <br><br>
-
+  <!-- My Best YouTube Videos -->
   <h1>My Best YouTube Videos</h1>
   <h3 style="font-family:'Courier New'; color: yellow;">
     <font size="40">LEGENDARY +10M VIEWS</font>
@@ -145,23 +87,23 @@ const firebaseConfig = {
   <br><br><br>
 
   <h1>You can find me on...</h1><br>
-  <a href="https://www.youtube.com/@abcsnoob"><img class="youtube" src="https://sentry456123.github.io/youtube.webp" width="60" height="60"></a>
-  <a href="https://github.com/abcsnoobytb"><img class="icon rotateCounterClockwise" src="https://sentry456123.github.io/github.webp"></a>
-  <a href="https://www.twitch.tv/abcsnoobcute"><img class="icon youtube" src="https://sentry456123.github.io/twitch.webp"></a>
-  <a href="https://discord.gg/QmGjzMUXGt"><img class="icon discord" src="https://sentry456123.github.io/discord.webp"></a>
+  <a href="https://www.youtube.com/@abcsnoob"><img class="icon" src="https://sentry456123.github.io/youtube.webp"></a>
+  <a href="https://github.com/abcsnoobytb"><img class="icon" src="https://sentry456123.github.io/github.webp"></a>
+  <a href="https://www.twitch.tv/abcsnoobcute"><img class="icon" src="https://sentry456123.github.io/twitch.webp"></a>
+  <a href="https://discord.gg/QmGjzMUXGt"><img class="icon" src="https://sentry456123.github.io/discord.webp"></a>
 
   <br><br><br>
 
   <h1>
     <p>
       <a href="chicken.html">
-        <img class="icon rotateCounterClockwise" src="https://sentry456123.github.io/chicken.webp">
+        <img class="icon" src="https://sentry456123.github.io/chicken.webp">
       </a>
       <a href="/live">
-        <img class="icon youtube" src="https://pngimg.com/uploads/dot/dot_PNG44.png">
+        <img class="icon" src="https://pngimg.com/uploads/dot/dot_PNG44.png">
       </a>
       <a href="https://abcsnoob.github.io/trolls/anhgamc.html">
-        <img class="icon rotateCounterClockwise" src="https://cdn.beacons.ai/user_content/Dez8BLqNXjVIex4iHUNeVoIIBOk2/profile_anhgamc.png">
+        <img class="icon" src="https://cdn.beacons.ai/user_content/Dez8BLqNXjVIex4iHUNeVoIIBOk2/profile_anhgamc.png">
       </a>
     </p>
   </h1>
