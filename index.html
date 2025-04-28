@@ -2,207 +2,159 @@
 <html lang="vi">
 
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Abc's Noob - Personal Website</title>
-  <link rel="icon" href="abcsnoob.webp">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <!-- Simple Styling -->
-  <style>
-    body {
-      background-color: black;
-      text-align: center;
-      font-family: Arial, Helvetica, sans-serif;
-      color: lime;
-      margin: 0;
-      padding: 0;
+<meta property="og:title" content="Abc's Noob Personal Website"/> 
+<meta property="og:site_name" content="Abc's Noob"/> 
+<meta property="og:type" content="website"/>
+<meta property="og:description" content="Abc's Noob is a YouTuber, C/C++ Programmer, and Minecraft fan!"/> 
+<meta property="og:url" content="https://abcsnoob.github.io/"/> 
+<meta property="og:image" content="https://abcsnoob.github.io/abcsnoob.webp"/> 
+<meta name="theme-color" content="#000000"/>
+
+<meta name="twitter:title" content="Abc's Noob Personal Website"> 
+<meta name="twitter:description" content="Abc's Noob is a YouTuber, C/C++ Programmer, and Minecraft fan!">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:site" content="@abcsnoob"> 
+<meta name="twitter:creator" content="@abcsnoob"> 
+<meta name="twitter:image:src" content="https://abcsnoob.github.io/abcsnoob.webp"> 
+
+<title>Abc's Noob - Personal Website</title> 
+
+<link rel="icon" href="/abcsnoob.webp"> 
+
+<style>
+  @font-face {
+    font-family: 'CustomFont';
+    src: local('Arial'), sans-serif;
+  }
+
+  body {
+    background-color: black;
+    text-align: center;
+    font-family: 'CustomFont', Arial, Helvetica, sans-serif;
+    color: lime;
+  }
+
+  .banner {
+    border: 0;
+    width: 100%;
+    height: 250px;
+    object-fit: cover;
+    padding: 0px;
+  }
+
+  .icon {
+    width: 60px;
+    height: 60px;
+    transition: transform 0.3s ease-in-out;
+  }
+
+  .icon:hover {
+    transform: scale(1.2);
+  }
+
+  .abcsnoob {
+    animation: rotate 1s linear infinite;
+  }
+  .youtube {
+    animation: rotate 0.3s linear infinite;
+  }
+
+  .github {
+    animation: rotate 0.3s linear infinite;
+  }
+
+  .twitch {
+    animation: rotateCounterClockwise 0.3s linear infinite;
+  }
+
+  .discord {
+    animation: bounce 0.1s linear infinite;
+  }
+
+  @keyframes rotate {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(180deg);
+    }
+  }
+
+  @keyframes rotateCounterClockwise {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(-360deg);
+    }
+  }
+
+  @keyframes bounce {
+    from {
+      transform: scaleY(0%);
     }
 
-    h1, h3 {
-      color: yellow;
+    50% {
+      transform: scaleY(50%);
     }
 
-    a {
-      color: lime;
-      text-decoration: none;
+    to {
+      transform: scaleY(100%);
     }
+  }
+</style>
 
-    .video {
-      width: 80%;
-      height: 400px;
-      margin-bottom: 20px;
-    }
-
-    .icon {
-      width: 60px;
-      height: 60px;
-      margin: 10px;
-      transition: transform 0.3s ease-in-out;
-    }
-
-    .icon:hover {
-      transform: scale(1.2);
-    }
-
-    /* Lớp phủ */
-    .overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0, 0, 0, 0.8);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      z-index: 9999;
-    }
-
-    /* Loading Spinner */
-    .spinner {
-      border: 4px solid #f3f3f3;
-      border-top: 4px solid #3498db;
-      border-radius: 50%;
-      width: 50px;
-      height: 50px;
-      animation: spin 2s linear infinite;
-    }
-
-    /* Progress Bar */
-    .progress-bar-container {
-      width: 80%;
-      height: 30px;
-      background-color: #444;
-      border-radius: 5px;
-      margin-top: 20px;
-    }
-
-    .progress-bar {
-      width: 0%;
-      height: 100%;
-      background-color: lime;
-      border-radius: 5px;
-    }
-
-    /* Số % */
-    .progress-text {
-      color: lime;
-      font-size: 20px;
-      margin-top: 10px;
-    }
-
-    /* Loading Animation */
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-  </style>
 </head>
 
 <body>
+  <img class="abcsnoob" alt="Abc's Noob" src="/abcsnoob.webp" width="150"> 
 
-  <!-- Logo mặc định -->
-  <a href="https://abcsnoob.github.io">
-    <img class="abcsnoob" alt="Abc's Noob" src="abcsnoob.webp" width="150">
-  </a>
   <br><br>
 
-  <!-- Audio Player (ẩn đi nhưng vẫn phát) -->
-  <audio id="background-audio" loop>
-    <source src="https://abcsnoob.github.io/files/Two-Steps-From-Hell-Live-Victory.mp3" type="audio/mp3">
-    Your browser does not support the audio element.
-  </audio>
+  <h1>INTRODUCTION</h1>
+  <h3>Hi, I'm <span style="color: yellow;">Abc's Noob</span>!</h3>
+  <h3>I'm a YouTuber, C/C++ Programmer, and a huge fan of Minecraft.</h3>
+  <h3><a href="lore.html">More info</a></h3>
 
-  <!-- Overlay (Lớp phủ) -->
-  <div class="overlay" id="overlay" onclick="startProcess()">
-    <div>
-      <div class="spinner" id="spinner"></div>
-      <div class="progress-bar-container" id="progress-bar-container">
-        <div class="progress-bar" id="progress-bar"></div>
-      </div>
-      <div class="progress-text" id="progress-text">0%</div>
-    </div>
-  </div>
+  <br><br>
 
-  <script>
-    // Hàm để bắt đầu quá trình khi ấn vào lớp phủ
-    function startProcess() {
-      // Ẩn lớp phủ và bắt đầu tiến trình
-      document.getElementById('overlay').style.display = 'none';
-      document.body.style.backgroundColor = 'black'; // Đảm bảo nền vẫn là màu đen
+  <h1>My Best YouTube Videos</h1>
+  <h3 style="font-family:'Courier New'; color: yellow;">
+    <font size="40">LEGENDARY +10M VIEWS</font>
+  </h3>
 
-      // Lấy phần audio và bắt đầu phát nhạc
-      var audio = document.getElementById('background-audio');
-      audio.play();
+  <iframe class="video" src="https://www.youtube.com/embed/s5WyWlavN60" frameborder="0" allowfullscreen></iframe>
+  <br>
+  <iframe class="video" src="https://www.youtube.com/embed/bh3CLRYnuWs" frameborder="0" allowfullscreen></iframe>
+  <br>
+  <iframe class="video" src="https://www.youtube.com/embed/CNq2r7bfPs4" frameborder="0" allowfullscreen></iframe>
+  <br>
+  <iframe class="video" src="https://www.youtube.com/embed/YV27My14M2Y" frameborder="0" allowfullscreen></iframe>
+  <br><br><br>
+  <h1>You can find me on...</h1><br>
+  <a href="https://www.youtube.com/@abcsnoob"><img class="youtube" src="https://sentry456123.github.io/youtube.webp" width="60" height="60"></a>
+  <a href="https://github.com/abcsnoobytb"><img class="icon github" src="https://sentry456123.github.io/github.webp"></a>
+  <a href="https://www.twitch.tv/abcsnoobcute"><img class="icon" src="https://sentry456123.github.io/twitch.webp"></a>
+  <a href="https://discord.gg/QmGjzMUXGt"><img class="icon discord" src="https://sentry456123.github.io/discord.webp"></a>
 
-      // Bắt đầu thanh tiến trình
-      var progressBar = document.getElementById('progress-bar');
-      var progressText = document.getElementById('progress-text');
-      var width = 0;
+  <br><br><br>
 
-      // Interval để cập nhật progress bar và text % mỗi 150ms
-      var interval = setInterval(function() {
-        if (width >= 100) {
-          clearInterval(interval);
-          showMainContent();  // Sau khi tiến trình hoàn tất, hiển thị nội dung chính
-        } else {
-          width++;
-          progressBar.style.width = width + '%';
-          progressText.textContent = width + '%'; // Cập nhật số %
-        }
-      }, 150); // 15s để hoàn thành 100%
-    }
-
-    // Hiển thị trang chính sau khi hoàn thành tiến trình
-    function showMainContent() {
-      // Hiển thị các phần còn lại của trang
-      document.body.innerHTML += `
-        <h1>INTRODUCTION</h1>
-        <h3>Hi, I'm <span style="color: yellow;">Abc's Noob</span>!</h3>
-        <h3>I'm a YouTuber, C/C++ Programmer, and a huge fan of Minecraft.</h3>
-        <h3><a href="lore.html">More info</a></h3>
-
-        <br><br>
-
-        <!-- My Best YouTube Videos -->
-        <h1>My Best YouTube Videos</h1>
-        <h3 style="font-family:'Courier New'; color: yellow;">
-          <font size="40">LEGENDARY +10M VIEWS</font>
-        </h3>
-
-        <iframe class="video" src="https://www.youtube.com/embed/s5WyWlavN60" frameborder="0" allowfullscreen></iframe>
-        <br>
-        <iframe class="video" src="https://www.youtube.com/embed/bh3CLRYnuWs" frameborder="0" allowfullscreen></iframe>
-        <br>
-        <iframe class="video" src="https://www.youtube.com/embed/CNq2r7bfPs4" frameborder="0" allowfullscreen></iframe>
-        <br>
-        <iframe class="video" src="https://www.youtube.com/embed/YV27My14M2Y" frameborder="0" allowfullscreen></iframe>
-        <br><br><br>
-
-        <h1>You can find me on...</h1><br>
-        <a href="https://www.youtube.com/@abcsnoob"><img class="icon" src="https://sentry456123.github.io/youtube.webp"></a>
-        <a href="https://github.com/abcsnoobytb"><img class="icon" src="https://sentry456123.github.io/github.webp"></a>
-        <a href="https://www.twitch.tv/abcsnoobcute"><img class="icon" src="https://sentry456123.github.io/twitch.webp"></a>
-        <a href="https://discord.gg/QmGjzMUXGt"><img class="icon" src="https://sentry456123.github.io/discord.webp"></a>
-
-        <br><br><br>
-
-        <h1>
-          <p>
-            <a href="chicken.html">
-              <img class="icon" src="https://sentry456123.github.io/chicken.webp">
-            </a>
-            <a href="/live">
-              <img class="icon" src="https://pngimg.com/uploads/dot/dot_PNG44.png">
-            </a>
-            <a href="https://abcsnoob.github.io/trolls/anhgamc.html">
-              <img class="icon" src="https://cdn.beacons.ai/user_content/Dez8BLqNXjVIex4iHUNeVoIIBOk2/profile_anhgamc.png">
-            </a>
-          </p>
-        </h1>
-      `;
-    }
-  </script>
+  <h1>
+    <p>
+      <a href="chicken.html">
+        <img class="icon" src="https://sentry456123.github.io/chicken.webp">
+      </a>
+      <a href="/live">
+        <img class="icon" src="https://pngimg.com/uploads/dot/dot_PNG44.png">
+      </a>
+      <a href="/trolls/anhgamc.html">
+        <img class="icon" src="https://cdn.beacons.ai/user_content/Dez8BLqNXjVIex4iHUNeVoIIBOk2/profile_anhgamc.png">
+      </a>
+    </p>
+  </h1>
 
 </body>
 
