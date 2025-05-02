@@ -46,7 +46,8 @@
     auth.getRedirectResult().then((result) => {
       if (result.user) {
         // Nếu đăng nhập thành công, chuyển hướng về index.html
-        window.location.href = "index.html";
+        console.log("Đăng nhập thành công:", result.user); // Kiểm tra kết quả đăng nhập
+        window.location.href = "index.html"; // Chuyển hướng về index.html
       }
     }).catch((error) => {
       console.error("Lỗi đăng nhập: ", error);
