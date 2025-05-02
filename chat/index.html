@@ -6,11 +6,11 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
-  
   <style>
     body {
       font-family: sans-serif;
-      background: #f2f2f2;
+      background: #f4f4f4;
+      margin: 0;
       padding: 20px;
     }
     .topbar {
@@ -63,60 +63,73 @@
     const firebaseConfig = {
       apiKey: "AIzaSyDtcs0XkNhf7yFRTzPY-A9WYet35YjQVT8",
       authDomain: "abc-s-noob.firebaseapp.com",
-      databaseURL: "https://abc-s-noob-default-rtdb.asia-southeast1.firebasedatabase.app",
       projectId: "abc-s-noob",
-      storageBucket: "abc-s-noob.firebasestorage.app",
+      storageBucket: "abc-s-noob.appspot.com",
       messagingSenderId: "196660846002",
-      appId: "1:196660846002:web:ce129820f388cc838658ab",
-      measurementId: "G-LG5SWH89MG"
+      appId: "1:196660846002:web:ce129820f388cc838658ab"
     };
-    
+
     // Khởi tạo Firebase
     firebase.initializeApp(firebaseConfig);
-
-    // Sử dụng Google Auth Provider
+    const auth = firebase.auth();
+    const db = firebase.firestore();
     const provider = new firebase.auth.GoogleAuthProvider();
 
     const appDiv = document.getElementById("app");
 
-    // Kiểm tra đăng nhập
-    firebase.auth().onAuthStateChanged(user => {
-      if (!user) {
-        // Nếu chưa đăng nhập thì hiện nút đăng nhập
-        appDiv.innerHTML = `
-          <div class="centered">
-            <h2>Abc's Noob Chat 2.0</h2>
-            <button class="login-btn" onclick="firebase.auth().signInWithRedirect(provider)">Đăng nhập với Google</button>
-          </div>
-        `;
-      } else {
-        // Nếu đã đăng nhập thì hiện giao diện chat
-        appDiv.innerHTML = `
-          <div class="topbar">
-            <h2>Abc's Noob Chat 2.0 app</h2>
-            <button onclick="logout()">Đăng xuất</button>
-          </div>
-          <div id="status"></div>
-          <div id="chatbox">Đang tải...</div>
-          <input type="text" id="messageInput" placeholder="Nhập tin nhắn">
-          <button onclick="sendMessage()">Gửi và làm mới</button>
-        `;
-        loadMessages();
-        checkNetwork();
-      }
+    // Thiết lập lưu đăng nhập trong localStorage (30 ngày)
+    auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).then(() => {
+      return auth.getRedirectResult().then(result => {
+        if (result.user) {
+          console.log("Đã đăng nhập qua redirect");
+        }
+        setupUI();
+      }).catch(err => {
+        console.error("Lỗi redirect:", err.message);
+        setupUI();
+      });
     });
 
-    // Hàm đăng xuất
-    function logout() {
-      firebase.auth().signOut().then(() => location.reload());
+    // Giao diện chính
+    function setupUI() {
+      auth.onAuthStateChanged(user => {
+        if (!user) {
+          appDiv.innerHTML = `
+            <div class="centered">
+              <h2>Abc's Noob Chat 2.0</h2>
+              <button class="login-btn" onclick="login()">Đăng nhập với Google</button>
+            </div>
+          `;
+        } else {
+          appDiv.innerHTML = `
+            <div class="topbar">
+              <h2>Abc's Noob Chat 2.0 app</h2>
+              <button onclick="logout()">Đăng xuất</button>
+            </div>
+            <div id="status"></div>
+            <div id="chatbox">Đang tải...</div>
+            <input type="text" id="messageInput" placeholder="Nhập tin nhắn">
+            <button onclick="sendMessage()">Gửi và làm mới</button>
+          `;
+          loadMessages();
+          checkNetwork();
+        }
+      });
     }
 
-    // Hàm gửi tin nhắn
+    function login() {
+      auth.signInWithRedirect(provider);
+    }
+
+    function logout() {
+      auth.signOut().then(() => location.reload());
+    }
+
     function sendMessage() {
-      const user = firebase.auth().currentUser;
+      const user = auth.currentUser;
       const msg = document.getElementById("messageInput").value.trim();
       if (!msg) return;
-      firebase.firestore().collection("messages").add({
+      db.collection("messages").add({
         name: user.displayName,
         text: msg,
         timestamp: firebase.firestore.FieldValue.serverTimestamp()
@@ -124,10 +137,9 @@
       document.getElementById("messageInput").value = "";
     }
 
-    // Hàm tải tin nhắn từ Firestore
     function loadMessages() {
       const chatbox = document.getElementById("chatbox");
-      firebase.firestore().collection("messages")
+      db.collection("messages")
         .orderBy("timestamp", "asc")
         .onSnapshot(snapshot => {
           chatbox.innerHTML = "";
@@ -141,7 +153,6 @@
         });
     }
 
-    // Kiểm tra kết nối mạng
     function checkNetwork() {
       const status = document.getElementById("status");
       function update() {
