@@ -6,7 +6,7 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
-  <script src="firebase-config.js"></script>
+  
   <style>
     body {
       font-family: sans-serif;
@@ -59,9 +59,25 @@
   <div id="app"></div>
 
   <script>
-    const appDiv = document.getElementById("app");
+    // Cấu hình Firebase
+    const firebaseConfig = {
+      apiKey: "AIzaSyDtcs0XkNhf7yFRTzPY-A9WYet35YjQVT8",
+      authDomain: "abc-s-noob.firebaseapp.com",
+      databaseURL: "https://abc-s-noob-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "abc-s-noob",
+      storageBucket: "abc-s-noob.firebasestorage.app",
+      messagingSenderId: "196660846002",
+      appId: "1:196660846002:web:ce129820f388cc838658ab",
+      measurementId: "G-LG5SWH89MG"
+    };
+    
+    // Khởi tạo Firebase
+    firebase.initializeApp(firebaseConfig);
 
+    // Sử dụng Google Auth Provider
     const provider = new firebase.auth.GoogleAuthProvider();
+
+    const appDiv = document.getElementById("app");
 
     // Kiểm tra đăng nhập
     firebase.auth().onAuthStateChanged(user => {
