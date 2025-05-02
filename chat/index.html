@@ -76,32 +76,64 @@
 
     const appDiv = document.getElementById("app");
 
-    auth.onAuthStateChanged(user => {
-      if (!user) {
-        appDiv.innerHTML = `
-          <div class="centered">
-            <h2>Abc's Noob Chat 2.0</h2>
-            <button class="login-btn" onclick="login()">Đăng nhập với Google</button>
-          </div>
-        `;
-      } else {
-        appDiv.innerHTML = `
-          <div class="topbar">
-            <h2>Abc's Noob Chat 2.0 app</h2>
-            <button onclick="logout()">Đăng xuất</button>
-          </div>
-          <div id="status"></div>
-          <div id="chatbox">Đang tải...</div>
-          <input type="text" id="messageInput" placeholder="Nhập tin nhắn">
-          <button onclick="sendMessage()">Gửi và làm mới</button>
-        `;
-        loadMessages();
-        checkNetwork();
+    // Nhận thông báo login từ tab đăng nhập
+    window.addEventListener("message", (e) => {
+      if (e.data === "logged_in") {
+        location.reload();
       }
     });
 
-    function login() {
-      auth.signInWithPopup(provider).catch(err => alert("Lỗi đăng nhập: " + err.message));
+    // Kiểm tra trạng thái login
+    auth.onAuthStateChanged(user => {
+      if (!user) {
+        showLoginScreen();
+      } else {
+        showChatScreen(user);
+      }
+    });
+
+    function showLoginScreen() {
+      appDiv.innerHTML = `
+        <div class="centered">
+          <h2>Abc's Noob Chat 2.0</h2>
+          <button class="login-btn" onclick="openLoginTab()">Đăng nhập với Google</button>
+        </div>
+      `;
+    }
+
+    function openLoginTab() {
+      const tab = window.open("", "_blank");
+      const loginHTML = `
+        <!DOCTYPE html><html><head><title>Đăng nhập</title>
+        <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+        <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+        </head><body><h3>Đang đăng nhập...</h3>
+        <script>
+          const firebaseConfig = ${JSON.stringify(firebaseConfig)};
+          firebase.initializeApp(firebaseConfig);
+          const auth = firebase.auth();
+          const provider = new firebase.auth.GoogleAuthProvider();
+          auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).then(() => {
+            return auth.signInWithRedirect(provider);
+          });
+        </script>
+        </body></html>`;
+      tab.document.write(loginHTML);
+    }
+
+    function showChatScreen(user) {
+      appDiv.innerHTML = `
+        <div class="topbar">
+          <h2>Abc's Noob Chat 2.0 app</h2>
+          <button onclick="logout()">Đăng xuất</button>
+        </div>
+        <div id="status"></div>
+        <div id="chatbox">Đang tải...</div>
+        <input type="text" id="messageInput" placeholder="Nhập tin nhắn">
+        <button onclick="sendMessage()">Gửi và làm mới</button>
+      `;
+      loadMessages();
+      checkNetwork();
     }
 
     function logout() {
