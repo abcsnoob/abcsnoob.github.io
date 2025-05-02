@@ -1,108 +1,139 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Abc's Noob Chat - Login</title>
+  <title>Abc's Noob Chat 2.0</title>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+  <script src="firebase-config.js"></script>
   <style>
-    body { background: #121212; color: white; font-family: Arial; text-align: center; padding: 20px; }
-    input, button { padding: 10px; margin: 5px; border: none; border-radius: 5px; }
-    input { width: 200px; }
-    button { cursor: pointer; background: #1e88e5; color: white; }
-    .auth-container { background: #1f1f1f; display: inline-block; padding: 20px; border-radius: 10px; }
-    .social-btn img { width: 20px; vertical-align: middle; margin-right: 5px; }
-    .social-btn { background: #333; }
+    body {
+      font-family: sans-serif;
+      background: #f2f2f2;
+      padding: 20px;
+    }
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    #chatbox {
+      border: 1px solid #ccc;
+      height: 300px;
+      overflow-y: auto;
+      background: white;
+      padding: 10px;
+      margin: 10px 0;
+    }
+    input, button {
+      padding: 10px;
+      font-size: 16px;
+      margin-top: 5px;
+    }
+    #messageInput {
+      width: 70%;
+    }
+    #status {
+      color: red;
+      margin-bottom: 10px;
+    }
+    .centered {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+    }
+    .login-btn {
+      padding: 12px 24px;
+      background: #4285F4;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
-  <h2>Abc's Noob ACCOUNTS</h2>
-  <div class="auth-container">
-    <h3>Login / Register</h3>
-    <input type="email" id="email" placeholder="Email"><br>
-    <input type="password" id="password" placeholder="Password"><br>
-    <input type="text" id="username" placeholder="Name (Register only)"><br>
-    <button onclick="login()">Login</button>
-    <button onclick="register()">Register</button><br>
-    <p>-----or-----</p>
-    <button class="social-btn" onclick="googleLogin()">
-      <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg">Login with Google
-    </button>
-    <button class="social-btn" onclick="githubLogin()">
-      <img src="https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png" style="width:20px">Login with GitHub
-    </button>
-  </div>
-
-  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+  <div id="app"></div>
 
   <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyDtcs0XkNhf7yFRTzPY-A9WYet35YjQVT8",
-      authDomain: "abc-s-noob.firebaseapp.com",
-      databaseURL: "https://abc-s-noob-default-rtdb.asia-southeast1.firebasedatabase.app",
-      projectId: "abc-s-noob",
-      storageBucket: "abc-s-noob.firebasestorage.app",
-      messagingSenderId: "196660846002",
-      appId: "1:196660846002:web:ce129820f388cc838658ab",
-      measurementId: "G-LG5SWH89MG"
-    };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
+    const appDiv = document.getElementById("app");
 
+    const provider = new firebase.auth.GoogleAuthProvider();
+
+    // Kiểm tra đăng nhập
     firebase.auth().onAuthStateChanged(user => {
-      if (user) {
-        const name = user.displayName || document.getElementById('username').value || prompt("Tên bạn là?");
-        db.collection("users").doc(user.uid).set({
-          name: name,
-          email: user.email
-        }).then(() => {
-          alert("Đăng nhập thành công: " + name);
-          // Chuyển hướng đến chat (bucket.html) sau khi đăng nhập
-          window.location.href = `/chat/bucket?ssid=${user.uid}&bucket_id=${user.uid}`;
-        }).catch(error => {
-          console.error("Lỗi khi lưu dữ liệu người dùng: ", error);
-        });
+      if (!user) {
+        // Nếu chưa đăng nhập thì hiện nút đăng nhập
+        appDiv.innerHTML = `
+          <div class="centered">
+            <h2>Abc's Noob Chat 2.0</h2>
+            <button class="login-btn" onclick="firebase.auth().signInWithRedirect(provider)">Đăng nhập với Google</button>
+          </div>
+        `;
+      } else {
+        // Nếu đã đăng nhập thì hiện giao diện chat
+        appDiv.innerHTML = `
+          <div class="topbar">
+            <h2>Abc's Noob Chat 2.0 app</h2>
+            <button onclick="logout()">Đăng xuất</button>
+          </div>
+          <div id="status"></div>
+          <div id="chatbox">Đang tải...</div>
+          <input type="text" id="messageInput" placeholder="Nhập tin nhắn">
+          <button onclick="sendMessage()">Gửi và làm mới</button>
+        `;
+        loadMessages();
+        checkNetwork();
       }
     });
 
-    function register() {
-      const email = document.getElementById('email').value;
-      const pass = document.getElementById('password').value;
-      const name = document.getElementById('username').value;
-      firebase.auth().createUserWithEmailAndPassword(email, pass)
-        .then(cred => {
-          return cred.user.updateProfile({ displayName: name });
-        })
-        .then(() => {
-          return firebase.auth().currentUser.sendEmailVerification();
-        })
-        .catch(err => alert(err.message));
+    // Hàm đăng xuất
+    function logout() {
+      firebase.auth().signOut().then(() => location.reload());
     }
 
-    function login() {
-      const email = document.getElementById('email').value;
-      const pass = document.getElementById('password').value;
-      firebase.auth().signInWithEmailAndPassword(email, pass)
-        .then(() => {
-          const user = firebase.auth().currentUser;
-          if (!user.emailVerified) {
-            alert("Xác minh email trước khi tiếp tục!");
-            firebase.auth().signOut();
-          }
-        })
-        .catch(err => alert(err.message));
+    // Hàm gửi tin nhắn
+    function sendMessage() {
+      const user = firebase.auth().currentUser;
+      const msg = document.getElementById("messageInput").value.trim();
+      if (!msg) return;
+      firebase.firestore().collection("messages").add({
+        name: user.displayName,
+        text: msg,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      document.getElementById("messageInput").value = "";
     }
 
-    function googleLogin() {
-      const provider = new firebase.auth.GoogleAuthProvider();
-      firebase.auth().signInWithPopup(provider).catch(err => alert(err.message));
+    // Hàm tải tin nhắn từ Firestore
+    function loadMessages() {
+      const chatbox = document.getElementById("chatbox");
+      firebase.firestore().collection("messages")
+        .orderBy("timestamp", "asc")
+        .onSnapshot(snapshot => {
+          chatbox.innerHTML = "";
+          snapshot.forEach(doc => {
+            const data = doc.data();
+            if (data.name && data.text) {
+              chatbox.innerHTML += `<p><strong>${data.name}:</strong> ${data.text}</p>`;
+            }
+          });
+          chatbox.scrollTop = chatbox.scrollHeight;
+        });
     }
 
-    function githubLogin() {
-      const provider = new firebase.auth.GithubAuthProvider();
-      firebase.auth().signInWithPopup(provider).catch(err => alert(err.message));
+    // Kiểm tra kết nối mạng
+    function checkNetwork() {
+      const status = document.getElementById("status");
+      function update() {
+        status.textContent = navigator.onLine ? "" : "❌ Mất kết nối mạng.";
+      }
+      window.addEventListener("online", update);
+      window.addEventListener("offline", update);
+      update();
     }
   </script>
 </body>
