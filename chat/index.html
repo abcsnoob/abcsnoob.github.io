@@ -7,59 +7,20 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
   <style>
-    body {
-      font-family: sans-serif;
-      background: #f4f4f4;
-      margin: 0;
-      padding: 20px;
-    }
-    .topbar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    #chatbox {
-      border: 1px solid #ccc;
-      height: 300px;
-      overflow-y: auto;
-      background: white;
-      padding: 10px;
-      margin: 10px 0;
-    }
-    input, button {
-      padding: 10px;
-      font-size: 16px;
-      margin-top: 5px;
-    }
-    #messageInput {
-      width: 70%;
-    }
-    #status {
-      color: red;
-      margin-bottom: 10px;
-    }
-    .centered {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
-    }
-    .login-btn {
-      padding: 12px 24px;
-      background: #4285F4;
-      color: white;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-    }
+    body { font-family: sans-serif; background: #f4f4f4; margin: 0; padding: 20px; }
+    .topbar { display: flex; justify-content: space-between; align-items: center; }
+    #chatbox { border: 1px solid #ccc; height: 300px; overflow-y: auto; background: white; padding: 10px; margin: 10px 0; }
+    input, button { padding: 10px; font-size: 16px; margin-top: 5px; }
+    #messageInput { width: 70%; }
+    #status { color: red; margin-bottom: 10px; }
+    .centered { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; }
+    .login-btn { padding: 12px 24px; background: #4285F4; color: white; border: none; border-radius: 6px; cursor: pointer; }
   </style>
 </head>
 <body>
   <div id="app"></div>
 
   <script>
-    // Firebase config
     const firebaseConfig = {
       apiKey: "AIzaSyDtcs0XkNhf7yFRTzPY-A9WYet35YjQVT8",
       authDomain: "abc-s-noob.firebaseapp.com",
@@ -72,18 +33,9 @@
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const db = firebase.firestore();
-    const provider = new firebase.auth.GoogleAuthProvider();
 
     const appDiv = document.getElementById("app");
 
-    // Nhận thông báo login từ tab đăng nhập
-    window.addEventListener("message", (e) => {
-      if (e.data === "logged_in") {
-        location.reload();
-      }
-    });
-
-    // Kiểm tra trạng thái login
     auth.onAuthStateChanged(user => {
       if (!user) {
         showLoginScreen();
@@ -102,23 +54,7 @@
     }
 
     function openLoginTab() {
-      const tab = window.open("", "_blank");
-      const loginHTML = `
-        <!DOCTYPE html><html><head><title>Đăng nhập</title>
-        <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-        <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
-        </head><body><h3>Đang đăng nhập...</h3>
-        <script>
-          const firebaseConfig = ${JSON.stringify(firebaseConfig)};
-          firebase.initializeApp(firebaseConfig);
-          const auth = firebase.auth();
-          const provider = new firebase.auth.GoogleAuthProvider();
-          auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).then(() => {
-            return auth.signInWithRedirect(provider);
-          });
-        </script>
-        </body></html>`;
-      tab.document.write(loginHTML);
+      window.location.href = "login.html"; // Chuyển hướng tới trang login
     }
 
     function showChatScreen(user) {
