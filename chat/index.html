@@ -2,105 +2,50 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8" />
-  <title>Abc's Noob Chat 2.0</title>
-  <style>
-    body { font-family: sans-serif; padding: 20px; }
-    #chatbox { height: 300px; overflow: auto; border: 1px solid #ccc; padding: 10px; margin: 10px 0; }
-    input[type="text"] { width: 80%; padding: 8px; }
-    button { padding: 8px 12px; margin-left: 5px; }
-    #status { color: red; margin-top: 10px; }
-  </style>
+  <title>Abc's Noob Chat</title>
 </head>
 <body>
-  <div id="app">Đang tải...</div>
+  <div id="app">
+    <h2>Đang tải...</h2>
+  </div>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
-    import { getAuth, GoogleAuthProvider, signInWithRedirect, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js";
-    import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js";
 
-    const firebaseConfig = {
+    const app = initializeApp({
       apiKey: "AIzaSyDtcs0XkNhf7yFRTzPY-A9WYet35YjQVT8",
       authDomain: "abc-s-noob.firebaseapp.com",
       projectId: "abc-s-noob",
-      storageBucket: "abc-s-noob.appspot.com",
-      messagingSenderId: "196660846002",
-      appId: "1:196660846002:web:ce129820f388cc838658ab",
-      measurementId: "G-LG5SWH89MG"
-    };
+      appId: "1:196660846002:web:ce129820f388cc838658ab"
+    });
 
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
-    const provider = new GoogleAuthProvider();
+    const auth = getAuth();
     const appDiv = document.getElementById("app");
 
-    function renderLogin() {
-      appDiv.innerHTML = `
-        <h2>Đăng nhập</h2>
-        <button id="loginBtn">Đăng nhập với Google</button>
-        <div id="status"></div>
-      `;
-      document.getElementById("loginBtn").onclick = () => {
-        signInWithRedirect(auth, provider);
-      };
+    function showLogin() {
+      appDiv.innerHTML = `<button onclick="window.open('login.html','_blank')">Đăng nhập với Google</button>`;
     }
 
-    function renderChat(user) {
+    function showChat(user) {
       appDiv.innerHTML = `
-        <h2>Abc's Noob Chat 2.0 app</h2>
+        <h2>Xin chào ${user.displayName}</h2>
         <button onclick="logout()">Đăng xuất</button>
-        <div id="status"></div>
-        <div id="chatbox"></div>
-        <input id="messageInput" type="text" placeholder="Nhập tin nhắn" />
-        <button onclick="sendMessage()">Gửi và làm mới</button>
+        <div>Đã đăng nhập. Sẵn sàng chat.</div>
       `;
-      loadMessages();
-      checkNetwork();
     }
 
     window.logout = () => signOut(auth);
 
-    window.sendMessage = async () => {
-      const input = document.getElementById("messageInput");
-      const msg = input.value.trim();
-      if (!msg) return;
-      await addDoc(collection(db, "messages"), {
-        name: auth.currentUser.displayName,
-        text: msg,
-        timestamp: serverTimestamp()
-      });
-      input.value = "";
-    };
+    onAuthStateChanged(auth, user => {
+      if (user) showChat(user);
+      else showLogin();
+    });
 
-    function loadMessages() {
-      const chatbox = document.getElementById("chatbox");
-      const q = query(collection(db, "messages"), orderBy("timestamp"));
-      onSnapshot(q, (snapshot) => {
-        chatbox.innerHTML = "";
-        snapshot.forEach(doc => {
-          const data = doc.data();
-          chatbox.innerHTML += `<div><b>${data.name}:</b> ${data.text}</div>`;
-        });
-        chatbox.scrollTop = chatbox.scrollHeight;
-      });
-    }
-
-    function checkNetwork() {
-      const status = document.getElementById("status");
-      const update = () => {
-        status.textContent = navigator.onLine ? "" : "❌ Mất kết nối mạng.";
-      };
-      window.addEventListener("online", update);
-      window.addEventListener("offline", update);
-      update();
-    }
-
-    onAuthStateChanged(auth, (user) => {
-      if (user) {
-        renderChat(user);
-      } else {
-        renderLogin();
+    // Kiểm tra từ login.html gửi về
+    window.addEventListener("message", (event) => {
+      if (event.data === "logged_in") {
+        location.reload();
       }
     });
   </script>
