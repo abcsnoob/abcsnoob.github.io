@@ -1,21 +1,23 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Đăng nhập - Abc's Noob Chat 2.0</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - Abc's Noob Chat</title>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
   <style>
-    body { font-family: sans-serif; padding: 20px; text-align: center; }
+    body { font-family: sans-serif; text-align: center; padding: 20px; }
     button { padding: 10px 20px; font-size: 16px; }
+    #sessionIdDiv { margin-top: 20px; }
   </style>
 </head>
 <body>
-  <h2>Đăng nhập với Google</h2>
+  <h1>Abc's Noob Chat - Đăng nhập</h1>
   <button onclick="loginWithGoogle()">Đăng nhập với Google</button>
 
-  <div id="sessionIdDiv" style="margin-top: 20px;">
+  <div id="sessionIdDiv">
     <h3>Mã phiên của bạn:</h3>
     <p id="sessionId"></p>
   </div>
@@ -24,76 +26,65 @@
     const firebaseConfig = {
       apiKey: "AIzaSyDtcs0XkNhf7yFRTzPY-A9WYet35YjQVT8",
       authDomain: "abc-s-noob.firebaseapp.com",
-      projectId: "abc-s-noob"
+      projectId: "abc-s-noob",
+      storageBucket: "abc-s-noob.appspot.com",
+      messagingSenderId: "196660846002",
+      appId: "1:196660846002:web:ce129820f388cc838658ab",
+      measurementId: "G-LG5SWH89MG"
     };
+
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const db = firebase.firestore();
 
     let currentUser = null;
-    const sessionIdDiv = document.getElementById("sessionIdDiv");
-    const sessionIdP = document.getElementById("sessionId");
 
-    // Lấy sessionId từ URL
-    const params = new URLSearchParams(window.location.search);
-    const sessionId = params.get("session");
-
-    // Hàm tạo mã phiên ngẫu nhiên
+    // Hàm tạo mã phiên ngẫu nhiên 11 ký tự
     function generateSessionId() {
-      return Math.random().toString(36).substring(2, 13); // 11 ký tự ngẫu nhiên
+      return Math.random().toString(36).substr(2, 11);
     }
 
-    // Lấy thông tin người dùng từ Firestore
-    auth.onAuthStateChanged(user => {
-      if (user) {
-        currentUser = user;
-        // Kiểm tra xem người dùng đã có mã phiên chưa
-        db.collection("users").doc(currentUser.uid).get().then(doc => {
+    // Đăng nhập với Google
+    function loginWithGoogle() {
+      const provider = new firebase.auth.GoogleAuthProvider();
+      auth.signInWithPopup(provider).then(result => {
+        const user = result.user;
+
+        db.collection("users").doc(user.uid).get().then(doc => {
           if (doc.exists) {
-            // Nếu có mã phiên, hiển thị mã đó
+            // Nếu người dùng đã có mã phiên, hiển thị mã đó
             const userData = doc.data();
-            sessionIdP.innerText = userData.sessionId;
+            document.getElementById("sessionId").innerText = userData.sessionId;
           } else {
             // Nếu chưa có mã, tạo mã mới và lưu vào Firestore
-            const newSessionId = generateSessionId();
-            db.collection("users").doc(currentUser.uid).set({
-              sessionId: newSessionId,
-              displayName: currentUser.displayName,
-              email: currentUser.email
+            const sessionId = generateSessionId();
+            db.collection("users").doc(user.uid).set({
+              sessionId: sessionId,
+              displayName: user.displayName,
+              email: user.email
             }).then(() => {
-              sessionIdP.innerText = newSessionId;
+              document.getElementById("sessionId").innerText = sessionId;
             }).catch(error => {
               console.error("Error saving sessionId: ", error);
             });
           }
         });
-      } else {
-        // Người dùng chưa đăng nhập
-        sessionIdP.innerText = "Chưa đăng nhập.";
-      }
-    });
 
-    // Đăng nhập bằng Google
-    function loginWithGoogle() {
-      const provider = new firebase.auth.GoogleAuthProvider();
-      auth.signInWithPopup(provider).then(result => {
-        const user = result.user;
-        if (sessionId) {
-          // Lưu sessionId vào Firestore khi đăng nhập
-          db.collection("users").doc(user.uid).set({
-            sessionId: sessionId,
-            displayName: user.displayName,
-            email: user.email
-          }).then(() => {
-            window.location.href = "index.html"; // Chuyển về trang index sau khi đăng nhập
-          }).catch(error => {
-            console.error("Error saving sessionId: ", error);
-          });
-        }
       }).catch(error => {
         console.error(error);
       });
     }
+
+    // Lắng nghe sự kiện thay đổi trạng thái đăng nhập
+    auth.onAuthStateChanged(user => {
+      if (user) {
+        currentUser = user;
+        document.getElementById("sessionIdDiv").style.display = "block"; // Hiện mã phiên
+      } else {
+        currentUser = null;
+        document.getElementById("sessionIdDiv").style.display = "none"; // Ẩn mã phiên
+      }
+    });
   </script>
 </body>
 </html>
