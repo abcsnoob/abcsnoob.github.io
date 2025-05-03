@@ -2,7 +2,7 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
-  <title>Đăng nhập OTP + Google + GitHub</title>
+  <title>Đăng nhập Google + GitHub</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -54,24 +54,13 @@
 <body>
   <h2>💬 Chat Firebase</h2>
 
-  <!-- OTP Email -->
-  <div class="form-box" id="otpForm">
-    <input type="email" id="otpEmail" placeholder="Nhập email để nhận mã OTP">
-    <button onclick="sendOTP()">Gửi mã OTP</button>
-  </div>
-
-  <div class="form-box" id="verifyForm" style="display:none;">
-    <input type="text" id="otpCode" placeholder="Nhập mã đã gửi đến email">
-    <button onclick="verifyOTP()">Xác nhận OTP</button>
-  </div>
-
   <!-- Google Login -->
-  <div class="form-box">
+  <div class="form-box" id="googleLoginForm">
     <button style="background:#db4437;" onclick="loginWithGoogle()">Đăng nhập bằng Google</button>
   </div>
 
   <!-- GitHub Login -->
-  <div class="form-box">
+  <div class="form-box" id="githubLoginForm">
     <button style="background:#24292f;" onclick="loginWithGithub()">Đăng nhập bằng GitHub</button>
   </div>
 
@@ -81,6 +70,8 @@
     <div id="messages"></div>
     <input type="text" id="messageInput" placeholder="Nhập tin nhắn...">
     <button onclick="sendMessage()">Gửi</button>
+    <!-- Logout Button -->
+    <button onclick="logout()" style="background:#f44336; margin-top: 10px;">Đăng xuất</button>
   </div>
 
   <!-- Firebase SDK -->
@@ -99,76 +90,48 @@
       appId: "1:196660846002:web:ce129820f388cc838658ab",
       measurementId: "G-LG5SWH89MG"
     };
-
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const db = firebase.firestore();
 
-    // Tạo OTP ngẫu nhiên
-    function generateOTP(length = 20) {
-      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-      let result = '';
-      for (let i = 0; i < length; i++) result += chars.charAt(Math.floor(Math.random() * chars.length));
-      return result;
-    }
-
-    let otpEmailGlobal = '';
-
-    async function sendOTP() {
-      const email = document.getElementById("otpEmail").value.trim();
-      if (!email) return alert("Nhập email!");
-
-      otpEmailGlobal = email;
-      const code = generateOTP();
-
-      await auth.createUserWithEmailAndPassword(email, 'defaultpassword').then(async () => {
-        const user = auth.currentUser;
-        if (user) {
-          await user.sendEmailVerification();
-          await db.collection("otp_codes").doc(email).set({
-            code: code,
-            createdAt: firebase.firestore.FieldValue.serverTimestamp()
-          });
-
-          console.log("⚠️ Mã gửi đến email:", code);
-          alert("Mã OTP đã được gửi đến email của bạn!");
-          document.getElementById("verifyForm").style.display = "block";
-        }
-      }).catch(err => {
-        alert("Lỗi tạo tài khoản: " + err.message);
+    // Đăng nhập bằng Google
+    function loginWithGoogle() {
+      const provider = new firebase.auth.GoogleAuthProvider();
+      auth.signInWithPopup(provider).then((result) => {
+        console.log("Đăng nhập bằng Google thành công!", result);
+        showChat();
+      }).catch((error) => {
+        console.error("Lỗi đăng nhập Google:", error.message);
+        alert("Lỗi đăng nhập Google!");
       });
     }
 
-    async function verifyOTP() {
-      const codeInput = document.getElementById("otpCode").value.trim();
-      const doc = await db.collection("otp_codes").doc(otpEmailGlobal).get();
-      if (!doc.exists) return alert("Không tìm thấy mã!");
-
-      const data = doc.data();
-      if (data.code === codeInput) {
-        await auth.signInWithEmailAndPassword(otpEmailGlobal, 'defaultpassword').then(() => {
-          alert("Đăng nhập thành công!");
-          showChat();
-        }).catch(err => {
-          alert("Lỗi đăng nhập: " + err.message);
-        });
-      } else {
-        alert("Mã không hợp lệ!");
-      }
+    // Đăng nhập bằng GitHub
+    function loginWithGithub() {
+      const provider = new firebase.auth.GithubAuthProvider();
+      auth.signInWithPopup(provider).then((result) => {
+        console.log("Đăng nhập bằng GitHub thành công!", result);
+        showChat();
+      }).catch((error) => {
+        console.error("Lỗi đăng nhập GitHub:", error.message);
+        alert("Lỗi đăng nhập GitHub!");
+      });
     }
 
+    // Hiển thị chat sau khi đăng nhập
     function showChat() {
-      document.getElementById("otpForm").style.display = "none";
-      document.getElementById("verifyForm").style.display = "none";
+      document.getElementById("googleLoginForm").style.display = "none";
+      document.getElementById("githubLoginForm").style.display = "none";
       document.getElementById("chatBox").style.display = "block";
     }
 
+    // Gửi tin nhắn vào Firestore
     function sendMessage() {
       const msg = document.getElementById("messageInput").value;
       const user = auth.currentUser;
       if (!msg.trim() || !user) return;
 
-      const email = user.email || otpEmailGlobal || "Ẩn danh";
+      const email = user.email || "Ẩn danh";
 
       db.collection("messages").add({
         text: msg,
@@ -180,7 +143,7 @@
       });
     }
 
-    // Lắng nghe tin nhắn
+    // Lắng nghe tin nhắn realtime
     db.collection("messages").orderBy("createdAt").onSnapshot(snapshot => {
       const msgBox = document.getElementById("messages");
       msgBox.innerHTML = "";
@@ -192,28 +155,17 @@
       });
     });
 
-    function loginWithGoogle() {
-      const provider = new firebase.auth.GoogleAuthProvider();
-      auth.signInWithPopup(provider)
-        .then(result => {
-          alert("Đăng nhập Google thành công!");
-          showChat();
-        })
-        .catch(error => {
-          alert("Lỗi đăng nhập Google: " + error.message);
-        });
-    }
-
-    function loginWithGithub() {
-      const provider = new firebase.auth.GithubAuthProvider();
-      auth.signInWithPopup(provider)
-        .then(result => {
-          alert("Đăng nhập GitHub thành công!");
-          showChat();
-        })
-        .catch(error => {
-          alert("Lỗi đăng nhập GitHub: " + error.message);
-        });
+    // Đăng xuất
+    function logout() {
+      auth.signOut().then(() => {
+        document.getElementById("chatBox").style.display = "none";
+        document.getElementById("googleLoginForm").style.display = "block";
+        document.getElementById("githubLoginForm").style.display = "block";
+        alert("Đăng xuất thành công!");
+      }).catch((error) => {
+        console.error("Lỗi đăng xuất:", error.message);
+        alert("Lỗi đăng xuất!");
+      });
     }
   </script>
 </body>
