@@ -1,53 +1,88 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <title>Abc's Noob Chat</title>
+  <meta charset="UTF-8">
+  <title>Abc's Noob Chat 2.0</title>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+  <style>
+    body { font-family: sans-serif; padding: 20px; }
+    #chatbox { border: 1px solid #ccc; height: 300px; overflow-y: scroll; padding: 10px; margin-top: 10px; }
+    #status { color: green; margin-bottom: 10px; }
+  </style>
 </head>
 <body>
-  <div id="app">
-    <h2>Đang tải...</h2>
+  <h2 id="status">Đang tạo mã phiên...</h2>
+  <div id="app" style="display: none;">
+    <h3>Abc's Noob Chat 2.0</h3>
+    <button onclick="logout()">Đăng xuất</button>
+    <div id="chatbox">Đang tải...</div>
+    <input type="text" id="messageInput" placeholder="Nhập tin nhắn..." style="width: 70%;">
+    <button onclick="sendMessage()">Gửi</button>
   </div>
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
-    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js";
-
-    const app = initializeApp({
+  <script>
+    const firebaseConfig = {
       apiKey: "AIzaSyDtcs0XkNhf7yFRTzPY-A9WYet35YjQVT8",
       authDomain: "abc-s-noob.firebaseapp.com",
-      projectId: "abc-s-noob",
-      appId: "1:196660846002:web:ce129820f388cc838658ab"
-    });
+      projectId: "abc-s-noob"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
 
-    const auth = getAuth();
+    const sessionId = Math.random().toString(36).substring(2, 12);
+    const statusEl = document.getElementById("status");
     const appDiv = document.getElementById("app");
+    let currentUser = null;
 
-    function showLogin() {
-      appDiv.innerHTML = `<button onclick="window.open('login.html','_blank')">Đăng nhập với Google</button>`;
-    }
+    // Mở login.html ở tab mới
+    const loginUrl = `login.html?session=${sessionId}`;
+    window.open(loginUrl, "_blank");
 
-    function showChat(user) {
-      appDiv.innerHTML = `
-        <h2>Xin chào ${user.displayName}</h2>
-        <button onclick="logout()">Đăng xuất</button>
-        <div>Đã đăng nhập. Sẵn sàng chat.</div>
-      `;
-    }
+    statusEl.innerText = `Mã phiên: ${sessionId} – Vui lòng đăng nhập ở tab mới...`;
 
-    window.logout = () => signOut(auth);
-
-    onAuthStateChanged(auth, user => {
-      if (user) showChat(user);
-      else showLogin();
-    });
-
-    // Kiểm tra từ login.html gửi về
     window.addEventListener("message", (event) => {
-      if (event.data === "logged_in") {
-        location.reload();
+      if (event.data?.type === "login" && event.data.session === sessionId) {
+        currentUser = event.data.user;
+        statusEl.innerText = `✅ Đăng nhập thành công: ${currentUser.displayName}`;
+        appDiv.style.display = "block";
+        loadMessages();
       }
     });
+
+    // Gửi tin nhắn
+    function sendMessage() {
+      const msg = document.getElementById("messageInput").value.trim();
+      if (!msg || !currentUser) return;
+      db.collection("messages").add({
+        name: currentUser.displayName,
+        text: msg,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      document.getElementById("messageInput").value = "";
+    }
+
+    // Tải tin nhắn từ Firestore
+    function loadMessages() {
+      const chatbox = document.getElementById("chatbox");
+      db.collection("messages").orderBy("timestamp", "asc").onSnapshot(snapshot => {
+        chatbox.innerHTML = "";
+        snapshot.forEach(doc => {
+          const data = doc.data();
+          if (data.name && data.text) {
+            chatbox.innerHTML += `<div><strong>${data.name}</strong>: ${data.text}</div>`;
+          }
+        });
+        chatbox.scrollTop = chatbox.scrollHeight;
+      });
+    }
+
+    // Đăng xuất
+    function logout() {
+      auth.signOut().then(() => location.reload());
+    }
   </script>
 </body>
 </html>
