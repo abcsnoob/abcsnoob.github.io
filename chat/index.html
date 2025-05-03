@@ -78,6 +78,7 @@
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-messaging.js"></script>
 
   <script>
     const firebaseConfig = {
@@ -93,6 +94,7 @@
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const db = firebase.firestore();
+    const messaging = firebase.messaging();
 
     // Đăng nhập bằng Google
     function loginWithGoogle() {
@@ -140,20 +142,23 @@
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
       }).then(() => {
         document.getElementById("messageInput").value = "";
+        fetchMessages();  // Tự động làm mới giao diện sau khi gửi tin nhắn
       });
     }
 
     // Lắng nghe tin nhắn realtime
-    db.collection("messages").orderBy("createdAt").onSnapshot(snapshot => {
-      const msgBox = document.getElementById("messages");
-      msgBox.innerHTML = "";
-      snapshot.forEach(doc => {
-        const data = doc.data();
-        const div = document.createElement("div");
-        div.textContent = `${data.email}: ${data.text}`;
-        msgBox.appendChild(div);
+    function fetchMessages() {
+      db.collection("messages").orderBy("createdAt").onSnapshot(snapshot => {
+        const msgBox = document.getElementById("messages");
+        msgBox.innerHTML = "";
+        snapshot.forEach(doc => {
+          const data = doc.data();
+          const div = document.createElement("div");
+          div.textContent = `${data.email}: ${data.text}`;
+          msgBox.appendChild(div);
+        });
       });
-    });
+    }
 
     // Đăng xuất
     function logout() {
@@ -167,6 +172,36 @@
         alert("Lỗi đăng xuất!");
       });
     }
+
+    // Thêm thông báo push khi có chat mới
+    messaging.onMessage(function(payload) {
+      console.log("Thông báo nhận được: ", payload);
+      const notificationTitle = "Tin nhắn mới!";
+      const notificationOptions = {
+        body: payload.notification.body,
+        icon: payload.notification.icon,
+      };
+      new Notification(notificationTitle, notificationOptions);
+    });
+
+    // Yêu cầu cấp phép nhận thông báo push
+    function requestPermission() {
+      messaging.requestPermission().then(() => {
+        console.log("Cấp phép thông báo thành công!");
+        return messaging.getToken();
+      }).then((token) => {
+        console.log("FCM Token: ", token);
+      }).catch((error) => {
+        console.error("Lỗi cấp phép thông báo:", error);
+      });
+    }
+
+    // Gọi hàm yêu cầu cấp phép nhận thông báo khi người dùng đăng nhập
+    auth.onAuthStateChanged(function(user) {
+      if (user) {
+        requestPermission();
+      }
+    });
   </script>
 </body>
 </html>
