@@ -3,23 +3,36 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Login - Abc's Noob Chat</title>
+  <title>Abc's Noob Chat 2.0</title>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
   <style>
     body { font-family: sans-serif; text-align: center; padding: 20px; }
     button { padding: 10px 20px; font-size: 16px; }
-    #sessionIdDiv { margin-top: 20px; }
+    #chatScreen { display: none; }
+    #loginScreen { display: block; }
+    #chatbox { max-height: 400px; overflow-y: auto; border: 1px solid #ccc; margin-bottom: 10px; padding: 10px; }
+    #status { color: red; font-size: 14px; }
   </style>
 </head>
 <body>
-  <h1>Abc's Noob Chat - Đăng nhập</h1>
-  <button onclick="loginWithGoogle()">Đăng nhập với Google</button>
+  <h1>Abc's Noob Chat 2.0</h1>
+  
+  <!-- Login Screen -->
+  <div id="loginScreen">
+    <button onclick="loginWithGoogle()">Đăng nhập với Google</button>
+  </div>
 
-  <div id="sessionIdDiv">
-    <h3>Mã phiên của bạn:</h3>
-    <p id="sessionId"></p>
+  <!-- Chat Screen -->
+  <div id="chatScreen">
+    <h2>Xin chào, <span id="userName"></span></h2>
+    <button onclick="logout()">Đăng xuất</button>
+    <div id="chatbox"></div>
+    <textarea id="messageInput" placeholder="Nhập tin nhắn"></textarea><br>
+    <button onclick="sendMessage()">Gửi</button>
+    <div id="status"></div>
   </div>
 
   <script>
@@ -36,7 +49,7 @@
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const db = firebase.firestore();
-
+    
     let currentUser = null;
 
     // Hàm tạo mã phiên ngẫu nhiên 11 ký tự
@@ -49,12 +62,13 @@
       const provider = new firebase.auth.GoogleAuthProvider();
       auth.signInWithPopup(provider).then(result => {
         const user = result.user;
+        document.getElementById("userName").innerText = user.displayName;
 
         db.collection("users").doc(user.uid).get().then(doc => {
           if (doc.exists) {
             // Nếu người dùng đã có mã phiên, hiển thị mã đó
             const userData = doc.data();
-            document.getElementById("sessionId").innerText = userData.sessionId;
+            setupChatScreen(userData.sessionId);
           } else {
             // Nếu chưa có mã, tạo mã mới và lưu vào Firestore
             const sessionId = generateSessionId();
@@ -63,7 +77,7 @@
               displayName: user.displayName,
               email: user.email
             }).then(() => {
-              document.getElementById("sessionId").innerText = sessionId;
+              setupChatScreen(sessionId);
             }).catch(error => {
               console.error("Error saving sessionId: ", error);
             });
@@ -75,14 +89,74 @@
       });
     }
 
-    // Lắng nghe sự kiện thay đổi trạng thái đăng nhập
+    // Thiết lập giao diện chat sau khi đăng nhập
+    function setupChatScreen(sessionId) {
+      document.getElementById("loginScreen").style.display = "none";
+      document.getElementById("chatScreen").style.display = "block";
+      document.getElementById("status").innerText = `Mã phiên của bạn: ${sessionId}`;
+      loadMessages();
+      checkNetwork();
+    }
+
+    // Hàm gửi tin nhắn
+    function sendMessage() {
+      const msg = document.getElementById("messageInput").value.trim();
+      if (!msg) return;
+      const user = auth.currentUser;
+      db.collection("messages").add({
+        name: user.displayName,
+        text: msg,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+      }).then(() => {
+        document.getElementById("messageInput").value = "";  // Clear input
+      }).catch(error => {
+        console.error("Error sending message: ", error);
+      });
+    }
+
+    // Tải và hiển thị tin nhắn
+    function loadMessages() {
+      const chatbox = document.getElementById("chatbox");
+      db.collection("messages").orderBy("timestamp", "asc").onSnapshot(snapshot => {
+        chatbox.innerHTML = "";
+        snapshot.forEach(doc => {
+          const data = doc.data();
+          if (data.name && data.text) {
+            chatbox.innerHTML += `<div><b>${data.name}:</b> ${data.text}</div>`;
+          }
+        });
+        chatbox.scrollTop = chatbox.scrollHeight;
+      });
+    }
+
+    // Kiểm tra kết nối mạng
+    function checkNetwork() {
+      const status = document.getElementById("status");
+      function update() {
+        status.textContent = navigator.onLine ? "" : "❌ Mất kết nối mạng.";
+      }
+      window.addEventListener("online", update);
+      window.addEventListener("offline", update);
+      update();
+    }
+
+    // Đăng xuất
+    function logout() {
+      auth.signOut().then(() => {
+        document.getElementById("loginScreen").style.display = "block";
+        document.getElementById("chatScreen").style.display = "none";
+      }).catch(error => {
+        console.error("Error during logout: ", error);
+      });
+    }
+
+    // Lắng nghe sự thay đổi trạng thái đăng nhập
     auth.onAuthStateChanged(user => {
       if (user) {
         currentUser = user;
-        document.getElementById("sessionIdDiv").style.display = "block"; // Hiện mã phiên
+        document.getElementById("userName").innerText = user.displayName;
       } else {
         currentUser = null;
-        document.getElementById("sessionIdDiv").style.display = "none"; // Ẩn mã phiên
       }
     });
   </script>
