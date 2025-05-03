@@ -1,38 +1,44 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <title>Đăng nhập Google</title>
+  <meta charset="UTF-8">
+  <title>Đăng nhập - Abc's Noob Chat 2.0</title>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  <style>
+    body { font-family: sans-serif; padding: 20px; text-align: center; }
+    button { padding: 10px 20px; font-size: 16px; }
+  </style>
 </head>
 <body>
-  <h2>Đang đăng nhập...</h2>
+  <h2>Đăng nhập với Google</h2>
+  <button onclick="loginWithGoogle()">Đăng nhập với Google</button>
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
-    import { getAuth, GoogleAuthProvider, getRedirectResult, signInWithRedirect } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js";
-
-    const app = initializeApp({
+  <script>
+    const firebaseConfig = {
       apiKey: "AIzaSyDtcs0XkNhf7yFRTzPY-A9WYet35YjQVT8",
       authDomain: "abc-s-noob.firebaseapp.com",
-      projectId: "abc-s-noob",
-      appId: "1:196660846002:web:ce129820f388cc838658ab"
-    });
+      projectId: "abc-s-noob"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
 
-    const auth = getAuth();
-    const provider = new GoogleAuthProvider();
+    const params = new URLSearchParams(window.location.search);
+    const sessionId = params.get("session");
 
-    getRedirectResult(auth).then(result => {
-      if (result && result.user) {
-        // Gửi tín hiệu về tab cha
-        if (window.opener) {
-          window.opener.postMessage("logged_in", "*");
+    function loginWithGoogle() {
+      const provider = new firebase.auth.GoogleAuthProvider();
+      auth.signInWithPopup(provider).then(result => {
+        const user = result.user;
+        if (sessionId) {
+          // Gửi thông tin người dùng và sessionId về index.html
+          window.opener.postMessage({ type: 'login', session: sessionId, user: user }, '*');
           window.close();
         }
-      } else {
-        // Nếu chưa đăng nhập, bắt đầu login
-        signInWithRedirect(auth, provider);
-      }
-    });
+      }).catch(error => {
+        console.error(error);
+      });
+    }
   </script>
 </body>
 </html>
