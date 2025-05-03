@@ -2,24 +2,22 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Abc's Noob Chat 2.0</title>
+  <title>Đăng nhập - Abc's Noob Chat 2.0</title>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
   <style>
-    body { font-family: sans-serif; padding: 20px; }
-    #chatbox { border: 1px solid #ccc; height: 300px; overflow-y: scroll; padding: 10px; margin-top: 10px; }
-    #status { color: green; margin-bottom: 10px; }
+    body { font-family: sans-serif; padding: 20px; text-align: center; }
+    button { padding: 10px 20px; font-size: 16px; }
   </style>
 </head>
 <body>
-  <h2 id="status">Đang tạo mã phiên...</h2>
-  <div id="app" style="display: none;">
-    <h3>Abc's Noob Chat 2.0</h3>
-    <button onclick="logout()">Đăng xuất</button>
-    <div id="chatbox">Đang tải...</div>
-    <input type="text" id="messageInput" placeholder="Nhập tin nhắn..." style="width: 70%;">
-    <button onclick="sendMessage()">Gửi</button>
+  <h2>Đăng nhập với Google</h2>
+  <button onclick="loginWithGoogle()">Đăng nhập với Google</button>
+
+  <div id="sessionIdDiv" style="margin-top: 20px;">
+    <h3>Mã phiên của bạn:</h3>
+    <p id="sessionId"></p>
   </div>
 
   <script>
@@ -32,56 +30,69 @@
     const auth = firebase.auth();
     const db = firebase.firestore();
 
-    const sessionId = Math.random().toString(36).substring(2, 12);
-    const statusEl = document.getElementById("status");
-    const appDiv = document.getElementById("app");
     let currentUser = null;
+    const sessionIdDiv = document.getElementById("sessionIdDiv");
+    const sessionIdP = document.getElementById("sessionId");
 
-    // Mở login.html ở tab mới
-    const loginUrl = `login.html?session=${sessionId}`;
-    window.open(loginUrl, "_blank");
+    // Lấy sessionId từ URL
+    const params = new URLSearchParams(window.location.search);
+    const sessionId = params.get("session");
 
-    statusEl.innerText = `Mã phiên: ${sessionId} – Vui lòng đăng nhập ở tab mới...`;
+    // Hàm tạo mã phiên ngẫu nhiên
+    function generateSessionId() {
+      return Math.random().toString(36).substring(2, 13); // 11 ký tự ngẫu nhiên
+    }
 
-    window.addEventListener("message", (event) => {
-      if (event.data?.type === "login" && event.data.session === sessionId) {
-        currentUser = event.data.user;
-        statusEl.innerText = `✅ Đăng nhập thành công: ${currentUser.displayName}`;
-        appDiv.style.display = "block";
-        loadMessages();
+    // Lấy thông tin người dùng từ Firestore
+    auth.onAuthStateChanged(user => {
+      if (user) {
+        currentUser = user;
+        // Kiểm tra xem người dùng đã có mã phiên chưa
+        db.collection("users").doc(currentUser.uid).get().then(doc => {
+          if (doc.exists) {
+            // Nếu có mã phiên, hiển thị mã đó
+            const userData = doc.data();
+            sessionIdP.innerText = userData.sessionId;
+          } else {
+            // Nếu chưa có mã, tạo mã mới và lưu vào Firestore
+            const newSessionId = generateSessionId();
+            db.collection("users").doc(currentUser.uid).set({
+              sessionId: newSessionId,
+              displayName: currentUser.displayName,
+              email: currentUser.email
+            }).then(() => {
+              sessionIdP.innerText = newSessionId;
+            }).catch(error => {
+              console.error("Error saving sessionId: ", error);
+            });
+          }
+        });
+      } else {
+        // Người dùng chưa đăng nhập
+        sessionIdP.innerText = "Chưa đăng nhập.";
       }
     });
 
-    // Gửi tin nhắn
-    function sendMessage() {
-      const msg = document.getElementById("messageInput").value.trim();
-      if (!msg || !currentUser) return;
-      db.collection("messages").add({
-        name: currentUser.displayName,
-        text: msg,
-        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    // Đăng nhập bằng Google
+    function loginWithGoogle() {
+      const provider = new firebase.auth.GoogleAuthProvider();
+      auth.signInWithPopup(provider).then(result => {
+        const user = result.user;
+        if (sessionId) {
+          // Lưu sessionId vào Firestore khi đăng nhập
+          db.collection("users").doc(user.uid).set({
+            sessionId: sessionId,
+            displayName: user.displayName,
+            email: user.email
+          }).then(() => {
+            window.location.href = "index.html"; // Chuyển về trang index sau khi đăng nhập
+          }).catch(error => {
+            console.error("Error saving sessionId: ", error);
+          });
+        }
+      }).catch(error => {
+        console.error(error);
       });
-      document.getElementById("messageInput").value = "";
-    }
-
-    // Tải tin nhắn từ Firestore
-    function loadMessages() {
-      const chatbox = document.getElementById("chatbox");
-      db.collection("messages").orderBy("timestamp", "asc").onSnapshot(snapshot => {
-        chatbox.innerHTML = "";
-        snapshot.forEach(doc => {
-          const data = doc.data();
-          if (data.name && data.text) {
-            chatbox.innerHTML += `<div><strong>${data.name}</strong>: ${data.text}</div>`;
-          }
-        });
-        chatbox.scrollTop = chatbox.scrollHeight;
-      });
-    }
-
-    // Đăng xuất
-    function logout() {
-      auth.signOut().then(() => location.reload());
     }
   </script>
 </body>
