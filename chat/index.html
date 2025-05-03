@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <title>Đăng nhập OTP + Google + GitHub</title>
   <style>
-    /* Thêm CSS ở đây */
     body {
       font-family: Arial, sans-serif;
       background: #f4f4f4;
@@ -90,21 +89,22 @@
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
   <script>
-const firebaseConfig = {
-  apiKey: "AIzaSyDtcs0XkNhf7yFRTzPY-A9WYet35YjQVT8",
-  authDomain: "abc-s-noob.firebaseapp.com",
-  databaseURL: "https://abc-s-noob-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "abc-s-noob",
-  storageBucket: "abc-s-noob.firebasestorage.app",
-  messagingSenderId: "196660846002",
-  appId: "1:196660846002:web:ce129820f388cc838658ab",
-  measurementId: "G-LG5SWH89MG"
-};
+    const firebaseConfig = {
+      apiKey: "AIzaSyDtcs0XkNhf7yFRTzPY-A9WYet35YjQVT8",
+      authDomain: "abc-s-noob.firebaseapp.com",
+      databaseURL: "https://abc-s-noob-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "abc-s-noob",
+      storageBucket: "abc-s-noob.firebasestorage.app",
+      messagingSenderId: "196660846002",
+      appId: "1:196660846002:web:ce129820f388cc838658ab",
+      measurementId: "G-LG5SWH89MG"
+    };
+
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const db = firebase.firestore();
 
-    // 🔐 Tạo mã OTP
+    // Tạo OTP ngẫu nhiên
     function generateOTP(length = 20) {
       const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
       let result = '';
@@ -119,18 +119,12 @@ const firebaseConfig = {
       if (!email) return alert("Nhập email!");
 
       otpEmailGlobal = email;
-
-      // Tạo mã OTP
       const code = generateOTP();
 
-      // Tạo người dùng mới bằng email và mật khẩu
       await auth.createUserWithEmailAndPassword(email, 'defaultpassword').then(async () => {
         const user = auth.currentUser;
         if (user) {
-          // Gửi email xác minh tới người dùng
           await user.sendEmailVerification();
-
-          // Lưu mã OTP vào Firestore để kiểm tra
           await db.collection("otp_codes").doc(email).set({
             code: code,
             createdAt: firebase.firestore.FieldValue.serverTimestamp()
@@ -152,7 +146,6 @@ const firebaseConfig = {
 
       const data = doc.data();
       if (data.code === codeInput) {
-        // Đăng nhập người dùng sau khi xác minh OTP
         await auth.signInWithEmailAndPassword(otpEmailGlobal, 'defaultpassword').then(() => {
           alert("Đăng nhập thành công!");
           showChat();
@@ -187,7 +180,7 @@ const firebaseConfig = {
       });
     }
 
-    // Lắng nghe tin nhắn realtime
+    // Lắng nghe tin nhắn
     db.collection("messages").orderBy("createdAt").onSnapshot(snapshot => {
       const msgBox = document.getElementById("messages");
       msgBox.innerHTML = "";
@@ -198,6 +191,30 @@ const firebaseConfig = {
         msgBox.appendChild(div);
       });
     });
+
+    function loginWithGoogle() {
+      const provider = new firebase.auth.GoogleAuthProvider();
+      auth.signInWithPopup(provider)
+        .then(result => {
+          alert("Đăng nhập Google thành công!");
+          showChat();
+        })
+        .catch(error => {
+          alert("Lỗi đăng nhập Google: " + error.message);
+        });
+    }
+
+    function loginWithGithub() {
+      const provider = new firebase.auth.GithubAuthProvider();
+      auth.signInWithPopup(provider)
+        .then(result => {
+          alert("Đăng nhập GitHub thành công!");
+          showChat();
+        })
+        .catch(error => {
+          alert("Lỗi đăng nhập GitHub: " + error.message);
+        });
+    }
   </script>
 </body>
 </html>
