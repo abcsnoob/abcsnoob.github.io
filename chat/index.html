@@ -99,14 +99,16 @@
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
   <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyDtcs0XkNhf7yFRTzPY-A9WYet35YjQVT8",
-      authDomain: "abcs-noob.firebaseapp.com",
-      projectId: "abcs-noob",
-      storageBucket: "abcs-noob.appspot.com",
-      messagingSenderId: "YOUR_ID",
-      appId: "YOUR_APP_ID"
-    };
+const firebaseConfig = {
+  apiKey: "AIzaSyDtcs0XkNhf7yFRTzPY-A9WYet35YjQVT8",
+  authDomain: "abc-s-noob.firebaseapp.com",
+  databaseURL: "https://abc-s-noob-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "abc-s-noob",
+  storageBucket: "abc-s-noob.firebasestorage.app",
+  messagingSenderId: "196660846002",
+  appId: "1:196660846002:web:ce129820f388cc838658ab",
+  measurementId: "G-LG5SWH89MG"
+};
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const db = firebase.firestore();
