@@ -1,164 +1,157 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Abc's Noob Chat 2.0</title>
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
-  <style>
-    body { font-family: sans-serif; text-align: center; padding: 20px; }
-    button { padding: 10px 20px; font-size: 16px; }
-    #chatScreen { display: none; }
-    #loginScreen { display: block; }
-    #chatbox { max-height: 400px; overflow-y: auto; border: 1px solid #ccc; margin-bottom: 10px; padding: 10px; }
-    #status { color: red; font-size: 14px; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Firebase Chat App</title>
+    <script src="https://www.gstatic.com/firebasejs/9.18.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.18.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.18.1/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.18.1/firebase-functions.js"></script>
 </head>
 <body>
-  <h1>Abc's Noob Chat 2.0</h1>
-  
-  <!-- Login Screen -->
-  <div id="loginScreen">
-    <button onclick="loginWithGoogle()">Đăng nhập với Google</button>
-  </div>
+    <h2>Chat Firebase</h2>
 
-  <!-- Chat Screen -->
-  <div id="chatScreen">
-    <h2>Xin chào, <span id="userName"></span></h2>
-    <button onclick="logout()">Đăng xuất</button>
-    <div id="chatbox"></div>
-    <textarea id="messageInput" placeholder="Nhập tin nhắn"></textarea><br>
-    <button onclick="sendMessage()">Gửi</button>
-    <div id="status"></div>
-  </div>
+    <!-- Đăng nhập -->
+    <button id="loginBtn">Đăng Nhập</button>
+    <input type="email" id="emailInput" placeholder="Nhập email" style="display:none;" />
+    <input type="password" id="passwordInput" placeholder="Nhập mật khẩu" style="display:none;" />
+    <button id="submitBtn" style="display:none;">Submit</button>
 
-  <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyDtcs0XkNhf7yFRTzPY-A9WYet35YjQVT8",
-      authDomain: "abc-s-noob.firebaseapp.com",
-      projectId: "abc-s-noob",
-      storageBucket: "abc-s-noob.appspot.com",
-      messagingSenderId: "196660846002",
-      appId: "1:196660846002:web:ce129820f388cc838658ab",
-      measurementId: "G-LG5SWH89MG"
-    };
+    <br><br>
 
-    firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
-    const db = firebase.firestore();
-    
-    let currentUser = null;
+    <!-- Phần Chat -->
+    <div id="chatContainer" style="display:none;">
+        <div id="chat"></div>
+        <input type="text" id="messageInput" placeholder="Nhập tin nhắn..." />
+        <button id="sendMessageBtn">Gửi</button>
+    </div>
 
-    // Hàm tạo mã phiên ngẫu nhiên 11 ký tự
-    function generateSessionId() {
-      return Math.random().toString(36).substr(2, 11);
-    }
+    <!-- Phần Nhập mã xác thực -->
+    <div id="codeVerification" style="display:none;">
+        <input type="text" id="codeInput" placeholder="Nhập mã xác thực" />
+        <button id="verifyCodeBtn">Xác Thực</button>
+    </div>
 
-    // Đăng nhập với Google
-    function loginWithGoogle() {
-      const provider = new firebase.auth.GoogleAuthProvider();
-      auth.signInWithPopup(provider).then(result => {
-        const user = result.user;
-        document.getElementById("userName").innerText = user.displayName;
+    <script>
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "your-api-key",
+            authDomain: "your-auth-domain",
+            projectId: "your-project-id",
+            storageBucket: "your-storage-bucket",
+            messagingSenderId: "your-sender-id",
+            appId: "your-app-id"
+        };
 
-        db.collection("users").doc(user.uid).get().then(doc => {
-          if (doc.exists) {
-            // Nếu người dùng đã có mã phiên, hiển thị mã đó
-            const userData = doc.data();
-            setupChatScreen(userData.sessionId);
-          } else {
-            // Nếu chưa có mã, tạo mã mới và lưu vào Firestore
-            const sessionId = generateSessionId();
-            db.collection("users").doc(user.uid).set({
-              sessionId: sessionId,
-              displayName: user.displayName,
-              email: user.email
-            }).then(() => {
-              setupChatScreen(sessionId);
-            }).catch(error => {
-              console.error("Error saving sessionId: ", error);
+        // Initialize Firebase
+        const app = firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const firestore = firebase.firestore();
+        const functions = firebase.functions();
+
+        let userEmail = "";
+        let verificationCode = "";
+
+        // Hiển thị input email và mật khẩu
+        document.getElementById("loginBtn").addEventListener("click", () => {
+            document.getElementById("emailInput").style.display = "block";
+            document.getElementById("passwordInput").style.display = "block";
+            document.getElementById("submitBtn").style.display = "block";
+        });
+
+        // Xử lý gửi email và mã xác thực
+        document.getElementById("submitBtn").addEventListener("click", async () => {
+            userEmail = document.getElementById("emailInput").value;
+            const password = document.getElementById("passwordInput").value;
+
+            if (userEmail && password) {
+                try {
+                    // Đăng nhập người dùng qua Firebase Authentication
+                    await auth.signInWithEmailAndPassword(userEmail, password);
+                    
+                    // Tạo mã xác thực ngẫu nhiên 20 ký tự
+                    verificationCode = generateCode();
+
+                    // Gửi mã xác thực qua email
+                    await sendVerificationCode(userEmail, verificationCode);
+
+                    // Ẩn input email, mật khẩu và hiển thị phần nhập mã xác thực
+                    document.getElementById("emailInput").style.display = "none";
+                    document.getElementById("passwordInput").style.display = "none";
+                    document.getElementById("submitBtn").style.display = "none";
+                    document.getElementById("codeVerification").style.display = "block";
+                } catch (error) {
+                    console.error("Lỗi đăng nhập: ", error);
+                    alert("Đăng nhập thất bại. Kiểm tra lại thông tin!");
+                }
+            } else {
+                alert("Vui lòng nhập email và mật khẩu!");
+            }
+        });
+
+        // Xác thực mã nhập vào
+        document.getElementById("verifyCodeBtn").addEventListener("click", async () => {
+            const enteredCode = document.getElementById("codeInput").value;
+
+            if (enteredCode === verificationCode) {
+                // Mã hợp lệ, tạo tài khoản và đăng nhập
+                await auth.createUserWithEmailAndPassword(userEmail, "randomPassword").catch(error => {
+                    console.error(error);
+                });
+
+                // Ẩn phần nhập mã và hiển thị phần chat
+                document.getElementById("codeVerification").style.display = "none";
+                document.getElementById("chatContainer").style.display = "block";
+                document.getElementById("codeInput").value = "";
+
+                // Xóa mã xác thực sau khi sử dụng
+                await firestore.collection("verification_codes").doc(userEmail).delete();
+            } else {
+                alert("Mã không hợp lệ!");
+            }
+        });
+
+        // Gửi tin nhắn
+        document.getElementById("sendMessageBtn").addEventListener("click", async () => {
+            const message = document.getElementById("messageInput").value;
+            if (message) {
+                await firestore.collection("messages").add({
+                    user: userEmail,
+                    message: message,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                document.getElementById("messageInput").value = "";
+            }
+        });
+
+        // Lắng nghe tin nhắn mới từ Firestore và hiển thị
+        firestore.collection("messages").orderBy("timestamp").onSnapshot(snapshot => {
+            const chatDiv = document.getElementById("chat");
+            chatDiv.innerHTML = "";  // Clear current chat
+            snapshot.forEach(doc => {
+                const message = doc.data();
+                const messageElement = document.createElement("div");
+                messageElement.textContent = `${message.user}: ${message.message}`;
+                chatDiv.appendChild(messageElement);
             });
-          }
         });
 
-      }).catch(error => {
-        console.error(error);
-      });
-    }
+        // Tạo mã xác thực ngẫu nhiên 20 ký tự
+        function generateCode() {
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+            let result = '';
+            for (let i = 0; i < 20; i++) {
+                result += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            return result;
+        }
 
-    // Thiết lập giao diện chat sau khi đăng nhập
-    function setupChatScreen(sessionId) {
-      document.getElementById("loginScreen").style.display = "none";
-      document.getElementById("chatScreen").style.display = "block";
-      document.getElementById("status").innerText = `Mã phiên của bạn: ${sessionId}`;
-      loadMessages();
-      checkNetwork();
-    }
-
-    // Hàm gửi tin nhắn
-    function sendMessage() {
-      const msg = document.getElementById("messageInput").value.trim();
-      if (!msg) return;
-      const user = auth.currentUser;
-      db.collection("messages").add({
-        name: user.displayName,
-        text: msg,
-        timestamp: firebase.firestore.FieldValue.serverTimestamp()
-      }).then(() => {
-        document.getElementById("messageInput").value = "";  // Clear input
-      }).catch(error => {
-        console.error("Error sending message: ", error);
-      });
-    }
-
-    // Tải và hiển thị tin nhắn
-    function loadMessages() {
-      const chatbox = document.getElementById("chatbox");
-      db.collection("messages").orderBy("timestamp", "asc").onSnapshot(snapshot => {
-        chatbox.innerHTML = "";
-        snapshot.forEach(doc => {
-          const data = doc.data();
-          if (data.name && data.text) {
-            chatbox.innerHTML += `<div><b>${data.name}:</b> ${data.text}</div>`;
-          }
-        });
-        chatbox.scrollTop = chatbox.scrollHeight;
-      });
-    }
-
-    // Kiểm tra kết nối mạng
-    function checkNetwork() {
-      const status = document.getElementById("status");
-      function update() {
-        status.textContent = navigator.onLine ? "" : "❌ Mất kết nối mạng.";
-      }
-      window.addEventListener("online", update);
-      window.addEventListener("offline", update);
-      update();
-    }
-
-    // Đăng xuất
-    function logout() {
-      auth.signOut().then(() => {
-        document.getElementById("loginScreen").style.display = "block";
-        document.getElementById("chatScreen").style.display = "none";
-      }).catch(error => {
-        console.error("Error during logout: ", error);
-      });
-    }
-
-    // Lắng nghe sự thay đổi trạng thái đăng nhập
-    auth.onAuthStateChanged(user => {
-      if (user) {
-        currentUser = user;
-        document.getElementById("userName").innerText = user.displayName;
-      } else {
-        currentUser = null;
-      }
-    });
-  </script>
+        // Gửi mã xác thực qua Firebase Function
+        async function sendVerificationCode(email, code) {
+            const sendCodeFunction = functions.httpsCallable('sendVerificationCode');
+            await sendCodeFunction({ email, code });
+        }
+    </script>
 </body>
 </html>
