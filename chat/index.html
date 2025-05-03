@@ -2,8 +2,9 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
-  <title>Firebase Chat</title>
+  <title>Đăng nhập OTP + Google + GitHub</title>
   <style>
+    /* Thêm CSS ở đây */
     body {
       font-family: Arial, sans-serif;
       background: #f4f4f4;
@@ -12,11 +13,6 @@
       align-items: center;
       padding: 30px;
     }
-
-    h1 {
-      color: #333;
-    }
-
     .form-box {
       background: white;
       padding: 20px;
@@ -25,34 +21,26 @@
       box-shadow: 0 0 10px rgba(0,0,0,0.1);
       width: 300px;
     }
-
-    input {
+    input, button {
       width: 100%;
       padding: 10px;
       margin: 5px 0;
       box-sizing: border-box;
     }
-
     button {
-      padding: 10px;
       background: #4CAF50;
       color: white;
       border: none;
-      width: 100%;
       cursor: pointer;
-      margin-top: 10px;
       border-radius: 6px;
     }
-
     button:hover {
       background: #45a049;
     }
-
     #chatBox {
       width: 400px;
       max-width: 90%;
     }
-
     #messages {
       border: 1px solid #ccc;
       height: 200px;
@@ -65,94 +53,119 @@
   </style>
 </head>
 <body>
-  <h1>💬 Firebase Chat</h1>
+  <h2>💬 Chat Firebase</h2>
 
-  <!-- Đăng nhập -->
-  <div class="form-box" id="loginForm">
-    <h3>Đăng nhập</h3>
-    <input type="email" id="loginEmail" placeholder="Email">
-    <input type="password" id="loginPassword" placeholder="Mật khẩu">
-    <button onclick="login()">Đăng nhập</button>
-    <button style="background:#2196F3;" onclick="showRegister()">Chuyển sang Đăng ký</button>
+  <!-- OTP Email -->
+  <div class="form-box" id="otpForm">
+    <input type="email" id="otpEmail" placeholder="Nhập email để nhận mã OTP">
+    <button onclick="sendOTP()">Gửi mã OTP</button>
   </div>
 
-  <!-- Đăng ký -->
-  <div class="form-box" id="registerForm" style="display: none;">
-    <h3>Đăng ký</h3>
-    <input type="email" id="registerEmail" placeholder="Email">
-    <input type="password" id="registerPassword" placeholder="Mật khẩu (≥6 ký tự)">
-    <button onclick="register()">Đăng ký</button>
-    <button style="background:#999;" onclick="showLogin()">Quay lại Đăng nhập</button>
+  <div class="form-box" id="verifyForm" style="display:none;">
+    <input type="text" id="otpCode" placeholder="Nhập mã đã gửi đến email">
+    <button onclick="verifyOTP()">Xác nhận OTP</button>
+  </div>
+
+  <!-- Google Login -->
+  <div class="form-box">
+    <button style="background:#db4437;" onclick="loginWithGoogle()">Đăng nhập bằng Google</button>
+  </div>
+
+  <!-- GitHub Login -->
+  <div class="form-box">
+    <button style="background:#24292f;" onclick="loginWithGithub()">Đăng nhập bằng GitHub</button>
   </div>
 
   <!-- Chat -->
   <div class="form-box" id="chatBox" style="display: none;">
-    <h3>Chào mừng đến Chat</h3>
+    <h3>Chào mừng!</h3>
     <div id="messages"></div>
     <input type="text" id="messageInput" placeholder="Nhập tin nhắn...">
     <button onclick="sendMessage()">Gửi</button>
   </div>
 
-  <!-- Firebase SDK v8 -->
+  <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
   <script>
-const firebaseConfig = {
-  apiKey: "AIzaSyDtcs0XkNhf7yFRTzPY-A9WYet35YjQVT8",
-  authDomain: "abc-s-noob.firebaseapp.com",
-  databaseURL: "https://abc-s-noob-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "abc-s-noob",
-  storageBucket: "abc-s-noob.firebasestorage.app",
-  messagingSenderId: "196660846002",
-  appId: "1:196660846002:web:ce129820f388cc838658ab",
-  measurementId: "G-LG5SWH89MG"
-};
+    const firebaseConfig = {
+      apiKey: "AIzaSyDtcs0XkNhf7yFRTzPY-A9WYet35YjQVT8",
+      authDomain: "abcs-noob.firebaseapp.com",
+      projectId: "abcs-noob",
+      storageBucket: "abcs-noob.appspot.com",
+      messagingSenderId: "YOUR_ID",
+      appId: "YOUR_APP_ID"
+    };
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const db = firebase.firestore();
 
-    function showRegister() {
-      document.getElementById("loginForm").style.display = "none";
-      document.getElementById("registerForm").style.display = "block";
+    // 🔐 Tạo mã OTP
+    function generateOTP(length = 20) {
+      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+      let result = '';
+      for (let i = 0; i < length; i++) result += chars.charAt(Math.floor(Math.random() * chars.length));
+      return result;
     }
 
-    function showLogin() {
-      document.getElementById("loginForm").style.display = "block";
-      document.getElementById("registerForm").style.display = "none";
+    let otpEmailGlobal = '';
+
+    async function sendOTP() {
+      const email = document.getElementById("otpEmail").value.trim();
+      if (!email) return alert("Nhập email!");
+
+      otpEmailGlobal = email;
+
+      // Tạo mã OTP
+      const code = generateOTP();
+
+      // Tạo người dùng mới bằng email và mật khẩu
+      await auth.createUserWithEmailAndPassword(email, 'defaultpassword').then(async () => {
+        const user = auth.currentUser;
+        if (user) {
+          // Gửi email xác minh tới người dùng
+          await user.sendEmailVerification();
+
+          // Lưu mã OTP vào Firestore để kiểm tra
+          await db.collection("otp_codes").doc(email).set({
+            code: code,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+          });
+
+          console.log("⚠️ Mã gửi đến email:", code);
+          alert("Mã OTP đã được gửi đến email của bạn!");
+          document.getElementById("verifyForm").style.display = "block";
+        }
+      }).catch(err => {
+        alert("Lỗi tạo tài khoản: " + err.message);
+      });
+    }
+
+    async function verifyOTP() {
+      const codeInput = document.getElementById("otpCode").value.trim();
+      const doc = await db.collection("otp_codes").doc(otpEmailGlobal).get();
+      if (!doc.exists) return alert("Không tìm thấy mã!");
+
+      const data = doc.data();
+      if (data.code === codeInput) {
+        // Đăng nhập người dùng sau khi xác minh OTP
+        await auth.signInWithEmailAndPassword(otpEmailGlobal, 'defaultpassword').then(() => {
+          alert("Đăng nhập thành công!");
+          showChat();
+        }).catch(err => {
+          alert("Lỗi đăng nhập: " + err.message);
+        });
+      } else {
+        alert("Mã không hợp lệ!");
+      }
     }
 
     function showChat() {
-      document.getElementById("loginForm").style.display = "none";
-      document.getElementById("registerForm").style.display = "none";
+      document.getElementById("otpForm").style.display = "none";
+      document.getElementById("verifyForm").style.display = "none";
       document.getElementById("chatBox").style.display = "block";
-    }
-
-    function login() {
-      const email = document.getElementById("loginEmail").value.trim();
-      const password = document.getElementById("loginPassword").value;
-      if (!email || !password) return alert("Nhập đủ email và mật khẩu!");
-      auth.signInWithEmailAndPassword(email, password)
-        .then(() => showChat())
-        .catch(err => {
-          console.error(err);
-          alert("Lỗi đăng nhập: " + err.message);
-        });
-    }
-
-    function register() {
-      const email = document.getElementById("registerEmail").value.trim();
-      const password = document.getElementById("registerPassword").value;
-      if (!email || !password) return alert("Nhập đủ email và mật khẩu!");
-      if (password.length < 6) return alert("Mật khẩu ≥ 6 ký tự");
-
-      auth.createUserWithEmailAndPassword(email, password)
-        .then(() => showChat())
-        .catch(err => {
-          console.error(err);
-          alert("Lỗi đăng ký: " + err.message);
-        });
     }
 
     function sendMessage() {
@@ -160,9 +173,11 @@ const firebaseConfig = {
       const user = auth.currentUser;
       if (!msg.trim() || !user) return;
 
+      const email = user.email || otpEmailGlobal || "Ẩn danh";
+
       db.collection("messages").add({
         text: msg,
-        email: user.email,
+        email: email,
         uid: user.uid,
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
       }).then(() => {
