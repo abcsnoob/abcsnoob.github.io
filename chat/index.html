@@ -96,11 +96,21 @@
     const db = firebase.firestore();
     const messaging = firebase.messaging();
 
+    // Kiểm tra trạng thái người dùng khi tải lại trang
+    window.onload = function() {
+      const user = JSON.parse(localStorage.getItem('user'));
+      if (user) {
+        auth.currentUser = user;
+        showChat();
+      }
+    };
+
     // Đăng nhập bằng Google
     function loginWithGoogle() {
       const provider = new firebase.auth.GoogleAuthProvider();
       auth.signInWithPopup(provider).then((result) => {
         console.log("Đăng nhập bằng Google thành công!", result);
+        localStorage.setItem('user', JSON.stringify(result.user)); // Lưu thông tin người dùng
         showChat();
       }).catch((error) => {
         console.error("Lỗi đăng nhập Google:", error.message);
@@ -113,6 +123,7 @@
       const provider = new firebase.auth.GithubAuthProvider();
       auth.signInWithPopup(provider).then((result) => {
         console.log("Đăng nhập bằng GitHub thành công!", result);
+        localStorage.setItem('user', JSON.stringify(result.user)); // Lưu thông tin người dùng
         showChat();
       }).catch((error) => {
         console.error("Lỗi đăng nhập GitHub:", error.message);
@@ -125,6 +136,7 @@
       document.getElementById("googleLoginForm").style.display = "none";
       document.getElementById("githubLoginForm").style.display = "none";
       document.getElementById("chatBox").style.display = "block";
+      fetchMessages();  // Lấy tin nhắn khi đã đăng nhập
     }
 
     // Gửi tin nhắn vào Firestore
@@ -142,7 +154,7 @@
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
       }).then(() => {
         document.getElementById("messageInput").value = "";
-        fetchMessages();  // Tự động làm mới giao diện sau khi gửi tin nhắn
+        fetchMessages();  // Tự động làm mới danh sách tin nhắn sau khi gửi
       });
     }
 
@@ -163,6 +175,7 @@
     // Đăng xuất
     function logout() {
       auth.signOut().then(() => {
+        localStorage.removeItem('user'); // Xóa thông tin người dùng khỏi localStorage
         document.getElementById("chatBox").style.display = "none";
         document.getElementById("googleLoginForm").style.display = "block";
         document.getElementById("githubLoginForm").style.display = "block";
@@ -199,6 +212,7 @@
     // Gọi hàm yêu cầu cấp phép nhận thông báo khi người dùng đăng nhập
     auth.onAuthStateChanged(function(user) {
       if (user) {
+        localStorage.setItem('user', JSON.stringify(user)); // Lưu trạng thái người dùng vào localStorage
         requestPermission();
       }
     });
