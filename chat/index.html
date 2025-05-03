@@ -1,32 +1,96 @@
 <!DOCTYPE html>
-<html>
+<html lang="vi">
 <head>
   <meta charset="UTF-8">
   <title>Firebase Chat</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f4f4;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 30px;
+    }
+
+    h1 {
+      color: #333;
+    }
+
+    .form-box {
+      background: white;
+      padding: 20px;
+      margin: 10px;
+      border-radius: 12px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      width: 300px;
+    }
+
+    input {
+      width: 100%;
+      padding: 10px;
+      margin: 5px 0;
+      box-sizing: border-box;
+    }
+
+    button {
+      padding: 10px;
+      background: #4CAF50;
+      color: white;
+      border: none;
+      width: 100%;
+      cursor: pointer;
+      margin-top: 10px;
+      border-radius: 6px;
+    }
+
+    button:hover {
+      background: #45a049;
+    }
+
+    #chatBox {
+      width: 400px;
+      max-width: 90%;
+    }
+
+    #messages {
+      border: 1px solid #ccc;
+      height: 200px;
+      overflow-y: auto;
+      padding: 10px;
+      margin-bottom: 10px;
+      background: #fff;
+      border-radius: 8px;
+    }
+  </style>
 </head>
 <body>
-  <h1>Firebase Chat</h1>
+  <h1>💬 Firebase Chat</h1>
 
-  <!-- Form Đăng nhập -->
-  <form id="loginForm">
-    <input type="email" id="loginEmail" placeholder="Email" required><br>
-    <input type="password" id="loginPassword" placeholder="Mật khẩu" required><br>
-    <button type="submit">Đăng nhập</button>
-  </form>
+  <!-- Đăng nhập -->
+  <div class="form-box" id="loginForm">
+    <h3>Đăng nhập</h3>
+    <input type="email" id="loginEmail" placeholder="Email">
+    <input type="password" id="loginPassword" placeholder="Mật khẩu">
+    <button onclick="login()">Đăng nhập</button>
+    <button style="background:#2196F3;" onclick="showRegister()">Chuyển sang Đăng ký</button>
+  </div>
 
-  <!-- Form Đăng ký -->
-  <form id="registerForm" style="display: none;">
-    <p>Tài khoản chưa tồn tại. Vui lòng đăng ký:</p>
-    <input type="email" id="registerEmail" placeholder="Email" required><br>
-    <input type="password" id="registerPassword" placeholder="Mật khẩu" required><br>
-    <button type="submit">Đăng ký</button>
-  </form>
+  <!-- Đăng ký -->
+  <div class="form-box" id="registerForm" style="display: none;">
+    <h3>Đăng ký</h3>
+    <input type="email" id="registerEmail" placeholder="Email">
+    <input type="password" id="registerPassword" placeholder="Mật khẩu (≥6 ký tự)">
+    <button onclick="register()">Đăng ký</button>
+    <button style="background:#999;" onclick="showLogin()">Quay lại Đăng nhập</button>
+  </div>
 
-  <!-- Khu vực chat -->
-  <div id="chatBox" style="display: none;">
-    <div id="messages" style="height: 200px; overflow-y: auto; border: 1px solid #ccc;"></div>
-    <input type="text" id="messageInput" placeholder="Nhập tin nhắn">
-    <button id="sendButton">Gửi</button>
+  <!-- Chat -->
+  <div class="form-box" id="chatBox" style="display: none;">
+    <h3>Chào mừng đến Chat</h3>
+    <div id="messages"></div>
+    <input type="text" id="messageInput" placeholder="Nhập tin nhắn...">
+    <button onclick="sendMessage()">Gửi</button>
   </div>
 
   <!-- Firebase SDK v8 -->
@@ -35,98 +99,86 @@
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
   <script>
-    // Cấu hình Firebase
-const firebaseConfig = {
-  apiKey: "AIzaSyDtcs0XkNhf7yFRTzPY-A9WYet35YjQVT8",
-  authDomain: "abc-s-noob.firebaseapp.com",
-  databaseURL: "https://abc-s-noob-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "abc-s-noob",
-  storageBucket: "abc-s-noob.firebasestorage.app",
-  messagingSenderId: "196660846002",
-  appId: "1:196660846002:web:ce129820f388cc838658ab",
-  measurementId: "G-LG5SWH89MG"
-};
+    const firebaseConfig = {
+      apiKey: "AIzaSyDtcs0XkNhf7yFRTzPY-A9WYet35YjQVT8",
+      authDomain: "abcs-noob.firebaseapp.com",
+      projectId: "abcs-noob",
+      storageBucket: "abcs-noob.appspot.com",
+      messagingSenderId: "YOUR_ID",
+      appId: "YOUR_APP_ID"
+    };
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const db = firebase.firestore();
 
-    // Đăng nhập
-    document.getElementById("loginForm").addEventListener("submit", function(e) {
-      e.preventDefault();
-      const email = document.getElementById("loginEmail").value.trim();
-      const password = document.getElementById("loginPassword").value;
+    function showRegister() {
+      document.getElementById("loginForm").style.display = "none";
+      document.getElementById("registerForm").style.display = "block";
+    }
 
-      if (!email || !password) return alert("Nhập đầy đủ email và mật khẩu");
-      if (password.length < 6) return alert("Mật khẩu phải ≥ 6 ký tự");
-
-      auth.signInWithEmailAndPassword(email, password)
-        .then(() => showChat())
-        .catch((error) => {
-          console.error("Lỗi đăng nhập: ", error);
-          if (error.code === "auth/user-not-found") {
-            // Chuyển sang đăng ký
-            document.getElementById("loginForm").style.display = "none";
-            document.getElementById("registerForm").style.display = "block";
-            document.getElementById("registerEmail").value = email;
-            document.getElementById("registerPassword").value = password;
-          } else if (error.code === "auth/wrong-password") {
-            alert("Sai mật khẩu!");
-          } else {
-            alert("Lỗi đăng nhập: " + error.message);
-          }
-        });
-    });
-
-    // Đăng ký
-    document.getElementById("registerForm").addEventListener("submit", function(e) {
-      e.preventDefault();
-      const email = document.getElementById("registerEmail").value.trim();
-      const password = document.getElementById("registerPassword").value;
-
-      if (!email || !password) return alert("Nhập đầy đủ email và mật khẩu");
-      if (password.length < 6) return alert("Mật khẩu phải ≥ 6 ký tự");
-
-      auth.createUserWithEmailAndPassword(email, password)
-        .then(() => showChat())
-        .catch((error) => {
-          console.error("Lỗi đăng ký: ", error);
-          alert("Lỗi đăng ký: " + error.message);
-        });
-    });
-
-    // Gửi tin nhắn
-    document.getElementById("sendButton").addEventListener("click", function() {
-      const message = document.getElementById("messageInput").value;
-      const user = auth.currentUser;
-      if (!user || !message.trim()) return;
-
-      db.collection("messages").add({
-        text: message,
-        uid: user.uid,
-        email: user.email,
-        createdAt: firebase.firestore.FieldValue.serverTimestamp()
-      }).then(() => {
-        document.getElementById("messageInput").value = "";
-      });
-    });
-
-    // Xem tin nhắn realtime
-    db.collection("messages").orderBy("createdAt").onSnapshot((snapshot) => {
-      const messagesDiv = document.getElementById("messages");
-      messagesDiv.innerHTML = "";
-      snapshot.forEach((doc) => {
-        const data = doc.data();
-        const div = document.createElement("div");
-        div.textContent = `${data.email}: ${data.text}`;
-        messagesDiv.appendChild(div);
-      });
-    });
+    function showLogin() {
+      document.getElementById("loginForm").style.display = "block";
+      document.getElementById("registerForm").style.display = "none";
+    }
 
     function showChat() {
       document.getElementById("loginForm").style.display = "none";
       document.getElementById("registerForm").style.display = "none";
       document.getElementById("chatBox").style.display = "block";
     }
+
+    function login() {
+      const email = document.getElementById("loginEmail").value.trim();
+      const password = document.getElementById("loginPassword").value;
+      if (!email || !password) return alert("Nhập đủ email và mật khẩu!");
+      auth.signInWithEmailAndPassword(email, password)
+        .then(() => showChat())
+        .catch(err => {
+          console.error(err);
+          alert("Lỗi đăng nhập: " + err.message);
+        });
+    }
+
+    function register() {
+      const email = document.getElementById("registerEmail").value.trim();
+      const password = document.getElementById("registerPassword").value;
+      if (!email || !password) return alert("Nhập đủ email và mật khẩu!");
+      if (password.length < 6) return alert("Mật khẩu ≥ 6 ký tự");
+
+      auth.createUserWithEmailAndPassword(email, password)
+        .then(() => showChat())
+        .catch(err => {
+          console.error(err);
+          alert("Lỗi đăng ký: " + err.message);
+        });
+    }
+
+    function sendMessage() {
+      const msg = document.getElementById("messageInput").value;
+      const user = auth.currentUser;
+      if (!msg.trim() || !user) return;
+
+      db.collection("messages").add({
+        text: msg,
+        email: user.email,
+        uid: user.uid,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      }).then(() => {
+        document.getElementById("messageInput").value = "";
+      });
+    }
+
+    // Lắng nghe tin nhắn realtime
+    db.collection("messages").orderBy("createdAt").onSnapshot(snapshot => {
+      const msgBox = document.getElementById("messages");
+      msgBox.innerHTML = "";
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        const div = document.createElement("div");
+        div.textContent = `${data.email}: ${data.text}`;
+        msgBox.appendChild(div);
+      });
+    });
   </script>
 </body>
 </html>
