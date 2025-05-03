@@ -2,22 +2,28 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Đăng nhập - Abc's Noob Chat 2.0</title>
+  <title>Abc's Noob Chat 2.0</title>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
   <style>
     body { font-family: sans-serif; padding: 20px; text-align: center; }
-    button { padding: 10px 20px; font-size: 16px; }
+    #chatbox { height: 300px; overflow-y: scroll; border: 1px solid #ddd; padding: 10px; margin-top: 20px; }
+    input, button { padding: 10px 20px; font-size: 16px; margin-top: 10px; }
   </style>
 </head>
 <body>
-  <h2>Đăng nhập với Google</h2>
-  <button onclick="loginWithGoogle()">Đăng nhập với Google</button>
+  <h1>Abc's Noob Chat 2.0</h1>
+  <div id="userInfo">
+    <span id="userName">Chưa đăng nhập</span> 
+    <button onclick="logout()">Đăng xuất</button>
+  </div>
 
-  <div id="sessionIdDiv" style="margin-top: 20px;">
-    <h3>Mã phiên của bạn:</h3>
-    <p id="sessionId"></p>
+  <div id="chatScreen" style="display: none;">
+    <div id="chatbox"></div>
+    <input type="text" id="messageInput" placeholder="Nhập tin nhắn" />
+    <button onclick="sendMessage()">Gửi</button>
+    <p id="status"></p>
   </div>
 
   <script>
@@ -27,72 +33,78 @@
       projectId: "abc-s-noob"
     };
     firebase.initializeApp(firebaseConfig);
+
     const auth = firebase.auth();
     const db = firebase.firestore();
 
-    let currentUser = null;
-    const sessionIdDiv = document.getElementById("sessionIdDiv");
-    const sessionIdP = document.getElementById("sessionId");
+    const userNameElem = document.getElementById("userName");
+    const chatScreenElem = document.getElementById("chatScreen");
+    const chatboxElem = document.getElementById("chatbox");
+    const messageInputElem = document.getElementById("messageInput");
+    const statusElem = document.getElementById("status");
 
-    // Lấy sessionId từ URL
-    const params = new URLSearchParams(window.location.search);
-    const sessionId = params.get("session");
-
-    // Hàm tạo mã phiên ngẫu nhiên
-    function generateSessionId() {
-      return Math.random().toString(36).substring(2, 13); // 11 ký tự ngẫu nhiên
-    }
-
-    // Lấy thông tin người dùng từ Firestore
+    // Kiểm tra trạng thái đăng nhập
     auth.onAuthStateChanged(user => {
       if (user) {
-        currentUser = user;
-        // Kiểm tra xem người dùng đã có mã phiên chưa
-        db.collection("users").doc(currentUser.uid).get().then(doc => {
-          if (doc.exists) {
-            // Nếu có mã phiên, hiển thị mã đó
-            const userData = doc.data();
-            sessionIdP.innerText = userData.sessionId;
-          } else {
-            // Nếu chưa có mã, tạo mã mới và lưu vào Firestore
-            const newSessionId = generateSessionId();
-            db.collection("users").doc(currentUser.uid).set({
-              sessionId: newSessionId,
-              displayName: currentUser.displayName,
-              email: currentUser.email
-            }).then(() => {
-              sessionIdP.innerText = newSessionId;
-            }).catch(error => {
-              console.error("Error saving sessionId: ", error);
-            });
-          }
-        });
+        // Người dùng đã đăng nhập
+        userNameElem.innerText = `Xin chào, ${user.displayName}`;
+        chatScreenElem.style.display = 'block'; // Hiển thị màn hình chat
+        loadMessages();
+        checkNetwork();
       } else {
         // Người dùng chưa đăng nhập
-        sessionIdP.innerText = "Chưa đăng nhập.";
+        window.location.href = "login.html"; // Chuyển về trang đăng nhập
       }
     });
 
-    // Đăng nhập bằng Google
-    function loginWithGoogle() {
-      const provider = new firebase.auth.GoogleAuthProvider();
-      auth.signInWithPopup(provider).then(result => {
-        const user = result.user;
-        if (sessionId) {
-          // Lưu sessionId vào Firestore khi đăng nhập
-          db.collection("users").doc(user.uid).set({
-            sessionId: sessionId,
-            displayName: user.displayName,
-            email: user.email
-          }).then(() => {
-            window.location.href = "index.html"; // Chuyển về trang index sau khi đăng nhập
-          }).catch(error => {
-            console.error("Error saving sessionId: ", error);
-          });
-        }
-      }).catch(error => {
-        console.error(error);
+    // Đăng xuất
+    function logout() {
+      auth.signOut().then(() => {
+        window.location.href = "login.html"; // Chuyển về trang đăng nhập sau khi đăng xuất
       });
+    }
+
+    // Gửi tin nhắn
+    function sendMessage() {
+      const user = auth.currentUser;
+      const msg = messageInputElem.value.trim();
+      if (!msg) return;
+
+      db.collection("messages").add({
+        name: user.displayName,
+        text: msg,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+      }).then(() => {
+        messageInputElem.value = ""; // Xóa trường nhập tin nhắn
+      }).catch(error => {
+        console.error("Error sending message: ", error);
+      });
+    }
+
+    // Tải và hiển thị các tin nhắn
+    function loadMessages() {
+      db.collection("messages")
+        .orderBy("timestamp", "asc")
+        .onSnapshot(snapshot => {
+          chatboxElem.innerHTML = ""; // Xóa các tin nhắn cũ
+          snapshot.forEach(doc => {
+            const data = doc.data();
+            if (data.name && data.text) {
+              chatboxElem.innerHTML += `<p><strong>${data.name}:</strong> ${data.text}</p>`;
+            }
+          });
+          chatboxElem.scrollTop = chatboxElem.scrollHeight; // Cuộn đến tin nhắn mới nhất
+        });
+    }
+
+    // Kiểm tra kết nối mạng
+    function checkNetwork() {
+      function update() {
+        statusElem.textContent = navigator.onLine ? "" : "❌ Mất kết nối mạng.";
+      }
+      window.addEventListener("online", update);
+      window.addEventListener("offline", update);
+      update();
     }
   </script>
 </body>
