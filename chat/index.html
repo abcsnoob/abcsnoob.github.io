@@ -1,11 +1,22 @@
 <!DOCTYPE html>
-<html>
+<html lang="vi">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Abc's Noob Chat 2.0</title>
+  <style>
+    body { font-family: sans-serif; padding: 20px; }
+    #chatbox { height: 300px; overflow: auto; border: 1px solid #ccc; padding: 10px; margin: 10px 0; }
+    input[type="text"] { width: 80%; padding: 8px; }
+    button { padding: 8px 12px; margin-left: 5px; }
+    #status { color: red; margin-top: 10px; }
+  </style>
+</head>
+<body>
+  <div id="app">Đang tải...</div>
+
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
-    import { getAuth, GoogleAuthProvider, signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js";
+    import { getAuth, GoogleAuthProvider, signInWithRedirect, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js";
     import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
 
     const firebaseConfig = {
@@ -21,9 +32,7 @@
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getFirestore(app);
-
     const provider = new GoogleAuthProvider();
-
     const appDiv = document.getElementById("app");
 
     function renderLogin() {
@@ -42,39 +51,36 @@
         <h2>Abc's Noob Chat 2.0 app</h2>
         <button onclick="logout()">Đăng xuất</button>
         <div id="status"></div>
-        <div id="chatbox" style="height:300px; overflow:auto; border:1px solid #ccc; margin-top:10px;"></div>
-        <input id="messageInput" placeholder="Nhập tin nhắn" />
+        <div id="chatbox"></div>
+        <input id="messageInput" type="text" placeholder="Nhập tin nhắn" />
         <button onclick="sendMessage()">Gửi và làm mới</button>
       `;
       loadMessages();
       checkNetwork();
     }
 
-    window.logout = function () {
-      signOut(auth).then(() => location.reload());
-    };
+    window.logout = () => signOut(auth);
 
-    window.sendMessage = async function () {
-      const msg = document.getElementById("messageInput").value.trim();
+    window.sendMessage = async () => {
+      const input = document.getElementById("messageInput");
+      const msg = input.value.trim();
       if (!msg) return;
       await addDoc(collection(db, "messages"), {
         name: auth.currentUser.displayName,
         text: msg,
         timestamp: serverTimestamp()
       });
-      document.getElementById("messageInput").value = "";
+      input.value = "";
     };
 
     function loadMessages() {
       const chatbox = document.getElementById("chatbox");
-      const q = query(collection(db, "messages"), orderBy("timestamp", "asc"));
+      const q = query(collection(db, "messages"), orderBy("timestamp"));
       onSnapshot(q, (snapshot) => {
         chatbox.innerHTML = "";
         snapshot.forEach(doc => {
-          const d = doc.data();
-          if (d.name && d.text) {
-            chatbox.innerHTML += `<div><b>${d.name}:</b> ${d.text}</div>`;
-          }
+          const data = doc.data();
+          chatbox.innerHTML += `<div><b>${data.name}:</b> ${data.text}</div>`;
         });
         chatbox.scrollTop = chatbox.scrollHeight;
       });
@@ -90,20 +96,13 @@
       update();
     }
 
-    // Xử lý kết quả redirect
-    getRedirectResult(auth).catch(console.warn);
-
-    onAuthStateChanged(auth, user => {
+    onAuthStateChanged(auth, (user) => {
       if (user) {
         renderChat(user);
       } else {
         renderLogin();
       }
     });
-
   </script>
-</head>
-<body>
-  <div id="app">Đang tải...</div>
 </body>
 </html>
