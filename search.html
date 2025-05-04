@@ -2,13 +2,36 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Trình tìm video từ Internet Archive</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        #splash-screen {
+            position: fixed;
+            background: linear-gradient(to bottom right, #00f, #a0f);
+            top: 0; left: 0; right: 0; bottom: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            animation: fadeOut 0.5s ease-out 5s forwards;
+        }
+
+        @keyframes fadeOut {
+            to {
+                opacity: 0;
+                visibility: hidden;
+            }
+        }
+
+        #splash-screen img {
+            width: 200px;
+            height: auto;
+        }
+
         body {
             font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
             background-color: #f4f4f4;
         }
 
@@ -20,12 +43,15 @@
             margin-bottom: 20px;
         }
 
-        #search-input {
+        #search-input, #search-service {
             padding: 10px;
-            width: 60%;
             font-size: 16px;
             border: 1px solid #ccc;
             border-radius: 4px;
+        }
+
+        #search-input {
+            width: 40%;
         }
 
         #search-btn {
@@ -42,9 +68,23 @@
             background-color: #4cae4c;
         }
 
+        .random-btn {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            border-radius: 4px;
+            margin-left: 10px;
+        }
+
+        .random-btn:hover {
+            background-color: #0056b3;
+        }
+
         #video-gallery {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 15px;
             padding: 10px;
         }
@@ -70,28 +110,40 @@
 
         .video-thumbnail {
             width: 100%;
-            height: auto;
+            height: 150px;
+            object-fit: cover;
             border-radius: 5px;
             margin-bottom: 10px;
         }
 
-        .overlay {
+        #loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        #loading img {
+            width: auto;
+            height: auto;
+        }
+
+        .no-results {
+            text-align: center;
+            color: red;
+        }
+
+        #overlay {
             position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
+            top: 0; left: 0; right: 0; bottom: 0;
             background: rgba(0, 0, 0, 0.8);
             display: none;
             justify-content: center;
             align-items: center;
-            opacity: 0;
-            transition: opacity 0.5s ease-in-out;
+            z-index: 10000;
         }
 
-        .overlay.show {
+        #overlay.show {
             display: flex;
-            opacity: 1;
         }
 
         .overlay-content {
@@ -99,20 +151,13 @@
             background: white;
             padding: 20px;
             border-radius: 10px;
-            max-width: 100%;
-            width: 100%;
-            height: 100%;
-            transform: translateY(-50px);
-            animation: slideInFromTop 0.5s ease-out forwards;
+            width: 90%;
+            height: 90%;
         }
 
-        @keyframes slideInFromTop {
-            0% {
-                transform: translateY(-50px);
-            }
-            100% {
-                transform: translateY(0);
-            }
+        #video-container {
+            width: 100%;
+            height: 100%;
         }
 
         .close-btn {
@@ -130,73 +175,36 @@
             background: darkred;
         }
 
-        #video-container {
-            text-align: center;
-            width: 100%;
-            height: 100%;
-        }
-
-        #loading {
+        #no-internet {
             display: none;
             text-align: center;
-            padding: 20px;
-        }
-
-        .no-results {
-            text-align: center;
-            color: red;
-        }
-
-        #loading img {
-            width: 50px;
-            height: 50px;
-        }
-
-        .random-btn {
-            background-color: #007bff;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            cursor: pointer;
-            border-radius: 4px;
-        }
-
-        .random-btn:hover {
-            background-color: #0056b3;
-        }
-
-        #no-internet {
-            text-align: center;
-            margin-top: 50px;
-            display: none; /* Ẩn mặc định */
+            margin-top: 30px;
         }
 
         #no-internet img {
-            width: 200px;
-            height: auto;
+            width: 150px;
         }
 
     </style>
 </head>
 <body>
 
+    <div id="splash-screen">
+        <img src="/abcsnoob.webp" alt="Logo Abc's Noob">
+    </div>
+
     <div id="search-container">
         <input type="text" id="search-input" placeholder="Tìm kiếm video...">
+        <select id="search-service">
+            <option value="archive">Internet Archive</option>
+            <option value="google">Google</option>
+        </select>
         <button id="search-btn">Tìm kiếm</button>
         <button class="random-btn" id="random-btn">Random Video</button>
     </div>
 
-    <div id="video-gallery"></div>
-
     <div id="loading">
         <img src="https://i.pinimg.com/originals/f1/93/85/f193851b339eef97f10a0e5dee72669e.gif" alt="Loading">
-    </div>
-
-    <div id="overlay" class="overlay">
-        <div class="overlay-content">
-            <button id="close-btn" class="close-btn">X</button>
-            <div id="video-container"></div>
-        </div>
     </div>
 
     <div id="no-internet">
@@ -204,49 +212,63 @@
         <p>Không có kết nối Internet. Vui lòng kiểm tra lại kết nối của bạn.</p>
     </div>
 
+    <div id="video-gallery"></div>
+
+    <div id="overlay">
+        <div class="overlay-content">
+            <button class="close-btn" id="close-btn">X</button>
+            <div id="video-container"></div>
+        </div>
+    </div>
+
     <script>
         let pageNum = 1;
-        const rows = 100;
+        const rows = 1000;
         let isLoading = false;
+        let allVideos = [];
+
         const videoGallery = document.getElementById('video-gallery');
         const overlay = document.getElementById('overlay');
         const videoContainer = document.getElementById('video-container');
         const closeBtn = document.getElementById('close-btn');
         const searchInput = document.getElementById('search-input');
         const searchBtn = document.getElementById('search-btn');
+        const searchService = document.getElementById('search-service');
         const loadingDiv = document.getElementById('loading');
         const randomBtn = document.getElementById('random-btn');
         const noInternetDiv = document.getElementById('no-internet');
 
-        // Kiểm tra kết nối mạng
         function checkInternetConnection() {
             if (!navigator.onLine) {
-                noInternetDiv.style.display = 'block'; // Hiển thị thông báo khi không có kết nối
-                loadingDiv.style.display = 'none'; // Ẩn loading khi không có kết nối
-                videoGallery.style.display = 'none'; // Ẩn video gallery
+                noInternetDiv.style.display = 'block';
+                loadingDiv.style.display = 'none';
+                videoGallery.style.display = 'none';
             } else {
-                noInternetDiv.style.display = 'none'; // Ẩn thông báo nếu có kết nối
-                videoGallery.style.display = 'grid'; // Hiển thị lại video gallery nếu có kết nối
-                fetchVideos();  // Bắt đầu tải video khi có kết nối
+                noInternetDiv.style.display = 'none';
+                videoGallery.style.display = 'grid';
+                fetchVideos();
             }
         }
 
-        // Kiểm tra kết nối khi trang tải
-        checkInternetConnection();
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                document.getElementById('splash-screen').style.display = 'none';
+            }, 5000);
+            checkInternetConnection();
+        });
 
-        // Cập nhật lại khi mất/gặp lại kết nối
         window.addEventListener('online', checkInternetConnection);
         window.addEventListener('offline', checkInternetConnection);
 
         function fetchVideos(query = "") {
-            if (isLoading || !navigator.onLine) return;  // Kiểm tra nếu đang tải hoặc không có kết nối
+            if (isLoading || !navigator.onLine) return;
             isLoading = true;
             loadingDiv.style.display = "block";
 
-            const apiUrl = `https://archive.org/advancedsearch.php?q=${query}&fl[]=identifier,title,mediatype,thumbnail_url&rows=${rows}&page=${pageNum}&output=json`;
+            const apiUrl = `https://archive.org/advancedsearch.php?q=${encodeURIComponent(query)}&fl[]=identifier,title,mediatype,thumbnail_url&rows=${rows}&page=${pageNum}&output=json`;
 
             fetch(apiUrl)
-                .then(response => response.json())
+                .then(res => res.json())
                 .then(data => {
                     const videos = data.response.docs;
                     if (videos.length > 0) {
@@ -258,8 +280,8 @@
                     isLoading = false;
                     loadingDiv.style.display = "none";
                 })
-                .catch(error => {
-                    console.error("Error fetching data from Internet Archive:", error);
+                .catch(err => {
+                    console.error(err);
                     isLoading = false;
                     loadingDiv.style.display = "none";
                 });
@@ -267,36 +289,33 @@
 
         function renderVideos(videos) {
             videos.forEach(video => {
+                allVideos.push(video);
                 const videoDiv = document.createElement('div');
-                videoDiv.classList.add('video-item');
+                videoDiv.className = 'video-item';
                 videoDiv.dataset.identifier = video.identifier;
 
-                const thumbnail = document.createElement('img');
-                thumbnail.classList.add('video-thumbnail');
-                thumbnail.src = video.thumbnail_url || "https://via.placeholder.com/150";
-                thumbnail.alt = video.title;
+                const img = document.createElement('img');
+                img.className = 'video-thumbnail';
+                img.src = video.thumbnail_url || `https://archive.org/services/img/${video.identifier}`;
+                img.onerror = function () {
+                    this.src = `https://archive.org/services/img/${video.identifier}`;
+                };
 
-                const videoTitle = document.createElement('div');
-                videoTitle.classList.add('video-title');
-                videoTitle.textContent = video.title || "No title available";
+                const title = document.createElement('div');
+                title.className = 'video-title';
+                title.textContent = video.title || "No title";
 
-                videoDiv.appendChild(thumbnail);
-                videoDiv.appendChild(videoTitle);
+                videoDiv.appendChild(img);
+                videoDiv.appendChild(title);
                 videoGallery.appendChild(videoDiv);
 
-                videoDiv.addEventListener('click', () => {
-                    openOverlay(video.identifier);
-                });
+                videoDiv.addEventListener('click', () => openOverlay(video.identifier));
             });
         }
 
         function openOverlay(identifier) {
             overlay.classList.add("show");
-            videoContainer.innerHTML = "<p>Đang tải video...</p>";
-            const videoUrl = `https://archive.org/embed/${identifier}`;
-            videoContainer.innerHTML = `
-                <iframe src="${videoUrl}" frameborder="0" allowfullscreen style="width: 100%; height: 100%;"></iframe>
-            `;
+            videoContainer.innerHTML = `<iframe src="https://archive.org/embed/${identifier}" frameborder="0" allowfullscreen style="width:100%;height:100%;"></iframe>`;
         }
 
         closeBtn.addEventListener('click', () => {
@@ -306,30 +325,40 @@
 
         searchBtn.addEventListener('click', () => {
             const query = searchInput.value.trim();
-            if (query) {
-                videoGallery.innerHTML = "";  // Clear existing videos
+            const service = searchService.value;
+
+            if (!query) return;
+
+            if (service === 'google') {
+                window.open(`https://www.google.com/search?q=${encodeURIComponent(query)}`, '_blank');
+            } else {
+                videoGallery.innerHTML = "";
+                allVideos = [];
                 pageNum = 1;
-                fetchVideos(query);  // Get videos based on the search query
+                fetchVideos(query);
             }
         });
 
-        // Random video functionality
-        randomBtn.addEventListener('click', () => {
-            const randomQuery = "random";
+        searchInput.addEventListener('input', () => {
+            const keyword = searchInput.value.trim().toLowerCase();
             videoGallery.innerHTML = "";
-            pageNum = 1;
-            fetchVideos(randomQuery);
+            const filtered = allVideos.filter(v => (v.title || "").toLowerCase().includes(keyword));
+            if (filtered.length > 0) renderVideos(filtered);
+            else videoGallery.innerHTML = "<p class='no-results'>Không tìm thấy kết quả</p>";
         });
 
-        // Infinite Scroll
+        randomBtn.addEventListener('click', () => {
+            videoGallery.innerHTML = "";
+            allVideos = [];
+            pageNum = 1;
+            fetchVideos("random");
+        });
+
         window.onscroll = () => {
             if (window.innerHeight + window.scrollY >= document.body.scrollHeight - 100) {
                 fetchVideos();
             }
         };
-
-        // Initial load
-        fetchVideos();
     </script>
 
 </body>
