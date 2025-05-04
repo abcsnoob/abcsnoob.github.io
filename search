@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trình tìm video từ Internet Archive</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+
+        #search-container {
+            padding: 20px;
+            background-color: #fff;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+
+        #search-input {
+            padding: 10px;
+            width: 60%;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        #search-btn {
+            padding: 10px 15px;
+            margin-left: 10px;
+            background-color: #5cb85c;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
+        #search-btn:hover {
+            background-color: #4cae4c;
+        }
+
+        #video-gallery {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            padding: 10px;
+        }
+
+        .video-item {
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+            background-color: white;
+            padding: 10px;
+        }
+
+        .video-item:hover {
+            transform: scale(1.05);
+        }
+
+        .video-title {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .video-thumbnail {
+            width: 100%;
+            height: auto;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
+        }
+
+        .overlay.show {
+            display: flex;
+            opacity: 1;
+        }
+
+        .overlay-content {
+            position: relative;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            max-width: 100%;
+            width: 100%;
+            height: 100%;
+            transform: translateY(-50px);
+            animation: slideInFromTop 0.5s ease-out forwards;
+        }
+
+        @keyframes slideInFromTop {
+            0% {
+                transform: translateY(-50px);
+            }
+            100% {
+                transform: translateY(0);
+            }
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: red;
+            color: white;
+            border: none;
+            padding: 10px;
+            cursor: pointer;
+        }
+
+        .close-btn:hover {
+            background: darkred;
+        }
+
+        #video-container {
+            text-align: center;
+            width: 100%;
+            height: 100%;
+        }
+
+        #loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .no-results {
+            text-align: center;
+            color: red;
+        }
+
+        #loading img {
+            width: 50px;
+            height: 50px;
+        }
+
+        .random-btn {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
+        .random-btn:hover {
+            background-color: #0056b3;
+        }
+
+        #no-internet {
+            text-align: center;
+            margin-top: 50px;
+            display: none; /* Ẩn mặc định */
+        }
+
+        #no-internet img {
+            width: 200px;
+            height: auto;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div id="search-container">
+        <input type="text" id="search-input" placeholder="Tìm kiếm video...">
+        <button id="search-btn">Tìm kiếm</button>
+        <button class="random-btn" id="random-btn">Random Video</button>
+    </div>
+
+    <div id="video-gallery"></div>
+
+    <div id="loading">
+        <img src="https://i.pinimg.com/originals/f1/93/85/f193851b339eef97f10a0e5dee72669e.gif" alt="Loading">
+    </div>
+
+    <div id="overlay" class="overlay">
+        <div class="overlay-content">
+            <button id="close-btn" class="close-btn">X</button>
+            <div id="video-container"></div>
+        </div>
+    </div>
+
+    <div id="no-internet">
+        <img src="nointernet.gif" alt="No internet">
+        <p>Không có kết nối Internet. Vui lòng kiểm tra lại kết nối của bạn.</p>
+    </div>
+
+    <script>
+        let pageNum = 1;
+        const rows = 100;
+        let isLoading = false;
+        const videoGallery = document.getElementById('video-gallery');
+        const overlay = document.getElementById('overlay');
+        const videoContainer = document.getElementById('video-container');
+        const closeBtn = document.getElementById('close-btn');
+        const searchInput = document.getElementById('search-input');
+        const searchBtn = document.getElementById('search-btn');
+        const loadingDiv = document.getElementById('loading');
+        const randomBtn = document.getElementById('random-btn');
+        const noInternetDiv = document.getElementById('no-internet');
+
+        // Kiểm tra kết nối mạng
+        function checkInternetConnection() {
+            if (!navigator.onLine) {
+                noInternetDiv.style.display = 'block'; // Hiển thị thông báo khi không có kết nối
+                loadingDiv.style.display = 'none'; // Ẩn loading khi không có kết nối
+                videoGallery.style.display = 'none'; // Ẩn video gallery
+            } else {
+                noInternetDiv.style.display = 'none'; // Ẩn thông báo nếu có kết nối
+                videoGallery.style.display = 'grid'; // Hiển thị lại video gallery nếu có kết nối
+                fetchVideos();  // Bắt đầu tải video khi có kết nối
+            }
+        }
+
+        // Kiểm tra kết nối khi trang tải
+        checkInternetConnection();
+
+        // Cập nhật lại khi mất/gặp lại kết nối
+        window.addEventListener('online', checkInternetConnection);
+        window.addEventListener('offline', checkInternetConnection);
+
+        function fetchVideos(query = "") {
+            if (isLoading || !navigator.onLine) return;  // Kiểm tra nếu đang tải hoặc không có kết nối
+            isLoading = true;
+            loadingDiv.style.display = "block";
+
+            const apiUrl = `https://archive.org/advancedsearch.php?q=${query}&fl[]=identifier,title,mediatype,thumbnail_url&rows=${rows}&page=${pageNum}&output=json`;
+
+            fetch(apiUrl)
+                .then(response => response.json())
+                .then(data => {
+                    const videos = data.response.docs;
+                    if (videos.length > 0) {
+                        renderVideos(videos);
+                        pageNum++;
+                    } else {
+                        videoGallery.innerHTML = "<p class='no-results'>Không tìm thấy kết quả</p>";
+                    }
+                    isLoading = false;
+                    loadingDiv.style.display = "none";
+                })
+                .catch(error => {
+                    console.error("Error fetching data from Internet Archive:", error);
+                    isLoading = false;
+                    loadingDiv.style.display = "none";
+                });
+        }
+
+        function renderVideos(videos) {
+            videos.forEach(video => {
+                const videoDiv = document.createElement('div');
+                videoDiv.classList.add('video-item');
+                videoDiv.dataset.identifier = video.identifier;
+
+                const thumbnail = document.createElement('img');
+                thumbnail.classList.add('video-thumbnail');
+                thumbnail.src = video.thumbnail_url || "https://via.placeholder.com/150";
+                thumbnail.alt = video.title;
+
+                const videoTitle = document.createElement('div');
+                videoTitle.classList.add('video-title');
+                videoTitle.textContent = video.title || "No title available";
+
+                videoDiv.appendChild(thumbnail);
+                videoDiv.appendChild(videoTitle);
+                videoGallery.appendChild(videoDiv);
+
+                videoDiv.addEventListener('click', () => {
+                    openOverlay(video.identifier);
+                });
+            });
+        }
+
+        function openOverlay(identifier) {
+            overlay.classList.add("show");
+            videoContainer.innerHTML = "<p>Đang tải video...</p>";
+            const videoUrl = `https://archive.org/embed/${identifier}`;
+            videoContainer.innerHTML = `
+                <iframe src="${videoUrl}" frameborder="0" allowfullscreen style="width: 100%; height: 100%;"></iframe>
+            `;
+        }
+
+        closeBtn.addEventListener('click', () => {
+            overlay.classList.remove("show");
+            videoContainer.innerHTML = "";
+        });
+
+        searchBtn.addEventListener('click', () => {
+            const query = searchInput.value.trim();
+            if (query) {
+                videoGallery.innerHTML = "";  // Clear existing videos
+                pageNum = 1;
+                fetchVideos(query);  // Get videos based on the search query
+            }
+        });
+
+        // Random video functionality
+        randomBtn.addEventListener('click', () => {
+            const randomQuery = "random";
+            videoGallery.innerHTML = "";
+            pageNum = 1;
+            fetchVideos(randomQuery);
+        });
+
+        // Infinite Scroll
+        window.onscroll = () => {
+            if (window.innerHeight + window.scrollY >= document.body.scrollHeight - 100) {
+                fetchVideos();
+            }
+        };
+
+        // Initial load
+        fetchVideos();
+    </script>
+
+</body>
+</html>
