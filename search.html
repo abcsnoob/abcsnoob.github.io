@@ -223,7 +223,7 @@
 
     <script>
         let pageNum = 1;
-        const rows = 1000;
+        const rows = 10000;
         let isLoading = false;
         let allVideos = [];
 
@@ -253,7 +253,7 @@
         window.addEventListener('load', () => {
             setTimeout(() => {
                 document.getElementById('splash-screen').style.display = 'none';
-            }, 5000);
+            }, 10000);
             checkInternetConnection();
         });
 
