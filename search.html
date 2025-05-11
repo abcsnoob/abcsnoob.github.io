@@ -315,51 +315,37 @@
 
         function openOverlay(identifier) {
             overlay.classList.add("show");
-            videoContainer.innerHTML = `<iframe src="https://archive.org/embed/${identifier}" frameborder="0" allowfullscreen style="width:100%;height:100%;"></iframe>`;
+            videoContainer.innerHTML = `
+                <div class="loading-overlay">
+                    <img src="https://www.opensuse.org/build/images/opensuse-laptop.gif" alt="Loading">
+                </div>
+                <iframe src="https://archive.org/embed/${identifier}" frameborder="0" allowfullscreen style="width:100%;height:100%;"></iframe>
+            `;
+            const iframe = videoContainer.querySelector('iframe');
+            iframe.onload = () => {
+                document.querySelector('.loading-overlay').style.display = 'none';
+            };
         }
 
         closeBtn.addEventListener('click', () => {
             overlay.classList.remove("show");
-            videoContainer.innerHTML = "";
+            videoContainer.innerHTML = '';
         });
 
         searchBtn.addEventListener('click', () => {
-            const query = searchInput.value.trim();
-            const service = searchService.value;
-
-            if (!query) return;
-
-            if (service === 'google') {
-                window.open(`https://www.google.com/search?q=${encodeURIComponent(query)}`, '_blank');
-            } else {
-                videoGallery.innerHTML = "";
-                allVideos = [];
-                pageNum = 1;
-                fetchVideos(query);
-            }
-        });
-
-        searchInput.addEventListener('input', () => {
-            const keyword = searchInput.value.trim().toLowerCase();
-            videoGallery.innerHTML = "";
-            const filtered = allVideos.filter(v => (v.title || "").toLowerCase().includes(keyword));
-            if (filtered.length > 0) renderVideos(filtered);
-            else videoGallery.innerHTML = "<p class='no-results'>Không tìm thấy kết quả</p>";
+            pageNum = 1;
+            allVideos = [];
+            videoGallery.innerHTML = '';
+            fetchVideos(searchInput.value);
         });
 
         randomBtn.addEventListener('click', () => {
-            videoGallery.innerHTML = "";
-            allVideos = [];
-            pageNum = 1;
-            fetchVideos("random");
+            const randomVideo = allVideos[Math.floor(Math.random() * allVideos.length)];
+            if (randomVideo) {
+                openOverlay(randomVideo.identifier);
+            }
         });
 
-        window.onscroll = () => {
-            if (window.innerHeight + window.scrollY >= document.body.scrollHeight - 100) {
-                fetchVideos();
-            }
-        };
     </script>
-
 </body>
 </html>
