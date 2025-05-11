@@ -185,6 +185,12 @@
             width: 150px;
         }
 
+        #search-stats {
+            margin-top: 10px;
+            font-size: 14px;
+            color: #555;
+        }
+
     </style>
 </head>
 <body>
@@ -194,13 +200,15 @@
     </div>
 
     <div id="search-container">
-        <input type="text" id="search-input" placeholder="Tìm kiếm video...">
+        <input type="text" id="search-input" placeholder="Tìm kiếm video..., đừng spam nếu bạn chọn Internet Archive">
         <select id="search-service">
             <option value="archive">Internet Archive</option>
             <option value="google">Google</option>
         </select>
         <button id="search-btn">Tìm kiếm</button>
-        <button class="random-btn" id="random-btn">Random Video</button>
+        <button class="random-btn" id="random-btn">I feel i lucky</button>
+
+        <div id="search-stats"></div>
     </div>
 
     <div id="loading">
@@ -226,6 +234,7 @@
         const rows = 10000;
         let isLoading = false;
         let allVideos = [];
+        let searchStartTime = 0;
 
         const videoGallery = document.getElementById('video-gallery');
         const overlay = document.getElementById('overlay');
@@ -237,6 +246,7 @@
         const loadingDiv = document.getElementById('loading');
         const randomBtn = document.getElementById('random-btn');
         const noInternetDiv = document.getElementById('no-internet');
+        const searchStats = document.getElementById('search-stats');
 
         function checkInternetConnection() {
             if (!navigator.onLine) {
@@ -264,6 +274,7 @@
             if (isLoading || !navigator.onLine) return;
             isLoading = true;
             loadingDiv.style.display = "block";
+            searchStartTime = new Date();
 
             const apiUrl = `https://archive.org/advancedsearch.php?q=${encodeURIComponent(query)}&fl[]=identifier,title,mediatype,thumbnail_url&rows=${rows}&page=${pageNum}&output=json`;
 
@@ -274,6 +285,7 @@
                     if (videos.length > 0) {
                         renderVideos(videos);
                         pageNum++;
+                        updateSearchStats(videos.length);
                     } else {
                         videoGallery.innerHTML = "<p class='no-results'>Không tìm thấy kết quả</p>";
                     }
@@ -346,6 +358,11 @@
             }
         });
 
+        function updateSearchStats(numItems) {
+            const searchEndTime = new Date();
+            const searchDuration = (searchEndTime - searchStartTime) / 1000; // in seconds
+            searchStats.textContent = `Tìm thấy ${numItems} mục trong ${searchDuration.toFixed(2)} giây.`;
+        }
     </script>
 </body>
 </html>
