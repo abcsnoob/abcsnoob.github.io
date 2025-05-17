@@ -27,6 +27,18 @@
       margin-left: 20px;
     }
   </style>
+    <script>
+    // Hàm làm mới iframe
+    function refreshIframe() {
+      var iframe = document.getElementById('adIframe');
+      iframe.contentWindow.location.reload();
+    }
+
+    // Thực hiện reload iframe khi trang được load
+    window.onload = function() {
+      refreshIframe(); // Refresh iframe ngay khi tải trang
+    }
+  </script>
 </head>
 <body>
   <h1>Hướng dẫn cài Datapack vào Server Minecraft</h1>
@@ -62,5 +74,8 @@
     <li>Đảm bảo datapack tương thích với phiên bản Minecraft server của bạn.</li>
     <li>Nên sao lưu dữ liệu server trước khi cài đặt datapack mới.</li>
   </ul>
+  <!-- Đảm bảo iframe có ID để có thể làm mới -->
+  <iframe id="adIframe" src="https://abcsnoob.github.io/ads/" width="80%" height="300" style="border: 2px solid lime; border-radius: 15px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.6);"></iframe>
+  <br><br>
 </body>
 </html>
