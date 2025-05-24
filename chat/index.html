@@ -68,9 +68,8 @@
   <div class="form-box" id="chatBox" style="display: none;">
     <h3>Chào mừng!</h3>
     <div id="messages"></div>
-    <input type="text" id="messageInput" placeholder="Nhập tin nhắn...">
+    <input type="text" id="messageInput" placeholder="Nhập tin nhắn hoặc [youtube]link[/youtube]">
     <button onclick="sendMessage()">Gửi</button>
-    <!-- Logout Button -->
     <button onclick="logout()" style="background:#f44336; margin-top: 10px;">Đăng xuất</button>
   </div>
 
@@ -96,50 +95,40 @@
     const db = firebase.firestore();
     const messaging = firebase.messaging();
 
-    // Kiểm tra trạng thái người dùng khi tải lại trang
-    window.onload = function() {
+    window.onload = function () {
       const user = JSON.parse(localStorage.getItem('user'));
       if (user) {
-        auth.currentUser = user;
         showChat();
       }
     };
 
-    // Đăng nhập bằng Google
     function loginWithGoogle() {
       const provider = new firebase.auth.GoogleAuthProvider();
       auth.signInWithPopup(provider).then((result) => {
-        console.log("Đăng nhập bằng Google thành công!", result);
-        localStorage.setItem('user', JSON.stringify(result.user)); // Lưu thông tin người dùng
+        localStorage.setItem('user', JSON.stringify(result.user));
         showChat();
       }).catch((error) => {
-        console.error("Lỗi đăng nhập Google:", error.message);
         alert("Lỗi đăng nhập Google!");
       });
     }
 
-    // Đăng nhập bằng GitHub
     function loginWithGithub() {
       const provider = new firebase.auth.GithubAuthProvider();
       auth.signInWithPopup(provider).then((result) => {
-        console.log("Đăng nhập bằng GitHub thành công!", result);
-        localStorage.setItem('user', JSON.stringify(result.user)); // Lưu thông tin người dùng
+        localStorage.setItem('user', JSON.stringify(result.user));
         showChat();
       }).catch((error) => {
-        console.error("Lỗi đăng nhập GitHub:", error.message);
         alert("Lỗi đăng nhập GitHub!");
       });
     }
 
-    // Hiển thị chat sau khi đăng nhập
     function showChat() {
       document.getElementById("googleLoginForm").style.display = "none";
       document.getElementById("githubLoginForm").style.display = "none";
       document.getElementById("chatBox").style.display = "block";
-      fetchMessages();  // Lấy tin nhắn khi đã đăng nhập
+      fetchMessages();
     }
 
-    // Gửi tin nhắn vào Firestore
     function sendMessage() {
       const msg = document.getElementById("messageInput").value;
       const user = auth.currentUser;
@@ -154,11 +143,9 @@
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
       }).then(() => {
         document.getElementById("messageInput").value = "";
-        fetchMessages();  // Tự động làm mới danh sách tin nhắn sau khi gửi
       });
     }
 
-    // Lắng nghe tin nhắn realtime
     function fetchMessages() {
       db.collection("messages").orderBy("createdAt").onSnapshot(snapshot => {
         const msgBox = document.getElementById("messages");
@@ -166,29 +153,36 @@
         snapshot.forEach(doc => {
           const data = doc.data();
           const div = document.createElement("div");
-          div.textContent = `${data.email}: ${data.text}`;
+
+          const youtubeRegex = /\[youtube\](https:\/\/www\.youtube\.com\/watch\?v=([\w-]{11}))\[\/youtube\]/;
+          const match = data.text.match(youtubeRegex);
+
+          if (match) {
+            const videoId = match[2];
+            div.innerHTML = `<strong>${data.email}:</strong><br>
+              <iframe width="100%" height="200" src="https://www.youtube.com/embed/${videoId}" frameborder="0" allowfullscreen></iframe>`;
+          } else {
+            div.textContent = `${data.email}: ${data.text}`;
+          }
+
           msgBox.appendChild(div);
         });
       });
     }
 
-    // Đăng xuất
     function logout() {
       auth.signOut().then(() => {
-        localStorage.removeItem('user'); // Xóa thông tin người dùng khỏi localStorage
+        localStorage.removeItem('user');
         document.getElementById("chatBox").style.display = "none";
         document.getElementById("googleLoginForm").style.display = "block";
         document.getElementById("githubLoginForm").style.display = "block";
         alert("Đăng xuất thành công!");
-      }).catch((error) => {
-        console.error("Lỗi đăng xuất:", error.message);
+      }).catch(() => {
         alert("Lỗi đăng xuất!");
       });
     }
 
-    // Thêm thông báo push khi có chat mới
     messaging.onMessage(function(payload) {
-      console.log("Thông báo nhận được: ", payload);
       const notificationTitle = "Tin nhắn mới!";
       const notificationOptions = {
         body: payload.notification.body,
@@ -197,10 +191,8 @@
       new Notification(notificationTitle, notificationOptions);
     });
 
-    // Yêu cầu cấp phép nhận thông báo push
     function requestPermission() {
       messaging.requestPermission().then(() => {
-        console.log("Cấp phép thông báo thành công!");
         return messaging.getToken();
       }).then((token) => {
         console.log("FCM Token: ", token);
@@ -209,10 +201,9 @@
       });
     }
 
-    // Gọi hàm yêu cầu cấp phép nhận thông báo khi người dùng đăng nhập
     auth.onAuthStateChanged(function(user) {
       if (user) {
-        localStorage.setItem('user', JSON.stringify(user)); // Lưu trạng thái người dùng vào localStorage
+        localStorage.setItem('user', JSON.stringify(user));
         requestPermission();
       }
     });
