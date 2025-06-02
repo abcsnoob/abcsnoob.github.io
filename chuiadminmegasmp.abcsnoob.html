@@ -22,12 +22,13 @@
     }
     button {
       padding: 10px 20px;
-      margin: 5px;
+      margin: 5px 5px 5px 0;
       background: #333;
       color: #fff;
       border: none;
       cursor: pointer;
       border-radius: 5px;
+      font-size: 1em;
     }
     button:hover {
       background: #444;
@@ -51,7 +52,7 @@
     #search-input {
       width: 100%;
       padding: 8px;
-      margin-bottom: 10px;
+      margin: 10px 0 15px 0;
       border-radius: 5px;
       border: none;
       font-size: 1em;
@@ -59,14 +60,21 @@
     em {
       color: #aaa;
     }
+    #auth-buttons {
+      margin-bottom: 20px;
+    }
   </style>
 </head>
 <body>
   <h1>🔥 Chửi Admin Voting 🔥</h1>
 
   <div id="auth">
-    <button onclick="loginGoogle()">Đăng nhập bằng Google</button>
-    <button onclick="loginGithub()">Đăng nhập bằng GitHub</button>
+    <div id="auth-buttons">
+      <button onclick="loginGoogle()">Đăng nhập bằng Google</button>
+      <button onclick="loginGithub()">Đăng nhập bằng GitHub</button>
+      <button onclick="loginFacebook()">Đăng nhập bằng Facebook</button>
+      <button onclick="loginAnonymous()">Đăng nhập ẩn danh</button>
+    </div>
   </div>
 
   <div id="main" style="display:none;">
@@ -84,14 +92,12 @@
   <script>
     // TODO: Thay bằng config Firebase thật của bạn:
     const firebaseConfig = {
-  apiKey: "AIzaSyDtcs0XkNhf7yFRTzPY-A9WYet35YjQVT8",
-  authDomain: "abc-s-noob.firebaseapp.com",
-  databaseURL: "https://abc-s-noob-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "abc-s-noob",
-  storageBucket: "abc-s-noob.firebasestorage.app",
-  messagingSenderId: "196660846002",
-  appId: "1:196660846002:web:ce129820f388cc838658ab",
-  measurementId: "G-LG5SWH89MG"
+      apiKey: "YOUR_API_KEY",
+      authDomain: "YOUR_AUTH_DOMAIN",
+      projectId: "YOUR_PROJECT_ID",
+      storageBucket: "YOUR_BUCKET",
+      messagingSenderId: "YOUR_SENDER_ID",
+      appId: "YOUR_APP_ID"
     };
 
     firebase.initializeApp(firebaseConfig);
@@ -105,7 +111,13 @@
         currentUser = user;
         document.getElementById('auth').style.display = 'none';
         document.getElementById('main').style.display = 'block';
-        document.getElementById('user-name').textContent = user.displayName || 'Người dùng';
+        // Hiển thị tên user, nếu ẩn danh thì hiện 'Khách ẩn danh'
+        let name = user.displayName;
+        if (!name) {
+          if (user.isAnonymous) name = 'Khách ẩn danh';
+          else name = 'Người dùng';
+        }
+        document.getElementById('user-name').textContent = name;
         loadRants();
       } else {
         currentUser = null;
@@ -122,6 +134,16 @@
       auth.signInWithPopup(new firebase.auth.GithubAuthProvider());
     }
 
+    function loginFacebook() {
+      auth.signInWithPopup(new firebase.auth.FacebookAuthProvider());
+    }
+
+    function loginAnonymous() {
+      auth.signInAnonymously().catch(error => {
+        alert('Đăng nhập ẩn danh thất bại: ' + error.message);
+      });
+    }
+
     function logout() {
       auth.signOut();
     }
@@ -132,7 +154,7 @@
       await db.collection("rants").add({
         text,
         authorUID: currentUser.uid,
-        authorName: currentUser.displayName || 'Người dùng',
+        authorName: currentUser.displayName || (currentUser.isAnonymous ? 'Khách ẩn danh' : 'Người dùng'),
         timestamp: firebase.firestore.FieldValue.serverTimestamp(),
         votes: 0,
         voters: []
