@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Chửi Admin Voting</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
@@ -42,11 +42,28 @@
       width: 100%;
       height: 80px;
       margin-top: 10px;
+      border-radius: 5px;
+      border: none;
+      padding: 10px;
+      font-size: 1em;
+      resize: vertical;
+    }
+    #search-input {
+      width: 100%;
+      padding: 8px;
+      margin-bottom: 10px;
+      border-radius: 5px;
+      border: none;
+      font-size: 1em;
+    }
+    em {
+      color: #aaa;
     }
   </style>
 </head>
 <body>
   <h1>🔥 Chửi Admin Voting 🔥</h1>
+
   <div id="auth">
     <button onclick="loginGoogle()">Đăng nhập bằng Google</button>
     <button onclick="loginGithub()">Đăng nhập bằng GitHub</button>
@@ -54,16 +71,19 @@
 
   <div id="main" style="display:none;">
     <p>Xin chào, <span id="user-name"></span>! <button onclick="logout()">Đăng xuất</button></p>
+
     <textarea id="rant-text" placeholder="Gửi lời chửi đến admin..."></textarea>
     <button onclick="submitRant()">Gửi</button>
+
+    <input type="text" id="search-input" placeholder="Tìm kiếm câu chửi..." />
 
     <h2>📢 Danh sách lời chửi</h2>
     <div id="rant-list"></div>
   </div>
 
   <script>
-    // TODO: Thay config Firebase bên dưới bằng config thật của bạn
-const firebaseConfig = {
+    // TODO: Thay bằng config Firebase thật của bạn:
+    const firebaseConfig = {
   apiKey: "AIzaSyDtcs0XkNhf7yFRTzPY-A9WYet35YjQVT8",
   authDomain: "abc-s-noob.firebaseapp.com",
   databaseURL: "https://abc-s-noob-default-rtdb.asia-southeast1.firebasedatabase.app",
@@ -72,8 +92,7 @@ const firebaseConfig = {
   messagingSenderId: "196660846002",
   appId: "1:196660846002:web:ce129820f388cc838658ab",
   measurementId: "G-LG5SWH89MG"
-};
-
+    };
 
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
@@ -86,7 +105,7 @@ const firebaseConfig = {
         currentUser = user;
         document.getElementById('auth').style.display = 'none';
         document.getElementById('main').style.display = 'block';
-        document.getElementById('user-name').textContent = user.displayName;
+        document.getElementById('user-name').textContent = user.displayName || 'Người dùng';
         loadRants();
       } else {
         currentUser = null;
@@ -113,7 +132,7 @@ const firebaseConfig = {
       await db.collection("rants").add({
         text,
         authorUID: currentUser.uid,
-        authorName: currentUser.displayName,
+        authorName: currentUser.displayName || 'Người dùng',
         timestamp: firebase.firestore.FieldValue.serverTimestamp(),
         votes: 0,
         voters: []
@@ -131,13 +150,23 @@ const firebaseConfig = {
       loadRants();
     }
 
-    async function loadRants() {
+    const searchInput = document.getElementById('search-input');
+    searchInput.addEventListener('input', () => {
+      loadRants(searchInput.value.trim().toLowerCase());
+    });
+
+    async function loadRants(searchText = '') {
       const rantList = document.getElementById('rant-list');
       rantList.innerHTML = 'Đang tải...';
       const snapshot = await db.collection("rants").orderBy("votes", "desc").limit(50).get();
       rantList.innerHTML = '';
+
+      let count = 0;
       snapshot.forEach(doc => {
         const rant = doc.data();
+        if (searchText && !rant.text.toLowerCase().includes(searchText)) {
+          return; // bỏ qua không khớp search
+        }
         const canVote = currentUser.uid !== rant.authorUID && !rant.voters.includes(currentUser.uid);
         rantList.innerHTML += `
           <div>
@@ -146,9 +175,11 @@ const firebaseConfig = {
             ${canVote ? `<button onclick="voteRant('${doc.id}', ${JSON.stringify(rant.voters)})">Vote</button>` : '<em>Đã vote hoặc bài của bạn</em>'}
           </div>
         `;
+        count++;
       });
+
+      if (count === 0) rantList.innerHTML = '<em>Không tìm thấy câu nào phù hợp.</em>';
     }
   </script>
 </body>
 </html>
- 
