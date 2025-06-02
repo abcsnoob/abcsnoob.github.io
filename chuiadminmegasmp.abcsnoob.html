@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Chửi Admin Voting</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+  <style>
+    body {
+      background: #111;
+      color: #fff;
+      font-family: 'Segoe UI', sans-serif;
+      padding: 20px;
+      max-width: 800px;
+      margin: auto;
+    }
+    h1 {
+      text-align: center;
+      color: #ff4444;
+    }
+    button {
+      padding: 10px 20px;
+      margin: 5px;
+      background: #333;
+      color: #fff;
+      border: none;
+      cursor: pointer;
+      border-radius: 5px;
+    }
+    button:hover {
+      background: #444;
+    }
+    #rant-list div {
+      background: #222;
+      margin: 10px 0;
+      padding: 10px;
+      border-radius: 5px;
+    }
+    textarea {
+      width: 100%;
+      height: 80px;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <h1>🔥 Chửi Admin Voting 🔥</h1>
+  <div id="auth">
+    <button onclick="loginGoogle()">Đăng nhập bằng Google</button>
+    <button onclick="loginGithub()">Đăng nhập bằng GitHub</button>
+  </div>
+
+  <div id="main" style="display:none;">
+    <p>Xin chào, <span id="user-name"></span>! <button onclick="logout()">Đăng xuất</button></p>
+    <textarea id="rant-text" placeholder="Gửi lời chửi đến admin..."></textarea>
+    <button onclick="submitRant()">Gửi</button>
+
+    <h2>📢 Danh sách lời chửi</h2>
+    <div id="rant-list"></div>
+  </div>
+
+  <script>
+    // TODO: Thay config Firebase bên dưới bằng config thật của bạn
+const firebaseConfig = {
+  apiKey: "AIzaSyDtcs0XkNhf7yFRTzPY-A9WYet35YjQVT8",
+  authDomain: "abc-s-noob.firebaseapp.com",
+  databaseURL: "https://abc-s-noob-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "abc-s-noob",
+  storageBucket: "abc-s-noob.firebasestorage.app",
+  messagingSenderId: "196660846002",
+  appId: "1:196660846002:web:ce129820f388cc838658ab",
+  measurementId: "G-LG5SWH89MG"
+};
+
+
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    let currentUser = null;
+
+    auth.onAuthStateChanged(user => {
+      if (user) {
+        currentUser = user;
+        document.getElementById('auth').style.display = 'none';
+        document.getElementById('main').style.display = 'block';
+        document.getElementById('user-name').textContent = user.displayName;
+        loadRants();
+      } else {
+        currentUser = null;
+        document.getElementById('auth').style.display = 'block';
+        document.getElementById('main').style.display = 'none';
+      }
+    });
+
+    function loginGoogle() {
+      auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());
+    }
+
+    function loginGithub() {
+      auth.signInWithPopup(new firebase.auth.GithubAuthProvider());
+    }
+
+    function logout() {
+      auth.signOut();
+    }
+
+    async function submitRant() {
+      const text = document.getElementById('rant-text').value.trim();
+      if (!text) return alert("Vui lòng nhập nội dung");
+      await db.collection("rants").add({
+        text,
+        authorUID: currentUser.uid,
+        authorName: currentUser.displayName,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+        votes: 0,
+        voters: []
+      });
+      document.getElementById('rant-text').value = '';
+      loadRants();
+    }
+
+    async function voteRant(id, voters) {
+      if (voters.includes(currentUser.uid)) return alert("Bạn đã vote bài này rồi!");
+      await db.collection("rants").doc(id).update({
+        votes: firebase.firestore.FieldValue.increment(1),
+        voters: firebase.firestore.FieldValue.arrayUnion(currentUser.uid)
+      });
+      loadRants();
+    }
+
+    async function loadRants() {
+      const rantList = document.getElementById('rant-list');
+      rantList.innerHTML = 'Đang tải...';
+      const snapshot = await db.collection("rants").orderBy("votes", "desc").limit(50).get();
+      rantList.innerHTML = '';
+      snapshot.forEach(doc => {
+        const rant = doc.data();
+        const canVote = currentUser.uid !== rant.authorUID && !rant.voters.includes(currentUser.uid);
+        rantList.innerHTML += `
+          <div>
+            <p><strong>${rant.authorName}:</strong> ${rant.text}</p>
+            <p>❤️ ${rant.votes} vote(s)</p>
+            ${canVote ? `<button onclick="voteRant('${doc.id}', ${JSON.stringify(rant.voters)})">Vote</button>` : '<em>Đã vote hoặc bài của bạn</em>'}
+          </div>
+        `;
+      });
+    }
+  </script>
+</body>
+</html>
+ 
