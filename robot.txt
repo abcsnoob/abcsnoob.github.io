@@ -1,5 +1,0 @@
-User-agent: *
-Disallow: /secret.html
-
-User-agent: ia_archiver
-Allow: /
