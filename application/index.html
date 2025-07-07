@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Infinite Bug Log</title>
+  <style>
+    body {
+      font-family: monospace;
+      background: #111;
+      color: #0f0;
+      white-space: pre-wrap;
+    }
+  </style>
+</head>
+<body>
+  <div id="log"></div>
+
+  <script>
+    const log = document.getElementById("log");
+
+    // Tạo 1 văn bản dài vô hạn
+    let i = 0;
+    const interval = setInterval(() => {
+      const line = document.createElement("p");
+      line.textContent = (i % 2 === 0) ? "bug bug bug bug bug" : "not enough memory on server.";
+      log.appendChild(line);
+      i++;
+
+      // Dừng lại nếu quá dài (có thể comment dòng dưới để chạy mãi)
+      if (i > 100000) clearInterval(interval);
+    }, 0);
+  </script>
+</body>
+</html>

@@ -1,23 +1,56 @@
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
-<!--  created with Free Online Sitemap Generator www.xml-sitemaps.com  -->
-<url>
-<loc>https://abcsnoobytb.github.io/</loc>
-<lastmod>2025-03-21T14:01:28+00:00</lastmod>
-<priority>1.00</priority>
-</url>
-<url>
-<loc>https://abcsnoobytb.github.io/lore.html</loc>
-<lastmod>2025-03-21T14:01:28+00:00</lastmod>
-<priority>0.80</priority>
-</url>
-<url>
-<loc>https://abcsnoobytb.github.io/chicken.html</loc>
-<lastmod>2025-03-21T14:01:28+00:00</lastmod>
-<priority>0.80</priority>
-</url>
-<url>
-<loc>https://abcsnoobytb.github.io/live/</loc>
-<lastmod>2025-03-21T14:01:28+00:00</lastmod>
-<priority>0.80</priority>
-</url>
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset
+  xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+  xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
+
+  <!-- Trang chủ -->
+  <url>
+    <loc>https://abcsnoob.github.io/</loc>
+    <lastmod>2025-07-07</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+    <image:image>
+      <image:loc>https://abcsnoob.github.io/assets/image/abcsnoobpointleft.png</image:loc>
+      <image:caption>Abc's Noob chỉ tay</image:caption>
+      <image:title>Abc's Noob</image:title>
+    </image:image>
+  </url>
+
+  <!-- Blog -->
+  <url>
+    <loc>https://abcsnoob.github.io/blog/</loc>
+    <lastmod>2025-07-03</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- Ứng dụng -->
+  <url>
+    <loc>https://abcsnoob.github.io/application</loc>
+    <lastmod>2025-07-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <!-- Trang có nhạc -->
+  <url>
+    <loc>https://abcsnoob.github.io/huggingme.html</loc>
+    <lastmod>2025-06-30</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+    <image:image>
+      <image:loc>https://abcsnoob.github.io/assets/image/favicon.ico</image:loc>
+      <image:title>Favicon</image:title>
+    </image:image>
+  </url>
+
+  <!-- Trang chứa nhạc -->
+  <url>
+    <loc>https://abcsnoob.github.io/assets/music/Tobu-Hope(Original%20Mix).mp3</loc>
+    <lastmod>2025-07-01</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+  </url>
+
 </urlset>
+ 

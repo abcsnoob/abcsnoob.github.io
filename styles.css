@@ -1,0 +1,109 @@
+
+.animated-loop {
+  background: linear-gradient(
+    90deg,
+    #FFD700,
+    #28a745,
+    #007BFF,
+    #8A2BE2,
+    #FF8C00,
+    #FFD700,
+    #FFD700,
+    #FF8C00,
+    #8A2BE2,
+    #007BFF,
+    #28a745,
+    #FFD700,
+    #FFD700,
+    #28a745,
+    #007BFF,
+    #8A2BE2,
+    #FF8C00,
+    #FFD700,
+    #FFD700,
+    #FF8C00,
+    #8A2BE2,
+    #007BFF,
+    #28a745,
+    #FFD700,
+    #FFD700,
+    #28a745,
+    #007BFF,
+    #8A2BE2,
+    #FF8C00,
+    #FFD700,
+    #FFD700,
+    #FF8C00,
+    #8A2BE2,
+    #007BFF,
+    #28a745,
+    #FFD700,
+    #FFD700,
+    #28a745,
+    #007BFF,
+    #8A2BE2,
+    #FF8C00,
+    #FFD700,
+    #FFD700,
+    #FF8C00,
+    #8A2BE2,
+    #007BFF,
+    #28a745,
+    #FFD700
+  );
+  background-size: 300% 300%;
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  animation: loopGradient 5s linear infinite;
+  font-weight: bold;
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+}
+
+@keyframes loopGradient {
+  0% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: 100% 50%;
+  }
+}
+
+.text-purple {
+  color: #9146FF; /* màu đặc trưng của Twitch */
+}
+
+
+.animated-loop-icon {
+  background: linear-gradient(
+    90deg,
+    #FFD700,
+    #28a745,
+    #007BFF,
+    #8A2BE2,
+    #FF8C00,
+    #FFD700,
+    #28a745,
+    #007BFF,
+    #8A2BE2,
+    #FF8C00,
+    #FFD700
+  );
+  background-size: 1000% 100%;
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+
+  animation: loopGradient 5s linear infinite;
+}
+
+@keyframes loopGradient {
+  0% {
+    background-position: 0% 0%;
+  }
+  100% {
+    background-position: 100% 0%;
+  }
+}

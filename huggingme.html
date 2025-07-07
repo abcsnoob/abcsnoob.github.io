@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Real Hug</title>
+  <script src="https://cdn.jsdelivr.net/npm/skinview3d@3.4.1/bundles/skinview3d.bundle.js"></script>
+  <style>
+    html, body {
+      margin: 0;
+      background: #111;
+      color: white;
+      font-family: sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      height: 100vh;
+    }
+    #skin-canvas {
+      display: block;
+    }
+    #loading {
+      font-size: 20px;
+      margin-top: 10px;
+      animation: blink 1s infinite;
+    }
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="skin-canvas" width="300" height="400"></canvas>
+  <div id="loading">🤗 Ôm bạn... mãi mãi!</div>
+
+<script>
+  class HugAnimation extends skinview3d.PlayerAnimation {
+    constructor() {
+      super();
+      this.loop = true;
+    }
+
+    update(player, time) {
+      const parts = player.parts;
+      if (!parts || !parts.leftArm || !parts.rightArm) return;
+
+      const wave = Math.sin(time * 10) * 0.2;
+
+      parts.leftArm.rotation.set(0, Math.PI / 3 + wave, 0);
+      parts.rightArm.rotation.set(0, -Math.PI / 3 - wave, 0);
+
+      if (parts.body) parts.body.rotation.set(0, 0, 0);
+      if (parts.leftLeg) parts.leftLeg.rotation.set(0, 0, 0);
+      if (parts.rightLeg) parts.rightLeg.rotation.set(0, 0, 0);
+    }
+  }
+
+  window.addEventListener("DOMContentLoaded", () => {
+    const canvas = document.getElementById("skin-canvas");
+
+    const viewer = new skinview3d.SkinViewer({
+      canvas: canvas,
+      width: 300,
+      height: 400,
+      skin: "assets/image/abcsnoobskin.png"
+    });
+
+    viewer.controls.enableZoom = false;
+    viewer.controls.enableRotate = false;
+
+    const hug = new HugAnimation();
+    viewer.animation = hug;
+  });
+</script>
+
+
+</body>
+</html>
