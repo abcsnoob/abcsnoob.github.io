@@ -45,12 +45,12 @@
     function setCookie(name, value, days) {
       const d = new Date();
       d.setTime(d.getTime() + (days * 24 * 60 * 60 * 1000));
-      document.cookie = `${name}=${value};expires=${d.toUTCString()};path=/`;
+      document.cookie = ${name}=${value};expires=${d.toUTCString()};path=/;
     }
 
     function getCookie(name) {
-      const value = `; ${document.cookie}`;
-      const parts = value.split(`; ${name}=`);
+      const value = ; ${document.cookie};
+      const parts = value.split(; ${name}=);
       if (parts.length === 2) return parts.pop().split(';').shift();
     }
   </script>
@@ -170,7 +170,7 @@
 </div>
 
 <!-- Audio -->
-<audio id="bgMusic" loop>
+<audio id="bgMusic" loop preload="auto">
   <source src="assets/music/Tobu-Hope(Original Mix).mp3" type="audio/mpeg">
   Trình duyệt không hỗ trợ phát nhạc.
 </audio>
@@ -186,20 +186,33 @@ window.addEventListener("DOMContentLoaded", () => {
   if (accepted === "yes") {
     overlay.style.display = "none";
 
-    // Đợi hành vi người dùng bất kỳ để kích hoạt nhạc
+window.addEventListener("DOMContentLoaded", () => {
+  const accepted = getCookie("autoplayAccepted");
+  if (accepted === "yes") {
+    overlay.style.display = "none";
+
     const triggerPlay = () => {
       music.play().catch(() => {});
+      removeAllListeners();
+    };
+
+    function removeAllListeners() {
       document.removeEventListener("click", triggerPlay);
       document.removeEventListener("keydown", triggerPlay);
       document.removeEventListener("mousemove", triggerPlay);
-    };
+      document.removeEventListener("scroll", triggerPlay);
+      document.removeEventListener("touchstart", triggerPlay);
+    }
 
-    // Gán sự kiện tương tác đầu tiên
+    // Gán toàn bộ hành vi tương tác thường gặp
     document.addEventListener("click", triggerPlay);
     document.addEventListener("keydown", triggerPlay);
     document.addEventListener("mousemove", triggerPlay);
+    document.addEventListener("scroll", triggerPlay);
+    document.addEventListener("touchstart", triggerPlay);
   }
 });
+
 
 
   acceptBtn.addEventListener("click", () => {
