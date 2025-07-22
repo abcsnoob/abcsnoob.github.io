@@ -107,3 +107,9 @@
     background-position: 100% 0%;
   }
 }
+
+.animated-loop:hover {
+  text-shadow: 2px 2px 5px rgba(255, 255, 255, 0.6);
+  animation-duration: 3s; /* Tăng tốc độ chuyển màu khi hover */
+}
+
