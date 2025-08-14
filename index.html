@@ -1,258 +1,411 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <!-- Mô tả nội dung trang -->
-<meta name="description" content="Trang chính thức của Abc's Noob – YouTuber Minecraft, lập trình HTML+CSS+JS. Xem blog, ứng dụng, và khám phá thêm!">
+  <meta
+    name="description"
+    content="Trang chính thức của Abc's Noob – YouTuber Minecraft, lập trình HTML+CSS+JS. Xem blog, ứng dụng, và khám phá thêm!"
+  />
 
-<!-- Từ khóa (không còn quá quan trọng, nhưng vẫn có ích nhỏ) -->
-<meta name="keywords" content="Abc's Noob, Minecraft, lập trình, HTML, CSS, JS, YouTuber Việt Nam, blog cá nhân">
+  <!-- Từ khóa (không còn quá quan trọng, nhưng vẫn có ích nhỏ) -->
+  <meta
+    name="keywords"
+    content="Abc's Noob, Minecraft, lập trình, HTML, CSS, JS, YouTuber Việt Nam, blog cá nhân"
+  />
 
-<!-- Tác giả -->
-<meta name="author" content="Abc's Noob">
-<!-- Open Graph -->
-<meta property="og:title" content="Abc's Noob - Web cá nhân, Minecraft & HTML Dev">
-<meta property="og:description" content="Trang chính thức của Abc's Noob – YouTuber Minecraft, lập trình HTML+CSS+JS. Xem blog, ứng dụng, và khám phá thêm!">
-<meta property="og:image" content="https://abcsnoob.github.io/abcsnoob.webp">
-<meta property="og:url" content="https://abcsnoob.github.io/">
-<meta property="og:type" content="website">
+  <!-- Tác giả -->
+  <meta name="author" content="Abc's Noob" />
+  <!-- Open Graph -->
+  <meta property="og:title" content="Abc's Noob - Web cá nhân, Minecraft & HTML Dev" />
+  <meta
+    property="og:description"
+    content="Trang chính thức của Abc's Noob – YouTuber Minecraft, lập trình HTML+CSS+JS. Xem blog, ứng dụng, và khám phá thêm!"
+  />
+  <meta property="og:image" content="https://abcsnoob.github.io/abcsnoob.webp" />
+  <meta property="og:url" content="https://abcsnoob.github.io/" />
+  <meta property="og:type" content="website" />
 
-<!-- Twitter Card -->
-<meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Abc's Noob - Web cá nhân, Minecraft & HTML Dev">
-<meta name="twitter:description" content="Trang chính thức của Abc's Noob – YouTuber Minecraft, lập trình HTML+CSS+JS. Xem blog, ứng dụng, và khám phá thêm!">
-<meta name="twitter:image" content="https://abcsnoob.github.io/abcsnoob.webp">
-<meta name="google-site-verification" content="FEJ27R1qywhbJNZaGEBBjPmyFIvQjpkW7F76XQHEaKE" />
-<!-- Favicon basics -->
-<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
-<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Abc's Noob - Web cá nhân, Minecraft & HTML Dev" />
+  <meta
+    name="twitter:description"
+    content="Trang chính thức của Abc's Noob – YouTuber Minecraft, lập trình HTML+CSS+JS. Xem blog, ứng dụng, và khám phá thêm!"
+  />
+  <meta name="twitter:image" content="https://abcsnoob.github.io/abcsnoob.webp" />
+  <meta
+    name="google-site-verification"
+    content="FEJ27R1qywhbJNZaGEBBjPmyFIvQjpkW7F76XQHEaKE"
+  />
+  <!-- Favicon basics -->
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
 
-<!-- Android -->
-<link rel="icon" type="image/png" sizes="192x192" href="/android-chrome-192x192.png" />
-<link rel="icon" type="image/png" sizes="512x512" href="/android-chrome-512x512.png" />
+  <!-- Android -->
+  <link rel="icon" type="image/png" sizes="192x192" href="/android-chrome-192x192.png" />
+  <link rel="icon" type="image/png" sizes="512x512" href="/android-chrome-512x512.png" />
 
-<!-- iOS -->
-<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+  <!-- iOS -->
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
 
-<!-- Web App Manifest -->
-<link rel="manifest" href="/site.webmanifest" />
+  <!-- Web App Manifest -->
+  <link rel="manifest" href="/site.webmanifest" />
 
-<!-- Theme for mobile browser -->
-<meta name="theme-color" content="#ffffff" />
+  <!-- Theme for mobile browser -->
+  <meta name="theme-color" content="#ffffff" />
 
-
-
-<!-- Canonical URL -->
-<link rel="canonical" href="https://abcsnoob.github.io/" />
+  <!-- Canonical URL -->
+  <link rel="canonical" href="https://abcsnoob.github.io/" />
   <title>Abc's Noob's Website</title>
 
   <!-- Bootstrap CSS -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
-  <link href="styles.css" rel="stylesheet">
-  <link rel="icon" href="assets/image/favicon.ico" type="image/x-icon">
+  <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css"
+    rel="stylesheet"
+    crossorigin="anonymous"
+  />
+  <link href="styles.css" rel="stylesheet" />
+  <link rel="icon" href="assets/image/favicon.ico" type="image/x-icon" />
 
   <!-- Bootstrap JS Bundle -->
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
-  <script defer src="https://cloud.umami.is/script.js" data-website-id="c4ef9b7d-4dd6-4301-9bcc-5eaf4c5fe439"></script>
+  <script
+    src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"
+    crossorigin="anonymous"
+    defer
+  ></script>
+  <script
+    defer
+    src="https://cloud.umami.is/script.js"
+    data-website-id="c4ef9b7d-4dd6-4301-9bcc-5eaf4c5fe439"
+  ></script>
   <!-- Font Awesome -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+  />
+  <style>
+    @keyframes gradientShift {
+      0% {
+        background-position: 0% 50%;
+      }
+      50% {
+        background-position: 100% 50%;
+      }
+      100% {
+        background-position: 0% 50%;
+      }
+    }
+
+    .news-alert {
+      font-weight: bold;
+      padding: 0.3rem 1rem;
+      border-radius: 0.25rem;
+      color: white;
+      background: linear-gradient(270deg, #ff416c, #ff4b2b, #1f4037, #99f2c8);
+      background-size: 800% 800%;
+      animation: gradientShift 10s ease infinite;
+      cursor: default;
+      margin-left: 1rem;
+      user-select: none;
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    }
+  </style>
 </head>
 
 <body>
+  <!-- Navbar -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container-fluid">
+      <a class="navbar-brand d-flex align-items-center animated-loop" href="./">
+        <img
+          src="https://abcsnoob.github.io/abcsnoob.webp"
+          alt="Logo"
+          width="30"
+          height="30"
+          class="me-2"
+        />
+        Abc's Noob
+      </a>
+      <button
+        class="navbar-toggler"
+        type="button"
+        data-bs-toggle="collapse"
+        data-bs-target="#mainNavbar"
+      >
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="mainNavbar">
+        <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+          <li class="nav-item"><a class="nav-link active" href="./">Trang chủ</a></li>
+          <li class="nav-item"><a class="nav-link" href="blog/">Blog</a></li>
+          <li class="nav-item"><a class="nav-link" href="mailto:abcsspprt@gmail.com">Liên hệ</a></li>
+          <li class="nav-item"><a class="nav-link" href="application">Các ứng dụng của tôi</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
 
-<!-- Navbar -->
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-  <div class="container-fluid">
-    <a class="navbar-brand d-flex align-items-center animated-loop" href="./">
-      <img src="https://abcsnoob.github.io/abcsnoob.webp" alt="Logo" width="30" height="30" class="me-2">
-      Abc's Noob
-    </a>
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar">
-      <span class="navbar-toggler-icon"></span>
-    </button>
-    <div class="collapse navbar-collapse" id="mainNavbar">
-      <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
-        <li class="nav-item"><a class="nav-link active" href="./">Trang chủ</a></li>
-        <li class="nav-item"><a class="nav-link" href="blog/">Blog</a></li>
-        <li class="nav-item"><a class="nav-link" href="mailto:abcsspprt@gmail.com">Liên hệ</a></li>
-        <li class="nav-item"><a class="nav-link" href="application">Các ứng dụng của tôi</a></li>
-      </ul>
+  <!-- Nội dung chính -->
+  <div class="container py-5">
+    <div class="row align-items-center">
+      <div class="col-md-6">
+        <h1 class="animated-loop">Abc's Noob</h1>
+        <h5>Một khứa Youtuber khoái với Minecraft kèm với HTML+CSS+JS</h5>
+        <p>Người biết một chút tiếng Anh</p>
+        <blockquote class="blockquote mt-4">
+          <p class="mb-0 animated-loop">"Minecraft is best. Do you like it?"</p>
+          <footer class="blockquote-footer">Abc's Noob</footer>
+        </blockquote>
+      </div>
+      <div class="col-md-6 text-center">
+        <a href="huggingme.html">
+          <img
+            src="assets/image/abcsnoobpointleft.png"
+            alt="abcsnoob-1"
+            class="img-fluid"
+            loading="lazy"
+          />
+        </a>
+      </div>
     </div>
   </div>
-</nav>
 
-<!-- Nội dung chính -->
-<div class="container py-5">
-  <div class="row align-items-center">
-    <div class="col-md-6">
-      <h1 class="animated-loop">Abc's Noob</h1>
-      <h5>Một khứa Youtuber khoái với Minecraft kèm với HTML+CSS+JS</h5>
-      <p>Người biết một chút tiếng Anh</p>
-      <blockquote class="blockquote mt-4">
-        <p class="mb-0 animated-loop">"Minecraft is best. Do you like it?"</p>
-        <footer class="blockquote-footer">Abc's Noob</footer>
-      </blockquote>
+  <!-- FAQ -->
+  <div class="container py-4">
+    <h2 class="mb-3">🧠 Bạn có câu hỏi? Tôi sẽ trả lời!</h2>
+    <div class="accordion" id="faqAccordion">
+      <div class="accordion-item">
+        <h2 class="accordion-header">
+          <button
+            class="accordion-button"
+            type="button"
+            data-bs-toggle="collapse"
+            data-bs-target="#collapse1"
+            aria-expanded="true"
+          >
+            ❓ Bạn là ai?
+          </button>
+        </h2>
+        <div id="collapse1" class="accordion-collapse collapse show">
+          <div class="accordion-body">- Tôi là Abc's Noob 😤</div>
+        </div>
+      </div>
+      <div class="accordion-item">
+        <h2 class="accordion-header">
+          <button
+            class="accordion-button"
+            type="button"
+            data-bs-toggle="collapse"
+            data-bs-target="#collapse2"
+          >
+            ❓ Bạn ở đâu?
+          </button>
+        </h2>
+        <div id="collapse2" class="accordion-collapse collapse">
+          <div class="accordion-body">- Bí mật tuyệt đối: <strong>Tôi không nói đâu</strong> :)</div>
+        </div>
+      </div>
+      <div class="accordion-item">
+        <h2 class="accordion-header">
+          <button
+            class="accordion-button"
+            type="button"
+            data-bs-toggle="collapse"
+            data-bs-target="#collapse3"
+          >
+            ❓ Bạn chơi game gì ngoài Minecraft?
+          </button>
+        </h2>
+        <div id="collapse3" class="accordion-collapse collapse">
+          <div class="accordion-body">- Ngoài Minecraft thì tôi có chơi Roblox. Hết rồi á!</div>
+        </div>
+      </div>
+      <div class="accordion-item">
+        <h2 class="accordion-header">
+          <button
+            class="accordion-button"
+            type="button"
+            data-bs-toggle="collapse"
+            data-bs-target="#collapse4"
+          >
+            ❓ Tôi muốn chat với bạn thì làm sao?
+          </button>
+        </h2>
+        <div id="collapse4" class="accordion-collapse collapse">
+          <div class="accordion-body">- Mời bạn vào Discord!</div>
+        </div>
+      </div>
     </div>
-    <div class="col-md-6 text-center">
-      <a href="huggingme.html">
-        <img src="assets/image/abcsnoobpointleft.png" alt="abcsnoob-1" class="img-fluid" loading="lazy">
+  </div>
+
+  <!-- Danh sách server -->
+  <div class="container py-4">
+    <h3 class="mb-3">Các server tôi hay chơi:</h3>
+    <ul class="list-group">
+      <li class="list-group-item">
+        <a href="redirect.html?url=https://3fmc.com">3fmc.com</a>
+        <span class="badge bg-primary">Bedwars</span>
+      </li>
+      <li class="list-group-item">
+        tenkimc.asia
+        <span class="badge bg-success">SMP</span>
+      </li>
+      <li class="list-group-item">
+        <a href="redirect.html?url=https://kingmc.vn">kingmc.vn</a>
+        <span class="badge bg-warning text-dark">Survival, SMP</span>
+      </li>
+    </ul>
+  </div>
+
+  <!-- Footer -->
+  <footer class="bg-dark text-light mt-5 py-4">
+    <div class="container text-center">
+      <h4 class="mb-3">Muốn xem tôi làm gì:</h4>
+      <div class="d-flex flex-wrap justify-content-center gap-4 fs-4">
+        <a href="https://youtube.com/@abcsnoob" target="_blank"
+          ><i class="fab fa-youtube animated-loop-icon"></i
+        ></a>
+        <a href="https://twitch.tv/abcsnoobcute" target="_blank"
+          ><i class="fab fa-twitch animated-loop-icon"></i
+        ></a>
+        <a href="https://steamcommunity.com/profiles/76561199839158034/" target="_blank"
+          ><i class="fab fa-steam animated-loop-icon"></i
+        ></a>
+        <a href="https://github.com/abcsnoob" target="_blank"
+          ><i class="fab fa-github animated-loop-icon"></i
+        ></a>
+        <a href="https://discord.com/invite/QmGjzMUXGt" target="_blank"
+          ><i class="fab fa-discord animated-loop-icon"></i
+        ></a>
+        <a href="https://www.reddit.com/user/FullPurchase7179/" target="_blank"
+          ><i class="fab fa-reddit animated-loop-icon"></i
+        ></a>
+        <a href="https://www.linkedin.com/in/abc-s-noob-589a33358/" target="_blank"
+          ><i class="fab fa-linkedin animated-loop-icon"></i
+        ></a>
+        <a href="https://www.tiktok.com/@abcsnoob" target="_blank"
+          ><i class="fab fa-tiktok animated-loop-icon"></i
+        ></a>
+      </div>
+      <a href="https://my.flightradar24.com/Abcs_noob" target="_blank">
+        <img
+          src="https://abcsnoob.github.io/files/flightradar24.svg"
+          class="animated-loop-icon"
+          alt="Flight Radar 24 Icon"
+        />
       </a>
     </div>
+  </footer>
+
+  <!-- Cookie Overlay -->
+  <div
+    id="cookieOverlay"
+    style="
+      position: fixed;
+      z-index: 9999;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(0, 0, 0, 0.9);
+      color: white;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      text-align: center;
+      padding: 2rem;
+      font-family: sans-serif;
+    "
+  >
+    <h4>🍪 Cookie &amp; Nhạc nền</h4>
+    <p>Trang này dùng cookie và có nhạc nền. Bạn chấp nhận không?</p>
+    <button id="acceptCookies" class="btn btn-success mt-3">Chấp nhận và tiếp tục</button>
   </div>
-</div>
 
-<!-- FAQ -->
-<div class="container py-4">
-  <h2 class="mb-3">🧠 Bạn có câu hỏi? Tôi sẽ trả lời!</h2>
-  <div class="accordion" id="faqAccordion">
-    <div class="accordion-item">
-      <h2 class="accordion-header"><button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapse1" aria-expanded="true">❓ Bạn là ai?</button></h2>
-      <div id="collapse1" class="accordion-collapse collapse show"><div class="accordion-body">- Tôi là Abc's Noob 😤</div></div>
-    </div>
-    <div class="accordion-item">
-      <h2 class="accordion-header"><button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapse2">❓ Bạn ở đâu?</button></h2>
-      <div id="collapse2" class="accordion-collapse collapse"><div class="accordion-body">- Bí mật tuyệt đối: <strong>Tôi không nói đâu</strong> :)</div></div>
-    </div>
-    <div class="accordion-item">
-      <h2 class="accordion-header"><button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapse3">❓ Bạn chơi game gì ngoài Minecraft?</button></h2>
-      <div id="collapse3" class="accordion-collapse collapse"><div class="accordion-body">- Ngoài Minecraft thì tôi có chơi Roblox. Hết rồi á!</div></div>
-    </div>
-    <div class="accordion-item">
-      <h2 class="accordion-header"><button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapse4">❓ Tôi muốn chat với bạn thì làm sao?</button></h2>
-      <div id="collapse4" class="accordion-collapse collapse"><div class="accordion-body">- Mời bạn vào Discord!</div></div>
-    </div>
-  </div>
-</div>
+  <!-- Audio -->
+  <audio id="bgMusic" loop preload="auto">
+    <source src="assets/music/Tobu-Hope(Original Mix).mp3" type="audio/mpeg" />
+    Trình duyệt không hỗ trợ phát nhạc.
+  </audio>
 
-<!-- Danh sách server -->
-<div class="container py-4">
-  <h3 class="mb-3">Các server tôi hay chơi:</h3>
-  <ul class="list-group">
-    <li class="list-group-item"><a href="redirect.html?url=https://3fmc.com">3fmc.com</a> <span class="badge bg-primary">Bedwars</span></li>
-    <li class="list-group-item">tenkimc.asia <span class="badge bg-success">SMP</span></li>
-    <li class="list-group-item"><a href="redirect.html?url=https://kingmc.vn">kingmc.vn</a> <span class="badge bg-warning text-dark">Survival, SMP</span></li>
-  </ul>
-</div>
+  <!-- JavaScript logic -->
+  <script>
+    // News Alert dynamic add
+    const newsAlert = document.createElement("span");
+    newsAlert.classList.add("news-alert");
+    newsAlert.textContent = "F*cking Roblox: https://x.com/Roblox/status/1955787504273199128";
 
-<!-- Footer -->
-<footer class="bg-dark text-light mt-5 py-4">
-  <div class="container text-center">
-    <h4 class="mb-3">Muốn xem tôi làm gì:</h4>
-    <div class="d-flex flex-wrap justify-content-center gap-4 fs-4">
-      <a href="https://youtube.com/@abcsnoob" target="_blank"><i class="fab fa-youtube animated-loop-icon"></i></a>
-      <a href="https://twitch.tv/abcsnoobcute" target="_blank"><i class="fab fa-twitch animated-loop-icon"></i></a>
-      <a href="https://steamcommunity.com/profiles/76561199839158034/" target="_blank"><i class="fab fa-steam animated-loop-icon"></i></a>
-      <a href="https://github.com/abcsnoob" target="_blank"><i class="fab fa-github animated-loop-icon"></i></a>
-      <a href="https://discord.com/invite/QmGjzMUXGt" target="_blank"><i class="fab fa-discord animated-loop-icon"></i></a>
-      <a href="https://www.reddit.com/user/FullPurchase7179/" target="_blank"><i class="fab fa-reddit animated-loop-icon"></i></a>
-      <a href="https://www.linkedin.com/in/abc-s-noob-589a33358/" target="_blank"><i class="fab fa-linkedin animated-loop-icon"></i></a>
-      <a href="https://www.tiktok.com/@abcsnoob" target="_blank"><i class="fab fa-tiktok animated-loop-icon"></i></a>
-
-
-    </div>
-          <a href="https://my.flightradar24.com/Abcs_noob" target="_blank">
-         <img src="https://abcsnoob.github.io/files/flightradar24.svg" class="animated-loop-icon" alt="Flight Radar 24 Icon">
-      </a>
-  </div>
-</footer>
-
-<!-- Cookie Overlay -->
-<div id="cookieOverlay" style="
-  position: fixed;
-  z-index: 9999;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background-color: rgba(0,0,0,0.9);
-  color: white;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  flex-direction: column;
-  text-align: center;
-  padding: 2rem;
-  font-family: sans-serif;
-">
-  <h4>🍪 Cookie & Nhạc nền</h4>
-  <p>Trang này dùng cookie và có nhạc nền. Bạn chấp nhận không?</p>
-  <button id="acceptCookies" class="btn btn-success mt-3">Chấp nhận và tiếp tục</button>
-</div>
-
-<!-- Audio -->
-<audio id="bgMusic" loop preload="auto">
-  <source src="assets/music/Tobu-Hope(Original Mix).mp3" type="audio/mpeg">
-  Trình duyệt không hỗ trợ phát nhạc.
-</audio>
-
-<!-- JavaScript logic -->
-<script>
-  const overlay = document.getElementById("cookieOverlay");
-  const acceptBtn = document.getElementById("acceptCookies");
-  const music = document.getElementById("bgMusic");
-
-  // ✅ Hàm tạo cookie
-  function setCookie(name, value, days) {
-    const d = new Date();
-    d.setTime(d.getTime() + (days * 24 * 60 * 60 * 1000));
-    const expires = "expires=" + d.toUTCString();
-    document.cookie = name + "=" + value + ";" + expires + ";path=/";
-  }
-
-  // ✅ Hàm lấy cookie
-  function getCookie(name) {
-    const decodedCookie = decodeURIComponent(document.cookie);
-    const ca = decodedCookie.split(';');
-    name = name + "=";
-    for (let i = 0; i < ca.length; i++) {
-      let c = ca[i];
-      while (c.charAt(0) == ' ') {
-        c = c.substring(1);
-      }
-      if (c.indexOf(name) == 0) {
-        return c.substring(name.length, c.length);
-      }
+    const navbarBrand = document.querySelector(".navbar-brand");
+    if (navbarBrand) {
+      navbarBrand.insertAdjacentElement("afterend", newsAlert);
     }
-    return "";
-  }
 
-  window.addEventListener("DOMContentLoaded", () => {
-    const accepted = getCookie("autoplayAccepted");
-    if (accepted === "yes") {
-      overlay.style.display = "none";
+    const overlay = document.getElementById("cookieOverlay");
+    const acceptBtn = document.getElementById("acceptCookies");
+    const music = document.getElementById("bgMusic");
 
-      const triggerPlay = () => {
-        music.play().catch(() => {});
-        removeAllListeners();
-      };
-
-      function removeAllListeners() {
-        document.removeEventListener("click", triggerPlay);
-        document.removeEventListener("keydown", triggerPlay);
-        document.removeEventListener("mousemove", triggerPlay);
-        document.removeEventListener("scroll", triggerPlay);
-        document.removeEventListener("touchstart", triggerPlay);
-      }
-
-      document.addEventListener("click", triggerPlay);
-      document.addEventListener("keydown", triggerPlay);
-      document.addEventListener("mousemove", triggerPlay);
-      document.addEventListener("scroll", triggerPlay);
-      document.addEventListener("touchstart", triggerPlay);
+    // ✅ Hàm tạo cookie
+    function setCookie(name, value, days) {
+      const d = new Date();
+      d.setTime(d.getTime() + days * 24 * 60 * 60 * 1000);
+      const expires = "expires=" + d.toUTCString();
+      document.cookie = name + "=" + value + ";" + expires + ";path=/";
     }
-  });
 
-  acceptBtn.addEventListener("click", () => {
-    setCookie("autoplayAccepted", "yes", 365);
-    overlay.style.display = "none";
-    music.play().catch(err => {
-      alert("Không thể phát nhạc: " + err.message);
+    // ✅ Hàm lấy cookie
+    function getCookie(name) {
+      const decodedCookie = decodeURIComponent(document.cookie);
+      const ca = decodedCookie.split(";");
+      name = name + "=";
+      for (let i = 0; i < ca.length; i++) {
+        let c = ca[i];
+        while (c.charAt(0) == " ") {
+          c = c.substring(1);
+        }
+        if (c.indexOf(name) == 0) {
+          return c.substring(name.length, c.length);
+        }
+      }
+      return "";
+    }
+
+    window.addEventListener("DOMContentLoaded", () => {
+      const accepted = getCookie("autoplayAccepted");
+      if (accepted === "yes") {
+        overlay.style.display = "none";
+
+        const triggerPlay = () => {
+          music.play().catch(() => {});
+          removeAllListeners();
+        };
+
+        // Nếu nhạc có thể play được luôn (ví dụ desktop)
+        music.play().then(() => {
+          overlay.style.display = "none";
+        }).catch(() => {
+          // Nếu không, đợi user click để play
+          document.addEventListener("click", triggerPlay);
+          document.addEventListener("keydown", triggerPlay);
+        });
+
+        function removeAllListeners() {
+          document.removeEventListener("click", triggerPlay);
+          document.removeEventListener("keydown", triggerPlay);
+        }
+      }
     });
-  });
-    if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/sw.js')
-      .then(() => console.log('✅ Service Worker registered'))
-      .catch(err => console.error('❌ SW registration failed:', err));
-  }
-</script>
 
+    acceptBtn.addEventListener("click", () => {
+      setCookie("autoplayAccepted", "yes", 30);
+      overlay.style.display = "none";
+      music.play().catch(() => {});
+    });
+  </script>
 </body>
 </html>
