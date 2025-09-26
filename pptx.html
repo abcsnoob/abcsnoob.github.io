@@ -56,23 +56,20 @@
   <iframe id="pptxFrame"></iframe>
 
   <script>
-    // Lấy tham số url
     const params = new URLSearchParams(window.location.search);
     let pptxUrl = params.get("url");
 
-    // Nếu không có url => chuyển hướng mặc định
     if (!pptxUrl) {
+      // Nếu không có url => chuyển hướng mặc định
       window.location.href = "https://abcsnoob.github.io/files/roblox.pptx";
     } else {
-      // Encode URL để nhúng vào Office Online Viewer
+      const iframe = document.getElementById("pptxFrame");
       const viewerUrl =
         "https://view.officeapps.live.com/op/embed.aspx?src=" + encodeURIComponent(pptxUrl);
 
-      const iframe = document.getElementById("pptxFrame");
-      iframe.src = viewerUrl;
-
-      // Chờ ít nhất 5s rồi hiển thị nội dung
+      // Hiển thị spinner 5s rồi mới bắt đầu load file
       setTimeout(() => {
+        iframe.src = viewerUrl;
         document.getElementById("loader").style.display = "none";
         iframe.style.display = "block";
       }, 5000);
