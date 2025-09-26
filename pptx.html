@@ -13,6 +13,7 @@
       overflow: hidden;
       font-family: Arial, sans-serif;
       background: #000;
+      color: white;
     }
 
     #container {
@@ -28,10 +29,9 @@
       width: 100%;
       height: 100%;
       border: none;
-      display: none; /* ẩn lúc load */
+      display: none;
     }
 
-    /* Spinner */
     .spinner {
       border: 8px solid rgba(255, 255, 255, 0.2);
       border-top: 8px solid #3498db;
@@ -51,44 +51,87 @@
       100% { transform: rotate(360deg);}
     }
 
-    /* Thông báo lỗi */
     #message {
-      color: white;
       position: absolute;
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
       text-align: center;
+      color: white;
+    }
+
+    #dropzone {
+      border: 2px dashed #aaa;
+      border-radius: 10px;
+      padding: 30px;
+      text-align: center;
+      background: rgba(255,255,255,0.05);
+    }
+
+    #dropzone.dragover {
+      border-color: #3498db;
+      background: rgba(52,152,219,0.2);
     }
   </style>
 </head>
 <body>
   <div id="container">
-    <div class="spinner" id="spinner"></div>
+    <div class="spinner" id="spinner" style="display:none;"></div>
     <iframe id="pptFrame" allowfullscreen></iframe>
-    <div id="message"></div>
+    <div id="message">
+      <div id="dropzone">
+        <p>Kéo & thả file PPTX vào đây<br>hoặc dùng <code>?url=</code> với link công khai</p>
+      </div>
+    </div>
   </div>
 
   <script>
     const iframe = document.getElementById('pptFrame');
     const spinner = document.getElementById('spinner');
     const message = document.getElementById('message');
+    const dropzone = document.getElementById('dropzone');
 
-    // Lấy URL từ query string ?url=
-    const params = new URLSearchParams(window.location.search);
-    const pptUrl = params.get('url');
-
-    if(pptUrl) {
-      // Thiết lập embed Office Online
-      iframe.src = `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(pptUrl)}`;
+    function showPPT(url) {
+      spinner.style.display = 'block';
+      message.style.display = 'none';
+      iframe.src = `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(url)}`;
       iframe.onload = () => {
         spinner.style.display = 'none';
         iframe.style.display = 'block';
       };
-    } else {
-      spinner.style.display = 'none';
-      message.textContent = "Vui lòng truyền URL PPTX bằng ?url=...";
     }
+
+    // ?url= hỗ trợ link online
+    const params = new URLSearchParams(window.location.search);
+    const pptUrl = params.get('url');
+    if (pptUrl) {
+      showPPT(pptUrl);
+    }
+
+    // Drag & Drop local file
+    ;['dragenter','dragover','dragleave','drop'].forEach(eventName => {
+      document.body.addEventListener(eventName, e => e.preventDefault());
+    });
+
+    document.body.addEventListener('dragover', () => dropzone.classList.add('dragover'));
+    document.body.addEventListener('dragleave', () => dropzone.classList.remove('dragover'));
+
+    document.body.addEventListener('drop', e => {
+      dropzone.classList.remove('dragover');
+      const file = e.dataTransfer.files[0];
+      if (file && file.name.endsWith(".pptx")) {
+        const url = URL.createObjectURL(file); // Blob local
+        spinner.style.display = 'block';
+        message.style.display = 'none';
+        iframe.src = url; 
+        iframe.onload = () => {
+          spinner.style.display = 'none';
+          iframe.style.display = 'block';
+        };
+      } else {
+        alert("Vui lòng thả file .pptx hợp lệ");
+      }
+    });
   </script>
 </body>
 </html>
