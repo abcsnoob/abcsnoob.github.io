@@ -3,42 +3,47 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Chiếu PPTX</title>
+  <title>Chiếu PPTX Fullscreen</title>
   <style>
-    body, html {
+    html, body {
       margin: 0;
       padding: 0;
       height: 100%;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      background: #f0f0f0;
+      width: 100%;
+      overflow: hidden;
       font-family: Arial, sans-serif;
+      background: #000;
     }
+
     #container {
-      width: 960px;
-      height: 569px;
       position: relative;
+      width: 100%;
+      height: 100%;
     }
+
     iframe {
+      position: absolute;
+      top: 0;
+      left: 0;
       width: 100%;
       height: 100%;
       border: none;
-      display: none; /* ẩn lúc đang load */
+      display: none; /* ẩn lúc load */
     }
 
     /* Spinner */
     .spinner {
-      border: 8px solid #f3f3f3;
+      border: 8px solid rgba(255, 255, 255, 0.2);
       border-top: 8px solid #3498db;
       border-radius: 50%;
-      width: 60px;
-      height: 60px;
+      width: 80px;
+      height: 80px;
       animation: spin 1s linear infinite;
       position: absolute;
       top: 50%;
       left: 50%;
-      margin: -30px 0 0 -30px;
+      margin: -40px 0 0 -40px;
+      z-index: 10;
     }
 
     @keyframes spin {
@@ -46,12 +51,14 @@
       100% { transform: rotate(360deg);}
     }
 
-    /* Responsive */
-    @media (max-width: 1000px) {
-      #container {
-        width: 90%;
-        height: 50vw; /* giữ tỉ lệ 16:9 */
-      }
+    /* Thông báo lỗi */
+    #message {
+      color: white;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
     }
   </style>
 </head>
@@ -59,18 +66,20 @@
   <div id="container">
     <div class="spinner" id="spinner"></div>
     <iframe id="pptFrame" allowfullscreen></iframe>
+    <div id="message"></div>
   </div>
 
   <script>
     const iframe = document.getElementById('pptFrame');
     const spinner = document.getElementById('spinner');
+    const message = document.getElementById('message');
 
     // Lấy URL từ query string ?url=
     const params = new URLSearchParams(window.location.search);
     const pptUrl = params.get('url');
 
     if(pptUrl) {
-      // Chèn link Office Online embed
+      // Thiết lập embed Office Online
       iframe.src = `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(pptUrl)}`;
       iframe.onload = () => {
         spinner.style.display = 'none';
@@ -78,7 +87,7 @@
       };
     } else {
       spinner.style.display = 'none';
-      document.getElementById('container').innerHTML = "<p>Vui lòng truyền URL PPTX bằng ?url=...</p>";
+      message.textContent = "Vui lòng truyền URL PPTX bằng ?url=...";
     }
   </script>
 </body>
