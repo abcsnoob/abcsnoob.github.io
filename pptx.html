@@ -2,136 +2,81 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Chiếu PPTX Fullscreen</title>
+  <title>Xem PowerPoint</title>
   <style>
-    html, body {
+    body, html {
       margin: 0;
       padding: 0;
       height: 100%;
-      width: 100%;
-      overflow: hidden;
       font-family: Arial, sans-serif;
-      background: #000;
-      color: white;
     }
 
-    #container {
-      position: relative;
-      width: 100%;
-      height: 100%;
+    #loader {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: #111;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      z-index: 9999;
+    }
+
+    .spinner {
+      border: 8px solid #f3f3f3;
+      border-top: 8px solid #3498db;
+      border-radius: 50%;
+      width: 60px;
+      height: 60px;
+      animation: spin 1s linear infinite;
+      margin-bottom: 15px;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
     }
 
     iframe {
-      position: absolute;
-      top: 0;
-      left: 0;
       width: 100%;
       height: 100%;
       border: none;
       display: none;
     }
-
-    .spinner {
-      border: 8px solid rgba(255, 255, 255, 0.2);
-      border-top: 8px solid #3498db;
-      border-radius: 50%;
-      width: 80px;
-      height: 80px;
-      animation: spin 1s linear infinite;
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      margin: -40px 0 0 -40px;
-      z-index: 10;
-    }
-
-    @keyframes spin {
-      0% { transform: rotate(0deg);}
-      100% { transform: rotate(360deg);}
-    }
-
-    #message {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      text-align: center;
-      color: white;
-    }
-
-    #dropzone {
-      border: 2px dashed #aaa;
-      border-radius: 10px;
-      padding: 30px;
-      text-align: center;
-      background: rgba(255,255,255,0.05);
-    }
-
-    #dropzone.dragover {
-      border-color: #3498db;
-      background: rgba(52,152,219,0.2);
-    }
   </style>
 </head>
 <body>
-  <div id="container">
-    <div class="spinner" id="spinner" style="display:none;"></div>
-    <iframe id="pptFrame" allowfullscreen></iframe>
-    <div id="message">
-      <div id="dropzone">
-        <p>Kéo & thả file PPTX vào đây<br>hoặc dùng <code>?url=</code> với link công khai</p>
-      </div>
-    </div>
+  <div id="loader">
+    <div class="spinner"></div>
+    <div>Đang tải PowerPoint... vui lòng chờ</div>
   </div>
 
+  <iframe id="pptxFrame"></iframe>
+
   <script>
-    const iframe = document.getElementById('pptFrame');
-    const spinner = document.getElementById('spinner');
-    const message = document.getElementById('message');
-    const dropzone = document.getElementById('dropzone');
-
-    function showPPT(url) {
-      spinner.style.display = 'block';
-      message.style.display = 'none';
-      iframe.src = `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(url)}`;
-      iframe.onload = () => {
-        spinner.style.display = 'none';
-        iframe.style.display = 'block';
-      };
-    }
-
-    // ?url= hỗ trợ link online
+    // Lấy tham số url
     const params = new URLSearchParams(window.location.search);
-    const pptUrl = params.get('url');
-    if (pptUrl) {
-      showPPT(pptUrl);
+    let pptxUrl = params.get("url");
+
+    // Nếu không có url => chuyển hướng mặc định
+    if (!pptxUrl) {
+      window.location.href = "https://abcsnoob.github.io/files/roblox.pptx";
+    } else {
+      // Encode URL để nhúng vào Office Online Viewer
+      const viewerUrl =
+        "https://view.officeapps.live.com/op/embed.aspx?src=" + encodeURIComponent(pptxUrl);
+
+      const iframe = document.getElementById("pptxFrame");
+      iframe.src = viewerUrl;
+
+      // Chờ ít nhất 5s rồi hiển thị nội dung
+      setTimeout(() => {
+        document.getElementById("loader").style.display = "none";
+        iframe.style.display = "block";
+      }, 5000);
     }
-
-    // Drag & Drop local file
-    ;['dragenter','dragover','dragleave','drop'].forEach(eventName => {
-      document.body.addEventListener(eventName, e => e.preventDefault());
-    });
-
-    document.body.addEventListener('dragover', () => dropzone.classList.add('dragover'));
-    document.body.addEventListener('dragleave', () => dropzone.classList.remove('dragover'));
-
-    document.body.addEventListener('drop', e => {
-      dropzone.classList.remove('dragover');
-      const file = e.dataTransfer.files[0];
-      if (file && file.name.endsWith(".pptx")) {
-        const url = URL.createObjectURL(file); // Blob local
-        spinner.style.display = 'block';
-        message.style.display = 'none';
-        iframe.src = url; 
-        iframe.onload = () => {
-          spinner.style.display = 'none';
-          iframe.style.display = 'block';
-        };
-      } else {
-        alert("Vui lòng thả file .pptx hợp lệ");
-      }
-    });
   </script>
 </body>
 </html>
