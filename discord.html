@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Discord Widget</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #2c2f33;
+        }
+    </style>
+</head>
+<body>
+    <iframe id="discord-widget"
+        width="350" 
+        height="500" 
+        allowtransparency="true" 
+        frameborder="0" 
+        sandbox="allow-popups allow-popups-to-escape-sandbox allow-same-origin allow-scripts">
+    </iframe>
+
+    <script>
+        // Lấy ID từ query string
+        const params = new URLSearchParams(window.location.search);
+        const serverId = params.get('id'); // ?id=SERVER_ID
+
+        if(serverId) {
+            const iframe = document.getElementById('discord-widget');
+            iframe.src = `https://discord.com/widget?id=${serverId}&theme=dark`;
+        } else {
+            document.body.innerHTML = "<p>Vui lòng cung cấp ID server Discord trong query string ?id=YOUR_SERVER_ID</p>";
+        }
+    </script>
+</body>
+</html>
