@@ -414,7 +414,7 @@
   </audio>
 
   <!-- JavaScript logic -->
-<script src="https://gist.github.com/abcsnoob/4d03249e26ae372ea7abec790a933b87.js"></script>
+
   <script>
 // Navbar shrink khi cuộn
 // Navbar shrink on scroll
@@ -426,7 +426,14 @@ window.addEventListener('scroll', () => {
     navbar.classList.remove('shrink');
   }
 });
-
+// News alert băng rôn
+const newsText = "Xin lỗi, không có gì cả";
+const newsContainer = document.createElement('div');
+newsContainer.className = 'news-alert';
+const span = document.createElement('span');
+span.textContent = newsText;
+newsContainer.appendChild(span);
+document.getElementById('newsBannerContainer').appendChild(newsContainer);
     const overlay = document.getElementById("cookieOverlay");
     const acceptBtn = document.getElementById("acceptCookies");
     const music = document.getElementById("bgMusic");
@@ -490,6 +497,7 @@ window.addEventListener('scroll', () => {
   </script>
 </body>
 </html>
+
 
 
 
