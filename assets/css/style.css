@@ -1,0 +1,42 @@
+@import url('https://fonts.googleapis.com/css2?family=Comfortaa:wght@300;400;700&display=swap');
+body{
+    font-family: 'Comfortaa', sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f4f4f4;
+    color: #333;
+}
+.logo {
+    height: 40px;
+    margin-right: 10px;
+    vertical-align: auto;
+}
+/* Xử lý nội dung bài viết */
+.post-text {
+    white-space: pre-wrap; /* Quan trọng nhất để giữ Enter xuống dòng */
+    word-wrap: break-word;
+    line-height: 1.6;
+    color: #444;
+}
+
+
+/* Chỉ hiện 3 dòng ở bản Preview */
+.text-truncate-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+/* Nút bấm không bị hiện viền xanh khi click */
+.btn:focus, .form-control:focus {
+    box-shadow: none !important;
+}
+
+/* Hiệu ứng mượt mà khi di chuột */
+.card {
+    transition: transform 0.2s ease;
+}
+.card:hover {
+    transform: translateY(-2px);
+}

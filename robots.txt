@@ -1,7 +1,0 @@
-User-agent: *
-Disallow: /secret.html
-
-User-agent: ia_archiver
-Allow: /
-
-Sitemap: https://abcsnoob.github.io/sitemap.xml

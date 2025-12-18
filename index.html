@@ -1,515 +1,101 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <!-- Mô tả nội dung trang -->
-  <meta
-    name="description"
-    content="Trang chính thức của Abc's Noob – YouTuber Minecraft, lập trình HTML+CSS+JS. Xem blog, ứng dụng, và khám phá thêm!"
-  />
-
-  <!-- Từ khóa (không còn quá quan trọng, nhưng vẫn có ích nhỏ) -->
-  <meta
-    name="keywords"
-    content="Abc's Noob, Minecraft, lập trình, HTML, CSS, JS, YouTuber Việt Nam, blog cá nhân"
-  />
-
-  <!-- Tác giả -->
-  <meta name="author" content="Abc's Noob" />
-  <!-- Open Graph -->
-  <meta property="og:title" content="Abc's Noob - Web cá nhân, Minecraft & HTML Dev" />
-  <meta
-    property="og:description"
-    content="Trang chính thức của Abc's Noob – YouTuber Minecraft, lập trình HTML+CSS+JS. Xem blog, ứng dụng, và khám phá thêm!"
-  />
-  <meta property="og:image" content="https://abcsnoob.github.io/abcsnoob.webp" />
-  <meta property="og:url" content="https://abcsnoob.github.io/" />
-  <meta property="og:type" content="website" />
-
-  <!-- Twitter Card -->
-  <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="Abc's Noob - Web cá nhân, Minecraft & HTML Dev" />
-  <meta
-    name="twitter:description"
-    content="Trang chính thức của Abc's Noob – YouTuber Minecraft, lập trình HTML+CSS+JS. Xem blog, ứng dụng, và khám phá thêm!"
-  />
-  <meta name="twitter:image" content="https://abcsnoob.github.io/abcsnoob.webp" />
-  <meta
-    name="google-site-verification"
-    content="FEJ27R1qywhbJNZaGEBBjPmyFIvQjpkW7F76XQHEaKE"
-  />
-  <!-- Favicon basics -->
-  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
-  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
-
-  <!-- Android -->
-  <link rel="icon" type="image/png" sizes="192x192" href="/android-chrome-192x192.png" />
-  <link rel="icon" type="image/png" sizes="512x512" href="/android-chrome-512x512.png" />
-
-  <!-- iOS -->
-  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-
-  <!-- Web App Manifest -->
-  <link rel="manifest" href="/site.webmanifest" />
-
-  <!-- Theme for mobile browser -->
-  <meta name="theme-color" content="#ffffff" />
-
-  <!-- Canonical URL -->
-  <link rel="canonical" href="https://abcsnoob.github.io/" />
-  <title>Abc's Noob's Website</title>
-
-  <!-- Bootstrap CSS -->
-  <link
-    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css"
-    rel="stylesheet"
-    crossorigin="anonymous"
-  />
-  <link href="styles.css" rel="stylesheet" />
-  <link rel="icon" href="assets/image/favicon.ico" type="image/x-icon" />
-
-  <!-- Bootstrap JS Bundle -->
-  <script
-    src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"
-    crossorigin="anonymous"
-    defer
-  ></script>
-  <script
-    defer
-    src="https://cloud.umami.is/script.js"
-    data-website-id="c4ef9b7d-4dd6-4301-9bcc-5eaf4c5fe439"
-  ></script>
-  <!-- Font Awesome -->
-  <link
-    rel="stylesheet"
-    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
-  />
-  <style>
-    @keyframes gradientShift {
-      0% {
-        background-position: 0% 50%;
-      }
-      50% {
-        background-position: 100% 50%;
-      }
-      100% {
-        background-position: 0% 50%;
-      }
-    }
-
-    .news-alert {
-      font-weight: bold;
-      padding: 0.3rem 1rem;
-      border-radius: 0.25rem;
-      color: white;
-      background: linear-gradient(270deg, #ff416c, #ff4b2b, #1f4037, #99f2c8);
-      background-size: 800% 800%;
-      animation: gradientShift 10s ease infinite;
-      cursor: default;
-      margin-left: 1rem;
-      user-select: none;
-      white-space: nowrap;
-      display: flex;
-      align-items: center;
-      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-    }
-
-/* ================= Navbar ================= */
-.navbar {
-  transition: all 0.4s ease;
-  width: 100%;
-  top: 0;
-  left: 0;
-  position: sticky;
-  z-index: 999;
-  padding: 1rem;
-  background-color: #222;
-}
-
-/* Shrink navbar */
-.navbar.shrink {
-  position: fixed;
-  bottom: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 90%;
-  max-width: 900px;
-  height: 45px;
-  border-radius: 120px;
-  padding: 0.2rem 0.6rem;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.4);
-  background-color: rgba(30,30,30,0.95);
-  z-index: 9999;
-}
-
-/* Brand logo shrink */
-.navbar.shrink .navbar-brand img {
-  width: 24px;
-  height: 24px;
-  transition: all 0.3s ease;
-}
-
-/* ================= News Alert ================= */
-.news-alert {
-  display: block;
-  width: 100%;
-  overflow: hidden;
-  white-space: nowrap;
-  font-weight: bold;
-  padding: 0.2rem 0.5rem;
-  border-radius: 5px;
-  color: #fff;
-  background: linear-gradient(270deg, #ff416c, #ff4b2b, #1f4037, #99f2c8);
-  background-size: 800% 800%;
-  animation: gradientShift 5s ease infinite;
-  font-size: 0.75rem;
-}
-
-.news-alert span {
-  display: inline-block;
-  padding-left: 100%;
-  animation: marquee 10s linear infinite;
-}
-
-/* Keyframes */
-@keyframes gradientShift {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
-}
-
-@keyframes marquee {
-  0% { transform: translateX(0%); }
-  100% { transform: translateX(-100%); }
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-  .news-alert { font-size: 0.65rem; }
-}
-  </style>
+      <!-- Cấu hình mã hóa, viewport --> 
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Cấu hình meta tags -->
+    <meta name="description" content="Trang chính thức của Abc's Noob – YouTuber Minecraft, lập trình HTML+CSS+JS. Xem blog, ứng dụng, và khám phá thêm!"/>
+    <meta name="keywords" content="Abc's Noob, Minecraft, lập trình, HTML, CSS, JS, YouTuber Việt Nam, blog cá nhân"/>
+    <meta name="author" content="Abc's Noob" />
+    <meta property="og:title" content="Abc's Noob - Web cá nhân, Minecraft & HTML Dev" />
+    <meta property="og:description" content="Trang chính thức của Abc's Noob – YouTuber Minecraft, lập trình HTML+CSS+JS. Xem blog, ứng dụng, và khám phá thêm!"/>
+    <meta property="og:image" content="https://abcsnoob.github.io/abcsnoob.webp" />
+    <meta property="og:url" content="https://abcsnoob.github.io/" />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Abc's Noob - Web cá nhân, Minecraft & HTML Dev" />
+    <meta name="twitter:description" content="Trang chính thức của Abc's Noob – YouTuber Minecraft, lập trình HTML+CSS+JS. Xem blog, ứng dụng, và khám phá thêm!"/>
+    <meta name="twitter:image" content="https://abcsnoob.github.io/abcsnoob.webp" />
+    <!-- Cấu hình Google Site Verification -->
+    <meta name="google-site-verification" content="FEJ27R1qywhbJNZaGEBBjPmyFIvQjpkW7F76XQHEaKE"/>
+    <!-- Cấu hình favicon và manifest -->
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/android-chrome-192x192.png" />
+    <link rel="icon" type="image/png" sizes="512x512" href="/android-chrome-512x512.png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <meta name="theme-color" content="#ffffff" />
+    <link rel="canonical" href="https://abcsnoob.github.io/" />
+    <!--Tiêu đề trang web-->
+    <title>Abc's Noob's Website</title>
+    <!-- Liên kết tới Bootstrap, CSS tùy chỉnh, favicon và các script khác -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous"/>
+    <link href="./assets/css/style.css" rel="stylesheet" />
+    <link rel="icon" href="assets/image/favicon.ico" type="image/x-icon"/>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous" defer></script>
+    <script defer src="https://cloud.umami.is/script.js" data-website-id="c4ef9b7d-4dd6-4301-9bcc-5eaf4c5fe439"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
 </head>
-
 <body>
-  <!-- Navbar -->
-<!-- Navbar -->
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-  <div class="container-fluid">
-    <a class="navbar-brand d-flex align-items-center animated-loop" href="./">
-      <img
-        src="https://abcsnoob.github.io/abcsnoob.webp"
-        alt="Logo"
-        width="30"
-        height="30"
-        class="me-2"
-      />
-      Abc's Noob
-    </a>
-    <button
-      class="navbar-toggler"
-      type="button"
-      data-bs-toggle="collapse"
-      data-bs-target="#mainNavbar"
-    >
-      <span class="navbar-toggler-icon"></span>
-    </button>
-    <div class="collapse navbar-collapse" id="mainNavbar">
-      <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
-        <li class="nav-item"><a class="nav-link active" href="./">Trang chủ</a></li>
-        <li class="nav-item"><a class="nav-link" href="blog/">Blog</a></li>
-        <li class="nav-item"><a class="nav-link" href="mailto:abcsspprt@gmail.com">Liên hệ</a></li>
-        <li class="nav-item"><a class="nav-link" href="application">Các ứng dụng của tôi</a></li>
-        <li class="nav-item"><a class="nav-link" href="donate">Ủng hộ tôi</li>
-      </ul>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
+        <div class="container">
+            <a class="navbar-brand" href="./"><img class="logo" src="./assets/image/abcsnoob.webp"></img>Abc's Noob</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link active" href="./">Trang chủ</a></li>
+                    <li class="nav-item"><a class="nav-link" href="./blog">Blog</a></li>
+                    <li class="nav-item"><a class="nav-link" href="./apps">Ứng dụng</a></li>
+                    <li class="nav-item"><a class="nav-link" href="./contact">Liên hệ</a></li>
+                    <li class="nav-item"><a class="nav-link" href="./donate">Donate</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+<div class="bg-dark text-white text-center py-5 shadow-sm">
+    <div class="container">
+        <img src="./assets/image/abcsnoob.webp" alt="Logo" class="rounded-circle mb-4 shadow" style="width: 150px; height: 150px; object-fit: cover; border: 5px solid #fff;">
+        <h1 class="display-4 fw-bold">Abc's Noob</h1>
+        <p class="lead">YouTuber Minecraft | HTML+CSS+JS Dev | Random Guy on Internet</p>
+        <div class="mt-4">
+            <a href="./blog" class="btn btn-primary btn-lg px-4 me-md-2">Xem Blog</a>
+            <a href="./apps" class="btn btn-outline-light btn-lg px-4">Khám phá App</a>
+        </div>
     </div>
-  </div>
-</nav>
+</div>
 
-<!-- Container cho news alert, ngay dưới navbar -->
-
-
-  <!-- Nội dung chính -->
-  <div class="container py-5">
+<div class="container my-5">
     <div class="row align-items-center">
-      <div class="col-md-6">
-        <h1 class="animated-loop">Abc's Noob</h1>
-        <h5>Một khứa Youtuber khoái với Minecraft kèm với HTML+CSS+JS</h5>
-        <p>Người biết một chút tiếng Anh</p>
-        <blockquote class="blockquote mt-4">
-          <p class="mb-0 animated-loop">"Minecraft is best. Do you like it?"</p>
-          <footer class="blockquote-footer">Abc's Noob</footer>
-        </blockquote>
-      </div>
-      <div class="col-md-6 text-center">
-        <a href="huggingme.html">
-          <img
-            src="assets/image/abcsnoobpointleft.png"
-            alt="abcsnoob-1"
-            class="img-fluid"
-            loading="lazy"
-          />
-        </a>
-      </div>
+        <div class="col-lg-6">
+            <h2 class="fw-bold mb-4">Chào mừng đến với thế giới của mình!</h2>
+            <p class="text-muted">Đây là nơi mình chia sẻ những cập nhật mới nhất, các dự án mã nguồn mở và những câu chuyện xoay quanh thế giới Minecraft.</p>
+            <div class="d-flex mb-3">
+                <div class="flex-shrink-0"><i class="fa-solid fa-gamepad text-primary fs-4"></i></div>
+                <div class="ms-3">
+                    <h5>Minecraft Content</h5>
+                    <p>Sáng tạo, sinh tồn và chia sẻ kiến thức về trò chơi phổ biến nhất thế giới.</p>
+                </div>
+            </div>
+            <div class="d-flex mb-3">
+                <div class="flex-shrink-0"><i class="fa-solid fa-code text-success fs-4"></i></div>
+                <div class="ms-3">
+                    <h5>Web Development</h5>
+                    <p>Yêu thích lập trình với HTML, CSS và JavaScript để tạo ra những ứng dụng hữu ích.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6 text-center">
+            <div class="p-5 bg-light rounded-3 shadow-sm border">
+                <i class="fa-solid fa-terminal fa-5x mb-3 text-secondary"></i>
+                <p class="fst-italic text-secondary">"Học lập trình cũng giống như chơi Minecraft, bạn bắt đầu từ những khối vuông nhỏ nhất để tạo nên kỳ quan."</p>
+            </div>
+        </div>
     </div>
-  </div>
-<div id="newsBannerContainer"></div>
-
-  <!-- FAQ -->
-  <div class="container py-4">
-    <h2 class="mb-3">🧠 Bạn có câu hỏi? Tôi sẽ trả lời!</h2>
-    <div class="accordion" id="faqAccordion">
-      <div class="accordion-item">
-        <h2 class="accordion-header">
-          <button
-            class="accordion-button"
-            type="button"
-            data-bs-toggle="collapse"
-            data-bs-target="#collapse1"
-            aria-expanded="true"
-          >
-            ❓ Bạn là ai?
-          </button>
-        </h2>
-        <div id="collapse1" class="accordion-collapse collapse show">
-          <div class="accordion-body">- Tôi là Abc's Noob 😤</div>
-        </div>
-      </div>
-      <div class="accordion-item">
-        <h2 class="accordion-header">
-          <button
-            class="accordion-button"
-            type="button"
-            data-bs-toggle="collapse"
-            data-bs-target="#collapse2"
-          >
-            ❓ Bạn ở đâu?
-          </button>
-        </h2>
-        <div id="collapse2" class="accordion-collapse collapse">
-          <div class="accordion-body">- Bí mật tuyệt đối: <strong>Tôi không nói đâu</strong> :)</div>
-        </div>
-      </div>
-      <div class="accordion-item">
-        <h2 class="accordion-header">
-          <button
-            class="accordion-button"
-            type="button"
-            data-bs-toggle="collapse"
-            data-bs-target="#collapse3"
-          >
-            ❓ Bạn chơi game gì ngoài Minecraft?
-          </button>
-        </h2>
-        <div id="collapse3" class="accordion-collapse collapse">
-          <div class="accordion-body">- Ngoài Minecraft thì tôi có chơi Roblox. Hết rồi á!</div>
-        </div>
-      </div>
-      <div class="accordion-item">
-        <h2 class="accordion-header">
-          <button
-            class="accordion-button"
-            type="button"
-            data-bs-toggle="collapse"
-            data-bs-target="#collapse4"
-          >
-            ❓ Tôi muốn chat với bạn thì làm sao?
-          </button>
-        </h2>
-        <div id="collapse4" class="accordion-collapse collapse">
-          <div class="accordion-body">- Mời bạn vào Discord!</div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Danh sách server -->
-  <div class="container py-4">
-    <h3 class="mb-3">Các server tôi hay chơi:</h3>
-    <ul class="list-group">
-      <li class="list-group-item">
-        <a href="redirect.html?url=https://3fmc.com">3fmc.com</a>
-        <span class="badge bg-primary">Bedwars</span>
-      </li>
-      <li class="list-group-item">
-        <a href="redirect.html?url=https://minhsoora.site">MinhSoora Network</a>
-        <span class="badge bg-success">Survival</span>
-      </li>
-      <li class="list-group-item">
-        <a href="redirect.html?url=https://earth.openmc.vn/#world;flat;13568,64,-3505;4">OpenMC</a>
-        <span class="badge bg-warning text-dark">Survival</span>
-      </li>
-    </ul>
-  </div>
-
-  <!-- Footer -->
-  <footer class="bg-dark text-light mt-5 py-4">
-    <div class="container text-center">
-      <h4 class="mb-3">Muốn xem tôi làm gì:</h4>
-      <div class="d-flex flex-wrap justify-content-center gap-4 fs-4">
-        <a href="https://youtube.com/@abcsnoob" target="_blank"
-          ><i class="fab fa-youtube animated-loop-icon"></i
-        ></a>
-        <a href="https://twitch.tv/abcsnoobcute" target="_blank"
-          ><i class="fab fa-twitch animated-loop-icon"></i
-        ></a>
-        <a href="https://steamcommunity.com/profiles/76561199839158034/" target="_blank"
-          ><i class="fab fa-steam animated-loop-icon"></i
-        ></a>
-        <a href="https://github.com/abcsnoob" target="_blank"
-          ><i class="fab fa-github animated-loop-icon"></i
-        ></a>
-        <a href="/discord?id=1404807126710353930" target="_blank"
-          ><i class="fab fa-discord animated-loop-icon"></i
-        ></a>
-        <a href="https://www.reddit.com/user/FullPurchase7179/" target="_blank"
-          ><i class="fab fa-reddit animated-loop-icon"></i
-        ></a>
-        <a href="https://www.linkedin.com/in/abc-s-noob-589a33358/" target="_blank"
-          ><i class="fab fa-linkedin animated-loop-icon"></i
-        ></a>
-        <a href="https://www.tiktok.com/@abcsnoob" target="_blank"
-          ><i class="fab fa-tiktok animated-loop-icon"></i
-        ></a>
-      </div>
-      <a href="https://my.flightradar24.com/Abcs_noob" target="_blank">
-        <img
-          src="https://abcsnoob.github.io/files/flightradar24.svg"
-          class="animated-loop-icon"
-          alt="Flight Radar 24 Icon"
-        />
-      </a>
-    </div>
-  </footer>
-
-  <!-- Cookie Overlay -->
-  <div
-    id="cookieOverlay"
-    style="
-      position: fixed;
-      z-index: 9999;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background-color: rgba(0, 0, 0, 0.9);
-      color: white;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      flex-direction: column;
-      text-align: center;
-      padding: 2rem;
-      font-family: sans-serif;
-    "
-  >
-    <h4>🍪 Cookie &amp; Nhạc nền</h4>
-    <p>Trang này dùng cookie và có nhạc nền. Bạn chấp nhận không?</p>
-    <button id="acceptCookies" class="btn btn-success mt-3">Chấp nhận và tiếp tục</button>
-  </div>
-
-  <!-- Audio -->
-  <audio id="bgMusic" loop preload="auto">
-    <source src="assets/music/Tobu-Hope(Original Mix).mp3" type="audio/mpeg" />
-    Trình duyệt không hỗ trợ phát nhạc.
-  </audio>
-
-  <!-- JavaScript logic -->
-
-  <script>
-// Navbar shrink khi cuộn
-// Navbar shrink on scroll
-const navbar = document.querySelector('.navbar');
-window.addEventListener('scroll', () => {
-  if (window.scrollY > 100) {
-    navbar.classList.add('shrink');
-  } else {
-    navbar.classList.remove('shrink');
-  }
-});
-// News alert băng rôn
-const newsText = "Vừa mở donate. Có hỗ trợ Bitcoin :)";
-const newsContainer = document.createElement('div');
-newsContainer.className = 'news-alert';
-const span = document.createElement('span');
-span.textContent = newsText;
-newsContainer.appendChild(span);
-document.getElementById('newsBannerContainer').appendChild(newsContainer);
-    const overlay = document.getElementById("cookieOverlay");
-    const acceptBtn = document.getElementById("acceptCookies");
-    const music = document.getElementById("bgMusic");
-
-    // ✅ Hàm tạo cookie
-    function setCookie(name, value, days) {
-      const d = new Date();
-      d.setTime(d.getTime() + days * 24 * 60 * 60 * 1000);
-      const expires = "expires=" + d.toUTCString();
-      document.cookie = name + "=" + value + ";" + expires + ";path=/";
-    }
-
-    // ✅ Hàm lấy cookie
-    function getCookie(name) {
-      const decodedCookie = decodeURIComponent(document.cookie);
-      const ca = decodedCookie.split(";");
-      name = name + "=";
-      for (let i = 0; i < ca.length; i++) {
-        let c = ca[i];
-        while (c.charAt(0) == " ") {
-          c = c.substring(1);
-        }
-        if (c.indexOf(name) == 0) {
-          return c.substring(name.length, c.length);
-        }
-      }
-      return "";
-    }
-
-    window.addEventListener("DOMContentLoaded", () => {
-      const accepted = getCookie("autoplayAccepted");
-      if (accepted === "yes") {
-        overlay.style.display = "none";
-
-        const triggerPlay = () => {
-          music.play().catch(() => {});
-          removeAllListeners();
-        };
-
-        // Nếu nhạc có thể play được luôn (ví dụ desktop)
-        music.play().then(() => {
-          overlay.style.display = "none";
-        }).catch(() => {
-          // Nếu không, đợi user click để play
-          document.addEventListener("click", triggerPlay);
-          document.addEventListener("keydown", triggerPlay);
-        });
-
-        function removeAllListeners() {
-          document.removeEventListener("click", triggerPlay);
-          document.removeEventListener("keydown", triggerPlay);
-        }
-      }
-    });
-
-    acceptBtn.addEventListener("click", () => {
-      setCookie("autoplayAccepted", "yes", 30);
-      overlay.style.display = "none";
-      music.play().catch(() => {});
-    });
-  </script>
-</body>
+</div>
+<script type="module" src="./assets/js/warn.js"></script>
+  </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
