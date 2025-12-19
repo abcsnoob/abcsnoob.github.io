@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Trang chính thức của Abc's Noob – YouTuber Minecraft, lập trình HTML+CSS+JS."/>
+    <meta name="author" content="Abc's Noob" />
+    <title>Chat với Abc's Noob AI</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+    <link href="./assets/css/style.css" rel="stylesheet" />
+
+    <style>
+        /* Tùy chỉnh giao diện Chat Terminal */
+        body { background-color: #121212; color: #eee; }
+        
+        .chat-container {
+            max-width: 900px;
+            margin: 30px auto;
+            background: #000;
+            border: 1px solid #00ff00;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.1);
+        }
+
+        .chat-header {
+            background: #1a1a1a;
+            padding: 10px 20px;
+            border-bottom: 1px solid #00ff00;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        #chat-window {
+            height: 500px;
+            overflow-y: auto;
+            padding: 20px;
+            font-family: 'Courier New', monospace;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .message { padding: 10px 15px; border-radius: 5px; max-width: 85%; line-height: 1.5; }
+        .user-message { 
+            align-self: flex-end; 
+            background: #004400; 
+            color: #00ff00; 
+            border-left: 3px solid #00ff00;
+        }
+        .bot-message { 
+            align-self: flex-start; 
+            background: #1a1a1a; 
+            color: #00ff00; 
+            border-left: 3px solid #00ff00;
+            white-space: pre-wrap;
+        }
+
+        .input-group {
+            background: #1a1a1a;
+            padding: 15px;
+            border-top: 1px solid #00ff00;
+        }
+
+        #user-input {
+            background: #000;
+            border: 1px solid #00ff00;
+            color: #00ff00;
+            border-radius: 0;
+        }
+
+        #user-input:focus {
+            box-shadow: 0 0 10px #00ff00;
+            outline: none;
+        }
+
+        .btn-send {
+            background: #00ff00;
+            color: #000;
+            font-weight: bold;
+            border-radius: 0;
+            border: none;
+        }
+
+        .btn-send:hover { background: #00cc00; }
+
+        /* Scrollbar xanh lè kiểu hacker */
+        #chat-window::-webkit-scrollbar { width: 5px; }
+        #chat-window::-webkit-scrollbar-thumb { background: #00ff00; }
+        
+        .logo { width: 30px; height: 30px; border-radius: 50%; margin-right: 10px; }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
+        <div class="container">
+            <a class="navbar-brand" href="../"><img class="logo" src="https://abcsnoob.github.io/abcsnoob.webp">Abc's Noob</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="../">Trang chủ</a></li>
+                    <li class="nav-item"><a class="nav-link" href="../blog">Blog</a></li>
+                    <li class="nav-item"><a class="nav-link" href="../apps">Ứng dụng</a></li>
+                    <li class="nav-item"><a class="nav-link" href="../contact">Liên hệ</a></li>
+                    <li class="nav-item"><a class="nav-link" href="../donate">Donate</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="./chat">Chat</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="chat-container">
+            <div class="chat-header">
+                <span><i class="fas fa-terminal"></i> ABCC_NOOB_TERMINAL v2.0</span>
+                <span class="badge bg-success">ONLINE [LITE-FLASH]</span>
+            </div>
+            
+            <div id="chat-window">
+                <div class="message bot-message">>>> [HỆ THỐNG]: Đã kết nối với Node của Abc's Noob. 
+Giao diện JavaScript đã sẵn sàng. Gáy gì đi anh em! #FreeAbcsnoobhelper</div>
+            </div>
+
+            <div class="input-group">
+                <input type="text" id="user-input" class="form-control" placeholder="Nhập lệnh hoặc hỏi về Bitcoin..." autocomplete="off">
+                <button class="btn btn-send" onclick="sendMessage()">PUSH</button>
+            </div>
+        </div>
+        <p class="text-center text-muted small">Powered by Cloudflare Workers & Gemini 1.5 Flash-Lite</p>
+    </div>
+
+    <script>
+        const WORKER_URL = 'https://abcsnoobai.abcsnoob.workers.dev';
+        const chatWindow = document.getElementById('chat-window');
+        const userInput = document.getElementById('user-input');
+
+        async function sendMessage() {
+            const prompt = userInput.value.trim();
+            if (!prompt) return;
+
+            // Add user message
+            addMessage(prompt, 'user-message', 'YOU');
+            userInput.value = '';
+
+            // Add loading placeholder
+            const loadingId = 'load-' + Date.now();
+            addMessage('Đang tính toán thuật toán Fireball...', 'bot-message', 'NOOB', loadingId);
+
+            try {
+                const response = await fetch(WORKER_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ prompt: prompt })
+                });
+
+                const data = await response.json();
+                document.getElementById(loadingId).innerText = `>>> ${data.text || data.error}`;
+                
+            } catch (err) {
+                document.getElementById(loadingId).innerText = `>>> [BUG]: Không kết nối được server. Chắc tại thiếu Satoshi rồi!`;
+            }
+            
+            chatWindow.scrollTop = chatWindow.scrollHeight;
+        }
+
+        function addMessage(text, className, label, id = '') {
+            const div = document.createElement('div');
+            div.className = `message ${className}`;
+            if(id) div.id = id;
+            div.innerHTML = `<strong>[${label}]:</strong> ${text}`;
+            chatWindow.appendChild(div);
+            chatWindow.scrollTop = chatWindow.scrollHeight;
+        }
+
+        // Enter key support
+        userInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendMessage();
+        });
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
