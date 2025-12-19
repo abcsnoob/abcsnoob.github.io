@@ -22,9 +22,10 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 const ADMIN_EMAIL = "abcsspprt@gmail.com";
 
-// ==========================================
-// AUTH & SPINNER TẢI TÀI KHOẢN
-// ==========================================
+// --- QUẢN LÝ REPLY ---
+let replyTo = { id: null, name: null };
+
+// --- AUTHENTICATION ---
 const authStatus = document.getElementById("auth-status");
 authStatus.innerHTML = `<div class="spinner-border spinner-border-sm text-primary"></div> <span class="ms-1 small text-muted">Đang check...</span>`;
 
@@ -53,9 +54,7 @@ onAuthStateChanged(auth, (user) => {
     }
 });
 
-// ==========================================
-// ACTIONS (REACT, COMMENT, SHARE)
-// ==========================================
+// --- ACTIONS ---
 window.addReaction = async (postId, type) => {
     const user = auth.currentUser;
     if (!user) return alert("Đăng nhập đi ông cháu!");
@@ -66,18 +65,33 @@ window.addReaction = async (postId, type) => {
     await updateDoc(postRef, { [`reactions.${type}`]: list.includes(user.uid) ? arrayRemove(user.uid) : arrayUnion(user.uid) });
 };
 
+window.setReply = (postId, commentId, userName) => {
+    replyTo = { id: commentId, name: userName };
+    const input = document.getElementById(`in-${postId}`);
+    input.placeholder = `Đang trả lời ${userName}... (Xóa hết để hủy)`;
+    input.focus();
+};
+
 window.sendComment = async (postId) => {
     const user = auth.currentUser;
     const input = document.getElementById(`in-${postId}`);
     if (!user || !input.value.trim()) return;
+
+    // Nếu người dùng xóa sạch chữ, tự động hủy reply
+    if (input.value.trim() === "") replyTo = { id: null, name: null };
+
     await updateDoc(doc(db, "posts", postId), {
         comments: arrayUnion({
+            id: Date.now().toString(),
+            parentId: replyTo.id,
             userName: user.displayName,
             text: input.value,
             date: new Date().toLocaleString('vi-VN', { hour:'2-digit', minute:'2-digit', day:'2-digit', month:'2-digit' })
         })
     });
     input.value = "";
+    input.placeholder = "Viết bình luận...";
+    replyTo = { id: null, name: null };
 };
 
 window.sharePost = (id, title) => {
@@ -86,9 +100,31 @@ window.sharePost = (id, title) => {
     else { navigator.clipboard.writeText(url); alert("Đã copy link!"); }
 };
 
-// ==========================================
-// RENDER REALTIME + XỬ LÝ ID KHÔNG TỒN TẠI
-// ==========================================
+// --- RENDER COMMENT TREE (A-B-C) ---
+function renderCommentTree(comments, postId, parentId = null, level = 0) {
+    const filtered = comments.filter(c => c.parentId === parentId);
+    if (filtered.length === 0) return "";
+
+    return filtered.map(c => `
+        <div class="comment-item ${level > 0 ? 'ms-3 ps-2 border-start' : ''} mt-2">
+            <div class="bg-white p-2 px-3 rounded-3 shadow-sm border-0 small">
+                <div class="d-flex justify-content-between">
+                    <b class="text-primary" style="font-size:0.75rem">${c.userName}</b>
+                    <span class="text-muted" style="font-size:0.6rem">${c.date}</span>
+                </div>
+                <div class="mt-1 text-dark">${c.text}</div>
+                <button class="btn btn-link p-0 text-muted small text-decoration-none mt-1" 
+                        style="font-size:0.65rem" 
+                        onclick="setReply('${postId}', '${c.id}', '${c.userName}')">
+                    <i class="fa-solid fa-reply me-1"></i>Phản hồi
+                </button>
+            </div>
+            ${renderCommentTree(comments, postId, c.id, level + 1)}
+        </div>
+    `).join('');
+}
+
+// --- MAIN RENDER ---
 onSnapshot(query(collection(db, "posts"), orderBy("createdAt", "desc")), (snapshot) => {
     const container = document.getElementById("blog-container");
     const activeId = new URLSearchParams(window.location.search).get('id');
@@ -99,7 +135,6 @@ onSnapshot(query(collection(db, "posts"), orderBy("createdAt", "desc")), (snapsh
         return;
     }
 
-    // Biến kiểm tra xem có tìm thấy bài viết khớp với ID không
     let postFound = false;
     let htmlContent = "";
 
@@ -107,7 +142,6 @@ onSnapshot(query(collection(db, "posts"), orderBy("createdAt", "desc")), (snapsh
         const post = doc.data();
         const id = doc.id;
 
-        // Logic lọc ID
         if (activeId && id !== activeId) return;
         if (activeId && id === activeId) postFound = true;
 
@@ -127,10 +161,12 @@ onSnapshot(query(collection(db, "posts"), orderBy("createdAt", "desc")), (snapsh
                         </button>
                     </div>
                     <h3 class="fw-bold mb-3">${post.title}</h3>
+                    
                     <div class="post-main-wrapper position-relative ${isExp ? 'is-expanded' : 'is-truncated'}">
-                        <div style="white-space: pre-wrap; line-height: 1.7;">${post.content}</div>
+                        <div class="post-content-body" style="white-space: pre-wrap; line-height: 1.7;">${post.content}</div>
                         ${!isExp ? `<div class="read-more-overlay"><a href="?id=${id}" class="btn btn-dark btn-sm rounded-pill px-4 shadow fw-bold">Xem thêm...</a></div>` : ''}
                     </div>
+
                     ${isExp ? `
                         <div class="mt-4 pt-4 border-top">
                             <div class="d-flex flex-wrap gap-2 mb-4">
@@ -143,14 +179,10 @@ onSnapshot(query(collection(db, "posts"), orderBy("createdAt", "desc")), (snapsh
                             </div>
                             <div class="p-3 bg-light rounded-4">
                                 <h6 class="fw-bold mb-3 small">Bình luận (${post.comments?.length || 0})</h6>
-                                <div class="d-grid gap-2 mb-3">
-                                    ${post.comments?.map(c => `
-                                        <div class="bg-white p-2 px-3 rounded-3 shadow-sm border-0 small">
-                                            <div class="d-flex justify-content-between"><b class="text-primary" style="font-size:0.75rem">${c.userName}</b><span class="text-muted" style="font-size:0.65rem">${c.date}</span></div>
-                                            <div class="mt-1">${c.text}</div>
-                                        </div>`).join('') || '<p class="text-muted small text-center">Hãy là người đầu tiên bình luận!</p>'}
+                                <div class="mb-3">
+                                    ${post.comments && post.comments.length > 0 ? renderCommentTree(post.comments, id) : '<p class="text-muted small text-center">Chưa có bình luận nào.</p>'}
                                 </div>
-                                <div class="input-group bg-white rounded-pill p-1 border shadow-sm">
+                                <div class="input-group bg-white rounded-pill p-1 border shadow-sm mt-3">
                                     <input type="text" id="in-${id}" class="form-control border-0 bg-transparent ps-3 shadow-none small" placeholder="Viết bình luận...">
                                     <button class="btn btn-primary rounded-pill px-4 btn-sm" onclick="sendComment('${id}')"><i class="fa-solid fa-paper-plane"></i></button>
                                 </div>
@@ -161,15 +193,8 @@ onSnapshot(query(collection(db, "posts"), orderBy("createdAt", "desc")), (snapsh
             </div>`;
     });
 
-    // HIỂN THỊ LỖI KHI ID KHÔNG TỒN TẠI
     if (activeId && !postFound) {
-        container.innerHTML = `
-            <div class="text-center py-5">
-                <div class="display-1 text-muted mb-3"><i class="fa-solid fa-face-frown-open"></i></div>
-                <h2 class="fw-bold">404 - Post Đếch Tồn Tại</h2>
-                <p class="text-muted">ID này bị sai hoặc bài viết đã bị Admin "bay màu".</p>
-                <a href="?" class="btn btn-dark rounded-pill px-5 mt-3 shadow">Quay về trang chủ</a>
-            </div>`;
+        container.innerHTML = `<div class="text-center py-5"><h2 class="fw-bold">404 - Post Đếch Tồn Tại</h2><p class="text-muted">ID sai rồi ông cháu ơi.</p><a href="?" class="btn btn-dark rounded-pill px-5 mt-2">Quay lại</a></div>`;
     } else {
         container.innerHTML = htmlContent;
         if (activeId) window.scrollTo({ top: 0, behavior: 'smooth' });
