@@ -1,5 +1,4 @@
 (function() {
-    // 1. Danh sách ngôn ngữ đầy đủ
     const supportedLangs = {
         "vi": "Tiếng Việt", "en": "English", "zh": "中文 (Zhōngwén)", "ja": "日本語 (Nihongo)",
         "ko": "한국어 (Hangugeo)", "fr": "Français", "de": "Deutsch", "es": "Español",
@@ -13,7 +12,6 @@
 
     let targetLang = 'vi';
 
-    // 2. Khởi tạo hệ thống
     const init = async () => {
         const params = new URLSearchParams(window.location.search);
         targetLang = params.get('lang') || localStorage.getItem('user_lang');
@@ -27,20 +25,34 @@
         injectProfessionalDropdown(supportedLangs, targetLang);
 
         if (targetLang !== 'vi') {
-            await startMasterProcess();
+            startMasterProcess();
         }
     };
 
-    // 3. Tiến trình dịch và Theo dõi động
     const startMasterProcess = async () => {
         showTranslateToast(true);
+        
+        // Cú hích đầu tiên: Dịch ngay những gì đang có
         await translateNewNodes(document.body);
-        showTranslateToast(false);
+        
+        // Cú hích bổ trợ: Quét lại mỗi giây trong 6 giây đầu (chống Lazy Load/Async)
+        let count = 0;
+        const retryTimer = setInterval(() => {
+            translateNewNodes(document.body);
+            count++;
+            if (count > 6) {
+                clearInterval(retryTimer);
+                showTranslateToast(false);
+            }
+        }, 1000);
 
+        // Theo dõi lâu dài: Bất cứ khi nào có bài viết mới hoặc đổi chữ
         const observer = new MutationObserver((mutations) => {
             mutations.forEach(mutation => {
                 if (mutation.addedNodes.length > 0) {
-                    mutation.addedNodes.forEach(node => translateNewNodes(node));
+                    mutation.addedNodes.forEach(node => {
+                        if (node.nodeType === 1 || node.nodeType === 3) translateNewNodes(node.parentElement || node);
+                    });
                 }
                 if (mutation.type === 'characterData') {
                     translateNewNodes(mutation.target.parentElement);
@@ -48,14 +60,9 @@
             });
         });
 
-        observer.observe(document.body, { 
-            childList: true, 
-            subtree: true, 
-            characterData: true 
-        });
+        observer.observe(document.body, { childList: true, subtree: true, characterData: true });
     };
 
-    // 4. Hàm dịch Node với cơ chế Retry
     async function translateNewNodes(rootNode) {
         if (!rootNode || (rootNode.id === 'notranslate')) return;
         
@@ -63,7 +70,6 @@
         const walk = (node) => {
             if (node.id === 'notranslate' || ['SCRIPT', 'STYLE', 'TEXTAREA', 'INPUT'].includes(node.tagName)) return;
             if (node.nodeType === Node.TEXT_NODE && node.textContent.trim().length > 1) {
-                // Lọc bỏ số/giờ, chỉ dịch khi có chữ cái
                 if (/[a-zA-Zà-ỹÀ-Ỹ]/.test(node.textContent)) textNodes.push(node);
             } else {
                 node.childNodes.forEach(walk);
@@ -84,38 +90,29 @@
         }
     }
 
-    // 5. API Fetch với cơ chế Retry 3 lần
     async function fetchWithRetry(text, target, retries = 3) {
         const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=vi&tl=${target}&dt=t&q=${encodeURIComponent(text)}`;
-        
         for (let i = 0; i < retries; i++) {
             try {
                 const res = await fetch(url);
-                if (!res.ok) throw new Error("API Error");
+                if (!res.ok) throw new Error();
                 const json = await res.json();
                 return json[0].map(item => item[0]).join('');
             } catch (err) {
-                if (i === retries - 1) return text; // Thất bại sau 3 lần
-                await new Promise(r => setTimeout(r, 1000)); // Chờ 1s rồi thử lại
+                if (i === retries - 1) return text;
+                await new Promise(r => setTimeout(r, 1000));
             }
         }
     }
 
-    // 6. Giao diện Dropdown Chuyên nghiệp
     function injectProfessionalDropdown(langs, current) {
+        if (document.getElementById('notranslate-picker')) return;
         const wrapper = document.createElement('div');
-        wrapper.id = 'notranslate';
+        wrapper.id = 'notranslate-picker';
         wrapper.style.cssText = "position:fixed; bottom:25px; right:25px; z-index:1000000;";
 
         const select = document.createElement('select');
-        select.style.cssText = `
-            appearance: none; background: #fff; border: 1px solid #ddd;
-            padding: 10px 35px 10px 15px; border-radius: 12px; font-size: 14px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1); outline: none; cursor: pointer;
-            background-image: url('data:image/svg+xml;charset=US-ASCII,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20"><path fill="%23666" d="M5 7l5 5 5-5z"/></svg>');
-            background-repeat: no-repeat; background-position: right 10px center; background-size: 18px;
-            font-family: sans-serif;
-        `;
+        select.style.cssText = "appearance:none; background:#fff; border:1px solid #ddd; padding:10px 35px 10px 15px; border-radius:12px; font-size:14px; box-shadow:0 4px 15px rgba(0,0,0,0.1); outline:none; cursor:pointer; background-image:url('data:image/svg+xml;charset=US-ASCII,<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"20\" height=\"20\" viewBox=\"0 0 20 20\"><path fill=\"%23666\" d=\"M5 7l5 5 5-5z\"/></svg>'); background-repeat:no-repeat; background-position:right 10px center; background-size:18px; font-family:sans-serif;";
 
         for (const [code, name] of Object.entries(langs)) {
             const opt = new Option(name, code);
@@ -134,14 +131,13 @@
         document.body.appendChild(wrapper);
     }
 
-    // 7. Toast Thông báo
     function showTranslateToast(show) {
         let toast = document.getElementById('translate-toast');
         if (show) {
             if (!toast) {
                 toast = document.createElement('div');
                 toast.id = 'translate-toast';
-                toast.style.cssText = "position:fixed; top:20px; left:50%; transform:translateX(-50%); background:rgba(0,0,0,0.8); color:#fff; padding:10px 20px; border-radius:30px; font-size:13px; z-index:1000001; backdrop-filter:blur(5px); transition:opacity 0.4s; display:flex; align-items:center; gap:10px;";
+                toast.style.cssText = "position:fixed; top:20px; left:50%; transform:translateX(-50%); background:rgba(0,0,0,0.8); color:#fff; padding:10px 20px; border-radius:30px; font-size:13px; z-index:1000001; backdrop-filter:blur(5px); transition:opacity 0.4s; display:flex; align-items:center; gap:10px; pointer-events:none;";
                 toast.innerHTML = `<div class="loader"></div> Translating site...`;
                 const s = document.createElement('style');
                 s.innerHTML = ".loader{width:14px; height:14px; border:2px solid #fff; border-top-color:transparent; border-radius:50%; animation:spin 0.8s linear infinite;} @keyframes spin{to{transform:rotate(360deg)}}";
@@ -155,10 +151,10 @@
         }
     }
 
-    // Chạy hệ thống
-    if (document.readyState === "loading") {
-        document.addEventListener("DOMContentLoaded", init);
-    } else {
+    // Ép chạy bất kể trạng thái nào
+    if (document.readyState === "complete" || document.readyState === "interactive") {
         init();
+    } else {
+        window.addEventListener("load", init);
     }
 })();
