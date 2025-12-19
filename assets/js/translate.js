@@ -134,23 +134,40 @@
 
         
 
-        const textNodes = [];
+const getTextNodes = (root) => {
+    const textNodes = [];
+    const walker = document.createTreeWalker(
+        root,
+        NodeFilter.SHOW_TEXT | NodeFilter.SHOW_ELEMENT,
+        {
+            acceptNode: (node) => {
+                // 1. Chặn các Element không muốn quét
+                if (node.nodeType === Node.ELEMENT_NODE) {
+                    const excludedTags = ['SCRIPT', 'STYLE', 'TEXTAREA', 'INPUT'];
+                    const excludedIds = ['notranslate', 'notranslate-picker'];
+                    
+                    if (excludedTags.includes(node.tagName) || excludedIds.includes(node.id)) {
+                        return NodeFilter.FILTER_REJECT; // Loại bỏ cả node này và con của nó
+                    }
+                    return NodeFilter.FILTER_SKIP; // Bỏ qua element node, chỉ xét tiếp con của nó
+                }
 
-        const walk = (node) => {
-
-            if (node.id === 'notranslate' || ['SCRIPT', 'STYLE', 'TEXTAREA', 'INPUT'].includes(node.tagName)) return;
-
-            if (node.nodeType === Node.TEXT_NODE && node.textContent.trim().length > 1) {
-
-                if (/[a-zA-Zà-ỹÀ-Ỹ]/.test(node.textContent)) textNodes.push(node);
-
-            } else {
-
-                node.childNodes.forEach(walk);
-
+                // 2. Kiểm tra Text Node
+                const content = node.textContent.trim();
+                if (content.length > 1 && /[a-zA-Zà-ỹÀ-Ỹ]/.test(content)) {
+                    return NodeFilter.FILTER_ACCEPT;
+                }
+                
+                return NodeFilter.FILTER_REJECT;
             }
+        }
+    );
 
-        };
+    while (walker.nextNode()) {
+        textNodes.push(walker.currentNode);
+    }
+    return textNodes;
+};
 
 
 
@@ -271,50 +288,27 @@
         if (show) {
 
             if (!toast) {
-
                 toast = document.createElement('div');
-
                 toast.id = 'translate-toast';
-
                 toast.style.cssText = "position:fixed; top:20px; left:50%; transform:translateX(-50%); background:rgba(0,0,0,0.8); color:#fff; padding:10px 20px; border-radius:30px; font-size:13px; z-index:1000001; backdrop-filter:blur(5px); transition:opacity 0.4s; display:flex; align-items:center; gap:10px; pointer-events:none;";
-
                 toast.innerHTML = `<div class="loader"></div> Translating site...`;
-
                 const s = document.createElement('style');
-
                 s.innerHTML = ".loader{width:14px; height:14px; border:2px solid #fff; border-top-color:transparent; border-radius:50%; animation:spin 0.8s linear infinite;} @keyframes spin{to{transform:rotate(360deg)}}";
-
                 document.head.appendChild(s);
-
                 document.body.appendChild(toast);
-
             }
-
             toast.style.opacity = "1";
-
         } else if (toast) {
-
             toast.style.opacity = "0";
-
             setTimeout(() => toast.remove(), 400);
-
         }
-
     }
-
-
 
     // Ép chạy bất kể trạng thái nào
-
     if (document.readyState === "complete" || document.readyState === "interactive") {
-
         init();
-
     } else {
-
         window.addEventListener("load", init);
-
     }
-
 })();
 
