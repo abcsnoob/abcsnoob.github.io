@@ -40,7 +40,7 @@
         const retryTimer = setInterval(() => {
             translateNewNodes(document.body);
             count++;
-            if (count > 6) {
+            if (count > 3) {
                 clearInterval(retryTimer);
                 showTranslateToast(false);
             }
