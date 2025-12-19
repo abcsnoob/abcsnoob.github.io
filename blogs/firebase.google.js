@@ -48,7 +48,6 @@ window.createPost = async (title, content) => {
     await addDoc(collection(db, "posts"), {
         title, content, author: user.displayName,
         createdAt: serverTimestamp(),
-        // Khởi tạo đầy đủ các loại cảm xúc mới
         reactions: { like: [], heart: [], love: [], cry: [], haha: [], angry: [] },
         comments: []
     });
@@ -60,13 +59,8 @@ window.addReaction = async (postId, type) => {
     const postRef = doc(db, "posts", postId);
     const postSnap = await getDoc(postRef);
     const data = postSnap.data();
-    
-    // Đảm bảo lấy đúng mảng của loại reaction đó
     let list = Array.isArray(data.reactions?.[type]) ? data.reactions[type] : [];
-    
-    await updateDoc(postRef, { 
-        [`reactions.${type}`]: list.includes(user.uid) ? arrayRemove(user.uid) : arrayUnion(user.uid) 
-    });
+    await updateDoc(postRef, { [`reactions.${type}`]: list.includes(user.uid) ? arrayRemove(user.uid) : arrayUnion(user.uid) });
 };
 
 window.sendComment = async (postId) => {
@@ -100,6 +94,7 @@ onSnapshot(query(collection(db, "posts"), orderBy("createdAt", "desc")), (snapsh
         return;
     }
 
+    // Tự động cuộn lên đầu khi vào chi tiết
     if (activeId) window.scrollTo({ top: 0, behavior: 'smooth' });
 
     container.innerHTML = "";
@@ -107,15 +102,13 @@ onSnapshot(query(collection(db, "posts"), orderBy("createdAt", "desc")), (snapsh
         const post = doc.data();
         const id = doc.id;
 
+        // LỌC ID: Chỉ hiện bài khớp với tham số ?id=
         if (activeId && id !== activeId) return;
 
         const isExp = (id === activeId);
         const r = post.reactions || {};
-        
-        // Hàm phụ để kiểm tra xem user hiện tại đã react chưa
         const hasReacted = (type) => (r[type] || []).includes(user?.uid);
         const getCount = (type) => (r[type] || []).length;
-
         const time = post.createdAt ? new Date(post.createdAt.seconds * 1000).toLocaleString('vi-VN') : "...";
 
         container.innerHTML += `
@@ -130,10 +123,11 @@ onSnapshot(query(collection(db, "posts"), orderBy("createdAt", "desc")), (snapsh
 
                     <h3 class="fw-bold mb-3">${post.title}</h3>
                     
-                    <div class="post-content-container position-relative ${isExp ? '' : 'is-truncated'}">
-                        <div style="white-space: pre-wrap; line-height: 1.7;">${post.content}</div>
+                    <div class="post-main-wrapper position-relative ${isExp ? 'is-expanded' : 'is-truncated'}">
+                        <div class="post-content-body" style="white-space: pre-wrap; line-height: 1.7;">${post.content}</div>
+                        
                         ${!isExp ? `
-                            <div class="read-more-fade">
+                            <div class="read-more-overlay">
                                 <a href="?id=${id}" class="btn btn-dark btn-sm rounded-pill px-4 shadow fw-bold">Xem thêm...</a>
                             </div>
                         ` : ''}
@@ -142,12 +136,12 @@ onSnapshot(query(collection(db, "posts"), orderBy("createdAt", "desc")), (snapsh
                     ${isExp ? `
                         <div class="mt-4 pt-4 border-top">
                             <div class="d-flex flex-wrap gap-2 mb-4">
-                                <button class="btn ${hasReacted('like') ? 'btn-primary' : 'btn-outline-primary'} btn-sm rounded-pill px-3 shadow-sm" onclick="addReaction('${id}', 'like')">👍 ${getCount('like')}</button>
-                                <button class="btn ${hasReacted('heart') ? 'btn-danger' : 'btn-outline-danger'} btn-sm rounded-pill px-3 shadow-sm" onclick="addReaction('${id}', 'heart')">❤️ ${getCount('heart')}</button>
-                                <button class="btn ${hasReacted('love') ? 'btn-warning text-white' : 'btn-outline-warning'} btn-sm rounded-pill px-3 shadow-sm" onclick="addReaction('${id}', 'love')">🥰 ${getCount('love')}</button>
-                                <button class="btn ${hasReacted('haha') ? 'btn-info text-white' : 'btn-outline-info'} btn-sm rounded-pill px-3 shadow-sm" onclick="addReaction('${id}', 'haha')">😆 ${getCount('haha')}</button>
-                                <button class="btn ${hasReacted('cry') ? 'btn-secondary' : 'btn-outline-secondary'} btn-sm rounded-pill px-3 shadow-sm" onclick="addReaction('${id}', 'cry')">😭 ${getCount('cry')}</button>
-                                <button class="btn ${hasReacted('angry') ? 'btn-dark' : 'btn-outline-dark'} btn-sm rounded-pill px-3 shadow-sm" onclick="addReaction('${id}', 'angry')">😡 ${getCount('angry')}</button>
+                                <button class="btn ${hasReacted('like') ? 'btn-primary' : 'btn-outline-primary'} btn-sm rounded-pill px-3" onclick="addReaction('${id}', 'like')">👍 ${getCount('like')}</button>
+                                <button class="btn ${hasReacted('heart') ? 'btn-danger' : 'btn-outline-danger'} btn-sm rounded-pill px-3" onclick="addReaction('${id}', 'heart')">❤️ ${getCount('heart')}</button>
+                                <button class="btn ${hasReacted('love') ? 'btn-warning text-white' : 'btn-outline-warning'} btn-sm rounded-pill px-3" onclick="addReaction('${id}', 'love')">🥰 ${getCount('love')}</button>
+                                <button class="btn ${hasReacted('haha') ? 'btn-info text-white' : 'btn-outline-info'} btn-sm rounded-pill px-3" onclick="addReaction('${id}', 'haha')">😆 ${getCount('haha')}</button>
+                                <button class="btn ${hasReacted('cry') ? 'btn-secondary' : 'btn-outline-secondary'} btn-sm rounded-pill px-3" onclick="addReaction('${id}', 'cry')">😭 ${getCount('cry')}</button>
+                                <button class="btn ${hasReacted('angry') ? 'btn-dark' : 'btn-outline-dark'} btn-sm rounded-pill px-3" onclick="addReaction('${id}', 'angry')">😡 ${getCount('angry')}</button>
                             </div>
 
                             <div class="p-3 bg-light rounded-4">
