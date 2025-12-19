@@ -22,7 +22,6 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 const ADMIN_EMAIL = "abcsspprt@gmail.com";
 
-// Auth logic
 window.login = async (providerType) => {
     let provider = providerType === 'google' ? new GoogleAuthProvider() : new GithubAuthProvider();
     try { await signInWithPopup(auth, provider); } catch (e) { console.error(e); }
@@ -41,7 +40,6 @@ onAuthStateChanged(auth, (user) => {
     }
 });
 
-// Post actions
 window.createPost = async (title, content) => {
     const user = auth.currentUser;
     if (!user || user.email !== ADMIN_EMAIL) return;
@@ -83,7 +81,6 @@ window.sharePost = (id, title) => {
     else { navigator.clipboard.writeText(url); alert("Đã copy link!"); }
 };
 
-// Main Render
 onSnapshot(query(collection(db, "posts"), orderBy("createdAt", "desc")), (snapshot) => {
     const container = document.getElementById("blog-container");
     const activeId = new URLSearchParams(window.location.search).get('id');
@@ -94,7 +91,6 @@ onSnapshot(query(collection(db, "posts"), orderBy("createdAt", "desc")), (snapsh
         return;
     }
 
-    // Tự động cuộn lên đầu khi vào chi tiết
     if (activeId) window.scrollTo({ top: 0, behavior: 'smooth' });
 
     container.innerHTML = "";
@@ -102,7 +98,7 @@ onSnapshot(query(collection(db, "posts"), orderBy("createdAt", "desc")), (snapsh
         const post = doc.data();
         const id = doc.id;
 
-        // LỌC ID: Chỉ hiện bài khớp với tham số ?id=
+        // CHỈ HIỆN BÀI VỚI ID ĐÓ
         if (activeId && id !== activeId) return;
 
         const isExp = (id === activeId);
@@ -128,7 +124,7 @@ onSnapshot(query(collection(db, "posts"), orderBy("createdAt", "desc")), (snapsh
                         
                         ${!isExp ? `
                             <div class="read-more-overlay">
-                                <a href="?id=${id}" class="btn btn-dark btn-sm rounded-pill px-4 shadow fw-bold">Xem thêm...</a>
+                                <a href="?id=${id}" class="btn btn-dark btn-sm rounded-pill px-4 shadow-sm fw-bold">Xem thêm...</a>
                             </div>
                         ` : ''}
                     </div>
@@ -143,19 +139,18 @@ onSnapshot(query(collection(db, "posts"), orderBy("createdAt", "desc")), (snapsh
                                 <button class="btn ${hasReacted('cry') ? 'btn-secondary' : 'btn-outline-secondary'} btn-sm rounded-pill px-3" onclick="addReaction('${id}', 'cry')">😭 ${getCount('cry')}</button>
                                 <button class="btn ${hasReacted('angry') ? 'btn-dark' : 'btn-outline-dark'} btn-sm rounded-pill px-3" onclick="addReaction('${id}', 'angry')">😡 ${getCount('angry')}</button>
                             </div>
-
                             <div class="p-3 bg-light rounded-4">
-                                <h6 class="fw-bold mb-3">Bình luận (${post.comments?.length || 0})</h6>
+                                <h6 class="fw-bold mb-3 small">Bình luận (${post.comments?.length || 0})</h6>
                                 <div class="d-grid gap-2 mb-3">
                                     ${post.comments?.map(c => `
                                         <div class="bg-white p-2 px-3 rounded-3 shadow-sm border-0 small">
-                                            <div class="d-flex justify-content-between"><b class="text-primary">${c.userName}</b><span class="text-muted" style="font-size:0.7rem">${c.date}</span></div>
+                                            <div class="d-flex justify-content-between"><b class="text-primary" style="font-size:0.75rem">${c.userName}</b><span class="text-muted" style="font-size:0.65rem">${c.date}</span></div>
                                             <div class="mt-1">${c.text}</div>
                                         </div>`).join('') || '<p class="text-muted small text-center">Hãy là người đầu tiên bình luận!</p>'}
                                 </div>
                                 <div class="input-group bg-white rounded-pill p-1 border shadow-sm">
-                                    <input type="text" id="in-${id}" class="form-control border-0 bg-transparent ps-3 shadow-none" placeholder="Viết bình luận...">
-                                    <button class="btn btn-primary rounded-pill px-4" onclick="sendComment('${id}')"><i class="fa-solid fa-paper-plane"></i></button>
+                                    <input type="text" id="in-${id}" class="form-control border-0 bg-transparent ps-3 shadow-none small" placeholder="Viết bình luận...">
+                                    <button class="btn btn-primary rounded-pill px-4 btn-sm" onclick="sendComment('${id}')"><i class="fa-solid fa-paper-plane"></i></button>
                                 </div>
                             </div>
                             <div class="text-center mt-3"><a href="?" class="text-muted small text-decoration-none">← Quay lại danh sách</a></div>
