@@ -41,29 +41,36 @@ body{
     transform: translateY(-2px);
 }
 
-/* Container giới hạn 100px */
-.is-truncated {
-    max-height: 100px;
-    overflow: hidden;
+/* Container giới hạn 100px ở trang chủ */
+.post-main-wrapper.is-truncated {
+    max-height: 100px !important;
+    overflow: hidden !important;
+    position: relative;
 }
 
-/* Lớp phủ mờ dần */
-.read-more-fade {
+/* Khi xem chi tiết thì bỏ giới hạn */
+.post-main-wrapper.is-expanded {
+    max-height: none !important;
+}
+
+/* Hiệu ứng mờ dần và nút Xem thêm */
+.read-more-overlay {
     position: absolute;
     bottom: 0;
     left: 0;
     width: 100%;
-    height: 60px; /* Độ cao vùng mờ */
+    height: 70px; /* Tăng lên một chút cho mượt */
     display: flex;
-    align-items: flex-end; /* Đẩy nút xuống đáy */
+    align-items: flex-end;
     justify-content: center;
-    padding-bottom: 5px;
-    /* Mờ dần từ px thứ 90 (khoảng 10-15% cuối của container 100px) */
-    background: linear-gradient(to bottom, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 1) 90%);
+    padding-bottom: 10px;
+    /* Hiệu ứng mờ bắt đầu từ pixel thứ 90 (trong tổng 100px) */
+    background: linear-gradient(to bottom, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 1) 85%);
+    z-index: 10;
 }
 
-/* Tùy chỉnh nút Xem thêm cho nổi bật trên nền mờ */
-.read-more-fade .btn {
-    z-index: 2;
-    font-size: 0.8rem;
+/* Đảm bảo nội dung bên trong (Iframe, Video) không tràn ra ngoài */
+.post-content-body img, .post-content-body iframe {
+    max-width: 100%;
+    height: auto;
 }
