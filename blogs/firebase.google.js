@@ -22,6 +22,12 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 const ADMIN_EMAIL = "abcsspprt@gmail.com";
 
+// ==========================================
+// AUTH & SPINNER TẢI TÀI KHOẢN
+// ==========================================
+const authStatus = document.getElementById("auth-status");
+authStatus.innerHTML = `<div class="spinner-border spinner-border-sm text-primary"></div> <span class="ms-1 small text-muted">Đang check...</span>`;
+
 window.login = async (providerType) => {
     let provider = providerType === 'google' ? new GoogleAuthProvider() : new GithubAuthProvider();
     try { await signInWithPopup(auth, provider); } catch (e) { console.error(e); }
@@ -30,30 +36,29 @@ window.logout = () => signOut(auth).then(() => location.reload());
 
 onAuthStateChanged(auth, (user) => {
     const adminArea = document.getElementById("admin-area");
-    const authStatus = document.getElementById("auth-status");
     if (user) {
-        authStatus.innerHTML = `<div class="d-flex align-items-center gap-2"><img src="${user.photoURL}" width="32" class="rounded-circle shadow-sm"><button onclick="logout()" class="btn btn-sm btn-outline-danger rounded-pill px-3">Thoát</button></div>`;
+        authStatus.innerHTML = `
+            <div class="d-flex align-items-center gap-2">
+                <img src="${user.photoURL}" width="30" class="rounded-circle border">
+                <button onclick="logout()" class="btn btn-sm btn-outline-danger rounded-pill px-3">Thoát</button>
+            </div>`;
         if (user.email === ADMIN_EMAIL && adminArea) adminArea.style.display = "block";
     } else {
-        authStatus.innerHTML = `<div class="btn-group border rounded-pill overflow-hidden shadow-sm"><button onclick="login('google')" class="btn btn-sm btn-light px-3 border-end">Google</button><button onclick="login('github')" class="btn btn-sm btn-light px-3">Github</button></div>`;
+        authStatus.innerHTML = `
+            <div class="btn-group border rounded-pill overflow-hidden shadow-sm">
+                <button onclick="login('google')" class="btn btn-sm btn-light px-3 border-end">Google</button>
+                <button onclick="login('github')" class="btn btn-sm btn-light px-3">Github</button>
+            </div>`;
         if (adminArea) adminArea.style.display = "none";
     }
 });
 
-window.createPost = async (title, content) => {
-    const user = auth.currentUser;
-    if (!user || user.email !== ADMIN_EMAIL) return;
-    await addDoc(collection(db, "posts"), {
-        title, content, author: user.displayName,
-        createdAt: serverTimestamp(),
-        reactions: { like: [], heart: [], love: [], cry: [], haha: [], angry: [] },
-        comments: []
-    });
-};
-
+// ==========================================
+// ACTIONS (REACT, COMMENT, SHARE)
+// ==========================================
 window.addReaction = async (postId, type) => {
     const user = auth.currentUser;
-    if (!user) return alert("Đăng nhập để bày tỏ cảm xúc!");
+    if (!user) return alert("Đăng nhập đi ông cháu!");
     const postRef = doc(db, "posts", postId);
     const postSnap = await getDoc(postRef);
     const data = postSnap.data();
@@ -81,25 +86,30 @@ window.sharePost = (id, title) => {
     else { navigator.clipboard.writeText(url); alert("Đã copy link!"); }
 };
 
+// ==========================================
+// RENDER REALTIME + XỬ LÝ ID KHÔNG TỒN TẠI
+// ==========================================
 onSnapshot(query(collection(db, "posts"), orderBy("createdAt", "desc")), (snapshot) => {
     const container = document.getElementById("blog-container");
     const activeId = new URLSearchParams(window.location.search).get('id');
     const user = auth.currentUser;
 
     if (snapshot.empty) {
-        container.innerHTML = `<div class="text-center py-5 text-muted">Chưa có bài viết nào.</div>`;
+        container.innerHTML = `<div class="text-center py-5 text-muted small">Chưa có bài viết nào.</div>`;
         return;
     }
 
-    if (activeId) window.scrollTo({ top: 0, behavior: 'smooth' });
+    // Biến kiểm tra xem có tìm thấy bài viết khớp với ID không
+    let postFound = false;
+    let htmlContent = "";
 
-    container.innerHTML = "";
     snapshot.forEach((doc) => {
         const post = doc.data();
         const id = doc.id;
 
-        // CHỈ HIỆN BÀI VỚI ID ĐÓ
+        // Logic lọc ID
         if (activeId && id !== activeId) return;
+        if (activeId && id === activeId) postFound = true;
 
         const isExp = (id === activeId);
         const r = post.reactions || {};
@@ -107,7 +117,7 @@ onSnapshot(query(collection(db, "posts"), orderBy("createdAt", "desc")), (snapsh
         const getCount = (type) => (r[type] || []).length;
         const time = post.createdAt ? new Date(post.createdAt.seconds * 1000).toLocaleString('vi-VN') : "...";
 
-        container.innerHTML += `
+        htmlContent += `
             <div class="card border-0 shadow-sm rounded-4 mb-4 ${isExp ? 'border-start border-primary border-4 shadow-lg' : ''}">
                 <div class="card-body p-4">
                     <div class="d-flex justify-content-between align-items-center mb-2 small text-muted">
@@ -116,28 +126,20 @@ onSnapshot(query(collection(db, "posts"), orderBy("createdAt", "desc")), (snapsh
                             <i class="fa-solid fa-share-nodes"></i>
                         </button>
                     </div>
-
                     <h3 class="fw-bold mb-3">${post.title}</h3>
-                    
                     <div class="post-main-wrapper position-relative ${isExp ? 'is-expanded' : 'is-truncated'}">
-                        <div class="post-content-body" style="white-space: pre-wrap; line-height: 1.7;">${post.content}</div>
-                        
-                        ${!isExp ? `
-                            <div class="read-more-overlay">
-                                <a href="?id=${id}" class="btn btn-dark btn-sm rounded-pill px-4 shadow-sm fw-bold">Xem thêm...</a>
-                            </div>
-                        ` : ''}
+                        <div style="white-space: pre-wrap; line-height: 1.7;">${post.content}</div>
+                        ${!isExp ? `<div class="read-more-overlay"><a href="?id=${id}" class="btn btn-dark btn-sm rounded-pill px-4 shadow fw-bold">Xem thêm...</a></div>` : ''}
                     </div>
-
                     ${isExp ? `
                         <div class="mt-4 pt-4 border-top">
                             <div class="d-flex flex-wrap gap-2 mb-4">
-                                <button class="btn ${hasReacted('like') ? 'btn-primary' : 'btn-outline-primary'} btn-sm rounded-pill px-3" onclick="addReaction('${id}', 'like')">👍 ${getCount('like')}</button>
-                                <button class="btn ${hasReacted('heart') ? 'btn-danger' : 'btn-outline-danger'} btn-sm rounded-pill px-3" onclick="addReaction('${id}', 'heart')">❤️ ${getCount('heart')}</button>
-                                <button class="btn ${hasReacted('love') ? 'btn-warning text-white' : 'btn-outline-warning'} btn-sm rounded-pill px-3" onclick="addReaction('${id}', 'love')">🥰 ${getCount('love')}</button>
-                                <button class="btn ${hasReacted('haha') ? 'btn-info text-white' : 'btn-outline-info'} btn-sm rounded-pill px-3" onclick="addReaction('${id}', 'haha')">😆 ${getCount('haha')}</button>
-                                <button class="btn ${hasReacted('cry') ? 'btn-secondary' : 'btn-outline-secondary'} btn-sm rounded-pill px-3" onclick="addReaction('${id}', 'cry')">😭 ${getCount('cry')}</button>
-                                <button class="btn ${hasReacted('angry') ? 'btn-dark' : 'btn-outline-dark'} btn-sm rounded-pill px-3" onclick="addReaction('${id}', 'angry')">😡 ${getCount('angry')}</button>
+                                <button class="btn ${hasReacted('like') ? 'btn-primary' : 'btn-outline-primary'} btn-sm rounded-pill px-3 shadow-sm" onclick="addReaction('${id}', 'like')">👍 ${getCount('like')}</button>
+                                <button class="btn ${hasReacted('heart') ? 'btn-danger' : 'btn-outline-danger'} btn-sm rounded-pill px-3 shadow-sm" onclick="addReaction('${id}', 'heart')">❤️ ${getCount('heart')}</button>
+                                <button class="btn ${hasReacted('love') ? 'btn-warning text-white' : 'btn-outline-warning'} btn-sm rounded-pill px-3 shadow-sm" onclick="addReaction('${id}', 'love')">🥰 ${getCount('love')}</button>
+                                <button class="btn ${hasReacted('haha') ? 'btn-info text-white' : 'btn-outline-info'} btn-sm rounded-pill px-3 shadow-sm" onclick="addReaction('${id}', 'haha')">😆 ${getCount('haha')}</button>
+                                <button class="btn ${hasReacted('cry') ? 'btn-secondary' : 'btn-outline-secondary'} btn-sm rounded-pill px-3 shadow-sm" onclick="addReaction('${id}', 'cry')">😭 ${getCount('cry')}</button>
+                                <button class="btn ${hasReacted('angry') ? 'btn-dark' : 'btn-outline-dark'} btn-sm rounded-pill px-3 shadow-sm" onclick="addReaction('${id}', 'angry')">😡 ${getCount('angry')}</button>
                             </div>
                             <div class="p-3 bg-light rounded-4">
                                 <h6 class="fw-bold mb-3 small">Bình luận (${post.comments?.length || 0})</h6>
@@ -154,9 +156,22 @@ onSnapshot(query(collection(db, "posts"), orderBy("createdAt", "desc")), (snapsh
                                 </div>
                             </div>
                             <div class="text-center mt-3"><a href="?" class="text-muted small text-decoration-none">← Quay lại danh sách</a></div>
-                        </div>
-                    ` : ''}
+                        </div>` : ''}
                 </div>
             </div>`;
     });
+
+    // HIỂN THỊ LỖI KHI ID KHÔNG TỒN TẠI
+    if (activeId && !postFound) {
+        container.innerHTML = `
+            <div class="text-center py-5">
+                <div class="display-1 text-muted mb-3"><i class="fa-solid fa-face-frown-open"></i></div>
+                <h2 class="fw-bold">404 - Post Đếch Tồn Tại</h2>
+                <p class="text-muted">ID này bị sai hoặc bài viết đã bị Admin "bay màu".</p>
+                <a href="?" class="btn btn-dark rounded-pill px-5 mt-3 shadow">Quay về trang chủ</a>
+            </div>`;
+    } else {
+        container.innerHTML = htmlContent;
+        if (activeId) window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
 });
