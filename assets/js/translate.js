@@ -5,7 +5,7 @@
         "pt": "Português", "it": "Italiano", "ru": "Русский", "ar": "العربية",
         "hi": "हिन्दी", "th": "ไทย", "id": "Bahasa Indonesia", "ms": "Bahasa Melayu",
         "tr": "Türkçe", "nl": "Nederlands", "pl": "Polski", "sv": "Svenska", "da": "Dansk",
-        "fi": "Suomi", "no": "Norsk", "cs": "Čeština", "el": "Ελληνικά", "he": "עברית",
+        "fi": "Suomi", "no": "Norsk", "cs": "Čeština", "el": "Ελληνικά", "he": "עบริת",
         "ro": "Română", "hu": "Magyar", "uk": "Українська", "bg": "Български", "sk": "Slovenčina",
         "sl": "Slovenščina", "hr": "Hrvatski", "sr": "Српски", "fa": "فارسی", "bn": "বাংলা"
     };
@@ -24,6 +24,7 @@
 
         injectProfessionalDropdown(supportedLangs, targetLang);
 
+        // Chỉ bắt đầu dịch nếu ngôn ngữ đích khác Tiếng Việt (sl=vi)
         if (targetLang !== 'vi') {
             startMasterProcess();
         }
@@ -32,10 +33,8 @@
     const startMasterProcess = async () => {
         showTranslateToast(true);
         
-        // Cú hích đầu tiên: Dịch ngay những gì đang có
         await translateNewNodes(document.body);
         
-        // Cú hích bổ trợ: Quét lại mỗi giây trong 6 giây đầu (chống Lazy Load/Async)
         let count = 0;
         const retryTimer = setInterval(() => {
             translateNewNodes(document.body);
@@ -44,14 +43,16 @@
                 clearInterval(retryTimer);
                 showTranslateToast(false);
             }
-        }, 1000);
+        }, 1500);
 
-        // Theo dõi lâu dài: Bất cứ khi nào có bài viết mới hoặc đổi chữ
         const observer = new MutationObserver((mutations) => {
             mutations.forEach(mutation => {
                 if (mutation.addedNodes.length > 0) {
                     mutation.addedNodes.forEach(node => {
-                        if (node.nodeType === 1 || node.nodeType === 3) translateNewNodes(node.parentElement || node);
+                        if (node.nodeType === 1 || node.nodeType === 3) {
+                            const target = node.nodeType === 3 ? node.parentElement : node;
+                            if (target) translateNewNodes(target);
+                        }
                     });
                 }
                 if (mutation.type === 'characterData') {
@@ -64,13 +65,21 @@
     };
 
     async function translateNewNodes(rootNode) {
-        if (!rootNode || (rootNode.id === 'notranslate')) return;
+        // Kiểm tra nếu node hiện tại hoặc cha của nó có đánh dấu không dịch
+        if (!rootNode || rootNode.closest?.('#notranslate') || rootNode.closest?.('.notranslate')) return;
         
         const textNodes = [];
         const walk = (node) => {
-            if (node.id === 'notranslate' || ['SCRIPT', 'STYLE', 'TEXTAREA', 'INPUT'].includes(node.tagName)) return;
+            // Loại bỏ các thẻ kỹ thuật và vùng cấm dịch
+            if (node.id === 'notranslate' || 
+                node.classList?.contains('notranslate') || 
+                ['SCRIPT', 'STYLE', 'TEXTAREA', 'INPUT', 'NOSCRIPT'].includes(node.tagName)) return;
+
             if (node.nodeType === Node.TEXT_NODE && node.textContent.trim().length > 1) {
-                if (/[a-zA-Zà-ỹÀ-Ỹ]/.test(node.textContent)) textNodes.push(node);
+                // Kiểm tra nếu có chứa ký tự chữ cái
+                if (/[a-zA-Zà-ỹÀ-Ỹ]/.test(node.textContent) && !node._isTranslated) {
+                    textNodes.push(node);
+                }
             } else {
                 node.childNodes.forEach(walk);
             }
@@ -78,19 +87,18 @@
 
         walk(rootNode);
 
+        // Xử lý dịch tuần tự để tránh spam quá tải API cùng lúc
         for (const node of textNodes) {
             const originalText = node.textContent.trim();
-            if (!node._isTranslated) {
-                const translated = await fetchWithRetry(originalText, targetLang);
-                if (translated && translated !== originalText) {
-                    node.textContent = node.textContent.replace(originalText, translated);
-                    node._isTranslated = true;
-                }
+            const translated = await fetchWithRetry(originalText, targetLang);
+            if (translated && translated !== originalText) {
+                node.textContent = translated;
+                node._isTranslated = true;
             }
         }
     }
 
-    async function fetchWithRetry(text, target, retries = 3) {
+    async function fetchWithRetry(text, target, retries = 2) {
         const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=vi&tl=${target}&dt=t&q=${encodeURIComponent(text)}`;
         for (let i = 0; i < retries; i++) {
             try {
@@ -100,19 +108,24 @@
                 return json[0].map(item => item[0]).join('');
             } catch (err) {
                 if (i === retries - 1) return text;
-                await new Promise(r => setTimeout(r, 1000));
+                await new Promise(r => setTimeout(r, 800));
             }
         }
     }
 
     function injectProfessionalDropdown(langs, current) {
-        if (document.getElementById('notranslate-picker')) return;
+        if (document.getElementById('notranslate')) return;
+
         const wrapper = document.createElement('div');
-        wrapper.id = 'notranslate-picker';
-        wrapper.style.cssText = "position:fixed; bottom:25px; right:25px; z-index:1000000;";
+        wrapper.id = 'notranslate';
+        // Thêm class notranslate để các trình duyệt (Chrome/Google) không tự dịch đè lên
+        wrapper.className = 'notranslate'; 
+        wrapper.style.cssText = "position:fixed; bottom:20px; right:20px; z-index:2147483647;";
 
         const select = document.createElement('select');
-        select.style.cssText = "appearance:none; background:#fff; border:1px solid #ddd; padding:10px 35px 10px 15px; border-radius:12px; font-size:14px; box-shadow:0 4px 15px rgba(0,0,0,0.1); outline:none; cursor:pointer; background-image:url('data:image/svg+xml;charset=US-ASCII,<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"20\" height=\"20\" viewBox=\"0 0 20 20\"><path fill=\"%23666\" d=\"M5 7l5 5 5-5z\"/></svg>'); background-repeat:no-repeat; background-position:right 10px center; background-size:18px; font-family:sans-serif;";
+        // Thêm thuộc tính chặn dịch trực tiếp cho thẻ select
+        select.setAttribute('translate', 'no');
+        select.style.cssText = "appearance:none; background:#fff; border:1px solid #e0e0e0; padding:8px 30px 8px 12px; border-radius:8px; font-size:13px; box-shadow:0 2px 10px rgba(0,0,0,0.1); outline:none; cursor:pointer; background-image:url('data:image/svg+xml;charset=US-ASCII,<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"%23333\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M6 9l6 6 6-6\"/></svg>'); background-repeat:no-repeat; background-position:right 8px center; font-family:system-ui, -apple-system, sans-serif; color:#333;";
 
         for (const [code, name] of Object.entries(langs)) {
             const opt = new Option(name, code);
@@ -132,29 +145,30 @@
     }
 
     function showTranslateToast(show) {
-        let toast = document.getElementById('translate-toast');
+        let toast = document.getElementById('translate-status');
         if (show) {
             if (!toast) {
                 toast = document.createElement('div');
-                toast.id = 'translate-toast';
-                toast.style.cssText = "position:fixed; top:20px; left:50%; transform:translateX(-50%); background:rgba(0,0,0,0.8); color:#fff; padding:10px 20px; border-radius:30px; font-size:13px; z-index:1000001; backdrop-filter:blur(5px); transition:opacity 0.4s; display:flex; align-items:center; gap:10px; pointer-events:none;";
-                toast.innerHTML = `<div class="loader"></div> Translating site...`;
-                const s = document.createElement('style');
-                s.innerHTML = ".loader{width:14px; height:14px; border:2px solid #fff; border-top-color:transparent; border-radius:50%; animation:spin 0.8s linear infinite;} @keyframes spin{to{transform:rotate(360deg)}}";
-                document.head.appendChild(s);
+                toast.id = 'translate-status';
+                toast.className = 'notranslate';
+                toast.style.cssText = "position:fixed; top:20px; left:50%; transform:translateX(-50%); background:rgba(0,0,0,0.75); color:#fff; padding:8px 16px; border-radius:20px; font-size:12px; z-index:2147483647; backdrop-filter:blur(4px); transition:opacity 0.3s; display:flex; align-items:center; gap:8px; pointer-events:none;";
+                toast.innerHTML = `<div class="tr-loader"></div> Translating...`;
+                
+                const style = document.createElement('style');
+                style.innerHTML = ".tr-loader{width:12px; height:12px; border:2px solid #fff; border-top-color:transparent; border-radius:50%; animation:tr-spin 0.6s linear infinite;} @keyframes tr-spin{to{transform:rotate(360deg)}}";
+                document.head.appendChild(style);
                 document.body.appendChild(toast);
             }
             toast.style.opacity = "1";
         } else if (toast) {
             toast.style.opacity = "0";
-            setTimeout(() => toast.remove(), 400);
+            setTimeout(() => toast.remove(), 300);
         }
     }
 
-    // Ép chạy bất kể trạng thái nào
     if (document.readyState === "complete" || document.readyState === "interactive") {
         init();
     } else {
-        window.addEventListener("load", init);
+        window.addEventListener("DOMContentLoaded", init);
     }
 })();
