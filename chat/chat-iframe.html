@@ -330,17 +330,33 @@ async function initSuggestions() {
 
 
 
-        async function typeText(el, txt) {
+async function typeText(el, txt) {
+    let i = 0;
+    const speed = 20; // Tốc độ gõ (ms mỗi ký tự), càng nhỏ càng nhanh
+    el.innerHTML = ''; // Xóa trắng trước khi gõ
 
-            // Không lặp for từng chữ để tránh hỏng thẻ HTML/Code khi đang render
-
-            el.innerHTML = marked.parse(txt);
-
-            Prism.highlightAllUnder(el);
-
-            chatWindow.scrollTop = chatWindow.scrollHeight;
-
+    return new Promise((resolve) => {
+        function typing() {
+            if (i < txt.length) {
+                // Lấy phần văn bản đã "gõ" xong
+                let currentText = txt.substring(0, i + 1);
+                
+                // Render Markdown và Highlight Code liên tục
+                el.innerHTML = marked.parse(currentText);
+                Prism.highlightAllUnder(el);
+                
+                // Tự động cuộn xuống theo dòng chữ
+                chatWindow.scrollTop = chatWindow.scrollHeight;
+                
+                i++;
+                setTimeout(typing, speed);
+            } else {
+                resolve();
+            }
         }
+        typing();
+    });
+}}
 
 
 
