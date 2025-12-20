@@ -38,19 +38,28 @@
 </head>
 <body>
 
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
-        <div class="container">
-            <a class="navbar-brand" href="../"><img class="logo" src="https://abcsnoob.github.io/assets/image/abcsnoob.webp">Abc's Noob</a>
-            <div class="ms-auto d-flex align-items-center">
-                <button class="btn btn-sm btn-outline-light me-2" onclick="clearChat()">Xóa lịch sử</button>
+    <div class="container">
+            <a id="notranslate" class="navbar-brand" href="./"><img class="logo" src="./assets/image/abcsnoob.webp">Abc's Noob</a>
+            <button class="navbar-toggler collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-expanded="false">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="navbar-collapse collapse" id="navbarNav" style="">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link active" href="./">Trang chủ</a></li>
+                    <li class="nav-item"><a class="nav-link" href="./blogs">Blog</a></li>
+                    <li class="nav-item"><a class="nav-link" href="./apps">Ứng dụng</a></li>
+                    <li class="nav-item"><a class="nav-link" href="./contact">Liên hệ</a></li>
+                    <li class="nav-item"><a class="nav-link" href="./donate">Donate</a></li>
+                    <li class="nav-item"><a class="nav-link" href="./chat">Chat AI</a></li>
+                    <button class="btn btn-sm btn-outline-light me-2" onclick="clearChat()">Xóa lịch sử</button>
+                </ul>
             </div>
         </div>
-    </nav>
 
     <div class="container chat-wrapper">
         <div class="chat-card">
             <div class="chat-header">
-                <div><i class="fa-solid fa-robot me-2"></i><span class="fw-medium">Abc's Noob AI</span></div>
+                <div><i id="notranslate" class="fa-solid fa-robot me-2"></i><span class="fw-medium">Abc's Noob AI</span></div>
                 <span class="badge rounded-pill bg-success">Online</span>
             </div>
             
