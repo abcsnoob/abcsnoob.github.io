@@ -30,8 +30,6 @@
         .img-msg { max-width: 100%; max-height: 200px; border-radius: 10px; margin-bottom: 8px; display: block; }
         .typing::after { content: '...'; animation: blink 1s infinite; }
         @keyframes blink { 50% { opacity: 0; } }
-        
-        /* Action buttons for bot messages */
         .msg-actions { margin-top: 8px; border-top: 1px solid #e0e0e0; padding-top: 5px; display: flex; gap: 15px; font-size: 12px; color: #666; }
         .msg-actions i { cursor: pointer; transition: 0.2s; }
         .msg-actions i:hover { color: #0d6efd; }
@@ -70,7 +68,7 @@
                 <button style="border:none; background:none" onclick="document.getElementById('file-input').click()">
                     <i class="fa-solid fa-image text-primary"></i>
                 </button>
-                <input type="text" id="user-input" placeholder="Hỏi gì đi ông anh..." autocomplete="off">
+                <input type="text" id="user-input" placeholder="..." autocomplete="off">
                 <button class="btn btn-primary" id="send-btn" style="border-radius:50%; width:40px; height:40px" onclick="sendMessage()">
                     <i class="fa-solid fa-paper-plane"></i>
                 </button>
@@ -93,6 +91,7 @@
                     <div class="mb-3">
                         <label class="form-label">Ngôn ngữ giao diện</label>
                         <select class="form-select" id="setting-lang">
+                            <option value="auto">Tự động (Auto)</option>
                             <option value="vi">Tiếng Việt</option>
                             <option value="en">English</option>
                             <option value="zh">Chinese</option>
@@ -120,13 +119,27 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
 
     <script>
-        const TARGET_LANG = localStorage.getItem('user_lang') || 'vi';
-        let config = JSON.parse(localStorage.getItem('abc_config')) || { temp: 1.4, lang: TARGET_LANG, provider: 'auto' };
+        // --- LOGIC NGÔN NGỮ ---
+        // 1. Lấy ngôn ngữ từ localStorage (do script trang chính lưu)
+        const getEffectiveLang = () => {
+            const savedLang = localStorage.getItem('user_lang');
+            if (savedLang) return savedLang;
+            
+            // Nếu chưa có trong localstorage, lấy theo trình duyệt
+            const browserLang = navigator.language.split('-')[0];
+            return ['vi', 'en', 'zh'].includes(browserLang) ? browserLang : 'vi';
+        };
+
+        // Cấu hình ban đầu
+        let config = JSON.parse(localStorage.getItem('abc_config')) || { temp: 1.4, lang: 'auto', provider: 'auto' };
+        
+        // Xác định ngôn ngữ thực tế để dịch (nếu config là auto thì dùng EffectiveLang)
+        const CURRENT_LANG = config.lang === 'auto' ? getEffectiveLang() : config.lang;
 
         async function translate(text) {
-            if (!text || TARGET_LANG === 'vi') return text;
+            if (!text || CURRENT_LANG === 'vi') return text;
             try {
-                const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=vi&tl=${TARGET_LANG}&dt=t&q=${encodeURIComponent(text)}`;
+                const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=vi&tl=${CURRENT_LANG}&dt=t&q=${encodeURIComponent(text)}`;
                 const res = await fetch(url);
                 const json = await res.json();
                 return json[0].map(item => item[0]).join('');
@@ -137,11 +150,17 @@
             config.temp = document.getElementById('setting-temp').value;
             config.lang = document.getElementById('setting-lang').value;
             config.provider = document.getElementById('setting-provider').value;
+            
             localStorage.setItem('abc_config', JSON.stringify(config));
-            localStorage.setItem('user_lang', config.lang);
+            
+            // Nếu người dùng chọn ngôn ngữ cụ thể, đồng bộ luôn cho trang chính
+            if (config.lang !== 'auto') {
+                localStorage.setItem('user_lang', config.lang);
+            }
             location.reload();
         }
 
+        // --- CHAT SYSTEM ---
         const WORKER_URL = 'https://abcsnoobai.abcsnoob.workers.dev';
         const chatWindow = document.getElementById('chat-window');
         const userInput = document.getElementById('user-input');
@@ -170,36 +189,29 @@
             }
         }
 
-        // --- NEW: Text to Speech (Trừ code) ---
         function speakMessage(elementId) {
             const el = document.getElementById(elementId);
             if (!el) return;
-            
-            // Tạo bản sao để xử lý text, loại bỏ các thẻ pre/code
             const tempDiv = document.createElement('div');
             tempDiv.innerHTML = el.innerHTML;
             tempDiv.querySelectorAll('pre, code, .msg-actions').forEach(node => node.remove());
             
             const textToRead = tempDiv.innerText;
-            window.speechSynthesis.cancel(); // Dừng các lượt đọc trước
+            window.speechSynthesis.cancel();
             const utterance = new SpeechSynthesisUtterance(textToRead);
-            utterance.lang = config.lang === 'vi' ? 'vi-VN' : 'en-US';
+            // Áp dụng ngôn ngữ thực tế cho giọng đọc
+            utterance.lang = CURRENT_LANG === 'vi' ? 'vi-VN' : (CURRENT_LANG === 'zh' ? 'zh-CN' : 'en-US');
             window.speechSynthesis.speak(utterance);
         }
 
-        // --- NEW: Regenerate ---
         async function regenerateLast() {
             if (isTyping || chatHistory.length < 2) return;
-            
-            // Xóa model response cuối cùng trong UI và History
             chatHistory.pop();
             const messages = document.querySelectorAll('.message');
             if (messages.length > 0) messages[messages.length - 1].remove();
             
-            // Gửi lại tin nhắn cuối của user
             isTyping = false; 
             const lastUserMsg = chatHistory[chatHistory.length - 1].parts[0].text;
-            // Xóa message user cuối khỏi history vì sendMessage sẽ add lại
             chatHistory.pop();
             userInput.value = lastUserMsg;
             sendMessage();
@@ -217,7 +229,7 @@
 
             renderMessage(prompt, 'user-message', null, true, selectedImageData);
             
-            const userContent = { role: "user", parts: [{ text: prompt || "Phân tích ảnh này" }] };
+            const userContent = { role: "user", parts: [{ text: prompt || "Analyze this image" }] };
             chatHistory.push(userContent);
 
             const loadingId = 'load-' + Date.now();
@@ -231,7 +243,11 @@
                 const res = await fetch(WORKER_URL, { 
                     method: 'POST', 
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ messages: chatHistory, settings: config, image: currentImg }) 
+                    body: JSON.stringify({ 
+                        messages: chatHistory, 
+                        settings: { ...config, lang: CURRENT_LANG }, // Gửi lang thực tế cho Worker
+                        image: currentImg 
+                    }) 
                 });
                 const data = await res.json();
                 
@@ -239,10 +255,9 @@
                 botDiv.classList.remove('typing');
                 botDiv.innerHTML = '';
                 
-                const responseText = data.text || "Xin lỗi, mình không nhận được phản hồi.";
+                const responseText = data.text || "Error: No response.";
                 await typeText(botDiv, responseText);
                 
-                // Thêm nút hành động sau khi type xong
                 addMsgActions(botDiv, loadingId);
 
                 chatHistory.push({ role: "model", parts: [{ text: responseText }] });
@@ -250,7 +265,7 @@
                 localStorage.setItem('abc_chat_history', JSON.stringify(chatHistory));
             } catch (e) { 
                 const botDiv = document.getElementById(loadingId);
-                if(botDiv) botDiv.innerText = "Lỗi kết nối Server!"; 
+                if(botDiv) botDiv.innerText = "Connection Error!"; 
             } finally { 
                 isTyping = false; 
                 sendBtn.disabled = false; 
@@ -261,8 +276,8 @@
             const actionDiv = document.createElement('div');
             actionDiv.className = 'msg-actions';
             actionDiv.innerHTML = `
-                <i class="fa-solid fa-volume-high" onclick="speakMessage('${id}')" title="Đọc phản hồi"></i>
-                <i class="fa-solid fa-arrows-rotate" onclick="regenerateLast()" title="Tạo lại phản hồi"></i>
+                <i class="fa-solid fa-volume-high" onclick="speakMessage('${id}')"></i>
+                <i class="fa-solid fa-arrows-rotate" onclick="regenerateLast()"></i>
             `;
             el.appendChild(actionDiv);
         }
@@ -299,13 +314,12 @@
             chatWindow.scrollTop = chatWindow.scrollHeight;
             if(mk) {
                 Prism.highlightAllUnder(d);
-                // Nếu là bot message đã load từ history, thêm nút actions
                 if(c.includes('bot-message') && id) addMsgActions(d, id);
             }
         }
 
         function clearChat() {
-            if(confirm("Xóa lịch sử trò chuyện?")) {
+            if(confirm("Clear chat history?")) {
                 localStorage.removeItem('abc_chat_history');
                 location.reload();
             }
@@ -317,18 +331,20 @@
             const reader = new FileReader();
             reader.onload = (e) => {
                 selectedImageData = e.target.result;
-                alert("Đã chọn ảnh! Nhấn gửi để AI phân tích.");
+                alert("Image selected!");
             };
             reader.readAsDataURL(file);
         }
 
         window.onload = async () => {
+            // Cập nhật UI modal
             document.getElementById('setting-temp').value = config.temp;
             document.getElementById('temp-val').innerText = config.temp;
             document.getElementById('setting-lang').value = config.lang;
             document.getElementById('setting-provider').value = config.provider;
             document.getElementById('setting-temp').oninput = (e) => document.getElementById('temp-val').innerText = e.target.value;
 
+            // Hiển thị lịch sử
             if (chatHistory.length > 0) {
                 const welcome = document.getElementById('welcome-screen');
                 if(welcome) welcome.remove();
@@ -340,7 +356,12 @@
                 await initSuggestions();
             }
             
+            // Dịch UI theo ngôn ngữ hiệu dụng (Auto/Fixed)
             document.getElementById('user-input').placeholder = await translate('Hỏi gì đi ông anh...');
+            document.getElementById('welcome-title').innerText = await translate('Chào bạn!');
+            document.getElementById('welcome-desc').innerText = await translate('Bạn hãy cùng trò chuyện với mình nhé');
+            document.getElementById('btn-refresh-text').innerText = await translate('Đổi gợi ý khác');
+            
             setTimeout(() => document.getElementById('iframe-loader')?.remove(), 500);
         };
 
