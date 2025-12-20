@@ -10,46 +10,47 @@
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
     <style>
         * { box-sizing: border-box; }
-        body, html { margin: 0; padding: 0; height: 100%; width: 100%; overflow: hidden; font-family: 'Segoe UI', Tahoma, sans-serif; }
-        #iframe-loader { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #fff; display: flex; justify-content: center; align-items: center; z-index: 9999; transition: 0.4s; }
+        body, html { margin: 0; padding: 0; height: 100%; width: 100%; overflow: hidden; font-family: 'Segoe UI', sans-serif; }
+        #iframe-loader { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #fff; display: flex; justify-content: center; align-items: center; z-index: 9999; }
         .chat-card { background: #fff; height: 100vh; display: flex; flex-direction: column; }
-        .chat-header { background: #212529; color: white; padding: 12px 20px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
-        #chat-window { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 15px; background: #fff; scroll-behavior: smooth; position: relative; }
+        .chat-header { background: #212529; color: white; padding: 12px 20px; display: flex; align-items: center; justify-content: space-between; }
+        #chat-window { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 15px; background: #fff; position: relative; }
         
-        /* Welcome Screen Styling */
-        #welcome-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; text-align: center; color: #555; }
+        /* Welcome Screen */
+        #welcome-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; text-align: center; }
         #welcome-screen img { width: 100px; height: 100px; border-radius: 50%; margin-bottom: 15px; border: 2px solid #eee; }
         .suggestion-container { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 20px; max-width: 400px; }
         .suggestion-chip { padding: 8px 16px; background: #f8f9fa; border: 1px solid #ddd; border-radius: 20px; font-size: 14px; cursor: pointer; transition: 0.2s; }
-        .suggestion-chip:hover { background: #0d6efd; color: white; border-color: #0d6efd; }
+        .suggestion-chip:hover { background: #0d6efd; color: white; }
 
+        /* Messages */
         .message { max-width: 85%; padding: 12px 16px; border-radius: 18px; font-size: 15px; line-height: 1.5; word-wrap: break-word; }
         .user-message { align-self: flex-end; background: #0d6efd; color: white; border-bottom-right-radius: 2px; }
         .bot-message { align-self: flex-start; background: #f1f0f0; color: #333; border-bottom-left-radius: 2px; }
-        pre { background: #2d2d2d !important; padding: 12px; border-radius: 10px; overflow-x: auto; margin: 10px 0; }
-        .chat-footer { padding: 15px; border-top: 1px solid #eee; background: #fff; }
+        
+        /* Provider Button Colors */
+        .btn-gemini { background-color: #0d6efd !important; border: none; }
+        .btn-groq { background-color: #ffc107 !important; color: #000 !important; border: none; }
+        .btn-openrouter { background-color: #6c757d !important; border: none; }
+        .btn-danger { background-color: #dc3545 !important; }
+
+        .chat-footer { padding: 15px; border-top: 1px solid #eee; }
         .input-group { background: #f8f9fa; border-radius: 30px; padding: 5px 15px; border: 1px solid #ddd; display: flex; align-items: center; }
         #user-input { border: none; background: transparent; outline: none; flex: 1; height: 40px; }
-        .btn-action { border: none; background: none; color: #666; margin-right: 10px; transition: 0.3s; }
-        .btn-action:hover { color: #0d6efd; }
-        .preview-container { display: none; padding: 10px 20px; border-top: 1px solid #eee; position: relative; background: #fafafa; }
-        .preview-img { width: 50px; height: 50px; object-fit: cover; border-radius: 8px; border: 1px solid #ddd; }
-        .remove-img { position: absolute; top: 5px; left: 55px; cursor: pointer; background: #ff4d4d; color: white; border-radius: 50%; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; font-size: 12px; }
-        .img-msg { max-width: 100%; max-height: 250px; border-radius: 10px; margin-bottom: 8px; display: block; cursor: pointer; }
+        .error-countdown { display: block; font-size: 0.8rem; color: #dc3545; margin-top: 5px; font-weight: bold; }
+        .img-msg { max-width: 100%; max-height: 250px; border-radius: 10px; margin-bottom: 8px; display: block; }
     </style>
 </head>
 <body>
     <div id="iframe-loader"><div class="spinner-grow text-primary"></div></div>
-
     <div class="chat-card">
         <div class="chat-header">
             <div><i class="fa-solid fa-robot me-2"></i><strong>Abc's Noob AI</strong></div>
             <div class="d-flex align-items-center">
-                <i class="fa-solid fa-trash-can me-3" style="cursor:pointer" onclick="clearChat()" title="Xóa lịch sử"></i>
-                <span class="badge rounded-pill bg-success" style="font-size: 0.7rem;">Online</span>
+                <i class="fa-solid fa-trash-can me-3" style="cursor:pointer" onclick="clearChat()"></i>
+                <span class="badge rounded-pill bg-success">Online</span>
             </div>
         </div>
-        
         <div id="chat-window">
             <div id="welcome-screen">
                 <img src="/assets/image/abcsnoob.webp" alt="Logo" onerror="this.src='https://via.placeholder.com/100'">
@@ -59,23 +60,16 @@
                     <div class="suggestion-chip" onclick="setQuery('Minecraft có những gì?')">Minecraft</div>
                     <div class="suggestion-chip" onclick="setQuery('Bitcoin được ai tạo ra?')">Bitcoin</div>
                     <div class="suggestion-chip" onclick="setQuery('AI là gì?')">Công nghệ</div>
-                    <div class="suggestion-chip" onclick="setQuery('Mình rảnh quá, có câu chuyện cười nào không nhỉ?')">Rảnh háng</div>
-                    <div class="suggestion-chip" onclick="setQuery('Có meme nào hay không?')">Meme</div>
+                    <div class="suggestion-chip" onclick="setQuery('Kể chuyện cười đi')">Rảnh háng</div>
                 </div>
             </div>
         </div>
-
-        <div class="preview-container" id="preview-container">
-            <img src="" class="preview-img" id="img-preview">
-            <div class="remove-img" onclick="removeImage()"><i class="fa-solid fa-xmark"></i></div>
-        </div>
-
         <div class="chat-footer">
             <div class="input-group">
                 <input type="file" id="file-input" accept="image/*" style="display:none" onchange="handleFile(this)">
-                <button class="btn-action" onclick="document.getElementById('file-input').click()"><i class="fa-solid fa-image"></i></button>
+                <button class="btn-action" style="border:none; background:none" onclick="document.getElementById('file-input').click()"><i class="fa-solid fa-image"></i></button>
                 <input type="text" id="user-input" placeholder="Hỏi gì đi ông anh..." autocomplete="off">
-                <button class="btn btn-primary btn-send" style="border-radius:50%; width:40px; height:40px" id="send-btn" onclick="sendMessage()">
+                <button class="btn btn-primary" id="send-btn" style="border-radius:50%; width:40px; height:40px" onclick="sendMessage()">
                     <i class="fa-solid fa-paper-plane"></i>
                 </button>
             </div>
@@ -85,157 +79,88 @@
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
-    
     <script>
         const WORKER_URL = 'https://abcsnoobai.abcsnoob.workers.dev';
         const chatWindow = document.getElementById('chat-window');
         const userInput = document.getElementById('user-input');
         const sendBtn = document.getElementById('send-btn');
-        let isTyping = false;
-        let selectedImageData = null;
+        let isTyping = false, selectedImageData = null;
         let chatHistory = JSON.parse(localStorage.getItem('abc_chat_history')) || [];
 
-        function showToast(text, type = "info") {
-            Toastify({ text, duration: 2500, gravity: "top", position: "right", style: { background: type === "error" ? "#ff4d4d" : "#212529" } }).showToast();
-        }
+        function showToast(t, type="info") { Toastify({ text: t, duration: 2500, style: { background: type==="error"?"#dc3545":"#212529" } }).showToast(); }
 
-        function setQuery(text) {
-            userInput.value = text;
-            sendMessage();
+        function getCountdown() {
+            const now = new Date();
+            const vnNow = new Date(now.toLocaleString("en-US", {timeZone: "Asia/Ho_Chi_Minh"}));
+            let target = new Date(vnNow);
+            target.setHours(7, 0, 0, 0);
+            if (vnNow >= target) target.setDate(target.getDate() + 1);
+            const diff = target - vnNow;
+            const h = Math.floor(diff/3600000), m = Math.floor((diff%3600000)/60000), s = Math.floor((diff%60000)/1000);
+            return `${h}h ${m}m ${s}s`;
         }
-
-        function handleFile(input) {
-            const file = input.files[0];
-            if (file) {
-                if (file.size > 1 * 1024 * 1024) {
-                    showToast("Ảnh quá nặng (>1MB)! Nén lại đi ông anh.", "error");
-                    input.value = ''; return;
-                }
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    selectedImageData = e.target.result;
-                    document.getElementById('img-preview').src = selectedImageData;
-                    document.getElementById('preview-container').style.display = 'block';
-                };
-                reader.readAsDataURL(file);
-            }
-        }
-
-        function removeImage() {
-            selectedImageData = null;
-            document.getElementById('preview-container').style.display = 'none';
-            document.getElementById('file-input').value = '';
-        }
-
-        window.onload = () => {
-            if (chatHistory.length > 0) {
-                const welcome = document.getElementById('welcome-screen');
-                if (welcome) welcome.remove();
-                
-                chatHistory.forEach(msg => {
-                    const text = msg.parts.find(p => p.text)?.text || "";
-                    const img = msg.parts.find(p => p.inline_data)?.inline_data?.data;
-                    renderMessage(text, msg.role === 'user' ? 'user-message' : 'bot-message', null, true, img);
-                });
-            }
-            setTimeout(() => { document.getElementById('iframe-loader').remove(); userInput.focus(); }, 600);
-        };
 
         async function sendMessage() {
             const prompt = userInput.value.trim();
             if ((!prompt && !selectedImageData) || isTyping) return;
-
+            isTyping = true; sendBtn.disabled = true;
             sendBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
-            sendBtn.disabled = true; isTyping = true;
-
-            const currentParts = [];
-            if (selectedImageData) {
-                currentParts.push({ inline_data: { mime_type: "image/jpeg", data: selectedImageData.split(',')[1] } });
-            }
-            currentParts.push({ text: prompt || "Phân tích ảnh" });
 
             renderMessage(prompt, 'user-message', null, true, selectedImageData);
-            chatHistory.push({ role: "user", parts: currentParts });
-            
-            const tempImg = selectedImageData;
-            removeImage(); userInput.value = '';
-
+            chatHistory.push({ role: "user", parts: [{ text: prompt || "Phân tích ảnh" }] });
             const loadingId = 'load-' + Date.now();
             renderMessage('Đang xử lý...', 'bot-message typing', loadingId, false);
+            userInput.value = ''; selectedImageData = null;
 
             try {
-                const response = await fetch(WORKER_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ messages: chatHistory })
-                });
-                const data = await response.json();
-                
-                sendBtn.className = data.provider === 'groq' ? 'btn btn-warning btn-send' : 'btn btn-primary btn-send';
-                if(data.provider === 'groq') showToast("Đã chuyển sang Groq Node", "info");
+                const res = await fetch(WORKER_URL, { method: 'POST', body: JSON.stringify({ messages: chatHistory }) });
+                const data = await res.json();
+                const botDiv = document.getElementById(loadingId);
+                botDiv.classList.remove('typing'); botDiv.innerHTML = '';
 
-                const botMsgDiv = document.getElementById(loadingId);
-                botMsgDiv.classList.remove('typing'); botMsgDiv.innerHTML = '';
-                
-                await typeText(botMsgDiv, data.text || "Lỗi phản hồi!");
-                chatHistory.push({ role: "model", parts: [{ text: data.text }] });
-                if (chatHistory.length > 10) chatHistory.splice(0, 2);
-                localStorage.setItem('abc_chat_history', JSON.stringify(chatHistory));
-            } catch (err) {
-                showToast("Server lag rồi!", "error");
-                document.getElementById(loadingId).innerText = "Lỗi node!";
-            } finally {
-                isTyping = false; sendBtn.innerHTML = '<i class="fa-solid fa-paper-plane"></i>';
-                sendBtn.disabled = false; chatWindow.scrollTop = chatWindow.scrollHeight;
-            }
+                if (data.provider === "out_of_resource") {
+                    sendBtn.className = 'btn btn-danger';
+                    botDiv.innerHTML = `<b style="color:#dc3545">❌ Hết tài nguyên</b><br>${data.text}<br><small class="error-countdown">Reset sau: <span id="tmr">${getCountdown()}</span></small>`;
+                    setInterval(() => { const el = document.getElementById('tmr'); if(el) el.innerText = getCountdown(); }, 1000);
+                } else {
+                    sendBtn.className = `btn btn-${data.provider === 'groq' ? 'groq' : data.provider === 'openrouter' ? 'openrouter' : 'gemini'}`;
+                    await typeText(botDiv, data.text);
+                    chatHistory.push({ role: "model", parts: [{ text: data.text }] });
+                    if (chatHistory.length > 10) chatHistory.splice(0, 2);
+                    localStorage.setItem('abc_chat_history', JSON.stringify(chatHistory));
+                }
+            } catch (e) { botDiv.innerText = "Lỗi kết nối!"; }
+            finally { isTyping = false; sendBtn.disabled = false; sendBtn.innerHTML = '<i class="fa-solid fa-paper-plane"></i>'; }
         }
 
         async function typeText(el, txt) {
-            let i = 0;
-            return new Promise(res => {
-                function t() {
-                    if (i < txt.length) {
-                        el.innerHTML = marked.parse(txt.substring(0, i + 1));
-                        Prism.highlightAllUnder(el); i++;
-                        chatWindow.scrollTop = chatWindow.scrollHeight;
-                        setTimeout(t, 5);
-                    } else res();
-                } t();
-            });
-        }
-
-        function renderMessage(text, className, id, mk, imgData = null) {
-            // Xóa màn hình chào nếu nó đang hiển thị
-            const welcome = document.getElementById('welcome-screen');
-            if (welcome) welcome.remove();
-
-            const div = document.createElement('div');
-            div.className = `message ${className}`;
-            if(id) div.id = id;
-            if(imgData) {
-                const img = document.createElement('img');
-                img.src = imgData.startsWith('data:') ? imgData : `data:image/jpeg;base64,${imgData}`;
-                img.className = 'img-msg';
-                div.appendChild(img);
-            }
-            if(text) {
-                const txtSpan = document.createElement('span');
-                txtSpan.innerHTML = mk ? marked.parse(text) : text;
-                div.appendChild(txtSpan);
-            }
-            chatWindow.appendChild(div);
-            if(mk) Prism.highlightAllUnder(div);
-            chatWindow.scrollTop = chatWindow.scrollHeight;
-        }
-
-        function clearChat() {
-            if(confirm("Xóa lịch sử node?")) { 
-                localStorage.removeItem('abc_chat_history'); 
-                showToast("Đã dọn dẹp!"); 
-                setTimeout(() => location.reload(), 800); 
+            for (let i = 0; i <= txt.length; i++) {
+                el.innerHTML = marked.parse(txt.substring(0, i));
+                Prism.highlightAllUnder(el);
+                chatWindow.scrollTop = chatWindow.scrollHeight;
+                await new Promise(r => setTimeout(r, 5));
             }
         }
-        userInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMessage(); });
+
+        function renderMessage(t, c, id, mk, img) {
+            const w = document.getElementById('welcome-screen'); if(w) w.remove();
+            const d = document.createElement('div'); d.className = `message ${c}`; if(id) d.id = id;
+            if(img) { const i = document.createElement('img'); i.src = img; i.className='img-msg'; d.appendChild(i); }
+            if(t) { const s = document.createElement('span'); s.innerHTML = mk ? marked.parse(t) : t; d.appendChild(s); }
+            chatWindow.appendChild(d); chatWindow.scrollTop = chatWindow.scrollHeight;
+        }
+
+        function setQuery(t) { userInput.value = t; sendMessage(); }
+        function clearChat() { if(confirm("Xóa lịch sử?")) { localStorage.removeItem('abc_chat_history'); location.reload(); } }
+        function handleFile(i) {
+            const f = i.files[0]; if(!f) return;
+            const r = new FileReader(); r.onload = (e) => selectedImageData = e.target.result; r.readAsDataURL(f);
+        }
+        window.onload = () => {
+            chatHistory.forEach(m => renderMessage(m.parts[0].text, m.role==='user'?'user-message':'bot-message', null, true));
+            setTimeout(() => document.getElementById('iframe-loader').remove(), 600);
+        };
+        userInput.addEventListener('keypress', e => e.key === 'Enter' && sendMessage());
     </script>
 </body>
 </html>
