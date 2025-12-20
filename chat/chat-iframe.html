@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Abc's Noob AI - Fixed Code</title>
+    <title>Abc's Noob AI</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
@@ -30,13 +30,6 @@
         .user-message { align-self: flex-end; background: #0d6efd; color: white; border-bottom-right-radius: 2px; }
         .bot-message { align-self: flex-start; background: #f1f0f0; color: #333; border-bottom-left-radius: 2px; }
         
-        /* Ngăn chặn dịch code và bảo vệ định dạng */
-        pre, code { 
-            direction: ltr !important; 
-            text-align: left !important; 
-            unicode-bidi: isolate;
-        }
-
         .chat-footer { padding: 15px; border-top: 1px solid #eee; }
         .input-group { background: #f8f9fa; border-radius: 30px; padding: 5px 15px; border: 1px solid #ddd; display: flex; align-items: center; }
         #user-input { border: none; background: transparent; outline: none; flex: 1; height: 40px; }
@@ -91,39 +84,18 @@
     <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
 
     <script>
-        // --- 1. CẤU HÌNH DỊCH THUẬT AN TOÀN ---
+        // --- 1. CẤU HÌNH DỊCH THUẬT (Chỉ dùng cho giao diện) ---
         const TARGET_LANG = localStorage.getItem('user_lang') || 'vi';
 
         async function translate(text) {
             if (!text || TARGET_LANG === 'vi') return text;
             try {
-                // Tách các đoạn code (bọc trong ``` hoặc `) ra để không dịch
-                const codeRegex = /(```[\s\S]*?```|`.*?`)/g;
-                const parts = text.split(codeRegex);
-                
-                const translatedParts = await Promise.all(parts.map(async (part) => {
-                    // Nếu là code block hoặc inline code, giữ nguyên
-                    if (part.startsWith('`')) return part;
-                    
-                    // Chỉ dịch nếu có chữ
-                    if (part.trim().length > 0) {
-                        const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=vi&tl=${TARGET_LANG}&dt=t&q=${encodeURIComponent(part)}`;
-                        const res = await fetch(url);
-                        const json = await res.json();
-                        return json[0].map(item => item[0]).join('');
-                    }
-                    return part;
-                }));
-                return translatedParts.join('');
+                const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=vi&tl=${TARGET_LANG}&dt=t&q=${encodeURIComponent(text)}`;
+                const res = await fetch(url);
+                const json = await res.json();
+                return json[0].map(item => item[0]).join('');
             } catch (e) { return text; }
         }
-
-        // Cấu hình marked để thêm class không dịch cho code
-        marked.setOptions({
-            highlight: function(code, lang) {
-                return code; // Prism sẽ xử lý sau
-            }
-        });
 
         // --- 2. QUẢN LÝ CHAT ---
         const WORKER_URL = 'https://abcsnoobai.abcsnoob.workers.dev';
@@ -133,13 +105,34 @@
         let isTyping = false, selectedImageData = null;
         let chatHistory = JSON.parse(localStorage.getItem('abc_chat_history')) || [];
 
-        const questionBank = [
-            { text: "Minecraft", query: "Minecraft có những gì thú vị?" },
-            { text: "Bitcoin", query: "Bitcoin là gì?" },
-            { text: "Hài hước", query: "Kể chuyện cười đi" },
-            { text: "Công nghệ", query: "AI là gì?" },
-            { text: "Code", query: "Viết HTML tạo nút bấm" }
-        ];
+const questionBank = [
+    // --- Giải trí & Trò chơi ---
+    { text: "Trò chơi", query: "Những tựa game thế giới mở phổ biến nhất hiện nay là gì?" },
+    { text: "Phim ảnh", query: "Gợi ý cho tôi một bộ phim kinh điển về đề tài du hành thời gian." },
+    
+    // --- Tài chính & Kinh tế ---
+    { text: "Tiền điện tử", query: "Bitcoin và Ethereum khác nhau như thế nào?" },
+    { text: "Đầu tư", query: "Những nguyên tắc cơ bản cho người mới bắt đầu đầu tư tài chính?" },
+
+    // --- Công nghệ & AI ---
+    { text: "Trí tuệ nhân tạo", query: "AI sẽ thay đổi thị trường việc làm như thế nào trong 5 năm tới?" },
+    { text: "Lập trình", query: "Hướng dẫn viết một hàm cơ bản bằng Python để kiểm tra số nguyên tố." },
+    { text: "Phát triển Web", query: "Làm thế nào để tạo một trang web có thiết kế responsive bằng CSS?" },
+
+    // --- Khoa học & Vũ trụ ---
+    { text: "Vũ trụ", query: "Lỗ đen là gì và điều gì xảy ra nếu vật chất rơi vào đó?" },
+    { text: "Môi trường", query: "Biến đổi khí hậu đang ảnh hưởng thế nào đến các rạn san hô?" },
+
+    // --- Đời sống & Sức khỏe ---
+    { text: "Nấu ăn", query: "Công thức làm một món ăn sáng nhanh gọn nhưng đủ dinh dưỡng?" },
+    { text: "Sức khỏe", query: "Làm thế nào để cải thiện chất lượng giấc ngủ một cách tự nhiên?" },
+    { text: "Năng suất", query: "Kỹ thuật Pomodoro là gì và cách áp dụng hiệu quả?" },
+
+    // --- Văn hóa & Nghệ thuật ---
+    { text: "Văn hóa", query: "Tìm hiểu về những di sản văn hóa thế giới nổi tiếng nhất của UNESCO." },
+    { text: "Hài hước", query: "Kể cho tôi một câu chuyện đùa ngắn về công nghệ." },
+    { text: "Ngôn ngữ", query: "Những cách hiệu quả nhất để tự học một ngôn ngữ mới tại nhà?" }
+];
 
         async function initSuggestions() {
             const container = document.getElementById('suggestion-container');
@@ -150,7 +143,9 @@
             for (const item of shuffled.slice(0, 4)) {
                 const chip = document.createElement('div');
                 chip.className = 'suggestion-chip';
+                // CHỈ DỊCH TEXT HIỂN THỊ CỦA GỢI Ý
                 chip.innerText = await translate(item.text);
+                // QUERY GỬI ĐI GIỮ NGUYÊN TIẾNG VIỆT ĐỂ AI HIỂU CHUẨN
                 chip.onclick = () => { userInput.value = item.query; sendMessage(); };
                 container.appendChild(chip);
             }
@@ -162,8 +157,8 @@
             
             isTyping = true; sendBtn.disabled = true;
             
-            const displayPrompt = await translate(prompt);
-            renderMessage(displayPrompt, 'user-message', null, true, selectedImageData);
+            // HIỂN THỊ GỐC: Không dịch nội dung user nhập
+            renderMessage(prompt, 'user-message', null, true, selectedImageData);
             
             chatHistory.push({ role: "user", parts: [{ text: prompt || "Phân tích ảnh" }] });
             
@@ -181,45 +176,32 @@
                 const botDiv = document.getElementById(loadingId);
                 botDiv.classList.remove('typing'); botDiv.innerHTML = '';
                 
-                // DỊCH AN TOÀN: Bỏ qua code blocks
-                const translatedBotText = await translate(data.text);
-                await typeText(botDiv, translatedBotText);
+                // HIỂN THỊ GỐC: AI trả về ngôn ngữ nào hiện ngôn ngữ đó (Chống dịch nhảm code)
+                await typeText(botDiv, data.text);
                 
                 chatHistory.push({ role: "model", parts: [{ text: data.text }] });
                 if (chatHistory.length > 10) chatHistory.splice(0, 2);
                 localStorage.setItem('abc_chat_history', JSON.stringify(chatHistory));
             } catch (e) { 
                 const errorMsg = await translate("Lỗi kết nối!");
-                const errEl = document.getElementById(loadingId);
-                if(errEl) errEl.innerText = errorMsg; 
+                document.getElementById(loadingId).innerText = errorMsg; 
             }
             finally { isTyping = false; sendBtn.disabled = false; }
         }
 
         async function typeText(el, txt) {
-            // Hiển thị nội dung đã được parse Markdown
+            // Không lặp for từng chữ để tránh hỏng thẻ HTML/Code khi đang render
             el.innerHTML = marked.parse(txt);
-            // Thêm class notranslate cho tất cả thẻ pre/code vừa tạo
-            el.querySelectorAll('pre, code').forEach(node => node.classList.add('notranslate'));
             Prism.highlightAllUnder(el);
             chatWindow.scrollTop = chatWindow.scrollHeight;
-            
-            // Nếu bạn muốn hiệu ứng chữ chạy, có thể dùng logic cũ nhưng 
-            // nên parse Markdown một lần ở cuối để tránh lỗi thẻ HTML dở dang.
         }
 
         function renderMessage(t, c, id, mk, img) {
             const w = document.getElementById('welcome-screen'); if(w) w.remove();
             const d = document.createElement('div'); d.className = `message ${c}`; if(id) d.id = id;
             if(img) { const i = document.createElement('img'); i.src = img; i.className='img-msg'; d.appendChild(i); }
-            if(t) { 
-                const s = document.createElement('span'); 
-                s.innerHTML = mk ? marked.parse(t) : t; 
-                if(mk) s.querySelectorAll('pre, code').forEach(n => n.classList.add('notranslate'));
-                d.appendChild(s); 
-            }
-            chatWindow.appendChild(d); 
-            chatWindow.scrollTop = chatWindow.scrollHeight;
+            if(t) { const s = document.createElement('span'); s.innerHTML = mk ? marked.parse(t) : t; d.appendChild(s); }
+            chatWindow.appendChild(d); chatWindow.scrollTop = chatWindow.scrollHeight;
             if(mk) Prism.highlightAllUnder(d);
         }
 
@@ -238,16 +220,16 @@
         }
 
         window.onload = async () => {
+            // Dịch giao diện tĩnh
             document.getElementById('welcome-title').innerText = await translate('Chào bạn!');
             document.getElementById('welcome-desc').innerText = await translate('Bạn hãy cùng trò chuyện với mình nhé');
             document.getElementById('btn-refresh-text').innerText = await translate('Đổi gợi ý khác');
             document.getElementById('user-input').placeholder = await translate('Hỏi gì đi ông anh...');
 
             if (chatHistory.length > 0) {
-                const w = document.getElementById('welcome-screen'); if(w) w.remove();
                 for (const m of chatHistory) {
-                    const t = await translate(m.parts[0].text);
-                    renderMessage(t, m.role==='user'?'user-message':'bot-message', null, true);
+                    // Hiển thị lại lịch sử cũng giữ nguyên ngôn ngữ gốc
+                    renderMessage(m.parts[0].text, m.role==='user'?'user-message':'bot-message', null, true);
                 }
             } else {
                 initSuggestions();
