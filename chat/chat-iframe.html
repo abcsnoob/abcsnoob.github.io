@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Abc's Noob AI</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
@@ -13,7 +14,6 @@
             overflow: hidden; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
-        /* Spinner riêng của Iframe */
         #iframe-loader {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -40,7 +40,6 @@
         #user-input { border: none; background: transparent; box-shadow: none; outline: none; flex: 1; height: 40px; }
         .btn-send { border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border: none; }
 
-        /* Hiệu ứng gõ máy (typing) */
         .typing::after { content: '|'; animation: blink 0.8s infinite; }
         @keyframes blink { 50% { opacity: 0; } }
     </style>
@@ -81,7 +80,6 @@
         let isTyping = false;
         let chatHistory = JSON.parse(localStorage.getItem('abc_chat_history')) || [];
 
-        // Lắng nghe lệnh xóa từ Index.html
         window.addEventListener('message', (e) => { if (e.data === 'clear-chat') clearChat(); });
 
         window.onload = () => {
@@ -92,12 +90,28 @@
                 renderMessage("Chào ông anh! Tôi là AI của Abc's Noob. Có bug gì cần fix à?", 'bot-message');
             }
 
-            // 2. Ẩn Spinner của Iframe sau khi render xong
+            // Hàm ẩn loader an toàn
+            const forceHideLoader = () => {
+                const targetLoader = document.getElementById('iframe-loader');
+                if (targetLoader) {
+                    targetLoader.style.opacity = "0";
+                    setTimeout(() => {
+                        if (targetLoader.parentNode) targetLoader.remove();
+                        userInput.focus();
+                    }, 400);
+                }
+            };
+
+            // 2. Ẩn sau 600ms (Trường hợp bình thường)
+            setTimeout(forceHideLoader, 600);
+
+            // 3. Cơ chế cứu cánh (Safety Net): Nếu sau 10s chưa ẩn thì ép ẩn luôn
             setTimeout(() => {
-                loader.style.opacity = "0";
-                setTimeout(() => loader.remove(), 400); // Xóa khỏi DOM cho nhẹ trang
-                userInput.focus(); // Tự động trỏ chuột vào ô nhập liệu
-            }, 600);
+                if (document.getElementById('iframe-loader')) {
+                    console.warn("Loading timeout: Hết 10s, tự động ẩn spinner.");
+                    forceHideLoader();
+                }
+            }, 10000);
         };
 
         async function sendMessage() {
@@ -127,13 +141,18 @@
                 botMsgDiv.classList.remove('typing');
                 botMsgDiv.innerHTML = '';
                 
-                await typeText(botMsgDiv, data.text || "Hệ thống đang bận, thử lại sau nhé!");
+                const botText = data.text || "Hệ thống đang bận, thử lại sau nhé!";
+                await typeText(botMsgDiv, botText);
 
-                chatHistory.push({ role: "model", parts: [{ text: data.text }] });
+                chatHistory.push({ role: "model", parts: [{ text: botText }] });
                 if (chatHistory.length > 14) chatHistory.splice(0, 2);
                 localStorage.setItem('abc_chat_history', JSON.stringify(chatHistory));
             } catch (err) {
-                document.getElementById(loadingId).innerText = "Lỗi kết nối Server!";
+                const botMsgDiv = document.getElementById(loadingId);
+                if (botMsgDiv) {
+                    botMsgDiv.classList.remove('typing');
+                    botMsgDiv.innerText = "Lỗi kết nối Server!";
+                }
             } finally {
                 isTyping = false;
                 sendBtn.innerHTML = '<i class="fa-solid fa-paper-plane"></i>';
@@ -177,5 +196,6 @@
 
         userInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMessage(); });
     </script>
+    <script src="/assets/js/translate.js"></script>
 </body>
 </html>
