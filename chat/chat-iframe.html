@@ -2,39 +2,67 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
     <style>
-        body { background: transparent; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        .chat-card { background: #fff; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
-        .chat-header { background: #212529; color: white; padding: 15px 20px; display: flex; align-items: center; justify-content: space-between; }
+        * { box-sizing: border-box; }
+        body, html { 
+            margin: 0; padding: 0; height: 100%; width: 100%;
+            overflow: hidden; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        /* Spinner riêng của Iframe */
+        #iframe-loader {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: #ffffff;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            transition: opacity 0.4s ease;
+        }
+
+        .chat-card { background: #fff; height: 100vh; width: 100%; display: flex; flex-direction: column; }
+        .chat-header { background: #212529; color: white; padding: 12px 20px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
         #chat-window { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 15px; background: #fff; }
         
-        .message { max-width: 85%; padding: 12px 16px; border-radius: 18px; font-size: 15px; line-height: 1.5; }
+        .message { max-width: 85%; padding: 12px 16px; border-radius: 18px; font-size: 15px; line-height: 1.5; word-wrap: break-word; }
         .user-message { align-self: flex-end; background-color: #0d6efd; color: white; border-bottom-right-radius: 2px; }
         .bot-message { align-self: flex-start; background-color: #f1f0f0; color: #333; border-bottom-left-radius: 2px; }
         
-        pre { background: #2d2d2d !important; padding: 12px; border-radius: 10px; margin: 10px 0; }
-        .chat-footer { padding: 15px; border-top: 1px solid #eee; background: #fff; }
-        .input-group { background: #f8f9fa; border-radius: 30px; padding: 5px 15px; border: 1px solid #ddd; }
-        #user-input { border: none; background: transparent; box-shadow: none; outline: none; flex: 1; }
-        .btn-send { border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; }
+        pre { background: #2d2d2d !important; padding: 12px; border-radius: 10px; overflow-x: auto; }
+        .chat-footer { padding: 15px; border-top: 1px solid #eee; background: #fff; flex-shrink: 0; }
+        .input-group { background: #f8f9fa; border-radius: 30px; padding: 5px 15px; border: 1px solid #ddd; display: flex; align-items: center; }
+        #user-input { border: none; background: transparent; box-shadow: none; outline: none; flex: 1; height: 40px; }
+        .btn-send { border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border: none; }
+
+        /* Hiệu ứng gõ máy (typing) */
+        .typing::after { content: '|'; animation: blink 0.8s infinite; }
+        @keyframes blink { 50% { opacity: 0; } }
     </style>
 </head>
 <body>
 
+    <div id="iframe-loader">
+        <div class="spinner-grow text-primary" role="status"></div>
+        <span class="mt-2 text-muted fw-bold" style="font-size: 0.9rem;">Đang tải hội thoại...</span>
+    </div>
+
     <div class="chat-card">
         <div class="chat-header">
             <div><i class="fa-solid fa-robot me-2"></i><strong>Abc's Noob AI</strong></div>
-            <span class="badge rounded-pill bg-success">Online</span>
+            <span class="badge rounded-pill bg-success" style="font-size: 0.7rem;">Online</span>
         </div>
         
         <div id="chat-window"></div>
 
         <div class="chat-footer">
             <div class="input-group">
-                <input type="text" id="user-input" placeholder="Hỏi gì về Minecraft hoặc Code đi..." autocomplete="off">
+                <input type="text" id="user-input" placeholder="Hỏi gì đi ông anh..." autocomplete="off">
                 <button class="btn btn-primary btn-send" id="send-btn" onclick="sendMessage()">
                     <i class="fa-solid fa-paper-plane"></i>
                 </button>
@@ -49,23 +77,36 @@
         const WORKER_URL = 'https://abcsnoobai.abcsnoob.workers.dev';
         const chatWindow = document.getElementById('chat-window');
         const userInput = document.getElementById('user-input');
+        const loader = document.getElementById('iframe-loader');
         let isTyping = false;
         let chatHistory = JSON.parse(localStorage.getItem('abc_chat_history')) || [];
 
-        // Nhận lệnh xóa từ Index
+        // Lắng nghe lệnh xóa từ Index.html
         window.addEventListener('message', (e) => { if (e.data === 'clear-chat') clearChat(); });
 
         window.onload = () => {
+            // 1. Render lịch sử chat
             if (chatHistory.length > 0) {
                 chatHistory.forEach(msg => renderMessage(msg.parts[0].text, msg.role === 'user' ? 'user-message' : 'bot-message', null, true));
             } else {
-                renderMessage("Chào ông anh! Tôi là AI của Abc's Noob đây.", 'bot-message');
+                renderMessage("Chào ông anh! Tôi là AI của Abc's Noob. Có bug gì cần fix à?", 'bot-message');
             }
+
+            // 2. Ẩn Spinner của Iframe sau khi render xong
+            setTimeout(() => {
+                loader.style.opacity = "0";
+                setTimeout(() => loader.remove(), 400); // Xóa khỏi DOM cho nhẹ trang
+                userInput.focus(); // Tự động trỏ chuột vào ô nhập liệu
+            }, 600);
         };
 
         async function sendMessage() {
             const prompt = userInput.value.trim();
             if (!prompt || isTyping) return;
+
+            const sendBtn = document.getElementById('send-btn');
+            sendBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+            sendBtn.disabled = true;
 
             renderMessage(prompt, 'user-message');
             chatHistory.push({ role: "user", parts: [{ text: prompt }] });
@@ -73,7 +114,7 @@
             isTyping = true;
 
             const loadingId = 'load-' + Date.now();
-            renderMessage('Đang quét mạng lưới...', 'bot-message', loadingId, false);
+            renderMessage('Đang xử lý...', 'bot-message typing', loadingId, false);
 
             try {
                 const response = await fetch(WORKER_URL, {
@@ -83,15 +124,21 @@
                 });
                 const data = await response.json();
                 const botMsgDiv = document.getElementById(loadingId);
+                botMsgDiv.classList.remove('typing');
                 botMsgDiv.innerHTML = '';
-                await typeText(botMsgDiv, data.text || "Lỗi rồi...");
+                
+                await typeText(botMsgDiv, data.text || "Hệ thống đang bận, thử lại sau nhé!");
 
                 chatHistory.push({ role: "model", parts: [{ text: data.text }] });
+                if (chatHistory.length > 14) chatHistory.splice(0, 2);
                 localStorage.setItem('abc_chat_history', JSON.stringify(chatHistory));
             } catch (err) {
-                document.getElementById(loadingId).innerText = "Mất kết nối!";
+                document.getElementById(loadingId).innerText = "Lỗi kết nối Server!";
             } finally {
                 isTyping = false;
+                sendBtn.innerHTML = '<i class="fa-solid fa-paper-plane"></i>';
+                sendBtn.disabled = false;
+                chatWindow.scrollTop = chatWindow.scrollHeight;
             }
         }
 
@@ -122,7 +169,7 @@
         }
 
         function clearChat() {
-            if(confirm("Xóa sạch lịch sử chat chứ?")) {
+            if(confirm("Xóa toàn bộ lịch sử chat?")) {
                 localStorage.removeItem('abc_chat_history');
                 location.reload();
             }
