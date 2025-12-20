@@ -7,128 +7,194 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
     <style>
         * { box-sizing: border-box; }
         body, html { margin: 0; padding: 0; height: 100%; width: 100%; overflow: hidden; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        #iframe-loader { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #fff; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; transition: opacity 0.4s ease; }
+        #iframe-loader { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #ffffff; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; transition: opacity 0.4s ease; }
         .chat-card { background: #fff; height: 100vh; width: 100%; display: flex; flex-direction: column; }
         .chat-header { background: #212529; color: white; padding: 12px 20px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
         #chat-window { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 15px; background: #fff; scroll-behavior: smooth; }
-        .message { max-width: 85%; padding: 12px 16px; border-radius: 18px; font-size: 15px; line-height: 1.5; }
+        .message { max-width: 85%; padding: 12px 16px; border-radius: 18px; font-size: 15px; line-height: 1.5; word-wrap: break-word; }
         .user-message { align-self: flex-end; background-color: #0d6efd; color: white; border-bottom-right-radius: 2px; }
         .bot-message { align-self: flex-start; background-color: #f1f0f0; color: #333; border-bottom-left-radius: 2px; }
-        pre { background: #2d2d2d !important; padding: 12px; border-radius: 10px; overflow-x: auto; }
-        .chat-footer { padding: 15px; border-top: 1px solid #eee; background: #fff; }
+        pre { background: #2d2d2d !important; padding: 12px; border-radius: 10px; overflow-x: auto; margin: 10px 0; }
+        .chat-footer { padding: 15px; border-top: 1px solid #eee; background: #fff; flex-shrink: 0; }
         .input-group { background: #f8f9fa; border-radius: 30px; padding: 5px 15px; border: 1px solid #ddd; display: flex; align-items: center; }
-        #user-input { border: none; background: transparent; outline: none; flex: 1; height: 40px; }
-        .btn-send { border-radius: 50%; width: 40px; height: 40px; border: none; transition: 0.3s; }
+        #user-input { border: none; background: transparent; box-shadow: none; outline: none; flex: 1; height: 40px; }
+        .btn-send { border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border: none; transition: all 0.3s ease; }
         .typing::after { content: '|'; animation: blink 0.8s infinite; }
         @keyframes blink { 50% { opacity: 0; } }
+        .trash-icon { cursor: pointer; opacity: 0.7; transition: 0.2s; }
+        .trash-icon:hover { opacity: 1; color: #ff4d4d; }
     </style>
 </head>
 <body>
-    <div id="iframe-loader"><div class="spinner-grow text-primary"></div></div>
+    <div id="iframe-loader">
+        <div class="spinner-grow text-primary" role="status"></div>
+    </div>
 
     <div class="chat-card">
         <div class="chat-header">
             <div><i class="fa-solid fa-robot me-2"></i><strong>Abc's Noob AI</strong></div>
             <div class="d-flex align-items-center">
-                <i class="fa-solid fa-trash-can me-3" style="cursor: pointer;" onclick="clearChat()"></i>
-                <span class="badge rounded-pill bg-success">Online</span>
+                <i class="fa-solid fa-trash-can me-3 trash-icon" onclick="clearChat()"></i>
+                <span class="badge rounded-pill bg-success" style="font-size: 0.7rem;">Online</span>
             </div>
         </div>
+        
         <div id="chat-window"></div>
+
         <div class="chat-footer">
             <div class="input-group">
                 <input type="text" id="user-input" placeholder="Hỏi gì đi ông anh..." autocomplete="off">
-                <button class="btn btn-primary btn-send" id="send-btn" onclick="sendMessage()"><i class="fa-solid fa-paper-plane"></i></button>
+                <button class="btn btn-primary btn-send" id="send-btn" onclick="sendMessage()">
+                    <i class="fa-solid fa-paper-plane"></i>
+                </button>
             </div>
         </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+    
     <script>
         const WORKER_URL = 'https://abcsnoobai.abcsnoob.workers.dev';
         const chatWindow = document.getElementById('chat-window');
         const userInput = document.getElementById('user-input');
         const sendBtn = document.getElementById('send-btn');
         let isTyping = false;
+        let currentProviderState = 'gemini';
         let chatHistory = JSON.parse(localStorage.getItem('abc_chat_history')) || [];
+
+        function showToast(text, type = "info") {
+            Toastify({
+                text: text,
+                duration: 3000,
+                gravity: "top",
+                position: "right",
+                style: {
+                    background: type === "error" ? "#ff4d4d" : (type === "warning" ? "#ffc107" : "#212529"),
+                    borderRadius: "10px",
+                    color: type === "warning" ? "#000" : "#fff"
+                }
+            }).showToast();
+        }
 
         window.onload = () => {
             if (chatHistory.length > 0) {
                 chatHistory.forEach(msg => renderMessage(msg.parts[0].text, msg.role === 'user' ? 'user-message' : 'bot-message', null, true));
             } else {
-                renderMessage("Chào ông anh! Có bug gì cần fix à?", 'bot-message');
+                renderMessage("Chào ông anh! Tôi là AI của Abc's Noob. Có bug gì cần fix à?", 'bot-message');
             }
-            setTimeout(() => { document.getElementById('iframe-loader').remove(); userInput.focus(); }, 600);
+            setTimeout(() => {
+                const loader = document.getElementById('iframe-loader');
+                if (loader) {
+                    loader.style.opacity = "0";
+                    setTimeout(() => loader.remove(), 400);
+                }
+                userInput.focus();
+            }, 600);
         };
 
         async function sendMessage() {
             const prompt = userInput.value.trim();
             if (!prompt || isTyping) return;
+
             sendBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
             sendBtn.disabled = true;
+
             renderMessage(prompt, 'user-message');
             chatHistory.push({ role: "user", parts: [{ text: prompt }] });
-            userInput.value = ''; isTyping = true;
+            userInput.value = '';
+            isTyping = true;
+
             const loadingId = 'load-' + Date.now();
             renderMessage('Đang xử lý...', 'bot-message typing', loadingId, false);
 
             try {
-                const res = await fetch(WORKER_URL, { method: 'POST', body: JSON.stringify({ messages: chatHistory }) });
-                const data = await res.json();
+                const response = await fetch(WORKER_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ messages: chatHistory })
+                });
+                const data = await response.json();
                 
-                // Đổi màu nút dựa trên Provider
+                // --- Xử lý Toast & Đổi màu nút ---
                 if (data.provider === 'groq') {
+                    if (currentProviderState !== 'groq') {
+                        showToast("Google DeepMind lỗi, đã chuyển sang Groq Node!", "warning");
+                        currentProviderState = 'groq';
+                    }
                     sendBtn.classList.replace('btn-primary', 'btn-warning');
                 } else {
+                    if (currentProviderState === 'groq') {
+                        showToast("Google DeepMind đã hồi phục!", "info");
+                        currentProviderState = 'gemini';
+                    }
                     sendBtn.classList.replace('btn-warning', 'btn-primary');
                 }
 
                 const botMsgDiv = document.getElementById(loadingId);
-                botMsgDiv.classList.remove('typing'); botMsgDiv.innerHTML = '';
-                await typeText(botMsgDiv, data.text || "Node lag rồi!");
-                chatHistory.push({ role: "model", parts: [{ text: data.text }] });
+                botMsgDiv.classList.remove('typing');
+                botMsgDiv.innerHTML = '';
+                
+                const botText = data.text || "Node lag rồi...";
+                await typeText(botMsgDiv, botText);
+
+                chatHistory.push({ role: "model", parts: [{ text: botText }] });
                 if (chatHistory.length > 14) chatHistory.splice(0, 2);
                 localStorage.setItem('abc_chat_history', JSON.stringify(chatHistory));
             } catch (err) {
-                document.getElementById(loadingId).innerText = "Lỗi node!";
+                showToast("Lỗi kết nối Server!", "error");
+                const botMsgDiv = document.getElementById(loadingId);
+                if (botMsgDiv) {
+                    botMsgDiv.classList.remove('typing');
+                    botMsgDiv.innerText = "Lỗi kết nối node!";
+                }
             } finally {
-                isTyping = false; sendBtn.innerHTML = '<i class="fa-solid fa-paper-plane"></i>';
-                sendBtn.disabled = false; chatWindow.scrollTop = chatWindow.scrollHeight;
+                isTyping = false;
+                sendBtn.innerHTML = '<i class="fa-solid fa-paper-plane"></i>';
+                sendBtn.disabled = false;
+                chatWindow.scrollTop = chatWindow.scrollHeight;
             }
         }
 
-        async function typeText(el, txt) {
+        async function typeText(element, text) {
             let i = 0;
-            return new Promise(res => {
-                function t() {
-                    if (i < txt.length) {
-                        el.innerHTML = marked.parse(txt.substring(0, i + 1));
-                        Prism.highlightAllUnder(el); i++;
+            return new Promise((resolve) => {
+                function typing() {
+                    if (i < text.length) {
+                        element.innerHTML = marked.parse(text.substring(0, i + 1));
+                        Prism.highlightAllUnder(element);
+                        i++;
                         chatWindow.scrollTop = chatWindow.scrollHeight;
-                        setTimeout(t, 10);
-                    } else res();
-                } t();
+                        setTimeout(typing, 10);
+                    } else { resolve(); }
+                }
+                typing();
             });
         }
 
-        function renderMessage(txt, cls, id = '', mk = true) {
+        function renderMessage(text, className, id = '', useMarkdown = true) {
             const div = document.createElement('div');
-            div.className = `message ${cls}`; if(id) div.id = id;
-            div.innerHTML = mk ? marked.parse(txt) : txt;
-            chatWindow.appendChild(div); if(mk) Prism.highlightAllUnder(div);
+            div.className = `message ${className}`;
+            if(id) div.id = id;
+            div.innerHTML = useMarkdown ? marked.parse(text) : text;
+            chatWindow.appendChild(div);
+            if(useMarkdown) Prism.highlightAllUnder(div);
             chatWindow.scrollTop = chatWindow.scrollHeight;
         }
 
         function clearChat() {
             if(confirm("Xóa lịch sử node chứ ông anh?")) {
                 localStorage.removeItem('abc_chat_history');
-                location.reload();
+                showToast("Đã dọn dẹp node sạch sẽ!", "info");
+                setTimeout(() => location.reload(), 1000);
             }
         }
+
         userInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMessage(); });
     </script>
 </body>
