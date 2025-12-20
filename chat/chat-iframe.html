@@ -83,8 +83,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
 
-    <script>
-        // --- 1. CẤU HÌNH DỊCH THUẬT (Chỉ dùng cho giao diện) ---
+  <script>
+        // --- 1. CẤU HÌNH DỊCH THUẬT ---
         const TARGET_LANG = localStorage.getItem('user_lang') || 'vi';
 
         async function translate(text) {
@@ -97,7 +97,99 @@
             } catch (e) { return text; }
         }
 
-        // --- 2. QUẢN LÝ CHAT ---
+        // --- 2. NGÂN HÀNG CÂU HỎI (Cấu trúc: Chủ đề -> Nhiều câu hỏi) ---
+const questionBank = [
+    {
+        category: "Giải trí & Trò chơi",
+        questions: [
+            "Những tựa game thế giới mở phổ biến nhất hiện nay là gì?",
+            "Gợi ý cho tôi một bộ phim kinh điển về đề tài du hành thời gian.",
+            "Tại sao trò chơi điện tử lại có lợi cho việc giảm căng thẳng?",
+            "Lịch sử phát triển của dòng máy game cầm tay từ GameBoy đến Switch.",
+            "Top 5 bộ phim đoạt giải Oscar có kịch bản xoắn não nhất.",
+            "Xu hướng của ngành công nghiệp eSports trong thập kỷ tới."
+        ]
+    },
+    {
+        category: "Tài chính & Kinh tế",
+        questions: [
+            "Bitcoin và Ethereum khác nhau như thế nào?",
+            "Những nguyên tắc cơ bản cho người mới bắt đầu đầu tư tài chính?",
+            "Làm sao để quản lý chi tiêu cá nhân hiệu quả theo quy tắc 50/30/20?",
+            "Lạm phát ảnh hưởng như thế nào đến sức mua của người tiêu dùng?",
+            "Phân biệt giữa cổ phiếu, trái phiếu và quỹ chỉ số (ETF).",
+            "Tự do tài chính (FIRE) là gì và làm sao để đạt được nó trước tuổi 40?"
+        ]
+    },
+    {
+        category: "Công nghệ & AI",
+        questions: [
+            "AI sẽ thay đổi thị trường việc làm như thế nào trong 5 năm tới?",
+            "Hướng dẫn viết một hàm cơ bản bằng Python để kiểm tra số nguyên tố.",
+            "Làm thế nào để tạo một trang web có thiết kế responsive bằng CSS?",
+            "Sự khác biệt giữa Machine Learning và Deep Learning là gì?",
+            "Web3 và Metaverse sẽ thay đổi cách chúng ta tương tác trên Internet ra sao?",
+            "Cách bảo vệ dữ liệu cá nhân trước các cuộc tấn công mạng hiện đại."
+        ]
+    },
+    {
+        category: "Khoa học & Vũ trụ",
+        questions: [
+            "Lỗ đen là gì và điều gì xảy ra nếu vật chất rơi vào đó?",
+            "Biến đổi khí hậu đang ảnh hưởng thế nào đến các rạn san hô?",
+            "Thuyết tương đối của Einstein có thể giải thích đơn giản như thế nào?",
+            "Khả năng con người định cư trên sao Hỏa trong tương lai gần.",
+            "Sóng hấp dẫn là gì và tại sao việc phát hiện ra chúng lại quan trọng?",
+            "Tại sao chúng ta vẫn chưa tìm thấy sự sống ngoài hành tinh (Nghịch lý Fermi)?"
+        ]
+    },
+    {
+        category: "Đời sống & Sức khỏe",
+        questions: [
+            "Công thức làm một món ăn sáng nhanh gọn nhưng đủ dinh dưỡng?",
+            "Làm thế nào để cải thiện chất lượng giấc ngủ một cách tự nhiên?",
+            "Kỹ thuật Pomodoro là gì và cách áp dụng hiệu quả?",
+            "Lợi ích của việc thiền định đối với sức khỏe tâm thần hằng ngày.",
+            "Chế độ ăn Intermittent Fasting (nhịn ăn gián đoạn) hoạt động như thế nào?",
+            "Cách thiết lập thói quen đọc sách 30 phút mỗi ngày cho người bận rộn."
+        ]
+    },
+    {
+        category: "Văn hóa & Nghệ thuật",
+        questions: [
+            "Tìm hiểu về những di sản văn hóa thế giới nổi tiếng nhất của UNESCO.",
+            "Kể cho tôi một câu chuyện đùa ngắn về công nghệ.",
+            "Những cách hiệu quả nhất để tự học một ngôn ngữ mới tại nhà?",
+            "Sự khác biệt giữa trường phái hội họa Ấn tượng và Biểu hiện.",
+            "Tác động của văn hóa đại chúng (Pop Culture) đến tư duy của Gen Z.",
+            "Lịch sử và ý nghĩa của các ngày lễ truyền thống lớn trên thế giới."
+        ]
+    },
+    {
+        category: "Phát triển bản thân",
+        questions: [
+            "Làm thế nào để xây dựng sự tự tin khi nói chuyện trước đám đông?",
+            "Kỹ năng tư duy phản biện (Critical Thinking) là gì và cách rèn luyện?",
+            "Sự khác biệt giữa tư duy cố định (Fixed Mindset) và tư duy phát triển (Growth Mindset).",
+            "Cách lập kế hoạch hành động (Action Plan) để đạt được mục tiêu năm.",
+            "Nghệ thuật thương lượng và đàm phán trong công việc.",
+            "Làm sao để vượt qua sự trì hoãn (Procrastination) một cách triệt để?"
+        ]
+    },
+    {
+        category: "Lịch sử & Triết học",
+        questions: [
+            "Những nguyên nhân chính dẫn đến sự sụp đổ của Đế chế La Mã.",
+            "Triết học Khắc kỷ (Stoicism) giúp ích gì cho cuộc sống hiện đại?",
+            "Ý nghĩa của cuộc Cách mạng Công nghiệp lần thứ nhất đối với nhân loại.",
+            "Chủ nghĩa hiện sinh (Existentialism) là gì qua góc nhìn của Jean-Paul Sartre?",
+            "Những vị tướng tài ba nhất trong lịch sử quân sự thế giới.",
+            "Sự hình thành và phát triển của Con đường tơ lụa cổ đại."
+        ]
+    }
+];
+
+        // --- 3. QUẢN LÝ CHAT ---
         const WORKER_URL = 'https://abcsnoobai.abcsnoob.workers.dev';
         const chatWindow = document.getElementById('chat-window');
         const userInput = document.getElementById('user-input');
@@ -105,69 +197,43 @@
         let isTyping = false, selectedImageData = null;
         let chatHistory = JSON.parse(localStorage.getItem('abc_chat_history')) || [];
 
-const questionBank = [
-    // --- Giải trí & Trò chơi ---
-    { text: "Trò chơi", query: "Những tựa game thế giới mở phổ biến nhất hiện nay là gì?" },
-    { text: "Phim ảnh", query: "Gợi ý cho tôi một bộ phim kinh điển về đề tài du hành thời gian." },
-    
-    // --- Tài chính & Kinh tế ---
-    { text: "Tiền điện tử", query: "Bitcoin và Ethereum khác nhau như thế nào?" },
-    { text: "Đầu tư", query: "Những nguyên tắc cơ bản cho người mới bắt đầu đầu tư tài chính?" },
-
-    // --- Công nghệ & AI ---
-    { text: "Trí tuệ nhân tạo", query: "AI sẽ thay đổi thị trường việc làm như thế nào trong 5 năm tới?" },
-    { text: "Lập trình", query: "Hướng dẫn viết một hàm cơ bản bằng Python để kiểm tra số nguyên tố." },
-    { text: "Phát triển Web", query: "Làm thế nào để tạo một trang web có thiết kế responsive bằng CSS?" },
-
-    // --- Khoa học & Vũ trụ ---
-    { text: "Vũ trụ", query: "Lỗ đen là gì và điều gì xảy ra nếu vật chất rơi vào đó?" },
-    { text: "Môi trường", query: "Biến đổi khí hậu đang ảnh hưởng thế nào đến các rạn san hô?" },
-
-    // --- Đời sống & Sức khỏe ---
-    { text: "Nấu ăn", query: "Công thức làm một món ăn sáng nhanh gọn nhưng đủ dinh dưỡng?" },
-    { text: "Sức khỏe", query: "Làm thế nào để cải thiện chất lượng giấc ngủ một cách tự nhiên?" },
-    { text: "Năng suất", query: "Kỹ thuật Pomodoro là gì và cách áp dụng hiệu quả?" },
-
-    // --- Văn hóa & Nghệ thuật ---
-    { text: "Văn hóa", query: "Tìm hiểu về những di sản văn hóa thế giới nổi tiếng nhất của UNESCO." },
-    { text: "Hài hước", query: "Kể cho tôi một câu chuyện đùa ngắn về công nghệ." },
-    { text: "Ngôn ngữ", query: "Những cách hiệu quả nhất để tự học một ngôn ngữ mới tại nhà?" }
-];
-
-async function initSuggestions() {
-    const container = document.getElementById('suggestion-container');
-    if (!container) return;
-    container.innerHTML = '';
-    const shuffled = [...questionBank].sort(() => 0.5 - Math.random());
-    
-    for (const item of shuffled.slice(0, 4)) {
-        const chip = document.createElement('div');
-        chip.className = 'suggestion-chip';
-        
-        // 1. Dịch cái nhãn hiển thị trên nút (Ví dụ: "Công nghệ" -> "Технологии")
-        const translatedLabel = await translate(item.text);
-        chip.innerText = translatedLabel;
-        
-        chip.onclick = async () => {
-            // 2. Dịch luôn cả câu hỏi gốc trước khi gán vào ô input
-            // (Ví dụ: "AI là gì?" -> "Что такое ИИ?")
-            const translatedQuery = await translate(item.query);
-            userInput.value = translatedQuery; 
+        async function initSuggestions() {
+            const container = document.getElementById('suggestion-container');
+            if (!container) return;
+            container.innerHTML = '';
             
-            // 3. Tự động gửi đi
-            sendMessage(); 
-        };
-        container.appendChild(chip);
-    }
-}
+            // Trộn ngẫu nhiên các chủ đề
+            const shuffled = [...questionBank].sort(() => 0.5 - Math.random());
+            
+            // Lấy 4 chủ đề ngẫu nhiên
+            for (const item of shuffled.slice(0, 4)) {
+                const chip = document.createElement('div');
+                chip.className = 'suggestion-chip';
+                chip.style.cssText = "display:inline-block; margin:5px; padding:8px 15px; background:#f0f0f0; border-radius:20px; cursor:pointer;";
+                
+                // Chọn ngẫu nhiên 1 câu hỏi trong chủ đề đó
+                const randomIdx = Math.floor(Math.random() * item.questions.length);
+                const selectedQuestion = item.questions[randomIdx];
+
+                // Dịch nhãn chủ đề để hiển thị
+                const translatedLabel = await translate(item.category);
+                chip.innerText = translatedLabel;
+                
+                chip.onclick = async () => {
+                    // Dịch câu hỏi cụ thể trước khi gửi
+                    const translatedQuery = await translate(selectedQuestion);
+                    userInput.value = translatedQuery; 
+                    sendMessage(); 
+                };
+                container.appendChild(chip);
+            }
+        }
 
         async function sendMessage() {
             const prompt = userInput.value.trim();
             if ((!prompt && !selectedImageData) || isTyping) return;
             
             isTyping = true; sendBtn.disabled = true;
-            
-            // HIỂN THỊ GỐC: Không dịch nội dung user nhập
             renderMessage(prompt, 'user-message', null, true, selectedImageData);
             
             chatHistory.push({ role: "user", parts: [{ text: prompt || "Phân tích ảnh" }] });
@@ -186,7 +252,6 @@ async function initSuggestions() {
                 const botDiv = document.getElementById(loadingId);
                 botDiv.classList.remove('typing'); botDiv.innerHTML = '';
                 
-                // HIỂN THỊ GỐC: AI trả về ngôn ngữ nào hiện ngôn ngữ đó (Chống dịch nhảm code)
                 await typeText(botDiv, data.text);
                 
                 chatHistory.push({ role: "model", parts: [{ text: data.text }] });
@@ -200,14 +265,13 @@ async function initSuggestions() {
         }
 
         async function typeText(el, txt) {
-            // Không lặp for từng chữ để tránh hỏng thẻ HTML/Code khi đang render
             el.innerHTML = marked.parse(txt);
             Prism.highlightAllUnder(el);
             chatWindow.scrollTop = chatWindow.scrollHeight;
         }
 
         function renderMessage(t, c, id, mk, img) {
-            const w = document.getElementById('welcome-screen'); if(w) w.remove();
+            const w = document.getElementById('welcome-screen'); if(w && !id) w.remove();
             const d = document.createElement('div'); d.className = `message ${c}`; if(id) d.id = id;
             if(img) { const i = document.createElement('img'); i.src = img; i.className='img-msg'; d.appendChild(i); }
             if(t) { const s = document.createElement('span'); s.innerHTML = mk ? marked.parse(t) : t; d.appendChild(s); }
@@ -230,21 +294,20 @@ async function initSuggestions() {
         }
 
         window.onload = async () => {
-            // Dịch giao diện tĩnh
+            // Dịch giao diện
             document.getElementById('welcome-title').innerText = await translate('Chào bạn!');
             document.getElementById('welcome-desc').innerText = await translate('Bạn hãy cùng trò chuyện với mình nhé');
             document.getElementById('btn-refresh-text').innerText = await translate('Đổi gợi ý khác');
             document.getElementById('user-input').placeholder = await translate('Hỏi gì đi ông anh...');
 
             if (chatHistory.length > 0) {
+                const w = document.getElementById('welcome-screen'); if(w) w.remove();
                 for (const m of chatHistory) {
-                    // Hiển thị lại lịch sử cũng giữ nguyên ngôn ngữ gốc
                     renderMessage(m.parts[0].text, m.role==='user'?'user-message':'bot-message', null, true);
                 }
             } else {
                 initSuggestions();
             }
-            setTimeout(() => document.getElementById('iframe-loader')?.remove(), 600);
         };
 
         userInput.addEventListener('keypress', e => e.key === 'Enter' && sendMessage());
