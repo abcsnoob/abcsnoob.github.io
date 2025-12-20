@@ -1,13 +1,13 @@
 <!DOCTYPE html>
-<html lang="vi" class="notranslate" translate="no">
+<html lang="vi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Abc's Noob AI</title>
-    <link href="[https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css](https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css)" rel="stylesheet">
-    <link rel="stylesheet" href="[https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css](https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css)"/>
-    <link rel="stylesheet" href="[https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css](https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css)">
-    <link rel="stylesheet" type="text/css" href="[https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css](https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css)">
+    <title>Abc's Noob AI - Fixed Code</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
     <style>
         * { box-sizing: border-box; }
         body, html { margin: 0; padding: 0; height: 100%; width: 100%; overflow: hidden; font-family: 'Segoe UI', sans-serif; }
@@ -23,17 +23,27 @@
         .suggestion-chip { padding: 8px 16px; background: #f8f9fa; border: 1px solid #ddd; border-radius: 20px; font-size: 14px; cursor: pointer; transition: 0.2s; }
         .suggestion-chip:hover { background: #0d6efd; color: white; border-color: #0d6efd; }
         
+        .refresh-btn { margin-top: 15px; font-size: 13px; color: #6c757d; cursor: pointer; text-decoration: underline; background: none; border: none; }
+        .refresh-btn:hover { color: #0d6efd; }
+
         .message { max-width: 85%; padding: 12px 16px; border-radius: 18px; font-size: 15px; line-height: 1.5; word-wrap: break-word; }
         .user-message { align-self: flex-end; background: #0d6efd; color: white; border-bottom-right-radius: 2px; }
         .bot-message { align-self: flex-start; background: #f1f0f0; color: #333; border-bottom-left-radius: 2px; }
         
-        /* Chặn trình duyệt tự dịch các vùng này */
-        pre, code, .notranslate { translate: no !important; }
+        /* Ngăn chặn dịch code và bảo vệ định dạng */
+        pre, code { 
+            direction: ltr !important; 
+            text-align: left !important; 
+            unicode-bidi: isolate;
+        }
 
         .chat-footer { padding: 15px; border-top: 1px solid #eee; }
         .input-group { background: #f8f9fa; border-radius: 30px; padding: 5px 15px; border: 1px solid #ddd; display: flex; align-items: center; }
         #user-input { border: none; background: transparent; outline: none; flex: 1; height: 40px; }
         .img-msg { max-width: 100%; max-height: 250px; border-radius: 10px; margin-bottom: 8px; display: block; }
+
+        .typing::after { content: '...'; animation: blink 1s infinite; }
+        @keyframes blink { 50% { opacity: 0; } }
     </style>
 </head>
 <body>
@@ -41,7 +51,7 @@
     
     <div class="chat-card">
         <div class="chat-header">
-            <div id="notranslate" class="notranslate" translate="no">
+            <div class="notranslate">
                 <i class="fa-solid fa-robot me-2"></i><strong>Abc's Noob AI</strong>
             </div>
             <div class="d-flex align-items-center">
@@ -52,10 +62,13 @@
 
         <div id="chat-window">
             <div id="welcome-screen">
-                <img src="/assets/image/abcsnoob.webp" alt="Logo" onerror="this.src='[https://via.placeholder.com/100](https://via.placeholder.com/100)'">
+                <img src="/assets/image/abcsnoob.webp" alt="Logo" onerror="this.src='https://via.placeholder.com/100'">
                 <h4 id="welcome-title">Chào bạn!</h4>
                 <p id="welcome-desc">Bạn hãy cùng trò chuyện với mình nhé</p>
                 <div id="suggestion-container" class="suggestion-container"></div>
+                <button class="refresh-btn" onclick="initSuggestions()">
+                    <i class="fa-solid fa-rotate me-1"></i> <span id="btn-refresh-text">Đổi gợi ý khác</span>
+                </button>
             </div>
         </div>
 
@@ -73,44 +86,75 @@
         </div>
     </div>
 
-    <script src="[https://cdn.jsdelivr.net/npm/marked/marked.min.js](https://cdn.jsdelivr.net/npm/marked/marked.min.js)"></script>
-    <script src="[https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js](https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js)"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
 
     <script>
+        // --- 1. CẤU HÌNH DỊCH THUẬT AN TOÀN ---
         const TARGET_LANG = localStorage.getItem('user_lang') || 'vi';
 
-        // --- HÀM DỊCH THÔNG MINH (CHẶN DỊCH CODE) ---
-        async function smartTranslate(text) {
+        async function translate(text) {
             if (!text || TARGET_LANG === 'vi') return text;
-
-            // Regex để tìm các đoạn code block ```...```
-            const codeBlocks = [];
-            let placeholderText = text.replace(/```[\s\S]*?```/g, (match) => {
-                codeBlocks.push(match);
-                return `__CODE_BLOCK_${codeBlocks.length - 1}__`;
-            });
-
             try {
-                const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=vi&tl=${TARGET_LANG}&dt=t&q=${encodeURIComponent(placeholderText)}`;
-                const res = await fetch(url);
-                const json = await res.json();
-                let translatedText = json[0].map(item => item[0]).join('');
-
-                // Trả lại các đoạn code nguyên bản vào văn bản đã dịch
-                codeBlocks.forEach((code, index) => {
-                    translatedText = translatedText.replace(`__CODE_BLOCK_${index}__`, code);
-                });
-
-                return translatedText;
+                // Tách các đoạn code (bọc trong ``` hoặc `) ra để không dịch
+                const codeRegex = /(```[\s\S]*?```|`.*?`)/g;
+                const parts = text.split(codeRegex);
+                
+                const translatedParts = await Promise.all(parts.map(async (part) => {
+                    // Nếu là code block hoặc inline code, giữ nguyên
+                    if (part.startsWith('`')) return part;
+                    
+                    // Chỉ dịch nếu có chữ
+                    if (part.trim().length > 0) {
+                        const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=vi&tl=${TARGET_LANG}&dt=t&q=${encodeURIComponent(part)}`;
+                        const res = await fetch(url);
+                        const json = await res.json();
+                        return json[0].map(item => item[0]).join('');
+                    }
+                    return part;
+                }));
+                return translatedParts.join('');
             } catch (e) { return text; }
         }
 
-        const WORKER_URL = 'https://abcsnoobai.abcsnoob.workers.dev';
+        // Cấu hình marked để thêm class không dịch cho code
+        marked.setOptions({
+            highlight: function(code, lang) {
+                return code; // Prism sẽ xử lý sau
+            }
+        });
+
+        // --- 2. QUẢN LÝ CHAT ---
+        const WORKER_URL = '[https://abcsnoobai.abcsnoob.workers.dev](https://abcsnoobai.abcsnoob.workers.dev)';
         const chatWindow = document.getElementById('chat-window');
         const userInput = document.getElementById('user-input');
         const sendBtn = document.getElementById('send-btn');
         let isTyping = false, selectedImageData = null;
         let chatHistory = JSON.parse(localStorage.getItem('abc_chat_history')) || [];
+
+        const questionBank = [
+            { text: "Minecraft", query: "Minecraft có những gì thú vị?" },
+            { text: "Bitcoin", query: "Bitcoin là gì?" },
+            { text: "Hài hước", query: "Kể chuyện cười đi" },
+            { text: "Công nghệ", query: "AI là gì?" },
+            { text: "Code", query: "Viết HTML tạo nút bấm" }
+        ];
+
+        async function initSuggestions() {
+            const container = document.getElementById('suggestion-container');
+            if (!container) return;
+            container.innerHTML = '';
+            const shuffled = [...questionBank].sort(() => 0.5 - Math.random());
+            
+            for (const item of shuffled.slice(0, 4)) {
+                const chip = document.createElement('div');
+                chip.className = 'suggestion-chip';
+                chip.innerText = await translate(item.text);
+                chip.onclick = () => { userInput.value = item.query; sendMessage(); };
+                container.appendChild(chip);
+            }
+        }
 
         async function sendMessage() {
             const prompt = userInput.value.trim();
@@ -118,66 +162,100 @@
             
             isTyping = true; sendBtn.disabled = true;
             
-            const displayPrompt = await smartTranslate(prompt);
+            const displayPrompt = await translate(prompt);
             renderMessage(displayPrompt, 'user-message', null, true, selectedImageData);
             
             chatHistory.push({ role: "user", parts: [{ text: prompt || "Phân tích ảnh" }] });
             
             const loadingId = 'load-' + Date.now();
-            renderMessage('...', 'bot-message typing', loadingId, false);
-            userInput.value = '';
+            const loadingMsg = await translate('Đang xử lý...');
+            renderMessage(loadingMsg, 'bot-message typing', loadingId, false);
+            userInput.value = ''; selectedImageData = null;
 
             try {
-                const res = await fetch(WORKER_URL, { method: 'POST', body: JSON.stringify({ messages: chatHistory }) });
+                const res = await fetch(WORKER_URL, { 
+                    method: 'POST', 
+                    body: JSON.stringify({ messages: chatHistory }) 
+                });
                 const data = await res.json();
                 const botDiv = document.getElementById(loadingId);
-                botDiv.classList.remove('typing');
+                botDiv.classList.remove('typing'); botDiv.innerHTML = '';
                 
-                // DỊCH NHƯNG GIỮ NGUYÊN CODE
-                const translatedBotText = await smartTranslate(data.text);
+                // DỊCH AN TOÀN: Bỏ qua code blocks
+                const translatedBotText = await translate(data.text);
                 await typeText(botDiv, translatedBotText);
                 
                 chatHistory.push({ role: "model", parts: [{ text: data.text }] });
-                localStorage.setItem('abc_chat_history', JSON.stringify(chatHistory.slice(-10)));
-            } catch (e) { document.getElementById(loadingId).innerText = "Error!"; }
+                if (chatHistory.length > 10) chatHistory.splice(0, 2);
+                localStorage.setItem('abc_chat_history', JSON.stringify(chatHistory));
+            } catch (e) { 
+                const errorMsg = await translate("Lỗi kết nối!");
+                const errEl = document.getElementById(loadingId);
+                if(errEl) errEl.innerText = errorMsg; 
+            }
             finally { isTyping = false; sendBtn.disabled = false; }
         }
 
         async function typeText(el, txt) {
-            // Render Marked trước để tách biệt thẻ HTML
+            // Hiển thị nội dung đã được parse Markdown
             el.innerHTML = marked.parse(txt);
-            // Gán thuộc tính chặn dịch cho tất cả các thẻ code vừa tạo
-            el.querySelectorAll('pre, code').forEach(node => {
-                node.classList.add('notranslate');
-                node.setAttribute('translate', 'no');
-            });
+            // Thêm class notranslate cho tất cả thẻ pre/code vừa tạo
+            el.querySelectorAll('pre, code').forEach(node => node.classList.add('notranslate'));
             Prism.highlightAllUnder(el);
             chatWindow.scrollTop = chatWindow.scrollHeight;
+            
+            // Nếu bạn muốn hiệu ứng chữ chạy, có thể dùng logic cũ nhưng 
+            // nên parse Markdown một lần ở cuối để tránh lỗi thẻ HTML dở dang.
         }
 
         function renderMessage(t, c, id, mk, img) {
             const w = document.getElementById('welcome-screen'); if(w) w.remove();
-            const d = document.createElement('div'); d.className = `message ${c} notranslate`; if(id) d.id = id;
+            const d = document.createElement('div'); d.className = `message ${c}`; if(id) d.id = id;
             if(img) { const i = document.createElement('img'); i.src = img; i.className='img-msg'; d.appendChild(i); }
-            if(t) { const s = document.createElement('span'); s.innerHTML = mk ? marked.parse(t) : t; d.appendChild(s); }
-            chatWindow.appendChild(d); chatWindow.scrollTop = chatWindow.scrollHeight;
+            if(t) { 
+                const s = document.createElement('span'); 
+                s.innerHTML = mk ? marked.parse(t) : t; 
+                if(mk) s.querySelectorAll('pre, code').forEach(n => n.classList.add('notranslate'));
+                d.appendChild(s); 
+            }
+            chatWindow.appendChild(d); 
+            chatWindow.scrollTop = chatWindow.scrollHeight;
+            if(mk) Prism.highlightAllUnder(d);
         }
 
-        function clearChat() { localStorage.removeItem('abc_chat_history'); location.reload(); }
+        function clearChat() { 
+            if(confirm("Xóa lịch sử?")) { 
+                localStorage.removeItem('abc_chat_history'); 
+                location.reload(); 
+            } 
+        }
+
         function handleFile(i) {
             const f = i.files[0]; if(!f) return;
-            const r = new FileReader(); r.onload = (e) => selectedImageData = e.target.result; r.readAsDataURL(f);
+            const r = new FileReader(); 
+            r.onload = (e) => selectedImageData = e.target.result; 
+            r.readAsDataURL(f);
         }
 
         window.onload = async () => {
+            document.getElementById('welcome-title').innerText = await translate('Chào bạn!');
+            document.getElementById('welcome-desc').innerText = await translate('Bạn hãy cùng trò chuyện với mình nhé');
+            document.getElementById('btn-refresh-text').innerText = await translate('Đổi gợi ý khác');
+            document.getElementById('user-input').placeholder = await translate('Hỏi gì đi ông anh...');
+
             if (chatHistory.length > 0) {
+                const w = document.getElementById('welcome-screen'); if(w) w.remove();
                 for (const m of chatHistory) {
-                    const t = await smartTranslate(m.parts[0].text);
+                    const t = await translate(m.parts[0].text);
                     renderMessage(t, m.role==='user'?'user-message':'bot-message', null, true);
                 }
+            } else {
+                initSuggestions();
             }
-            document.getElementById('iframe-loader')?.remove();
+            setTimeout(() => document.getElementById('iframe-loader')?.remove(), 600);
         };
+
+        userInput.addEventListener('keypress', e => e.key === 'Enter' && sendMessage());
     </script>
 </body>
 </html>
