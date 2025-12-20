@@ -83,21 +83,50 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
 
-  <script>
-        // --- 1. CẤU HÌNH DỊCH THUẬT ---
+   <script>
+
+        // --- 1. CẤU HÌNH DỊCH THUẬT (Chỉ dùng cho giao diện) ---
+
         const TARGET_LANG = localStorage.getItem('user_lang') || 'vi';
 
+
+
         async function translate(text) {
+
             if (!text || TARGET_LANG === 'vi') return text;
+
             try {
+
                 const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=vi&tl=${TARGET_LANG}&dt=t&q=${encodeURIComponent(text)}`;
+
                 const res = await fetch(url);
+
                 const json = await res.json();
+
                 return json[0].map(item => item[0]).join('');
+
             } catch (e) { return text; }
+
         }
 
-        // --- 2. NGÂN HÀNG CÂU HỎI (Cấu trúc: Chủ đề -> Nhiều câu hỏi) ---
+
+
+        // --- 2. QUẢN LÝ CHAT ---
+
+        const WORKER_URL = 'https://abcsnoobai.abcsnoob.workers.dev';
+
+        const chatWindow = document.getElementById('chat-window');
+
+        const userInput = document.getElementById('user-input');
+
+        const sendBtn = document.getElementById('send-btn');
+
+        let isTyping = false, selectedImageData = null;
+
+        let chatHistory = JSON.parse(localStorage.getItem('abc_chat_history')) || [];
+
+
+
 const questionBank = [
     {
         category: "Giải trí & Trò chơi",
@@ -189,128 +218,216 @@ const questionBank = [
     }
 ];
 
-        // --- 3. QUẢN LÝ CHAT ---
-        const WORKER_URL = 'https://abcsnoobai.abcsnoob.workers.dev';
-        const chatWindow = document.getElementById('chat-window');
-        const userInput = document.getElementById('user-input');
-        const sendBtn = document.getElementById('send-btn');
-        let isTyping = false, selectedImageData = null;
-        let chatHistory = JSON.parse(localStorage.getItem('abc_chat_history')) || [];
 
-        async function initSuggestions() {
-            const container = document.getElementById('suggestion-container');
-            if (!container) return;
-            container.innerHTML = '';
-            
-            // Trộn ngẫu nhiên các chủ đề
-            const shuffled = [...questionBank].sort(() => 0.5 - Math.random());
-            
-            // Lấy 4 chủ đề ngẫu nhiên
-            for (const item of shuffled.slice(0, 4)) {
-                const chip = document.createElement('div');
-                chip.className = 'suggestion-chip';
-                chip.style.cssText = "display:inline-block; margin:5px; padding:8px 15px; background:#f0f0f0; border-radius:20px; cursor:pointer;";
-                
-                // Chọn ngẫu nhiên 1 câu hỏi trong chủ đề đó
-                const randomIdx = Math.floor(Math.random() * item.questions.length);
-                const selectedQuestion = item.questions[randomIdx];
 
-                // Dịch nhãn chủ đề để hiển thị
-                const translatedLabel = await translate(item.category);
-                chip.innerText = translatedLabel;
-                
-                chip.onclick = async () => {
-                    // Dịch câu hỏi cụ thể trước khi gửi
-                    const translatedQuery = await translate(selectedQuestion);
-                    userInput.value = translatedQuery; 
-                    sendMessage(); 
-                };
-                container.appendChild(chip);
-            }
-        }
+async function initSuggestions() {
+    const container = document.getElementById('suggestion-container');
+    if (!container) return;
+    container.innerHTML = '';
+
+    // Trộn ngẫu nhiên các chủ đề
+    const shuffledCategories = [...questionBank].sort(() => 0.5 - Math.random());
+    
+    // Lấy 4 chủ đề đầu tiên (hoặc số lượng bạn muốn)
+    for (const item of shuffledCategories.slice(0, 4)) {
+        const chip = document.createElement('div');
+        chip.className = 'suggestion-chip';
+        
+        // Chọn ngẫu nhiên 1 câu hỏi trong chủ đề đó
+        const randomQuestion = item.questions[Math.floor(Math.random() * item.questions.length)];
+        
+        // 1. Dịch nhãn chủ đề để hiển thị trên nút
+        const translatedLabel = await translate(item.category);
+        chip.innerText = translatedLabel;
+        
+        chip.onclick = async () => {
+            // 2. Dịch câu hỏi đã chọn trước khi gửi
+            const translatedQuery = await translate(randomQuestion);
+            userInput.value = translatedQuery; 
+            
+            // 3. Tự động gửi đi
+            sendMessage(); 
+        };
+        container.appendChild(chip);
+    }
+}
+
+
 
         async function sendMessage() {
+
             const prompt = userInput.value.trim();
+
             if ((!prompt && !selectedImageData) || isTyping) return;
+
             
+
             isTyping = true; sendBtn.disabled = true;
+
+            
+
+            // HIỂN THỊ GỐC: Không dịch nội dung user nhập
+
             renderMessage(prompt, 'user-message', null, true, selectedImageData);
+
             
+
             chatHistory.push({ role: "user", parts: [{ text: prompt || "Phân tích ảnh" }] });
+
             
+
             const loadingId = 'load-' + Date.now();
+
             const loadingMsg = await translate('Đang xử lý...');
+
             renderMessage(loadingMsg, 'bot-message typing', loadingId, false);
+
             userInput.value = ''; selectedImageData = null;
 
+
+
             try {
+
                 const res = await fetch(WORKER_URL, { 
+
                     method: 'POST', 
+
                     body: JSON.stringify({ messages: chatHistory }) 
+
                 });
+
                 const data = await res.json();
+
                 const botDiv = document.getElementById(loadingId);
+
                 botDiv.classList.remove('typing'); botDiv.innerHTML = '';
+
                 
+
+                // HIỂN THỊ GỐC: AI trả về ngôn ngữ nào hiện ngôn ngữ đó (Chống dịch nhảm code)
+
                 await typeText(botDiv, data.text);
+
                 
+
                 chatHistory.push({ role: "model", parts: [{ text: data.text }] });
+
                 if (chatHistory.length > 10) chatHistory.splice(0, 2);
+
                 localStorage.setItem('abc_chat_history', JSON.stringify(chatHistory));
+
             } catch (e) { 
+
                 const errorMsg = await translate("Lỗi kết nối!");
+
                 document.getElementById(loadingId).innerText = errorMsg; 
+
             }
+
             finally { isTyping = false; sendBtn.disabled = false; }
+
         }
+
+
 
         async function typeText(el, txt) {
+
+            // Không lặp for từng chữ để tránh hỏng thẻ HTML/Code khi đang render
+
             el.innerHTML = marked.parse(txt);
+
             Prism.highlightAllUnder(el);
+
             chatWindow.scrollTop = chatWindow.scrollHeight;
+
         }
+
+
 
         function renderMessage(t, c, id, mk, img) {
-            const w = document.getElementById('welcome-screen'); if(w && !id) w.remove();
+
+            const w = document.getElementById('welcome-screen'); if(w) w.remove();
+
             const d = document.createElement('div'); d.className = `message ${c}`; if(id) d.id = id;
+
             if(img) { const i = document.createElement('img'); i.src = img; i.className='img-msg'; d.appendChild(i); }
+
             if(t) { const s = document.createElement('span'); s.innerHTML = mk ? marked.parse(t) : t; d.appendChild(s); }
+
             chatWindow.appendChild(d); chatWindow.scrollTop = chatWindow.scrollHeight;
+
             if(mk) Prism.highlightAllUnder(d);
+
         }
+
+
 
         function clearChat() { 
+
             if(confirm("Xóa lịch sử?")) { 
+
                 localStorage.removeItem('abc_chat_history'); 
+
                 location.reload(); 
+
             } 
+
         }
+
+
 
         function handleFile(i) {
+
             const f = i.files[0]; if(!f) return;
+
             const r = new FileReader(); 
+
             r.onload = (e) => selectedImageData = e.target.result; 
+
             r.readAsDataURL(f);
+
         }
 
+
+
         window.onload = async () => {
-            // Dịch giao diện
+
+            // Dịch giao diện tĩnh
+
             document.getElementById('welcome-title').innerText = await translate('Chào bạn!');
+
             document.getElementById('welcome-desc').innerText = await translate('Bạn hãy cùng trò chuyện với mình nhé');
+
             document.getElementById('btn-refresh-text').innerText = await translate('Đổi gợi ý khác');
+
             document.getElementById('user-input').placeholder = await translate('Hỏi gì đi ông anh...');
 
+
+
             if (chatHistory.length > 0) {
-                const w = document.getElementById('welcome-screen'); if(w) w.remove();
+
                 for (const m of chatHistory) {
+
+                    // Hiển thị lại lịch sử cũng giữ nguyên ngôn ngữ gốc
+
                     renderMessage(m.parts[0].text, m.role==='user'?'user-message':'bot-message', null, true);
+
                 }
+
             } else {
+
                 initSuggestions();
+
             }
+
+            setTimeout(() => document.getElementById('iframe-loader')?.remove(), 600);
+
         };
 
+
+
         userInput.addEventListener('keypress', e => e.key === 'Enter' && sendMessage());
+
     </script>
 </body>
 </html>
