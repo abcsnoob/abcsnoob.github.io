@@ -134,22 +134,32 @@ const questionBank = [
     { text: "Ngôn ngữ", query: "Những cách hiệu quả nhất để tự học một ngôn ngữ mới tại nhà?" }
 ];
 
-        async function initSuggestions() {
-            const container = document.getElementById('suggestion-container');
-            if (!container) return;
-            container.innerHTML = '';
-            const shuffled = [...questionBank].sort(() => 0.5 - Math.random());
+async function initSuggestions() {
+    const container = document.getElementById('suggestion-container');
+    if (!container) return;
+    container.innerHTML = '';
+    const shuffled = [...questionBank].sort(() => 0.5 - Math.random());
+    
+    for (const item of shuffled.slice(0, 4)) {
+        const chip = document.createElement('div');
+        chip.className = 'suggestion-chip';
+        
+        // 1. Dịch cái nhãn hiển thị trên nút (Ví dụ: "Công nghệ" -> "Технологии")
+        const translatedLabel = await translate(item.text);
+        chip.innerText = translatedLabel;
+        
+        chip.onclick = async () => {
+            // 2. Dịch luôn cả câu hỏi gốc trước khi gán vào ô input
+            // (Ví dụ: "AI là gì?" -> "Что такое ИИ?")
+            const translatedQuery = await translate(item.query);
+            userInput.value = translatedQuery; 
             
-            for (const item of shuffled.slice(0, 4)) {
-                const chip = document.createElement('div');
-                chip.className = 'suggestion-chip';
-                // CHỈ DỊCH TEXT HIỂN THỊ CỦA GỢI Ý
-                chip.innerText = await translate(item.text);
-                // QUERY GỬI ĐI GIỮ NGUYÊN TIẾNG VIỆT ĐỂ AI HIỂU CHUẨN
-                chip.onclick = () => { userInput.value = item.query; sendMessage(); };
-                container.appendChild(chip);
-            }
-        }
+            // 3. Tự động gửi đi
+            sendMessage(); 
+        };
+        container.appendChild(chip);
+    }
+}
 
         async function sendMessage() {
             const prompt = userInput.value.trim();
