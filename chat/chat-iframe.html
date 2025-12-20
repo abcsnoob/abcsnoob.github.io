@@ -16,7 +16,6 @@
         .chat-header { background: #212529; color: white; padding: 12px 20px; display: flex; align-items: center; justify-content: space-between; }
         #chat-window { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 15px; background: #fff; position: relative; }
         
-        /* Welcome Screen */
         #welcome-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; text-align: center; }
         #welcome-screen img { width: 100px; height: 100px; border-radius: 50%; margin-bottom: 15px; border: 2px solid #eee; }
         
@@ -27,7 +26,6 @@
         .refresh-btn { margin-top: 15px; font-size: 13px; color: #6c757d; cursor: pointer; text-decoration: underline; background: none; border: none; }
         .refresh-btn:hover { color: #0d6efd; }
 
-        /* Messages */
         .message { max-width: 85%; padding: 12px 16px; border-radius: 18px; font-size: 15px; line-height: 1.5; word-wrap: break-word; }
         .user-message { align-self: flex-end; background: #0d6efd; color: white; border-bottom-right-radius: 2px; }
         .bot-message { align-self: flex-start; background: #f1f0f0; color: #333; border-bottom-left-radius: 2px; }
@@ -36,33 +34,44 @@
         .input-group { background: #f8f9fa; border-radius: 30px; padding: 5px 15px; border: 1px solid #ddd; display: flex; align-items: center; }
         #user-input { border: none; background: transparent; outline: none; flex: 1; height: 40px; }
         .img-msg { max-width: 100%; max-height: 250px; border-radius: 10px; margin-bottom: 8px; display: block; }
+
+        /* Loader cho hiệu ứng đang xử lý */
+        .typing::after { content: '...'; animation: blink 1s infinite; }
+        @keyframes blink { 50% { opacity: 0; } }
     </style>
 </head>
 <body>
     <div id="iframe-loader"><div class="spinner-grow text-primary"></div></div>
+    
     <div class="chat-card">
         <div class="chat-header">
-            <div><i class="fa-solid fa-robot me-2"></i><strong>Abc's Noob AI</strong></div>
+            <div id="notranslate" class="notranslate">
+                <i class="fa-solid fa-robot me-2"></i><strong>Abc's Noob AI</strong>
+            </div>
             <div class="d-flex align-items-center">
                 <i class="fa-solid fa-trash-can me-3" style="cursor:pointer" onclick="clearChat()"></i>
-                <span class="badge rounded-pill bg-success">Online</span>
+                <span class="badge rounded-pill bg-success notranslate">Online</span>
             </div>
         </div>
+
         <div id="chat-window">
             <div id="welcome-screen">
                 <img src="/assets/image/abcsnoob.webp" alt="Logo" onerror="this.src='https://via.placeholder.com/100'">
-                <h4>Chào bạn!</h4>
-                <p>Bạn hãy cùng trò chuyện với mình nhé</p>
+                <h4 id="welcome-title">Chào bạn!</h4>
+                <p id="welcome-desc">Bạn hãy cùng trò chuyện với mình nhé</p>
                 <div id="suggestion-container" class="suggestion-container"></div>
                 <button class="refresh-btn" onclick="initSuggestions()">
-                    <i class="fa-solid fa-rotate me-1"></i> Đổi gợi ý khác
+                    <i class="fa-solid fa-rotate me-1"></i> <span id="btn-refresh-text">Đổi gợi ý khác</span>
                 </button>
             </div>
         </div>
+
         <div class="chat-footer">
             <div class="input-group">
                 <input type="file" id="file-input" accept="image/*" style="display:none" onchange="handleFile(this)">
-                <button style="border:none; background:none" onclick="document.getElementById('file-input').click()"><i class="fa-solid fa-image"></i></button>
+                <button style="border:none; background:none" onclick="document.getElementById('file-input').click()">
+                    <i class="fa-solid fa-image"></i>
+                </button>
                 <input type="text" id="user-input" placeholder="Hỏi gì đi ông anh..." autocomplete="off">
                 <button class="btn btn-primary" id="send-btn" style="border-radius:50%; width:40px; height:40px" onclick="sendMessage()">
                     <i class="fa-solid fa-paper-plane"></i>
@@ -74,7 +83,22 @@
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+
     <script>
+        // --- 1. CẤU HÌNH DỊCH THUẬT ---
+        const TARGET_LANG = localStorage.getItem('user_lang') || 'vi';
+
+        async function translate(text) {
+            if (!text || TARGET_LANG === 'vi') return text;
+            try {
+                const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=vi&tl=${TARGET_LANG}&dt=t&q=${encodeURIComponent(text)}`;
+                const res = await fetch(url);
+                const json = await res.json();
+                return json[0].map(item => item[0]).join('');
+            } catch (e) { return text; }
+        }
+
+        // --- 2. QUẢN LÝ CHAT ---
         const WORKER_URL = 'https://abcsnoobai.abcsnoob.workers.dev';
         const chatWindow = document.getElementById('chat-window');
         const userInput = document.getElementById('user-input');
@@ -84,71 +108,66 @@
 
         const questionBank = [
             { text: "Minecraft", query: "Minecraft có những gì thú vị?" },
-            { text: "Bitcoin", query: "Bitcoin được ai tạo ra và nó hoạt động thế nào?" },
-            { text: "Công nghệ", query: "AI (Trí tuệ nhân tạo) là gì?" },
-            { text: "Hài hước", query: "Kể cho tôi một câu chuyện cười ngắn" },
-            { text: "Nấu ăn", query: "Cách nấu món phở bò đơn giản tại nhà" },
-            { text: "Vũ trụ", query: "Hố đen là gì và nó có thật không?" },
-            { text: "Lịch sử", query: "Ai là người đầu tiên đặt chân lên Mặt Trăng?" },
-            { text: "Code", query: "Viết giúp tôi một đoạn code HTML tạo nút bấm đổi màu" },
-            { text: "Sức khỏe", query: "Uống bao nhiêu nước mỗi ngày là đủ?" },
-            { text: "Âm nhạc", query: "Sơn Tùng M-TP là ai?" },
-            { text: "Trái Đất", query: "Tại sao bầu trời lại có màu xanh?" },
-            { text: "Sinh học", query: "Cấu trúc DNA là gì và tại sao nó quan trọng?" },
-            { text: "Động vật", query: "Loài vật nào thông minh nhất thế giới sau con người?" },
-            { text: "Tâm lý", query: "Làm thế nào để vượt qua sự trì hoãn?" },
-            { text: "Tài chính", query: "Quy tắc 50/30/20 trong quản lý tài chính là gì?" },
-            { text: "Ngôn ngữ", query: "Cách nhanh nhất để học một ngôn ngữ mới?" },
-            { text: "Năng suất", query: "Phương pháp Pomodoro là gì?" },
-            { text: "Hội họa", query: "Ý nghĩa bức tranh Mona Lisa?" },
-            { text: "Điện ảnh", query: "Top 10 bộ phim hay nhất mọi thời đại?" },
-            { text: "Du lịch", query: "Những địa điểm du lịch đẹp nhất Việt Nam?" },
-            { text: "Xe điện", query: "Ưu điểm của xe điện Tesla?" },
-            { text: "Web3", query: "Metaverse là gì?" },
-            { text: "Robot", query: "Robot có thể thay thế con người không?" },
-            { text: "An ninh mạng", query: "Cách bảo mật tài khoản mạng xã hội?" },
-            { text: "Bóng đá", query: "Messi và Ronaldo ai vĩ đại hơn?" },
-            { text: "eSports", query: "Giải đấu LoL lớn nhất thế giới?" },
-            { text: "Yoga", query: "Lợi ích của tập Yoga?" }
+            { text: "Bitcoin", query: "Bitcoin là gì?" },
+            { text: "Hài hước", query: "Kể chuyện cười đi" },
+            { text: "Công nghệ", query: "AI là gì?" },
+            { text: "Code", query: "Viết HTML tạo nút bấm" }
         ];
 
-        function initSuggestions() {
+        async function initSuggestions() {
             const container = document.getElementById('suggestion-container');
             if (!container) return;
             container.innerHTML = '';
             const shuffled = [...questionBank].sort(() => 0.5 - Math.random());
-            shuffled.slice(0, 4).forEach(item => {
+            
+            for (const item of shuffled.slice(0, 4)) {
                 const chip = document.createElement('div');
                 chip.className = 'suggestion-chip';
-                chip.innerText = item.text;
+                // Dịch nhãn gợi ý
+                chip.innerText = await translate(item.text);
                 chip.onclick = () => { userInput.value = item.query; sendMessage(); };
                 container.appendChild(chip);
-            });
+            }
         }
 
         async function sendMessage() {
             const prompt = userInput.value.trim();
             if ((!prompt && !selectedImageData) || isTyping) return;
+            
             isTyping = true; sendBtn.disabled = true;
             
-            renderMessage(prompt, 'user-message', null, true, selectedImageData);
+            // Dịch nội dung người dùng gửi trước khi hiển thị lên giao diện
+            const displayPrompt = await translate(prompt);
+            renderMessage(displayPrompt, 'user-message', null, true, selectedImageData);
+            
+            // Lưu tiếng Việt vào lịch sử để AI hiểu chuẩn nhất
             chatHistory.push({ role: "user", parts: [{ text: prompt || "Phân tích ảnh" }] });
             
             const loadingId = 'load-' + Date.now();
-            renderMessage('Đang xử lý...', 'bot-message typing', loadingId, false);
+            const loadingMsg = await translate('Đang xử lý...');
+            renderMessage(loadingMsg, 'bot-message typing', loadingId, false);
             userInput.value = ''; selectedImageData = null;
 
             try {
-                const res = await fetch(WORKER_URL, { method: 'POST', body: JSON.stringify({ messages: chatHistory }) });
+                const res = await fetch(WORKER_URL, { 
+                    method: 'POST', 
+                    body: JSON.stringify({ messages: chatHistory }) 
+                });
                 const data = await res.json();
                 const botDiv = document.getElementById(loadingId);
                 botDiv.classList.remove('typing'); botDiv.innerHTML = '';
                 
-                await typeText(botDiv, data.text);
+                // DỊCH PHẢN HỒI CỦA AI SANG NGÔN NGỮ ĐÍCH
+                const translatedBotText = await translate(data.text);
+                await typeText(botDiv, translatedBotText);
+                
                 chatHistory.push({ role: "model", parts: [{ text: data.text }] });
                 if (chatHistory.length > 10) chatHistory.splice(0, 2);
                 localStorage.setItem('abc_chat_history', JSON.stringify(chatHistory));
-            } catch (e) { document.getElementById(loadingId).innerText = "Lỗi kết nối!"; }
+            } catch (e) { 
+                const errorMsg = await translate("Lỗi kết nối!");
+                document.getElementById(loadingId).innerText = errorMsg; 
+            }
             finally { isTyping = false; sendBtn.disabled = false; }
         }
 
@@ -169,20 +188,39 @@
             chatWindow.appendChild(d); chatWindow.scrollTop = chatWindow.scrollHeight;
         }
 
-        function clearChat() { if(confirm("Xóa lịch sử?")) { localStorage.removeItem('abc_chat_history'); location.reload(); } }
-        function handleFile(i) {
-            const f = i.files[0]; if(!f) return;
-            const r = new FileReader(); r.onload = (e) => selectedImageData = e.target.result; r.readAsDataURL(f);
+        function clearChat() { 
+            if(confirm("Xóa lịch sử?")) { 
+                localStorage.removeItem('abc_chat_history'); 
+                location.reload(); 
+            } 
         }
 
-        window.onload = () => {
+        function handleFile(i) {
+            const f = i.files[0]; if(!f) return;
+            const r = new FileReader(); 
+            r.onload = (e) => selectedImageData = e.target.result; 
+            r.readAsDataURL(f);
+        }
+
+        // --- 3. KHỞI TẠO TRANG ---
+        window.onload = async () => {
+            // Dịch các thành phần tĩnh
+            document.getElementById('welcome-title').innerText = await translate('Chào bạn!');
+            document.getElementById('welcome-desc').innerText = await translate('Bạn hãy cùng trò chuyện với mình nhé');
+            document.getElementById('btn-refresh-text').innerText = await translate('Đổi gợi ý khác');
+            document.getElementById('user-input').placeholder = await translate('Hỏi gì đi ông anh...');
+
             if (chatHistory.length > 0) {
-                chatHistory.forEach(m => renderMessage(m.parts[0].text, m.role==='user'?'user-message':'bot-message', null, true));
+                for (const m of chatHistory) {
+                    const t = await translate(m.parts[0].text);
+                    renderMessage(t, m.role==='user'?'user-message':'bot-message', null, true);
+                }
             } else {
                 initSuggestions();
             }
             setTimeout(() => document.getElementById('iframe-loader')?.remove(), 600);
         };
+
         userInput.addEventListener('keypress', e => e.key === 'Enter' && sendMessage());
     </script>
 </body>
