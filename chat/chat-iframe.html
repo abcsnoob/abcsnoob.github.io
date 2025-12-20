@@ -111,7 +111,7 @@
                     console.warn("Loading timeout: Hết 10s, tự động ẩn spinner.");
                     forceHideLoader();
                 }
-            }, 10000);
+            }, 5000);
         };
 
         async function sendMessage() {
@@ -196,6 +196,5 @@
 
         userInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMessage(); });
     </script>
-    <script src="/assets/js/translate.js"></script>
 </body>
 </html>
