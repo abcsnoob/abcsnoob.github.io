@@ -87,122 +87,90 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-css.min.js"></script>
     <script type="module" src="/assets/js/warn.js"></script>
     <script src="/assets/js/translate.js"></script>
-    <script>
-        // Thay WORKER_URL bằng URL của worker đã deploy
+<script>
         const WORKER_URL = 'https://abcsnoobai.abcsnoob.workers.dev'; 
         const chatWindow = document.getElementById('chat-window');
         const userInput = document.getElementById('user-input');
+        
+        let chatHistory = []; 
         let isTyping = false;
-        let chatHistory = []; // Lịch sử chat sẽ được quản lý bởi Durable Object
+        let lastDataHash = ""; // Dùng để kiểm tra tin nhắn mới
 
-        // Lấy chatId từ URL hoặc tạo mới
+        // 1. Logic lấy ID phòng từ URL
         const urlParams = new URLSearchParams(window.location.search);
         let currentChatId = urlParams.get('id');
         if (!currentChatId) {
-            currentChatId = 'group-' + Date.now().toString(36); // Tạo ID mới nếu không có
-            window.history.replaceState(null, null, `?id=${currentChatId}`); // Cập nhật URL
+            currentChatId = 'group-' + Math.random().toString(36).substring(7);
+            window.history.replaceState(null, null, `?id=${currentChatId}`);
         }
 
-        let ws; // Biến giữ kết nối WebSocket
+        // 2. Hàm Sync dữ liệu (Polling thay thế WebSocket)
+        async function syncChat() {
+            if (isTyping) return; // Tránh xung đột khi đang gửi
+            try {
+                const res = await fetch(`${WORKER_URL}?chatId=${currentChatId}`);
+                const data = await res.json();
+                const currentHash = JSON.stringify(data);
 
-        // Hàm kết nối WebSocket
-        function connectWebSocket() {
-            if (ws && ws.readyState === WebSocket.OPEN) return;
-
-            // Xây dựng URL WebSocket từ WORKER_URL
-            const wsUrl = WORKER_URL.replace('https://', 'wss://') + `/websocket/${currentChatId}`;
-            ws = new WebSocket(wsUrl);
-
-            ws.onopen = () => {
-                console.log("WebSocket connected for chat ID:", currentChatId);
-                // Sau khi kết nối, DO sẽ gửi lịch sử chat về
-            };
-
-            ws.onmessage = async (event) => {
-                const message = JSON.parse(event.data);
-                console.log("Received message from WebSocket:", message);
-
-                if (message.type === "history") {
-                    // Xóa cửa sổ chat cũ và hiển thị lịch sử từ DO
+                // Chỉ render lại nếu có dữ liệu mới từ server
+                if (currentHash !== lastDataHash) {
                     chatWindow.innerHTML = '';
-                    chatHistory = message.data;
+                    chatHistory = data;
                     chatHistory.forEach(msg => {
                         renderMessage(msg.parts[0].text, msg.role === 'user' ? 'user-message' : 'bot-message', null, true);
                     });
-                } else if (message.type === "chat") {
-                    // Nhận tin nhắn chat mới, hiển thị ngay lập tức
-                    const msgData = message.data;
-                    chatHistory.push(msgData); // Cập nhật lịch sử cục bộ
-                    if (msgData.role === 'user') {
-                        renderMessage(msgData.parts[0].text, 'user-message');
-                    } else {
-                        // Hiển thị tin nhắn bot (có hiệu ứng gõ)
-                        const loadingId = 'bot-' + Date.now();
-                        renderMessage('', 'bot-message', loadingId, false); // Tạo div rỗng để đổ text vào
-                        await typeText(document.getElementById(loadingId), msgData.parts[0].text);
-                    }
+                    lastDataHash = currentHash;
+                    chatWindow.scrollTop = chatWindow.scrollHeight;
                 }
-            };
-
-            ws.onclose = () => {
-                console.log("WebSocket disconnected. Reconnecting in 5 seconds...");
-                setTimeout(connectWebSocket, 5000); // Thử kết nối lại sau 5 giây
-            };
-
-            ws.onerror = (error) => {
-                console.error("WebSocket error:", error);
-                ws.close();
-            };
+            } catch (e) {
+                console.error("Node lag, không sync được dữ liệu...");
+            }
         }
 
-        window.onload = () => {
-            connectWebSocket(); // Bắt đầu kết nối WebSocket khi tải trang
-        };
+        // Chạy sync mỗi 3 giây
+        setInterval(syncChat, 3000);
+        window.onload = syncChat;
 
         marked.setOptions({ breaks: true });
 
+        // 3. Hàm gửi tin nhắn (Gửi qua HTTP POST thay vì WebSocket)
         async function sendMessage() {
             const prompt = userInput.value.trim();
-            if (!prompt || isTyping || ws.readyState !== WebSocket.OPEN) return;
+            if (!prompt || isTyping) return;
 
             isTyping = true;
             userInput.value = '';
 
-            // 1. Hiển thị tin nhắn user ngay lập tức (và gửi qua WebSocket)
-            const userMessage = { role: "user", parts: [{ text: prompt }] };
-            ws.send(JSON.stringify({ type: "chat", data: userMessage })); // Gửi tin nhắn user qua WS
-            // renderMessage(prompt, 'user-message'); // Sẽ được render khi nhận broadcast từ WS
+            // Render tạm tin nhắn user
+            renderMessage(prompt, 'user-message');
+            chatWindow.scrollTop = chatWindow.scrollHeight;
 
-            // 2. Gửi prompt đến Gemini API (qua Worker chính) để lấy phản hồi của AI
             const loadingId = 'gemini-thinking-' + Date.now();
-            renderMessage('AI đang nghĩ...', 'bot-message', loadingId, false); // Hiển thị trạng thái AI đang nghĩ
+            renderMessage('AI đang nghĩ...', 'bot-message', loadingId, false);
 
             try {
-                // Chúng ta sẽ gửi toàn bộ chatHistory hiện tại đến Gemini để duy trì ngữ cảnh
-                // Lưu ý: chatHistory cần được cập nhật đúng cách từ WebSocket
-                const messagesToSendToGemini = [...chatHistory, userMessage]; 
-
-                const response = await fetch(WORKER_URL, {
+                const response = await fetch(`${WORKER_URL}?chatId=${currentChatId}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ messages: messagesToSendToGemini, chatId: currentChatId })
+                    body: JSON.stringify({ message: prompt })
                 });
 
                 const data = await response.json();
-                const botText = data.text || data.error || "Hệ thống AI đang offline mất rồi...";
                 
-                // Xóa trạng thái "AI đang nghĩ..."
-                document.getElementById(loadingId).remove(); 
-                
-                // 3. Khi nhận được phản hồi từ Gemini, gửi nó qua WebSocket để broadcast
-                const botMessage = { role: "model", parts: [{ text: botText }] };
-                ws.send(JSON.stringify({ type: "chat", data: botMessage })); // Gửi tin nhắn bot qua WS
-                
+                // Xóa dòng "AI đang nghĩ"
+                const loadingDiv = document.getElementById(loadingId);
+                if (loadingDiv) loadingDiv.remove();
+
+                if (data.text) {
+                    // Force sync ngay lập tức để lấy tin nhắn bot về
+                    await syncChat();
+                } else if (data.error) {
+                    renderMessage("[BUG]: " + data.error, 'bot-message');
+                }
             } catch (err) {
-                console.error("Error calling Gemini API:", err);
-                // Xóa trạng thái "AI đang nghĩ..."
-                document.getElementById(loadingId).remove();
-                renderMessage(`[BUG]: Mất kết nối đến AI server rồi! ${err.message}`, 'bot-message');
+                const loadingDiv = document.getElementById(loadingId);
+                if (loadingDiv) loadingDiv.remove();
+                renderMessage("[BUG]: Mất kết nối server!", 'bot-message');
             } finally {
                 isTyping = false;
                 chatWindow.scrollTop = chatWindow.scrollHeight;
@@ -218,7 +186,7 @@
                         Prism.highlightAllUnder(element);
                         i++;
                         chatWindow.scrollTop = chatWindow.scrollHeight;
-                        setTimeout(typing, 15); // Tốc độ gõ 15ms
+                        setTimeout(typing, 15);
                     } else {
                         resolve();
                     }
@@ -231,29 +199,24 @@
             const div = document.createElement('div');
             div.className = `message ${className}`;
             if(id) div.id = id;
-            
             div.innerHTML = useMarkdown ? marked.parse(text) : text;
             chatWindow.appendChild(div);
             if(useMarkdown) Prism.highlightAllUnder(div);
             chatWindow.scrollTop = chatWindow.scrollHeight;
-            return div; // Trả về div để có thể thao tác với nó (ví dụ xóa loading message)
+            return div;
         }
 
         function clearChat() {
-            if(confirm("Xóa hết dấu vết chat à ông anh? Nó sẽ reset cả phòng chat này đó!")) {
-                // Để reset chat trên Durable Object, cách đơn giản nhất là đổi `currentChatId`
-                // hoặc thêm một API endpoint để DO tự xóa lịch sử của nó.
-                // Tạm thời, chúng ta sẽ tạo một chat ID mới.
-                window.location.search = `?id=new-group-${Date.now().toString(36)}`;
-                // Durable Object cũ với currentChatId trước đó vẫn sẽ tồn tại với lịch sử của nó
-                // cho đến khi nó tự động được dọn dẹp (nếu không có ai kết nối).
+            if(confirm("Xóa hết dấu vết chat à ông anh? Nó sẽ tạo phòng mới đó!")) {
+                const newId = 'group-' + Math.random().toString(36).substring(7);
+                window.location.search = `?id=${newId}`;
             }
         }
 
         function shareChat() {
             const shareUrl = window.location.href;
             navigator.clipboard.writeText(shareUrl);
-            alert("Đã chép link chat nhóm/chia sẻ! Gửi cho bạn bè để cùng chat: " + shareUrl);
+            alert("Đã chép link chat nhóm! Gửi cho bạn bè: " + shareUrl);
         }
 
         userInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMessage(); });
