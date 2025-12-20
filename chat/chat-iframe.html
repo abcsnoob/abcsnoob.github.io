@@ -9,37 +9,19 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
     <style>
         * { box-sizing: border-box; }
-        body, html { 
-            margin: 0; padding: 0; height: 100%; width: 100%;
-            overflow: hidden; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-
-        #iframe-loader {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: #ffffff;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            z-index: 9999;
-            transition: opacity 0.4s ease;
-        }
-
+        body, html { margin: 0; padding: 0; height: 100%; width: 100%; overflow: hidden; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        #iframe-loader { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #ffffff; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; transition: opacity 0.4s ease; }
         .chat-card { background: #fff; height: 100vh; width: 100%; display: flex; flex-direction: column; }
         .chat-header { background: #212529; color: white; padding: 12px 20px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
-        #chat-window { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 15px; background: #fff; }
-        
+        #chat-window { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 15px; background: #fff; scroll-behavior: smooth; }
         .message { max-width: 85%; padding: 12px 16px; border-radius: 18px; font-size: 15px; line-height: 1.5; word-wrap: break-word; }
         .user-message { align-self: flex-end; background-color: #0d6efd; color: white; border-bottom-right-radius: 2px; }
         .bot-message { align-self: flex-start; background-color: #f1f0f0; color: #333; border-bottom-left-radius: 2px; }
-        
-        pre { background: #2d2d2d !important; padding: 12px; border-radius: 10px; overflow-x: auto; }
+        pre { background: #2d2d2d !important; padding: 12px; border-radius: 10px; overflow-x: auto; margin: 10px 0; }
         .chat-footer { padding: 15px; border-top: 1px solid #eee; background: #fff; flex-shrink: 0; }
         .input-group { background: #f8f9fa; border-radius: 30px; padding: 5px 15px; border: 1px solid #ddd; display: flex; align-items: center; }
         #user-input { border: none; background: transparent; box-shadow: none; outline: none; flex: 1; height: 40px; }
-        .btn-send { border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border: none; }
-
+        .btn-send { border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border: none; transition: all 0.3s ease; }
         .typing::after { content: '|'; animation: blink 0.8s infinite; }
         @keyframes blink { 50% { opacity: 0; } }
     </style>
@@ -76,49 +58,31 @@
         const WORKER_URL = 'https://abcsnoobai.abcsnoob.workers.dev';
         const chatWindow = document.getElementById('chat-window');
         const userInput = document.getElementById('user-input');
-        const loader = document.getElementById('iframe-loader');
+        const sendBtn = document.getElementById('send-btn');
         let isTyping = false;
         let chatHistory = JSON.parse(localStorage.getItem('abc_chat_history')) || [];
 
-        window.addEventListener('message', (e) => { if (e.data === 'clear-chat') clearChat(); });
-
         window.onload = () => {
-            // 1. Render lịch sử chat
             if (chatHistory.length > 0) {
                 chatHistory.forEach(msg => renderMessage(msg.parts[0].text, msg.role === 'user' ? 'user-message' : 'bot-message', null, true));
             } else {
                 renderMessage("Chào ông anh! Tôi là AI của Abc's Noob. Có bug gì cần fix à?", 'bot-message');
             }
-
-            // Hàm ẩn loader an toàn
-            const forceHideLoader = () => {
-                const targetLoader = document.getElementById('iframe-loader');
-                if (targetLoader) {
-                    targetLoader.style.opacity = "0";
-                    setTimeout(() => {
-                        if (targetLoader.parentNode) targetLoader.remove();
-                        userInput.focus();
-                    }, 400);
-                }
-            };
-
-            // 2. Ẩn sau 600ms (Trường hợp bình thường)
-            setTimeout(forceHideLoader, 600);
-
-            // 3. Cơ chế cứu cánh (Safety Net): Nếu sau 10s chưa ẩn thì ép ẩn luôn
             setTimeout(() => {
-                if (document.getElementById('iframe-loader')) {
-                    console.warn("Loading timeout: Hết 10s, tự động ẩn spinner.");
-                    forceHideLoader();
+                const loader = document.getElementById('iframe-loader');
+                if (loader) {
+                    loader.style.opacity = "0";
+                    setTimeout(() => loader.remove(), 400);
                 }
-            }, 5000);
+                userInput.focus();
+            }, 600);
         };
 
         async function sendMessage() {
             const prompt = userInput.value.trim();
             if (!prompt || isTyping) return;
 
-            const sendBtn = document.getElementById('send-btn');
+            // Trạng thái đang gửi
             sendBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
             sendBtn.disabled = true;
 
@@ -137,11 +101,19 @@
                     body: JSON.stringify({ messages: chatHistory })
                 });
                 const data = await response.json();
+                
+                // --- LOGIC ĐỔI MÀU NÚT ---
+                if (data.provider === 'groq') {
+                    sendBtn.classList.replace('btn-primary', 'btn-warning');
+                } else {
+                    sendBtn.classList.replace('btn-warning', 'btn-primary');
+                }
+
                 const botMsgDiv = document.getElementById(loadingId);
                 botMsgDiv.classList.remove('typing');
                 botMsgDiv.innerHTML = '';
                 
-                const botText = data.text || "Hệ thống đang bận, thử lại sau nhé!";
+                const botText = data.text || "Node đang lag rồi... #FreeAbcsnoobhelper";
                 await typeText(botMsgDiv, botText);
 
                 chatHistory.push({ role: "model", parts: [{ text: botText }] });
@@ -151,7 +123,7 @@
                 const botMsgDiv = document.getElementById(loadingId);
                 if (botMsgDiv) {
                     botMsgDiv.classList.remove('typing');
-                    botMsgDiv.innerText = "Lỗi kết nối Server!";
+                    botMsgDiv.innerText = "Lỗi kết nối node!";
                 }
             } finally {
                 isTyping = false;
@@ -185,13 +157,6 @@
             chatWindow.appendChild(div);
             if(useMarkdown) Prism.highlightAllUnder(div);
             chatWindow.scrollTop = chatWindow.scrollHeight;
-        }
-
-        function clearChat() {
-            if(confirm("Xóa toàn bộ lịch sử chat?")) {
-                localStorage.removeItem('abc_chat_history');
-                location.reload();
-            }
         }
 
         userInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMessage(); });
