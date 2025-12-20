@@ -67,7 +67,6 @@
                     <li class="nav-item"><a class="nav-link" href="../donate">Donate</a></li>
                     <li class="nav-item"><a class="nav-link" href="../chat">Chat AI</a></li>
                     <li class="nav-item ms-lg-3">
-                        <button class="btn btn-sm btn-outline-danger" onclick="clearIframeChat()">Xóa lịch sử</button>
                     </li>
                 </ul>
             </div>
@@ -103,13 +102,7 @@
         }, 4000);
 
         // Hàm gọi lệnh xóa lịch sử bên trong Iframe
-        function clearIframeChat() {
-            const frame = document.getElementById('chatFrame');
-            if(frame.contentWindow) {
-                // Gửi tin nhắn "clear-chat" vào iframe
-                frame.contentWindow.postMessage('clear-chat', '*');
-            }
-        }
+
     </script>
 </body>
 </html>
