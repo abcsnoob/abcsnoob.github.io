@@ -1,42 +1,15 @@
 (function() {
-    // 1. Danh sách ngôn ngữ đầy đủ (Endonym)
+    // 1. Danh sách ngôn ngữ và cấu hình
     const supportedLangs = {
-        "vi": "Tiếng Việt",
-        "en": "English",
-        "zh": "中文 (Zhōngwén)",
-        "ja": "日本語 (Nihongo)",
-        "ko": "한국어 (Hangugeo)",
-        "fr": "Français",
-        "de": "Deutsch",
-        "es": "Español",
-        "pt": "Português",
-        "it": "Italiano",
-        "ru": "Русский",
-        "ar": "العربية",
-        "hi": "हिन्दी",
-        "th": "ไทย",
-        "id": "Bahasa Indonesia",
-        "ms": "Bahasa Melayu",
-        "tr": "Türkçe",
-        "nl": "Nederlands",
-        "pl": "Polski",
-        "sv": "Svenska",
-        "da": "Dansk",
-        "fi": "Suomi",
-        "no": "Norsk",
-        "cs": "Čeština",
-        "el": "Ελληνικά",
-        "he": "עברית",
-        "ro": "Română",
-        "hu": "Magyar",
-        "uk": "Українська",
-        "bg": "Български",
-        "sk": "Slovenčina",
-        "sl": "Slovenščina",
-        "hr": "Hrvatski",
-        "sr": "Српски",
-        "fa": "فارسی",
-        "bn": "বাংলা"
+        "vi": "Tiếng Việt", "en": "English", "zh": "中文 (Zhōngwén)", "ja": "日本語 (Nihongo)",
+        "ko": "한국어 (Hangugeo)", "fr": "Français", "de": "Deutsch", "es": "Español",
+        "pt": "Português", "it": "Italiano", "ru": "Русский", "ar": "العربية",
+        "hi": "हिन्दी", "th": "ไทย", "id": "Bahasa Indonesia", "ms": "Bahasa Melayu",
+        "tr": "Türkçe", "nl": "Nederlands", "pl": "Polski", "sv": "Svenska",
+        "da": "Dansk", "fi": "Suomi", "no": "Norsk", "cs": "Čeština",
+        "el": "Ελληνικά", "he": "עبری", "ro": "Română", "hu": "Magyar",
+        "uk": "Українська", "bg": "Български", "sk": "Slovenčina",
+        "sl": "Slovenščina", "hr": "Hrvatski", "sr": "Српски", "fa": "فارسی", "bn": "বাংলা"
     };
 
     let targetLang = 'vi';
@@ -51,32 +24,81 @@
         }
         localStorage.setItem('user_lang', targetLang);
 
+        // Inject UI
         injectProfessionalDropdown(supportedLangs, targetLang);
+        injectAIButton(); // Thêm nút AI
 
-        // Chỉ chạy tiến trình dịch nếu ngôn ngữ đích khác Tiếng Việt (ngôn ngữ gốc)
         if (targetLang !== 'vi') {
             startMasterProcess();
         }
     };
 
+    // --- PHẦN MỚI: HỖ TRỢ AI IFRAME ---
+    function injectAIButton() {
+        if (document.getElementById('ai-support-container')) return;
+
+        // 1. Tạo Style
+        const style = document.createElement('style');
+        style.innerHTML = `
+            #ai-sidebar {
+                position: fixed; top: 0; right: -450px; width: 400px; height: 100%;
+                background: #fff; box-shadow: -5px 0 15px rgba(0,0,0,0.1);
+                z-index: 1000002; transition: right 0.3s ease; border-left: 1px solid #eee;
+                display: flex; flex-direction: column;
+            }
+            #ai-sidebar.open { right: 0; }
+            #ai-btn {
+                position: fixed; bottom: 25px; right: 200px; /* Cạnh nút ngôn ngữ */
+                z-index: 1000000; background: #0078d4; color: white;
+                border: none; padding: 10px 20px; border-radius: 12px;
+                cursor: pointer; font-family: sans-serif; font-weight: 600;
+                display: flex; align-items: center; gap: 8px;
+                box-shadow: 0 4px 15px rgba(0,120,212,0.3); transition: all 0.2s;
+            }
+            #ai-btn:hover { background: #005a9e; transform: translateY(-2px); }
+            #ai-header { padding: 15px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
+            #ai-iframe { border: none; flex-grow: 1; width: 100%; height: 100%; }
+            @media (max-width: 500px) { #ai-sidebar { width: 100%; right: -100%; } }
+        `;
+        document.head.appendChild(style);
+
+        // 2. Tạo Sidebar Container
+        const sidebar = document.createElement('div');
+        sidebar.id = 'ai-sidebar';
+        sidebar.className = 'notranslate';
+        sidebar.innerHTML = `
+            <div id="ai-header">
+                <span style="font-weight:bold; font-family:sans-serif;">Hỗ trợ AI</span>
+                <button onclick="document.getElementById('ai-sidebar').classList.remove('open')" style="border:none; background:none; cursor:pointer; font-size:20px;">×</button>
+            </div>
+            <iframe id="ai-iframe" src="/chat/chat-iframe.html"></iframe>
+        `;
+
+        // 3. Tạo Nút Bấm
+        const btn = document.createElement('button');
+        btn.id = 'ai-btn';
+        btn.className = 'notranslate';
+        btn.innerHTML = `
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.48 2 12c0 1.61.38 3.12 1.05 4.47L2 22l5.53-1.05C8.88 21.62 10.39 22 12 22c5.52 0 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+            Hỗ trợ AI
+        `;
+        btn.onclick = () => sidebar.classList.toggle('open');
+
+        document.body.appendChild(sidebar);
+        document.body.appendChild(btn);
+    }
+
+    // --- CÁC HÀM CŨ (GIỮ NGUYÊN) ---
     const startMasterProcess = async () => {
         showTranslateToast(true);
-        
-        // Cú hích đầu tiên
         await translateNewNodes(document.body);
-        
-        // Quét bổ trợ trong vài giây đầu để xử lý nội dung load chậm
         let count = 0;
         const retryTimer = setInterval(() => {
             translateNewNodes(document.body);
             count++;
-            if (count > 3) {
-                clearInterval(retryTimer);
-                showTranslateToast(false);
-            }
+            if (count > 3) { clearInterval(retryTimer); showTranslateToast(false); }
         }, 1500);
 
-        // Theo dõi thay đổi DOM (AJAX, Single Page App, v.v.)
         const observer = new MutationObserver((mutations) => {
             mutations.forEach(mutation => {
                 if (mutation.addedNodes.length > 0) {
@@ -91,51 +113,37 @@
                 }
             });
         });
-
         observer.observe(document.body, { childList: true, subtree: true, characterData: true });
     };
 
     async function translateNewNodes(rootNode) {
-        if (!rootNode || (rootNode.id === 'notranslate') || (rootNode.classList && rootNode.classList.contains('notranslate'))) return;
+        if (!rootNode || (rootNode.id === 'notranslate') || (rootNode.id === 'ai-sidebar') || (rootNode.classList && rootNode.classList.contains('notranslate'))) return;
         
         const getTextNodes = (root) => {
             const textNodes = [];
             const walker = document.createTreeWalker(
-                root,
-                NodeFilter.SHOW_TEXT | NodeFilter.SHOW_ELEMENT,
+                root, NodeFilter.SHOW_TEXT | NodeFilter.SHOW_ELEMENT,
                 {
                     acceptNode: (node) => {
                         if (node.nodeType === Node.ELEMENT_NODE) {
                             const excludedTags = ['SCRIPT', 'STYLE', 'TEXTAREA', 'INPUT', 'NOSCRIPT', 'CODE'];
-                            const excludedIds = ['notranslate', 'notranslate-picker'];
-                            if (excludedTags.includes(node.tagName) || excludedIds.includes(node.id) || node.classList.contains('notranslate')) {
-                                return NodeFilter.FILTER_REJECT;
-                            }
+                            if (excludedTags.includes(node.tagName) || node.classList.contains('notranslate') || node.id === 'ai-sidebar') return NodeFilter.FILTER_REJECT;
                             return NodeFilter.FILTER_SKIP;
                         }
                         const content = node.textContent.trim();
-                        // Chỉ nhận node có chữ và chưa dịch
-                        if (content.length > 1 && /[a-zA-Zà-ỹÀ-Ỹ]/.test(content) && !node._isTranslated) {
-                            return NodeFilter.FILTER_ACCEPT;
-                        }
+                        if (content.length > 1 && /[a-zA-Zà-ỹÀ-Ỹ]/.test(content) && !node._isTranslated) return NodeFilter.FILTER_ACCEPT;
                         return NodeFilter.FILTER_REJECT;
                     }
                 }
             );
-
-            while (walker.nextNode()) {
-                textNodes.push(walker.currentNode);
-            }
+            while (walker.nextNode()) textNodes.push(walker.currentNode);
             return textNodes;
         };
 
         const nodesToTranslate = getTextNodes(rootNode);
-
-        // Dịch song song để tăng tốc độ load
         await Promise.all(nodesToTranslate.map(async (node) => {
             const originalText = node.textContent.trim();
             const translated = await fetchWithRetry(originalText, targetLang);
-            
             if (translated && translated !== originalText) {
                 node.textContent = node.textContent.replace(originalText, translated);
                 node._isTranslated = true;
@@ -148,7 +156,6 @@
         for (let i = 0; i < retries; i++) {
             try {
                 const res = await fetch(url);
-                if (!res.ok) throw new Error();
                 const json = await res.json();
                 return json[0].map(item => item[0]).join('');
             } catch (err) {
@@ -168,9 +175,7 @@
         const select = document.createElement('select');
         select.style.cssText = "appearance:none; background:#fff; border:1px solid #ddd; padding:10px 35px 10px 15px; border-radius:12px; font-size:14px; box-shadow:0 4px 15px rgba(0,0,0,0.1); outline:none; cursor:pointer; background-image:url('data:image/svg+xml;charset=US-ASCII,<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"20\" height=\"20\" viewBox=\"0 0 20 20\"><path fill=\"%23666\" d=\"M5 7l5 5 5-5z\"/></svg>'); background-repeat:no-repeat; background-position:right 10px center; background-size:18px; font-family:sans-serif;";
 
-        // Sắp xếp ngôn ngữ theo tên để dễ tìm
         const sortedLangs = Object.entries(langs).sort((a, b) => a[1].localeCompare(b[1]));
-
         for (const [code, name] of sortedLangs) {
             const opt = new Option(name, code);
             if (code === current) opt.selected = true;
