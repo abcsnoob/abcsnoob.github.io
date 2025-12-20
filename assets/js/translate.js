@@ -1,5 +1,5 @@
 (function() {
-    // 1. Danh sách ngôn ngữ và cấu hình
+    // 1. Cấu hình ngôn ngữ
     const supportedLangs = {
         "vi": "Tiếng Việt", "en": "English", "zh": "中文 (Zhōngwén)", "ja": "日本語 (Nihongo)",
         "ko": "한국어 (Hangugeo)", "fr": "Français", "de": "Deutsch", "es": "Español",
@@ -24,74 +24,19 @@
         }
         localStorage.setItem('user_lang', targetLang);
 
-        // Inject UI
         injectProfessionalDropdown(supportedLangs, targetLang);
-        injectAIButton(); // Thêm nút AI
+        injectAIButton();
 
         if (targetLang !== 'vi') {
             startMasterProcess();
         }
     };
 
-    // --- PHẦN MỚI: HỖ TRỢ AI IFRAME ---
-    function injectAIButton() {
-        if (document.getElementById('ai-support-container')) return;
-
-        // 1. Tạo Style
-        const style = document.createElement('style');
-        style.innerHTML = `
-            #ai-sidebar {
-                position: fixed; top: 0; right: -450px; width: 400px; height: 100%;
-                background: #fff; box-shadow: -5px 0 15px rgba(0,0,0,0.1);
-                z-index: 1000002; transition: right 0.3s ease; border-left: 1px solid #eee;
-                display: flex; flex-direction: column;
-            }
-            #ai-sidebar.open { right: 0; }
-            #ai-btn {
-                position: fixed; bottom: 25px; right: 200px; /* Cạnh nút ngôn ngữ */
-                z-index: 1000000; background: #0078d4; color: white;
-                border: none; padding: 10px 20px; border-radius: 12px;
-                cursor: pointer; font-family: sans-serif; font-weight: 600;
-                display: flex; align-items: center; gap: 8px;
-                box-shadow: 0 4px 15px rgba(0,120,212,0.3); transition: all 0.2s;
-            }
-            #ai-btn:hover { background: #005a9e; transform: translateY(-2px); }
-            #ai-header { padding: 15px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
-            #ai-iframe { border: none; flex-grow: 1; width: 100%; height: 100%; }
-            @media (max-width: 500px) { #ai-sidebar { width: 100%; right: -100%; } }
-        `;
-        document.head.appendChild(style);
-
-        // 2. Tạo Sidebar Container
-        const sidebar = document.createElement('div');
-        sidebar.id = 'ai-sidebar';
-        sidebar.className = 'notranslate';
-        sidebar.innerHTML = `
-            <div id="ai-header">
-                <span style="font-weight:bold; font-family:sans-serif;">Hỗ trợ AI</span>
-                <button onclick="document.getElementById('ai-sidebar').classList.remove('open')" style="border:none; background:none; cursor:pointer; font-size:20px;">×</button>
-            </div>
-            <iframe id="ai-iframe" src="/chat/chat-iframe.html"></iframe>
-        `;
-
-        // 3. Tạo Nút Bấm
-        const btn = document.createElement('button');
-        btn.id = 'ai-btn';
-        btn.className = 'notranslate';
-        btn.innerHTML = `
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.48 2 12c0 1.61.38 3.12 1.05 4.47L2 22l5.53-1.05C8.88 21.62 10.39 22 12 22c5.52 0 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
-            Hỗ trợ AI
-        `;
-        btn.onclick = () => sidebar.classList.toggle('open');
-
-        document.body.appendChild(sidebar);
-        document.body.appendChild(btn);
-    }
-
-    // --- CÁC HÀM CŨ (GIỮ NGUYÊN) ---
+    // --- LOGIC DỊCH THUẬT TỐI ƯU ---
     const startMasterProcess = async () => {
         showTranslateToast(true);
         await translateNewNodes(document.body);
+        
         let count = 0;
         const retryTimer = setInterval(() => {
             translateNewNodes(document.body);
@@ -117,21 +62,30 @@
     };
 
     async function translateNewNodes(rootNode) {
-        if (!rootNode || (rootNode.id === 'notranslate') || (rootNode.id === 'ai-sidebar') || (rootNode.classList && rootNode.classList.contains('notranslate'))) return;
-        
+        // Kiểm tra nhanh: Nếu bản thân rootNode hoặc cha của nó không được dịch
+        if (!rootNode || isExcluded(rootNode)) return;
+
         const getTextNodes = (root) => {
             const textNodes = [];
             const walker = document.createTreeWalker(
-                root, NodeFilter.SHOW_TEXT | NodeFilter.SHOW_ELEMENT,
+                root, 
+                NodeFilter.SHOW_TEXT | NodeFilter.SHOW_ELEMENT,
                 {
                     acceptNode: (node) => {
                         if (node.nodeType === Node.ELEMENT_NODE) {
-                            const excludedTags = ['SCRIPT', 'STYLE', 'TEXTAREA', 'INPUT', 'NOSCRIPT', 'CODE'];
-                            if (excludedTags.includes(node.tagName) || node.classList.contains('notranslate') || node.id === 'ai-sidebar') return NodeFilter.FILTER_REJECT;
+                            // Chặn các thẻ kỹ thuật và các vùng đánh dấu notranslate
+                            const excludedTags = ['SCRIPT', 'STYLE', 'TEXTAREA', 'INPUT', 'NOSCRIPT', 'CODE', 'PRE'];
+                            if (excludedTags.includes(node.tagName) || isExcluded(node)) {
+                                return NodeFilter.FILTER_REJECT; // CHẶN TOÀN BỘ NHÁNH CON
+                            }
                             return NodeFilter.FILTER_SKIP;
                         }
+                        
                         const content = node.textContent.trim();
-                        if (content.length > 1 && /[a-zA-Zà-ỹÀ-Ỹ]/.test(content) && !node._isTranslated) return NodeFilter.FILTER_ACCEPT;
+                        // Chỉ dịch nếu có chữ cái, độ dài > 1 và chưa từng được dịch
+                        if (content.length > 1 && /[a-zA-Zà-ỹÀ-Ỹ]/.test(content) && !node._isTranslated) {
+                            return NodeFilter.FILTER_ACCEPT;
+                        }
                         return NodeFilter.FILTER_REJECT;
                     }
                 }
@@ -151,6 +105,20 @@
         }));
     }
 
+    // Hàm kiểm tra điều kiện loại trừ dịch
+    function isExcluded(node) {
+        if (!node || node.nodeType !== 1) return false;
+        return (
+            node.id === 'notranslate' || 
+            node.id === 'notranslate-picker' || 
+            node.id === 'ai-sidebar' ||
+            node.classList.contains('notranslate') ||
+            node.getAttribute('translate') === 'no' ||
+            node.closest?.('#notranslate') || // Kiểm tra xem có nằm trong vùng ID=notranslate không
+            node.closest?.('.notranslate')    // Kiểm tra xem có nằm trong vùng Class=notranslate không
+        );
+    }
+
     async function fetchWithRetry(text, target, retries = 3) {
         const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=vi&tl=${target}&dt=t&q=${encodeURIComponent(text)}`;
         for (let i = 0; i < retries; i++) {
@@ -165,11 +133,50 @@
         }
     }
 
+    // --- GIAO DIỆN (UI) ---
+    function injectAIButton() {
+        if (document.getElementById('ai-sidebar')) return;
+
+        const style = document.createElement('style');
+        style.innerHTML = `
+            #ai-sidebar { position: fixed; top: 0; right: -450px; width: 400px; height: 100%; background: #fff; box-shadow: -5px 0 15px rgba(0,0,0,0.1); z-index: 1000002; transition: right 0.3s ease; border-left: 1px solid #eee; display: flex; flex-direction: column; }
+            #ai-sidebar.open { right: 0; }
+            #ai-btn { position: fixed; bottom: 25px; right: 200px; z-index: 1000000; background: #0078d4; color: white; border: none; padding: 10px 20px; border-radius: 12px; cursor: pointer; font-family: sans-serif; font-weight: 600; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 15px rgba(0,120,212,0.3); transition: all 0.2s; }
+            #ai-btn:hover { background: #005a9e; transform: translateY(-2px); }
+            #ai-header { padding: 15px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
+            #ai-iframe { border: none; flex-grow: 1; width: 100%; height: 100%; }
+        `;
+        document.head.appendChild(style);
+
+        const sidebar = document.createElement('div');
+        sidebar.id = 'ai-sidebar';
+        sidebar.className = 'notranslate';
+        sidebar.setAttribute('translate', 'no');
+        sidebar.innerHTML = `
+            <div id="ai-header">
+                <span style="font-weight:bold; font-family:sans-serif;">Hỗ trợ AI</span>
+                <button onclick="document.getElementById('ai-sidebar').classList.remove('open')" style="border:none; background:none; cursor:pointer; font-size:20px;">×</button>
+            </div>
+            <iframe id="ai-iframe" src="/chat/chat-iframe.html"></iframe>
+        `;
+
+        const btn = document.createElement('button');
+        btn.id = 'ai-btn';
+        btn.className = 'notranslate';
+        btn.setAttribute('translate', 'no');
+        btn.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.48 2 12c0 1.61.38 3.12 1.05 4.47L2 22l5.53-1.05C8.88 21.62 10.39 22 12 22c5.52 0 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg> Hỗ trợ AI`;
+        btn.onclick = () => sidebar.classList.toggle('open');
+
+        document.body.appendChild(sidebar);
+        document.body.appendChild(btn);
+    }
+
     function injectProfessionalDropdown(langs, current) {
         if (document.getElementById('notranslate-picker')) return;
         const wrapper = document.createElement('div');
         wrapper.id = 'notranslate-picker';
         wrapper.className = 'notranslate';
+        wrapper.setAttribute('translate', 'no');
         wrapper.style.cssText = "position:fixed; bottom:25px; right:25px; z-index:1000000;";
 
         const select = document.createElement('select');
@@ -200,8 +207,9 @@
                 toast = document.createElement('div');
                 toast.id = 'translate-toast';
                 toast.className = 'notranslate';
+                toast.setAttribute('translate', 'no');
                 toast.style.cssText = "position:fixed; top:20px; left:50%; transform:translateX(-50%); background:rgba(0,0,0,0.8); color:#fff; padding:10px 20px; border-radius:30px; font-size:13px; z-index:1000001; backdrop-filter:blur(5px); transition:opacity 0.4s; display:flex; align-items:center; gap:10px; pointer-events:none; font-family:sans-serif;";
-                toast.innerHTML = `<div class="loader"></div> Processing Translation...`;
+                toast.innerHTML = `<div class="loader"></div> Processing...`;
                 const s = document.createElement('style');
                 s.innerHTML = ".loader{width:14px; height:14px; border:2px solid #fff; border-top-color:transparent; border-radius:50%; animation:spin 0.8s linear infinite;} @keyframes spin{to{transform:rotate(360deg)}}";
                 document.head.appendChild(s);
