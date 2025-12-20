@@ -56,12 +56,8 @@
                 <img src="/assets/image/abcsnoob.webp" alt="Logo" onerror="this.src='https://via.placeholder.com/100'">
                 <h4>Chào bạn!</h4>
                 <p>Bạn hãy cùng trò chuyện với mình nhé</p>
-                <div class="suggestion-container">
-                    <div class="suggestion-chip" onclick="setQuery('Minecraft có những gì?')">Minecraft</div>
-                    <div class="suggestion-chip" onclick="setQuery('Bitcoin được ai tạo ra?')">Bitcoin</div>
-                    <div class="suggestion-chip" onclick="setQuery('AI là gì?')">Công nghệ</div>
-                    <div class="suggestion-chip" onclick="setQuery('Kể chuyện cười đi')">Rảnh háng</div>
-                </div>
+<div id="suggestion-container" class="suggestions-wrapper">
+    </div>
             </div>
         </div>
         <div class="chat-footer">
@@ -86,6 +82,70 @@
         const sendBtn = document.getElementById('send-btn');
         let isTyping = false, selectedImageData = null;
         let chatHistory = JSON.parse(localStorage.getItem('abc_chat_history')) || [];
+
+        // Kho dữ liệu câu hỏi đa dạng
+const questionBank = [
+    // --- Dữ liệu cũ của bạn ---
+    { text: "Minecraft", query: "Minecraft có những gì thú vị?" },
+    { text: "Bitcoin", query: "Bitcoin được ai tạo ra và nó hoạt động thế nào?" },
+    { text: "Công nghệ", query: "AI (Trí tuệ nhân tạo) là gì?" },
+    { text: "Hài hước", query: "Kể cho tôi một câu chuyện cười ngắn" },
+    { text: "Nấu ăn", query: "Cách nấu món phở bò đơn giản tại nhà" },
+    { text: "Vũ trụ", query: "Hố đen là gì và nó có thật không?" },
+    { text: "Lịch sử", query: "Ai là người đầu tiên đặt chân lên Mặt Trăng?" },
+    { text: "Code", query: "Viết giúp tôi một đoạn code HTML tạo nút bấm đổi màu" },
+    { text: "Sức khỏe", query: "Uống bao nhiêu nước mỗi ngày là đủ?" },
+    { text: "Âm nhạc", query: "Sơn Tùng M-TP là ai?" },
+
+    // --- Mở rộng: Khoa học & Tự nhiên ---
+    { text: "Trái Đất", query: "Tại sao bầu trời lại có màu xanh?" },
+    { text: "Sinh học", query: "Cấu trúc DNA là gì và tại sao nó quan trọng?" },
+    { text: "Động vật", query: "Loài vật nào thông minh nhất thế giới sau con người?" },
+    { text: "Biến đổi khí hậu", query: "Hiệu ứng nhà kính ảnh hưởng thế nào đến Trái Đất?" },
+
+    // --- Mở rộng: Đời sống & Phát triển bản thân ---
+    { text: "Tâm lý", query: "Làm thế nào để vượt qua sự trì hoãn trong công việc?" },
+    { text: "Tài chính", query: "Quy tắc 50/30/20 trong quản lý tài chính cá nhân là gì?" },
+    { text: "Ngôn ngữ", query: "Cách nhanh nhất để học một ngôn ngữ mới là gì?" },
+    { text: "Năng suất", query: "Phương pháp Pomodoro giúp tập trung như thế nào?" },
+
+    // --- Mở rộng: Văn hóa & Nghệ thuật ---
+    { text: "Hội họa", query: "Ý nghĩa thực sự đằng sau bức tranh Mona Lisa là gì?" },
+    { text: "Điện ảnh", query: "Top 10 bộ phim hay nhất mọi thời đại theo IMDb?" },
+    { text: "Văn học", query: "Tóm tắt ý nghĩa của tác phẩm 'Nhà giả kim' - Paulo Coelho" },
+    { text: "Du lịch", query: "Những địa điểm du lịch không thể bỏ qua tại Việt Nam?" },
+
+    // --- Mở rộng: Công nghệ & Tương lai ---
+    { text: "Xe điện", query: "Xe điện của Tesla có gì khác biệt so với xe xăng?" },
+    { text: "Web3", query: "Metaverse là gì và nó sẽ thay đổi tương lai ra sao?" },
+    { text: "Robot", query: "Robot có thể thay thế con người trong những ngành nghề nào?" },
+    { text: "An ninh mạng", query: "Cách tạo mật khẩu mạnh và bảo vệ tài khoản mạng xã hội?" },
+
+    // --- Mở rộng: Thể thao & Giải trí ---
+    { text: "Bóng đá", query: "Lionel Messi và Cristiano Ronaldo, ai có nhiều danh hiệu hơn?" },
+    { text: "eSports", query: "Liên Minh Huyền Thoại (LoL) là trò chơi như thế nào?" },
+    { text: "Nhiếp ảnh", query: "Cách chụp ảnh chân dung đẹp bằng điện thoại?" },
+    { text: "Yoga", query: "Lợi ích của việc tập Yoga mỗi buổi sáng?" }
+];
+
+function initSuggestions() {
+    const container = document.getElementById('suggestion-container');
+    if (!container) return; // Nếu màn hình welcome đã bị xóa thì không chạy
+
+    container.innerHTML = ''; // Làm trống container
+
+    // Trộn ngẫu nhiên và lấy ra 4 gợi ý
+    const shuffled = [...questionBank].sort(() => 0.5 - Math.random());
+    const selected = shuffled.slice(0, 4);
+
+    selected.forEach(item => {
+        const chip = document.createElement('div');
+        chip.className = 'suggestion-chip';
+        chip.innerText = item.text;
+        chip.onclick = () => setQuery(item.query);
+        container.appendChild(chip);
+    });
+}
 
         function showToast(t, type="info") { Toastify({ text: t, duration: 2500, style: { background: type==="error"?"#dc3545":"#212529" } }).showToast(); }
 
