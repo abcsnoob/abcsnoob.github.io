@@ -99,7 +99,29 @@ window.sharePost = (id, title) => {
     if (navigator.share) navigator.share({ title, url });
     else { navigator.clipboard.writeText(url); alert("Đã copy link!"); }
 };
+// Thêm hàm này vào file firebase.google.js
+window.createPost = async (title, content) => {
+    const user = auth.currentUser;
+    if (!user || user.email !== ADMIN_EMAIL) {
+        return alert("Chỉ Admin mới có quyền đăng bài!");
+    }
 
+    try {
+        await addDoc(collection(db, "posts"), {
+            title: title,
+            content: content,
+            createdAt: serverTimestamp(),
+            comments: [],
+            reactions: {
+                like: [], heart: [], love: [], haha: [], cry: [], angry: []
+            }
+        });
+        alert("Đăng bài thành công!");
+    } catch (e) {
+        console.error("Lỗi đăng bài: ", e);
+        alert("Lỗi rồi: " + e.message);
+    }
+};
 // --- RENDER COMMENT TREE (A-B-C) ---
 function renderCommentTree(comments, postId, parentId = null, level = 0) {
     const filtered = comments.filter(c => c.parentId === parentId);
