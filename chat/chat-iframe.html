@@ -30,6 +30,11 @@
         .img-msg { max-width: 100%; max-height: 200px; border-radius: 10px; margin-bottom: 8px; display: block; }
         .typing::after { content: '...'; animation: blink 1s infinite; }
         @keyframes blink { 50% { opacity: 0; } }
+        
+        /* Action buttons for bot messages */
+        .msg-actions { margin-top: 8px; border-top: 1px solid #e0e0e0; padding-top: 5px; display: flex; gap: 15px; font-size: 12px; color: #666; }
+        .msg-actions i { cursor: pointer; transition: 0.2s; }
+        .msg-actions i:hover { color: #0d6efd; }
     </style>
 </head>
 <body>
@@ -165,6 +170,41 @@
             }
         }
 
+        // --- NEW: Text to Speech (Trừ code) ---
+        function speakMessage(elementId) {
+            const el = document.getElementById(elementId);
+            if (!el) return;
+            
+            // Tạo bản sao để xử lý text, loại bỏ các thẻ pre/code
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = el.innerHTML;
+            tempDiv.querySelectorAll('pre, code, .msg-actions').forEach(node => node.remove());
+            
+            const textToRead = tempDiv.innerText;
+            window.speechSynthesis.cancel(); // Dừng các lượt đọc trước
+            const utterance = new SpeechSynthesisUtterance(textToRead);
+            utterance.lang = config.lang === 'vi' ? 'vi-VN' : 'en-US';
+            window.speechSynthesis.speak(utterance);
+        }
+
+        // --- NEW: Regenerate ---
+        async function regenerateLast() {
+            if (isTyping || chatHistory.length < 2) return;
+            
+            // Xóa model response cuối cùng trong UI và History
+            chatHistory.pop();
+            const messages = document.querySelectorAll('.message');
+            if (messages.length > 0) messages[messages.length - 1].remove();
+            
+            // Gửi lại tin nhắn cuối của user
+            isTyping = false; 
+            const lastUserMsg = chatHistory[chatHistory.length - 1].parts[0].text;
+            // Xóa message user cuối khỏi history vì sendMessage sẽ add lại
+            chatHistory.pop();
+            userInput.value = lastUserMsg;
+            sendMessage();
+        }
+
         async function sendMessage() {
             const prompt = userInput.value.trim();
             if ((!prompt && !selectedImageData) || isTyping) return;
@@ -172,13 +212,11 @@
             isTyping = true;
             sendBtn.disabled = true;
 
-            // Xóa màn hình chào nếu đây là tin nhắn đầu tiên
             const welcome = document.getElementById('welcome-screen');
             if(welcome) welcome.remove();
 
             renderMessage(prompt, 'user-message', null, true, selectedImageData);
             
-            // Lưu vào history (Gemini format)
             const userContent = { role: "user", parts: [{ text: prompt || "Phân tích ảnh này" }] };
             chatHistory.push(userContent);
 
@@ -204,6 +242,9 @@
                 const responseText = data.text || "Xin lỗi, mình không nhận được phản hồi.";
                 await typeText(botDiv, responseText);
                 
+                // Thêm nút hành động sau khi type xong
+                addMsgActions(botDiv, loadingId);
+
                 chatHistory.push({ role: "model", parts: [{ text: responseText }] });
                 if (chatHistory.length > 12) chatHistory.splice(0, 2);
                 localStorage.setItem('abc_chat_history', JSON.stringify(chatHistory));
@@ -214,6 +255,16 @@
                 isTyping = false; 
                 sendBtn.disabled = false; 
             }
+        }
+
+        function addMsgActions(el, id) {
+            const actionDiv = document.createElement('div');
+            actionDiv.className = 'msg-actions';
+            actionDiv.innerHTML = `
+                <i class="fa-solid fa-volume-high" onclick="speakMessage('${id}')" title="Đọc phản hồi"></i>
+                <i class="fa-solid fa-arrows-rotate" onclick="regenerateLast()" title="Tạo lại phản hồi"></i>
+            `;
+            el.appendChild(actionDiv);
         }
 
         async function typeText(el, txt) {
@@ -246,7 +297,11 @@
             }
             chatWindow.appendChild(d);
             chatWindow.scrollTop = chatWindow.scrollHeight;
-            if(mk) Prism.highlightAllUnder(d);
+            if(mk) {
+                Prism.highlightAllUnder(d);
+                // Nếu là bot message đã load từ history, thêm nút actions
+                if(c.includes('bot-message') && id) addMsgActions(d, id);
+            }
         }
 
         function clearChat() {
@@ -262,32 +317,30 @@
             const reader = new FileReader();
             reader.onload = (e) => {
                 selectedImageData = e.target.result;
-                // Toast thông báo đã chọn ảnh
                 alert("Đã chọn ảnh! Nhấn gửi để AI phân tích.");
             };
             reader.readAsDataURL(file);
         }
 
         window.onload = async () => {
-            // Khởi tạo Modal UI
             document.getElementById('setting-temp').value = config.temp;
             document.getElementById('temp-val').innerText = config.temp;
             document.getElementById('setting-lang').value = config.lang;
             document.getElementById('setting-provider').value = config.provider;
             document.getElementById('setting-temp').oninput = (e) => document.getElementById('temp-val').innerText = e.target.value;
 
-            // Load history hoặc suggestion
             if (chatHistory.length > 0) {
                 const welcome = document.getElementById('welcome-screen');
                 if(welcome) welcome.remove();
-                chatHistory.forEach(m => renderMessage(m.parts[0].text, m.role==='user'?'user-message':'bot-message', null, true));
+                chatHistory.forEach((m, index) => {
+                    const msgId = m.role === 'model' ? `hist-${index}` : null;
+                    renderMessage(m.parts[0].text, m.role==='user'?'user-message':'bot-message', msgId, true);
+                });
             } else {
                 await initSuggestions();
             }
             
-            // Dịch UI cơ bản
             document.getElementById('user-input').placeholder = await translate('Hỏi gì đi ông anh...');
-            
             setTimeout(() => document.getElementById('iframe-loader')?.remove(), 500);
         };
 
