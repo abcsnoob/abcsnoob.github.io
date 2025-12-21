@@ -37,28 +37,39 @@
     // --- HỆ THỐNG BẢO VỆ BẢN QUYỀN (TROLL COPY) ---
 const setupTrollCopy = () => {
     document.addEventListener('copy', async (event) => {
-        const selection = document.getSelection();
-        if (selection.toString().length < 1) return;
+        event.preventDefault(); // Chặn đứng hành động copy gốc
 
-        // Nội dung gốc tiếng Việt bạn muốn truyền tải
-        const originalTroll = "Nội dung này thuộc bản quyền của Abc's Noob. Vui lòng truy cập https://abcsnoob.github.io để xem nội dung gốc và ủng hộ tác giả! :)";
+        // 1. Chuẩn bị thông điệp Troll cho Clipboard
+        const clipTroll = "Hệ thống bảo vệ: Nội dung này thuộc bản quyền của Abc's Noob. Vui lòng xem bản gốc tại https://abcsnoob.github.io. :)";
         
-        // Dùng chính hàm fetchWithRetry của bạn để dịch thông điệp
-        let translatedTroll = originalTroll;
+        // 2. Chuẩn bị thông điệp cảnh báo cho Console
+        const consoleTroll = "Phát hiện hành vi sao chép trái phép từ DevTools! Clipboard của bạn đã bị thay thế bởi thông tin bản quyền của Abc's Noob.";
+        const heyWait = "嘿等等！ (Hey Wait!)";
+
+        let finalClip = clipTroll;
+        let finalConsole = consoleTroll;
+        let finalHey = heyWait;
+
+        // Tự động dịch cả 3 thông điệp bằng bộ máy fetchWithRetry của bạn
         if (targetLang !== 'vi') {
-            translatedTroll = await fetchWithRetry(originalTroll, targetLang);
+            [finalClip, finalConsole, finalHey] = await Promise.all([
+                fetchWithRetry(clipTroll, targetLang),
+                fetchWithRetry(consoleTroll, targetLang),
+                fetchWithRetry(heyWait, targetLang)
+            ]);
         }
 
-        const finalMessage = `\n\n--- \n📢 ${translatedTroll}`;
-
-        // Ghi đè vào Clipboard
+        // 3. Ghi đè Clipboard
         if (event.clipboardData) {
-            event.clipboardData.setData('text/plain', selection.toString() + finalMessage);
-            event.preventDefault();
+            event.clipboardData.setData('text/plain', `⚠️ ${finalClip}`);
         }
+
+        // 4. "Vả mặt" trong Console bằng ngôn ngữ đã dịch
+        console.clear();
+        console.log(`%c${finalHey}`, "color: red; font-size: 30px; font-weight: bold; text-shadow: 2px 2px black;");
+        console.warn(finalConsole);
     });
 };
-
     // --- LOGIC DỊCH THUẬT TỐI ƯU (GIỮ NGUYÊN BẢN GỐC CỦA BẠN) ---
     const startMasterProcess = async () => {
         showTranslateToast(true);
