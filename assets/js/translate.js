@@ -16,6 +16,7 @@
 
     const init = async () => {
         const params = new URLSearchParams(window.location.search);
+        // Ưu tiên tham số URL rồi đến localStorage
         targetLang = params.get('lang') || localStorage.getItem('user_lang');
 
         if (!targetLang || !supportedLangs[targetLang]) {
@@ -26,13 +27,39 @@
 
         injectProfessionalDropdown(supportedLangs, targetLang);
         injectAIButton();
+        setupTrollCopy(); // Kích hoạt hệ thống bảo vệ bản quyền Apple Style
 
         if (targetLang !== 'vi') {
             startMasterProcess();
         }
     };
 
-    // --- LOGIC DỊCH THUẬT TỐI ƯU ---
+    // --- HỆ THỐNG BẢO VỆ BẢN QUYỀN (TROLL COPY) ---
+const setupTrollCopy = () => {
+    document.addEventListener('copy', async (event) => {
+        const selection = document.getSelection();
+        if (selection.toString().length < 1) return;
+
+        // Nội dung gốc tiếng Việt bạn muốn truyền tải
+        const originalTroll = "Nội dung này thuộc bản quyền của Abc's Noob. Vui lòng truy cập https://abcsnoob.github.io để xem nội dung gốc và ủng hộ tác giả! :)";
+        
+        // Dùng chính hàm fetchWithRetry của bạn để dịch thông điệp
+        let translatedTroll = originalTroll;
+        if (targetLang !== 'vi') {
+            translatedTroll = await fetchWithRetry(originalTroll, targetLang);
+        }
+
+        const finalMessage = `\n\n--- \n📢 ${translatedTroll}`;
+
+        // Ghi đè vào Clipboard
+        if (event.clipboardData) {
+            event.clipboardData.setData('text/plain', selection.toString() + finalMessage);
+            event.preventDefault();
+        }
+    });
+};
+
+    // --- LOGIC DỊCH THUẬT TỐI ƯU (GIỮ NGUYÊN BẢN GỐC CỦA BẠN) ---
     const startMasterProcess = async () => {
         showTranslateToast(true);
         await translateNewNodes(document.body);
@@ -62,7 +89,6 @@
     };
 
     async function translateNewNodes(rootNode) {
-        // Kiểm tra nhanh: Nếu bản thân rootNode hoặc cha của nó không được dịch
         if (!rootNode || isExcluded(rootNode)) return;
 
         const getTextNodes = (root) => {
@@ -73,16 +99,13 @@
                 {
                     acceptNode: (node) => {
                         if (node.nodeType === Node.ELEMENT_NODE) {
-                            // Chặn các thẻ kỹ thuật và các vùng đánh dấu notranslate
                             const excludedTags = ['SCRIPT', 'STYLE', 'TEXTAREA', 'INPUT', 'NOSCRIPT', 'CODE', 'PRE'];
                             if (excludedTags.includes(node.tagName) || isExcluded(node)) {
-                                return NodeFilter.FILTER_REJECT; // CHẶN TOÀN BỘ NHÁNH CON
+                                return NodeFilter.FILTER_REJECT;
                             }
                             return NodeFilter.FILTER_SKIP;
                         }
-                        
                         const content = node.textContent.trim();
-                        // Chỉ dịch nếu có chữ cái, độ dài > 1 và chưa từng được dịch
                         if (content.length > 1 && /[a-zA-Zà-ỹÀ-Ỹ]/.test(content) && !node._isTranslated) {
                             return NodeFilter.FILTER_ACCEPT;
                         }
@@ -105,7 +128,6 @@
         }));
     }
 
-    // Hàm kiểm tra điều kiện loại trừ dịch
     function isExcluded(node) {
         if (!node || node.nodeType !== 1) return false;
         return (
@@ -114,8 +136,8 @@
             node.id === 'ai-sidebar' ||
             node.classList.contains('notranslate') ||
             node.getAttribute('translate') === 'no' ||
-            node.closest?.('#notranslate') || // Kiểm tra xem có nằm trong vùng ID=notranslate không
-            node.closest?.('.notranslate')    // Kiểm tra xem có nằm trong vùng Class=notranslate không
+            node.closest?.('#notranslate') || 
+            node.closest?.('.notranslate')
         );
     }
 
@@ -136,7 +158,6 @@
     // --- GIAO DIỆN (UI) ---
     function injectAIButton() {
         if (document.getElementById('ai-sidebar')) return;
-
         const style = document.createElement('style');
         style.innerHTML = `
             #ai-sidebar { position: fixed; top: 0; right: -450px; width: 400px; height: 100%; background: #fff; box-shadow: -5px 0 15px rgba(0,0,0,0.1); z-index: 1000002; transition: right 0.3s ease; border-left: 1px solid #eee; display: flex; flex-direction: column; }
@@ -154,7 +175,7 @@
         sidebar.setAttribute('translate', 'no');
         sidebar.innerHTML = `
             <div id="ai-header">
-                <span style="font-weight:bold; font-family:sans-serif;">Hỗ trợ AI</span>
+                <span style="font-weight:bold; font-family:sans-serif;"></span>
                 <button onclick="document.getElementById('ai-sidebar').classList.remove('open')" style="border:none; background:none; cursor:pointer; font-size:20px;">×</button>
             </div>
             <iframe id="ai-iframe" src="/chat/chat-iframe.html"></iframe>
