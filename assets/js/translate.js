@@ -196,7 +196,7 @@ const setupTrollCopy = () => {
         btn.id = 'ai-btn';
         btn.className = 'notranslate';
         btn.setAttribute('translate', 'no');
-        btn.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.48 2 12c0 1.61.38 3.12 1.05 4.47L2 22l5.53-1.05C8.88 21.62 10.39 22 12 22c5.52 0 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg> Hỗ trợ AI`;
+        btn.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.48 2 12c0 1.61.38 3.12 1.05 4.47L2 22l5.53-1.05C8.88 21.62 10.39 22 12 22c5.52 0 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg> `;
         btn.onclick = () => sidebar.classList.toggle('open');
 
         document.body.appendChild(sidebar);
