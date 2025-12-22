@@ -2,135 +2,145 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Abc's Noob AI</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Abc's Noob AI - Premium</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
-<style>
+
+    <style>
+        :root {
+            --primary-color: #0d6efd;
+            --bg-light: #f0f2f5;
+            --bot-msg-bg: #f1f0f0;
+        }
+
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body, html { margin: 0; padding: 0; height: 100%; width: 100%; overflow: hidden; font-family: 'Segoe UI', sans-serif; background-color: #f0f2f5; }
+        body, html { margin: 0; padding: 0; height: 100%; width: 100%; overflow: hidden; font-family: 'Segoe UI', Roboto, sans-serif; background-color: var(--bg-light); }
+
+        /* Loader */
+        #iframe-loader { position: fixed; inset: 0; background: #fff; display: flex; justify-content: center; align-items: center; z-index: 9999; transition: opacity 0.5s; }
+
+        /* Layout */
+        .chat-card { background: #fff; height: 100vh; height: 100dvh; display: flex; flex-direction: column; width: 100%; position: relative; }
         
-        #iframe-loader { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #fff; display: flex; justify-content: center; align-items: center; z-index: 9999; }
-        
-        .chat-card { 
-    background: #fff; 
-    height: 100vh; 
-    display: flex; 
-    flex-direction: column; 
-    width: 100%; /* Mặc định đầy màn hình */
-    max-width: 100%; 
-    margin: 0; 
-    box-shadow: none; 
-    position: relative; 
-}
-        
-        .chat-header { background: #212529; color: white; padding: 10px 15px; display: flex; align-items: center; justify-content: space-between; z-index: 10; }
-        .chat-header strong { font-size: 16px; }
+        .chat-header { 
+            background: #212529; color: white; padding: 12px 15px; 
+            display: flex; align-items: center; justify-content: space-between; 
+            z-index: 10; box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
 
         #chat-window { 
-            flex: 1; 
-            overflow-y: auto; 
-            padding: 15px; 
-            display: flex; 
-            flex-direction: column; 
-            gap: 12px; 
-            background: #fff; 
-            scroll-behavior: smooth;
+            flex: 1; overflow-y: auto; padding: 15px; 
+            display: flex; flex-direction: column; gap: 15px; 
+            background: #fff; scroll-behavior: smooth;
         }
-        
-        #welcome-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; text-align: center; padding: 20px; }
-        #welcome-screen img { width: 80px; height: 80px; border-radius: 50%; margin-bottom: 15px; }
-        
-        .suggestion-container { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 15px; width: 100%; }
-        .suggestion-chip { padding: 6px 12px; background: #f8f9fa; border: 1px solid #ddd; border-radius: 18px; font-size: 13px; cursor: pointer; }
 
-        .message { max-width: 85%; padding: 10px 14px; border-radius: 18px; font-size: 15px; line-height: 1.4; word-wrap: break-word; position: relative; }
-        .user-message { align-self: flex-end; background: #0d6efd; color: white; border-bottom-right-radius: 2px; }
-        .bot-message { align-self: flex-start; background: #f1f0f0; color: #333; border-bottom-left-radius: 2px; }
+        /* Message Bubbles */
+        .message { 
+            max-width: 85%; padding: 10px 16px; border-radius: 18px; 
+            font-size: 15px; line-height: 1.5; word-wrap: break-word; 
+            animation: fadeIn 0.3s ease; position: relative;
+        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .user-message { align-self: flex-end; background: var(--primary-color); color: white; border-bottom-right-radius: 4px; }
+        .bot-message { align-self: flex-start; background: var(--bot-msg-bg); color: #222; border-bottom-left-radius: 4px; }
         
-        .chat-footer { padding: 10px; border-top: 1px solid #eee; background: white; }
-        .input-group { background: #f8f9fa; border-radius: 25px; padding: 2px 10px; border: 1px solid #ddd; display: flex; align-items: center; }
-        #user-input { border: none; background: transparent; outline: none; flex: 1; height: 38px; padding: 0 10px; font-size: 15px; }
+        /* Markdown Style inside Chat */
+        .bot-message pre { background: #2d2d2d !important; border-radius: 8px; margin: 10px 0; padding: 10px; }
+        .bot-message code { font-family: 'Consolas', monospace; font-size: 0.9em; }
+
+        /* Footer & Input */
+        .chat-footer { padding: 12px; border-top: 1px solid #eee; background: white; }
+        .input-group-custom { 
+            background: #f8f9fa; border-radius: 30px; padding: 5px 15px; 
+            border: 1px solid #ddd; display: flex; align-items: center; gap: 10px;
+        }
+        #user-input { border: none; background: transparent; outline: none; flex: 1; min-height: 40px; font-size: 15px; }
+
+        /* Tutorial Overlay */
+        #tut-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 9990; display: none; }
+        .tut-highlight { z-index: 9991 !important; position: relative; box-shadow: 0 0 0 9999px rgba(0,0,0,0.7); border-radius: 8px; }
+        #tut-box { 
+            position: absolute; z-index: 9992; background: white; 
+            padding: 15px; border-radius: 12px; width: 280px; 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2); transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        /* Welcome Screen & Chips */
+        #welcome-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; text-align: center; }
+        .suggestion-chip { 
+            padding: 8px 16px; background: #fff; border: 1px solid var(--primary-color); 
+            color: var(--primary-color); border-radius: 20px; font-size: 13px; 
+            cursor: pointer; transition: 0.2s; 
+        }
+        .suggestion-chip:hover { background: var(--primary-color); color: white; }
+
+        /* Image Msg */
+        .img-container { position: relative; margin-bottom: 5px; border-radius: 10px; overflow: hidden; border: 1px solid #ddd; }
+        .img-msg { max-width: 100%; max-height: 300px; display: block; cursor: zoom-in; }
         
-        /* Chỉnh sửa hiển thị ảnh */
-        .img-container { position: relative; display: inline-block; cursor: zoom-in; margin-top: 5px; }
-        .img-msg { max-width: 100%; max-height: 300px; border-radius: 10px; display: block; }
-        .download-btn { position: absolute; top: 5px; right: 5px; background: rgba(0,0,0,0.5); color: white; border: none; border-radius: 50%; width: 28px; height: 28px; opacity: 0.8; }
-
-        /* Spinner & Typing */
-        .typing::after { content: '...'; animation: blink 1s infinite; }
-        @keyframes blink { 50% { opacity: 0; } }
-        #stop-btn { display: none; border-radius: 50%; width: 35px; height: 35px; margin-right: 5px; }
-
-        /* RESPONSIVE QUERIES */
-@media (max-width: 768px) {
-    .chat-card { 
-        width: 100vw; /* Chiếm trọn bề ngang điện thoại */
-        height: 100dvh; /* Dùng dvh để tránh lỗi tràn màn hình trên Safari/Chrome mobile */
-        max-width: 100vw;
-        border-radius: 0; 
-    }
-    #chat-window { padding: 10px; }
-    .message { max-width: 90%; font-size: 14px; }
-    .chat-header { padding: 8px 12px; }
-    .chat-header strong { font-size: 14px; }
-    .chat-header .fa-expand { display: none; } 
-    .img-msg { max-height: 250px; }
-    .suggestion-chip { font-size: 12px; }
-    .chat-footer { padding: 8px; } /* Thu nhỏ footer một chút trên mobile */
-}
-
-        /* Fullscreen Image */
-        img:fullscreen { object-fit: contain; background: black; }
-        img:-webkit-full-screen { object-fit: contain; background: black; }
+        /* Mobile */
+        @media (max-width: 768px) {
+            .message { max-width: 92%; }
+            .chat-header strong { font-size: 14px; }
+        }
     </style>
 </head>
 <body>
-    <div id="iframe-loader"><div class="spinner-grow text-primary"></div></div>
-    
+
+    <div id="iframe-loader"><div class="spinner-border text-primary"></div></div>
+
+    <div id="tut-overlay" onclick="nextStep()"></div>
+    <div id="tut-box" style="display:none">
+        <h6 id="tut-title" class="fw-bold text-primary mb-2"></h6>
+        <p id="tut-desc" class="small mb-3"></p>
+        <div class="d-flex justify-content-between align-items-center">
+            <span id="tut-step-count" class="badge bg-light text-dark"></span>
+            <button class="btn btn-sm btn-primary px-3" onclick="nextStep()" id="tut-btn-next">Tiếp tục</button>
+        </div>
+    </div>
+
     <div class="chat-card" id="main-app">
-        <div class="chat-header">
-            <div class="notranslate">
+        <div class="chat-header" id="header-area">
+            <div>
                 <i class="fa-solid fa-robot me-2"></i><strong>Abc's Noob AI</strong>
             </div>
-            <div class="d-flex align-items-center">
-                <i class="fa-solid fa-expand me-3" title="Toàn màn hình" style="cursor:pointer" onclick="toggleFullScreen()"></i>
-                <i class="fa-solid fa-file-import me-3" title="Dán ID chia sẻ" style="cursor:pointer" onclick="importShareId()"></i>
-                <i class="fa-solid fa-share-nodes me-3" title="Chia sẻ hội thoại" style="cursor:pointer" onclick="shareChat()"></i>
-                <i class="fa-solid fa-trash-can me-3" style="cursor:pointer" onclick="clearChat()"></i>
-                <span class="badge rounded-pill bg-success notranslate">Online</span>
+            <div class="d-flex gap-3 align-items-center">
+                <i id="btn-share" class="fa-solid fa-share-nodes" title="Chia sẻ" style="cursor:pointer" onclick="shareChat()"></i>
+                <i id="btn-clear" class="fa-solid fa-trash-can" title="Xóa" style="cursor:pointer" onclick="clearChat()"></i>
+                <i class="fa-solid fa-expand d-none d-md-block" onclick="toggleFullScreen()" style="cursor:pointer"></i>
+                <span class="badge rounded-pill bg-success">Online</span>
             </div>
         </div>
 
         <div id="chat-window">
             <div id="welcome-screen">
-                <img src="/assets/image/abcsnoob.webp" alt="Logo" onerror="this.src='https://via.placeholder.com/100'">
-                <h4 id="welcome-title">Chào bạn!</h4>
-                <p id="welcome-desc">Bạn hãy cùng trò chuyện với mình nhé</p>
-                <div id="suggestion-container" class="suggestion-container"></div>
-                <button class="refresh-btn" onclick="initSuggestions()">
-                    <i class="fa-solid fa-rotate me-1"></i> <span id="btn-refresh-text">Đổi gợi ý khác</span>
-                </button>
+                <img src="/assets/image/abcsnoob.webp" width="80" height="80" class="rounded-circle mb-3" onerror="this.src='https://via.placeholder.com/80'">
+                <h4 id="welcome-title">Xin chào!</h4>
+                <p id="welcome-desc" class="text-muted">Tôi có thể giúp gì cho bạn hôm nay?</p>
+                <div id="suggestion-container" class="suggestion-container d-flex flex-wrap justify-content-center gap-2 mt-3"></div>
             </div>
         </div>
 
-        <div class="chat-footer">
-            <div class="input-group">
-                <input type="file" id="file-input" accept="image/*" style="display:none" onchange="handleFile(this)">
-                <button style="border:none; background:none" onclick="document.getElementById('file-input').click()">
-                    <i class="fa-solid fa-image text-muted"></i>
+        <div class="chat-footer" id="footer-area">
+            <div class="input-group-custom">
+                <button id="btn-img" class="btn btn-link p-0 text-muted" onclick="document.getElementById('file-input').click()">
+                    <i class="fa-solid fa-image fs-5"></i>
                 </button>
+                <input type="file" id="file-input" accept="image/*" hidden onchange="handleFile(this)">
                 
-                <input type="text" id="user-input" placeholder="Hỏi gì đi ông anh..." autocomplete="off">
+                <input type="text" id="user-input" placeholder="Nhập tin nhắn..." autocomplete="off">
                 
-                <button id="stop-btn" class="btn btn-outline-danger border-0" onclick="stopTyping()">
-                    <i class="fa-solid fa-circle-stop"></i>
+                <button id="stop-btn" class="btn btn-link text-danger p-0" style="display:none" onclick="stopTyping()">
+                    <i class="fa-solid fa-circle-stop fs-5"></i>
                 </button>
 
-                <button class="btn btn-primary" id="send-btn" style="border-radius:50%; width:40px; height:40px" onclick="sendMessage()">
-                    <i class="fa-solid fa-paper-plane"></i>
+                <button id="send-btn" class="btn btn-primary rounded-circle d-flex align-items-center justify-content-center" style="width:35px; height:35px" onclick="sendMessage()">
+                    <i class="fa-solid fa-paper-plane" style="font-size: 14px;"></i>
                 </button>
             </div>
         </div>
@@ -139,376 +149,211 @@
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
-<script>
-const USER_LANG = localStorage.getItem('user_lang') || 'vi';
-const WORKER_URL = 'https://abcsnoobai.abcsnoob.workers.dev';
-const chatWindow = document.getElementById('chat-window');
-const userInput = document.getElementById('user-input');
-const sendBtn = document.getElementById('send-btn');
-const stopBtn = document.getElementById('stop-btn');
 
-let isTyping = false, 
-    abortTyping = false, 
-    selectedImageData = null,      
-    selectedImageBase64 = null,   
-    selectedImageMime = null;     
+    <script>
+        // --- CONFIG & STATE ---
+        const WORKER_URL = 'https://abcsnoobai.abcsnoob.workers.dev';
+        const USER_LANG = localStorage.getItem('user_lang') || 'vi';
+        const chatWindow = document.getElementById('chat-window');
+        const userInput = document.getElementById('user-input');
+        const sendBtn = document.getElementById('send-btn');
+        const stopBtn = document.getElementById('stop-btn');
 
-let chatHistory = JSON.parse(localStorage.getItem('abc_chat_history')) || [];
+        let isTyping = false;
+        let abortTyping = false;
+        let selectedImageData = null;
+        let currentStep = 0;
+        let chatHistory = JSON.parse(localStorage.getItem('abc_chat_history')) || [];
 
-const questionBank = [
-    { category: "Công nghệ", questions: ["AI sẽ thay đổi việc làm thế nào?", "Cách học code nhanh nhất?"] },
-    { category: "Giải trí", questions: ["Phim nào hay trên Netflix?", "Gợi ý game thế giới mở."] },
-    { category: "Sức khỏe", questions: ["Cách ngủ ngon tự nhiên?", "Bài tập 5 phút tại chỗ."] }
-];
+        const tutSteps = [
+            { target: 'header-area', title: 'Thanh công cụ', desc: 'Nơi bạn có thể chia sẻ cuộc hội thoại hoặc xóa lịch sử chat.' },
+            { target: 'btn-img', title: 'Gửi ảnh', desc: 'Bạn có thể gửi ảnh để AI phân tích nội dung bên trong.' },
+            { target: 'user-input', title: 'Trò chuyện', desc: 'Nhập bất cứ điều gì bạn muốn hỏi vào đây.' }
+        ];
 
-// --- HÀM FULLSCREEN TOÀN APP ---
-function toggleFullScreen() {
-    const elem = document.documentElement;
-    if (!document.fullscreenElement) {
-        elem.requestFullscreen().catch(err => {
-            alert(`Lỗi: ${err.message}`);
-        });
-    } else {
-        document.exitFullscreen();
-    }
-}
+        // --- CORE FUNCTIONS ---
+        async function translate(text) {
+            if (!text || USER_LANG === 'vi') return text;
+            try {
+                const res = await fetch(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=vi&tl=${USER_LANG}&dt=t&q=${encodeURIComponent(text)}`);
+                const json = await res.json();
+                return json[0].map(item => item[0]).join('');
+            } catch (e) { return text; }
+        }
 
-// --- HÀM PHÓNG TO ẢNH ---
-function openFullScreenImage(imgElement) {
-    if (imgElement.requestFullscreen) {
-        imgElement.requestFullscreen();
-    } else if (imgElement.webkitRequestFullscreen) {
-        imgElement.webkitRequestFullscreen();
-    } else if (imgElement.msRequestFullscreen) {
-        imgElement.msRequestFullscreen();
-    }
-}
+        function renderMessage(text, className, id = null, isMarkdown = true, imgSrc = null) {
+            const welcome = document.getElementById('welcome-screen');
+            if (welcome) welcome.style.display = 'none';
 
-// --- HÀM CHIA SẺ ---
-async function shareChat() {
-    if (!chatHistory || chatHistory.length === 0) {
-        Toastify({ text: "Chưa có gì để share hết ông giáo ạ!", background: "orange" }).showToast();
-        return;
-    }
+            const msgDiv = document.createElement('div');
+            msgDiv.className = `message ${className}`;
+            if (id) msgDiv.id = id;
 
-    const loadToast = Toastify({ text: "Đang đóng gói và gửi lên GitHub Gist...", duration: -1 }).showToast();
+            if (imgSrc) {
+                const imgCont = document.createElement('div');
+                imgCont.className = 'img-container';
+                imgCont.innerHTML = `<img src="${imgSrc}" class="img-msg" onclick="this.requestFullscreen()">`;
+                msgDiv.appendChild(imgCont);
+            }
 
-    try {
-        const response = await fetch(WORKER_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                action: 'share',
-                data: {
-                    history: chatHistory,
-                    timestamp: new Date().toISOString()
+            if (text) {
+                const span = document.createElement('span');
+                span.innerHTML = isMarkdown ? marked.parse(text) : text;
+                msgDiv.appendChild(span);
+            }
+
+            chatWindow.appendChild(msgDiv);
+            chatWindow.scrollTop = chatWindow.scrollHeight;
+            if (isMarkdown) Prism.highlightAllUnder(msgDiv);
+        }
+
+        async function sendMessage() {
+            const text = userInput.value.trim();
+            if ((!text && !selectedImageData) || isTyping) return;
+
+            const currentImg = selectedImageData;
+            renderMessage(text, 'user-message', null, true, currentImg);
+            
+            userInput.value = '';
+            selectedImageData = null;
+            isTyping = true;
+            sendBtn.disabled = true;
+            stopBtn.style.display = 'block';
+
+            // Prepare API Data
+            let userParts = [];
+            if (text) userParts.push({ text: text });
+            if (currentImg) {
+                userParts.push({ inline_data: { mime_type: "image/jpeg", data: currentImg.split(',')[1] } });
+            }
+            chatHistory.push({ role: "user", parts: userParts });
+
+            const botMsgId = 'bot-' + Date.now();
+            renderMessage('...', 'bot-message typing', botMsgId, false);
+
+            try {
+                const res = await fetch(WORKER_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ messages: chatHistory, user_lang: USER_LANG })
+                });
+                const data = await res.json();
+                
+                const botEl = document.getElementById(botMsgId);
+                botEl.classList.remove('typing');
+                botEl.innerHTML = '';
+                
+                await typeEffect(botEl, data.text);
+                chatHistory.push({ role: "model", parts: [{ text: data.text }] });
+                localStorage.setItem('abc_chat_history', JSON.stringify(chatHistory.slice(-10)));
+            } catch (e) {
+                document.getElementById(botMsgId).innerText = "Lỗi kết nối máy chủ!";
+            } finally {
+                isTyping = false;
+                sendBtn.disabled = false;
+                stopBtn.style.display = 'none';
+            }
+        }
+
+        async function typeEffect(el, text) {
+            let i = 0;
+            abortTyping = false;
+            return new Promise(resolve => {
+                function inner() {
+                    if (i < text.length && !abortTyping) {
+                        i += 3; // Type faster
+                        el.innerHTML = marked.parse(text.substring(0, i));
+                        chatWindow.scrollTop = chatWindow.scrollHeight;
+                        setTimeout(inner, 10);
+                    } else {
+                        el.innerHTML = marked.parse(text);
+                        Prism.highlightAllUnder(el);
+                        resolve();
+                    }
                 }
-            })
-        });
-
-        const result = await response.json();
-
-        if (result.success && result.shareId) {
-            const shareUrl = `${window.location.origin}${window.location.pathname}?shareId=${result.shareId}`;
-            await navigator.clipboard.writeText(shareUrl);
-            loadToast.hideToast();
-            Toastify({ 
-                text: "✅ Đã copy link chia sẻ vĩnh viễn!", 
-                duration: 5000,
-                style: { background: "linear-gradient(to right, #00b09b, #96c93d)" }
-            }).showToast();
-        } else {
-            throw new Error("Worker không tạo được Gist");
-        }
-    } catch (e) {
-        loadToast.hideToast();
-        Toastify({ text: "Lỗi: " + e.message, background: "#f44336" }).showToast();
-    }
-}
-
-async function importShareId() {
-    const shareId = prompt("Nhập ID chia sẻ:");
-    if (!shareId) return;
-
-    // Hiện spinner khi đang import
-    const importToast = Toastify({ text: " đang tải hội thoại...", duration: -1, avatar: "https://i.gifer.com/ZKZg.gif" }).showToast();
-
-    try {
-        const res = await fetch(WORKER_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ action: 'get_share', shareId: shareId.trim() })
-        });
-        const result = await res.json();
-        
-        if (result.success) {
-            chatWindow.innerHTML = ''; // Xóa màn hình hiện tại
-            result.data.history.forEach(m => {
-                const txt = m.parts.find(p => p.text)?.text || "";
-                const imgPart = m.parts.find(p => p.inline_data);
-                const imgSrc = imgPart ? `data:${imgPart.inline_data.mime_type};base64,${imgPart.inline_data.data}` : null;
-                renderMessage(txt, m.role === 'user' ? 'user-message' : 'bot-message', null, true, imgSrc);
-            });
-            window.history.pushState({}, '', `?shareId=${shareId}`);
-            importToast.hideToast();
-            Toastify({ text: "Đã nhập thành công!", background: "green" }).showToast();
-        } else {
-            alert("Không tìm thấy ID này!");
-            importToast.hideToast();
-        }
-    } catch (e) { 
-        alert("Lỗi tải ID!"); 
-        importToast.hideToast();
-    }
-}
-
-// --- TIỆN ÍCH ---
-async function translate(text) {
-    if (!text || USER_LANG === 'vi') return text;
-    try {
-        const res = await fetch(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=vi&tl=${USER_LANG}&dt=t&q=${encodeURIComponent(text)}`);
-        const json = await res.json();
-        return json[0].map(item => item[0]).join('');
-    } catch (e) { return text; }
-}
-
-function stopTyping() { abortTyping = true; }
-
-function clearChat() {
-    if(confirm("Xóa lịch sử trò chuyện?")) {
-        localStorage.removeItem('abc_chat_history');
-        location.reload();
-    }
-}
-
-// --- XỬ LÝ HÌNH ẢNH ---
-function handleFile(input) {
-    const file = input.files[0];
-    if (!file) return;
-
-    Toastify({ text: "Đang nén ảnh...", duration: 1000 }).showToast();
-
-    const reader = new FileReader();
-    reader.onload = function(e) {
-        const img = new Image();
-        img.onload = function() {
-            const canvas = document.createElement('canvas');
-            const MAX_WIDTH = 1024; 
-            let width = img.width;
-            let height = img.height;
-
-            if (width > MAX_WIDTH) {
-                height *= MAX_WIDTH / width;
-                width = MAX_WIDTH;
-            }
-            canvas.width = width;
-            canvas.height = height;
-            const ctx = canvas.getContext('2d');
-            ctx.drawImage(img, 0, 0, width, height);
-            
-            const compressedData = canvas.toDataURL('image/jpeg', 0.7);
-            
-            selectedImageData = compressedData; 
-            selectedImageBase64 = compressedData.split(',')[1];
-            selectedImageMime = 'image/jpeg';
-            
-            Toastify({ text: "Đã sẵn sàng gửi ảnh!", duration: 2000, style: { background: "green" } }).showToast();
-        };
-        img.src = e.target.result;
-    };
-    reader.readAsDataURL(file);
-}
-
-async function sendMessage() {
-    const prompt = userInput.value.trim();
-    if ((!prompt && !selectedImageBase64) || isTyping) return;
-
-    isTyping = true; abortTyping = false;
-    sendBtn.disabled = true;
-    stopBtn.style.display = 'inline-block';
-
-    renderMessage(prompt, 'user-message', null, true, selectedImageData);
-
-    let userParts = [];
-    if (prompt) userParts.push({ text: prompt });
-    if (selectedImageBase64) {
-        userParts.push({
-            inline_data: { mime_type: selectedImageMime, data: selectedImageBase64 }
-        });
-    }
-
-    chatHistory.push({ role: "user", parts: userParts });
-
-    const loadingId = 'load-' + Date.now();
-    renderMessage('...', 'bot-message typing', loadingId, false);
-    
-    userInput.value = '';
-    const tempImg = selectedImageData;
-    selectedImageData = null;
-    selectedImageBase64 = null;
-    document.getElementById('file-input').value = '';
-
-    try {
-        const res = await fetch(WORKER_URL, { 
-            method: 'POST', 
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ messages: chatHistory, user_lang: USER_LANG }) 
-        });
-        
-        const data = await res.json();
-        const botDiv = document.getElementById(loadingId);
-        botDiv.classList.remove('typing');
-        botDiv.innerHTML = '';
-
-        await typeText(botDiv, data.text);
-
-        if(data.provider) {
-            const pTag = document.createElement('small');
-            pTag.style = "font-size: 10px; color: #999; display: block; margin-top: 5px; font-style: italic;";
-            pTag.innerText = 'Powered by ' + data.provider;
-            botDiv.appendChild(pTag);
-        }
-
-        chatHistory.push({ role: "model", parts: [{ text: data.text }] });
-        
-        const historyToSave = chatHistory.slice(-10).map(msg => ({
-            role: msg.role,
-            parts: msg.parts.filter(p => p.text) 
-        }));
-        localStorage.setItem('abc_chat_history', JSON.stringify(historyToSave));
-
-    } catch (e) {
-        const errDiv = document.getElementById(loadingId);
-        if(errDiv) errDiv.innerText = "Lỗi kết nối!";
-    } finally {
-        isTyping = false; sendBtn.disabled = false;
-        stopBtn.style.display = 'none';
-    }
-}
-
-async function typeText(el, txt) {
-    let i = 0;
-    return new Promise((resolve) => {
-        function typing() {
-            if (i < txt.length && !abortTyping) {
-                i++;
-                el.innerHTML = marked.parse(txt.substring(0, i));
-                Prism.highlightAllUnder(el);
-                chatWindow.scrollTop = chatWindow.scrollHeight;
-                setTimeout(typing, 10); 
-            } else { 
-                if(abortTyping) el.innerHTML = marked.parse(txt.substring(0, i) + " [Đã dừng]");
-                resolve(); 
-            }
-        }
-        typing();
-    });
-}
-
-function renderMessage(t, c, id, mk, img) {
-    const welcome = document.getElementById('welcome-screen'); 
-    if(welcome) welcome.remove();
-
-    const msgDiv = document.createElement('div'); 
-    msgDiv.className = `message ${c}`; 
-    if(id) msgDiv.id = id;
-
-    if(img) { 
-        const container = document.createElement('div');
-        container.className = 'img-container';
-        container.onclick = () => openFullScreenImage(imageEl); // Click để xem full screen
-        
-        const imageEl = document.createElement('img'); 
-        imageEl.src = img; 
-        imageEl.className = 'img-msg'; 
-        
-        const dlBtn = document.createElement('button');
-        dlBtn.className = 'download-btn';
-        dlBtn.innerHTML = '<i class="fa-solid fa-download"></i>';
-        dlBtn.onclick = (e) => {
-            e.stopPropagation();
-            const link = document.createElement('a');
-            link.href = img;
-            link.download = `img-${Date.now()}.png`;
-            link.click();
-        };
-        
-        container.appendChild(imageEl);
-        container.appendChild(dlBtn);
-        msgDiv.appendChild(container); 
-    }
-
-    if(t) { 
-        const textSpan = document.createElement('span'); 
-        textSpan.innerHTML = mk ? marked.parse(t) : t; 
-        msgDiv.appendChild(textSpan); 
-    }
-
-    chatWindow.appendChild(msgDiv);
-    chatWindow.scrollTop = chatWindow.scrollHeight;
-    if(mk) Prism.highlightAllUnder(msgDiv);
-}
-
-async function initSuggestions() {
-    const container = document.getElementById('suggestion-container');
-    if (!container) return;
-    container.innerHTML = '';
-    const shuffled = [...questionBank].sort(() => 0.5 - Math.random());
-    for (const item of shuffled.slice(0, 3)) {
-        const chip = document.createElement('div');
-        chip.className = 'suggestion-chip';
-        chip.innerText = await translate(item.category);
-        chip.onclick = async () => {
-            const q = item.questions[Math.floor(Math.random() * item.questions.length)];
-            userInput.value = await translate(q);
-            sendMessage();
-        };
-        container.appendChild(chip);
-    }
-}
-
-async function loadSharedChat(shareId) {
-    // Spinner cho trường hợp load từ URL tham số
-    const importToast = Toastify({ text: "Đang tải hội thoại chia sẻ...", duration: -1 }).showToast();
-    try {
-        const res = await fetch(WORKER_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ action: 'get_share', shareId: shareId.trim() })
-        });
-        const result = await res.json();
-        if (result.success) {
-            result.data.history.forEach(m => {
-                const txt = m.parts.find(p => p.text)?.text || "";
-                const imgPart = m.parts.find(p => p.inline_data);
-                const imgSrc = imgPart ? `data:${imgPart.inline_data.mime_type};base64,${imgPart.inline_data.data}` : null;
-                renderMessage(txt, m.role === 'user' ? 'user-message' : 'bot-message', null, true, imgSrc);
+                inner();
             });
         }
-    } catch (e) { console.error(e); }
-    finally { importToast.hideToast(); }
-}
 
-window.onload = async () => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const shareId = urlParams.get('shareId');
+        // --- TUTORIAL LOGIC ---
+        async function showStep() {
+            const step = tutSteps[currentStep];
+            const target = document.getElementById(step.target);
+            
+            document.querySelectorAll('.tut-highlight').forEach(el => el.classList.remove('tut-highlight'));
+            target.classList.add('tut-highlight');
 
-    if (shareId) {
-        await loadSharedChat(shareId);
-    } else if (chatHistory.length > 0) {
-        chatHistory.forEach(m => {
-            const txt = m.parts.find(p => p.text)?.text || "";
-            const imgPart = m.parts.find(p => p.inline_data);
-            const imgSrc = imgPart ? `data:${imgPart.inline_data.mime_type};base64,${imgPart.inline_data.data}` : null;
-            renderMessage(txt, m.role === 'user' ? 'user-message' : 'bot-message', null, true, imgSrc);
-        });
-    } else {
-        initSuggestions();
-    }
-    setTimeout(() => document.getElementById('iframe-loader')?.remove(), 600);
-};
+            document.getElementById('tut-title').innerText = await translate(step.title);
+            document.getElementById('tut-desc').innerText = await translate(step.desc);
+            document.getElementById('tut-step-count').innerText = `${currentStep + 1}/${tutSteps.length}`;
+            
+            const rect = target.getBoundingClientRect();
+            const box = document.getElementById('tut-box');
+            box.style.display = 'block';
+            box.style.top = (rect.bottom + 15) + 'px';
+            box.style.left = Math.max(10, Math.min(window.innerWidth - 300, rect.left)) + 'px';
+        }
 
-userInput.addEventListener('keypress', e => { if(e.key === 'Enter') sendMessage(); });
-</script>
+        function nextStep() {
+            currentStep++;
+            if (currentStep < tutSteps.length) showStep();
+            else {
+                document.getElementById('tut-overlay').style.display = 'none';
+                document.getElementById('tut-box').style.display = 'none';
+                document.querySelectorAll('.tut-highlight').forEach(el => el.classList.remove('tut-highlight'));
+                localStorage.setItem('completetutorial', 'true');
+            }
+        }
+
+        // --- UTILS ---
+        function handleFile(input) {
+            const file = input.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                selectedImageData = e.target.result;
+                Toastify({ text: "Đã đính kèm ảnh", background: "green" }).showToast();
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function clearChat() {
+            if (confirm("Xóa toàn bộ lịch sử?")) {
+                localStorage.removeItem('abc_chat_history');
+                location.reload();
+            }
+        }
+
+        function toggleFullScreen() {
+            if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+            else document.exitFullscreen();
+        }
+
+        function stopTyping() { abortTyping = true; }
+
+        // --- INIT ---
+        window.onload = async () => {
+            // Hiển thị lịch sử cũ nếu có
+            if (chatHistory.length > 0) {
+                document.getElementById('welcome-screen').style.display = 'none';
+                chatHistory.forEach(m => {
+                    const txt = m.parts.find(p => p.text)?.text || "";
+                    renderMessage(txt, m.role === 'user' ? 'user-message' : 'bot-message');
+                });
+            }
+
+            setTimeout(() => {
+                document.getElementById('iframe-loader').style.opacity = '0';
+                setTimeout(() => document.getElementById('iframe-loader').remove(), 500);
+                
+                if (localStorage.getItem('completetutorial') !== 'true') {
+                    document.getElementById('tut-overlay').style.display = 'block';
+                    showStep();
+                }
+            }, 1000);
+        };
+
+        userInput.onkeypress = (e) => { if(e.key === 'Enter') sendMessage(); };
+    </script>
 </body>
 </html>
