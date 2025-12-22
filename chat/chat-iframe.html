@@ -187,6 +187,33 @@ async function shareChat() {
     }
 }
 
+    async function importShareId() {
+    const shareId = prompt("Nhập ID chia sẻ:");
+    if (!shareId) return;
+
+    chatWindow.innerHTML = ''; // Xóa màn hình hiện tại
+    try {
+        const res = await fetch(WORKER_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'get_share', shareId: shareId.trim() })
+        });
+        const result = await res.json();
+        
+        if (result.success) {
+            result.data.history.forEach(m => {
+                const txt = m.parts.find(p => p.text)?.text || "";
+                const imgPart = m.parts.find(p => p.inline_data);
+                const imgSrc = imgPart ? `data:${imgPart.inline_data.mime_type};base64,${imgPart.inline_data.data}` : null;
+                // Render trực tiếp, không gửi lại server
+                renderMessage(txt, m.role === 'user' ? 'user-message' : 'bot-message', null, true, imgSrc);
+            });
+            // Cập nhật URL ẩn
+            window.history.pushState({}, '', `?shareId=${shareId}`);
+        }
+    } catch (e) { alert("Lỗi tải ID!"); }
+}
+
 // --- TIỆN ÍCH ---
 async function translate(text) {
     if (!text || USER_LANG === 'vi') return text;
@@ -206,6 +233,7 @@ function clearChat() {
     }
 }
 
+    
 // --- XỬ LÝ HÌNH ẢNH ---
 function handleFile(input) {
     const file = input.files[0];
@@ -248,6 +276,16 @@ function handleFile(input) {
     reader.readAsDataURL(file);
 }
 
+    function saveImageToLocal(base64Data) {
+    const imgId = `cached_img_${Date.now()}`;
+    try {
+        localStorage.setItem(imgId, base64Data);
+        return imgId;
+    } catch (e) {
+        console.error("LocalStorage đầy!");
+        return null;
+    }
+}
 async function sendMessage() {
     const prompt = userInput.value.trim();
     if ((!prompt && !selectedImageBase64) || isTyping) return;
@@ -336,41 +374,67 @@ async function typeText(el, txt) {
     });
 }
 
+/**
+ * Render tin nhắn lên cửa sổ chat
+ * @param {string} t - Nội dung văn bản (Markdown)
+ * @param {string} c - Class CSS (user-message hoặc bot-message)
+ * @param {string} id - ID của phần tử (dùng cho hiệu ứng typing)
+ * @param {boolean} mk - Có dùng marked.js để parse Markdown không
+ * @param {string} img - Chuỗi Base64 của ảnh (data:image/jpeg;base64,...)
+ */
 function renderMessage(t, c, id, mk, img) {
-    const w = document.getElementById('welcome-screen'); 
-    if(w) w.remove();
+    // 1. Tự động ẩn màn hình chào mừng khi bắt đầu có tin nhắn
+    const welcome = document.getElementById('welcome-screen'); 
+    if(welcome) welcome.remove();
 
-    const d = document.createElement('div'); 
-    d.className = `message ${c}`; 
-    if(id) d.id = id;
+    // 2. Tạo khung chứa tin nhắn
+    const msgDiv = document.createElement('div'); 
+    msgDiv.className = `message ${c}`; 
+    if(id) msgDiv.id = id;
 
+    // 3. XỬ LÝ HÌNH ẢNH (Nếu có)
+    // Ảnh được ưu tiên hiển thị trước văn bản trong cùng một khối tin nhắn
     if(img) { 
         const container = document.createElement('div');
         container.className = 'img-container';
         
-        const i = document.createElement('img'); 
-        i.src = img; 
-        i.className = 'img-msg'; 
+        const imageEl = document.createElement('img'); 
+        imageEl.src = img; // Nguồn ảnh từ chuỗi Base64 (Local hoặc Gist)
+        imageEl.className = 'img-msg'; 
         
+        // Nút tải ảnh xuống nhanh
         const dlBtn = document.createElement('button');
         dlBtn.className = 'download-btn';
         dlBtn.innerHTML = '<i class="fa-solid fa-download"></i>';
-        dlBtn.onclick = () => downloadImage(img);
+        dlBtn.onclick = (e) => {
+            e.stopPropagation(); // Ngăn chặn sự kiện click vào tin nhắn
+            const link = document.createElement('a');
+            link.href = img;
+            link.download = `abcs-noob-ai-${Date.now()}.png`;
+            link.click();
+        };
         
-        container.appendChild(i);
+        container.appendChild(imageEl);
         container.appendChild(dlBtn);
-        d.appendChild(container); 
+        msgDiv.appendChild(container); 
     }
 
+    // 4. XỬ LÝ VĂN BẢN (Nếu có)
     if(t) { 
-        const s = document.createElement('span'); 
-        s.innerHTML = mk ? marked.parse(t) : t; 
-        d.appendChild(s); 
+        const textSpan = document.createElement('span'); 
+        // Nếu mk = true, sử dụng marked.js để hiển thị định dạng code, bold, v.v.
+        textSpan.innerHTML = mk ? marked.parse(t) : t; 
+        msgDiv.appendChild(textSpan); 
     }
 
-    chatWindow.appendChild(d);
+    // 5. Đưa tin nhắn vào cửa sổ chat và cuộn xuống cuối
+    chatWindow.appendChild(msgDiv);
     chatWindow.scrollTop = chatWindow.scrollHeight;
-    if(mk) Prism.highlightAllUnder(d);
+
+    // 6. Highlight code (Prism.js) nếu có khối code trong văn bản
+    if(mk) {
+        Prism.highlightAllUnder(msgDiv);
+    }
 }
 
 async function initSuggestions() {
@@ -395,53 +459,31 @@ window.onload = async () => {
     const urlParams = new URLSearchParams(window.location.search);
     const shareId = urlParams.get('shareId');
 
-    // 1. Cập nhật ngôn ngữ (Thêm dấu ? để tránh lỗi khi phần tử đã bị remove)
+    // 1. Dịch giao diện (Chào mừng, gợi ý...)
     const titleEl = document.getElementById('welcome-title');
-    const descEl = document.getElementById('welcome-desc');
-    const refreshBtnEl = document.getElementById('btn-refresh-text');
-    const inputEl = document.getElementById('user-input');
-
     if (titleEl) titleEl.innerText = await translate('Chào bạn!');
-    if (descEl) descEl.innerText = await translate("Tôi là Abc's Noob. Hỏi tôi về Code, Minecraft hoặc Bitcoin nhé!");
-    if (refreshBtnEl) refreshBtnEl.innerText = await translate('Đổi gợi ý khác');
-    if (inputEl) inputEl.placeholder = await translate('Hỏi gì đi ông anh...');
+    // (Thêm các dòng dịch khác của bạn ở đây)
 
-    // 2. Chế độ xem ShareId (GitHub Gist)
+    // 2. Kiểm tra nguồn dữ liệu
     if (shareId) {
-        // Xóa màn hình chào sau khi đã thử dịch (hoặc nếu nó tồn tại)
-        document.getElementById('welcome-screen')?.remove();
-        
-        Toastify({ text: "Đang tải dữ liệu từ GitHub vệ tinh... 🛰️", duration: 3000 }).showToast();
-        try {
-            const res = await fetch(WORKER_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ action: 'get_share', shareId: shareId })
-            });
-            const result = await res.json();
-            if (!result.success) throw new Error("Gist không tồn tại");
-
-            result.data.history.forEach(m => {
-                const txt = m.parts.find(p => p.text)?.text || "";
-                const imgPart = m.parts.find(p => p.inline_data);
-                const imgSrc = imgPart ? `data:${imgPart.inline_data.mime_type};base64,${imgPart.inline_data.data}` : null;
-                renderMessage(txt, m.role === 'user' ? 'user-message' : 'bot-message', null, true, imgSrc);
-            });
-        } catch (e) {
-            renderMessage("❌ Lỗi: " + e.message, 'bot-message', null, true);
-        }
+        // Nếu truy cập qua link chia sẻ: Tải từ Worker
+        loadSharedChat(shareId);
+    } else if (chatHistory.length > 0) {
+        // Nếu có lịch sử local: Render Offline hoàn toàn
+        chatHistory.forEach(m => {
+            const txt = m.parts.find(p => p.text)?.text || "";
+            const imgPart = m.parts.find(p => p.inline_data);
+            const imgSrc = imgPart ? `data:${imgPart.inline_data.mime_type};base64,${imgPart.inline_data.data}` : null;
+            
+            // Hiển thị lại ảnh từ Base64 đã lưu trong máy, không request server
+            renderMessage(txt, m.role === 'user' ? 'user-message' : 'bot-message', null, true, imgSrc);
+        });
     } else {
-        // Chế độ bình thường
-        if (chatHistory.length > 0) {
-            chatHistory.forEach(m => {
-                const txt = m.parts.find(p => p.text)?.text || "";
-                renderMessage(txt, m.role === 'user' ? 'user-message' : 'bot-message', null, true);
-            });
-        } else { 
-            initSuggestions(); 
-        }
+        // Nếu máy trắng: Hiện gợi ý
+        initSuggestions();
     }
 
+    // Tắt hiệu ứng loading ban đầu
     setTimeout(() => document.getElementById('iframe-loader')?.remove(), 600);
 };
 
