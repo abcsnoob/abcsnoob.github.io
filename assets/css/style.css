@@ -1,29 +1,37 @@
 @import url('https://fonts.googleapis.com/css2?family=Comfortaa:wght@300;400;700&display=swap');
-body{
+
+body {
     font-family: 'Comfortaa', sans-serif;
     margin: 0;
     padding: 0;
-    background-color: #f4f4f4;
+    
+    /* Thay đổi nền thành ảnh */
+    background-image: url('https://abcsnoob.github.io/assets/image/background.webp');
+    background-size: cover;          /* Ảnh bao phủ toàn bộ màn hình */
+    background-position: center;     /* Căn giữa ảnh */
+    background-attachment: fixed;    /* Cố định nền khi cuộn trang */
+    background-repeat: no-repeat;    /* Không lặp lại ảnh */
+    
     color: #333;
     -webkit-user-select: none; /* Safari */
     -ms-user-select: none;      /* IE 10+ */
     user-select: none;          /* Standard */
 }
+
+/* Các phần còn lại giữ nguyên */
 .logo {
     height: 40px;
     margin-right: 10px;
     vertical-align: auto;
 }
-/* Xử lý nội dung bài viết */
+
 .post-text {
-    white-space: pre-wrap; /* Quan trọng nhất để giữ Enter xuống dòng */
+    white-space: pre-wrap;
     word-wrap: break-word;
     line-height: 1.6;
     color: #444;
 }
 
-
-/* Chỉ hiện 3 dòng ở bản Preview */
 .text-truncate-3 {
     display: -webkit-box;
     -webkit-line-clamp: 3;
@@ -31,52 +39,44 @@ body{
     overflow: hidden;
 }
 
-/* Nút bấm không bị hiện viền xanh khi click */
 .btn:focus, .form-control:focus {
     box-shadow: none !important;
 }
 
-/* Hiệu ứng mượt mà khi di chuột */
 .card {
     transition: transform 0.2s ease;
+    background-color: rgba(255, 255, 255, 0.9); /* Gợi ý: Thêm độ trong suốt cho card để thấy nền đẹp hơn */
 }
+
 .card:hover {
     transform: translateY(-2px);
 }
 
-/* Container chính cho nội dung bài viết */
 .post-main-wrapper {
-    min-height: 100px; /* Luôn cao ít nhất 100px */
+    min-height: 100px;
     position: relative;
     overflow: hidden;
 }
 
-/* Khi ở trang chủ (chưa nhấn xem thêm) */
 .post-main-wrapper.is-truncated {
-    max-height: 200px; /* Bạn có thể tăng lên nếu muốn hiện nhiều hơn chút */
-    /* Nếu bạn muốn CHẮC CHẮN nó dừng ở 100px: */
     height: 100px !important; 
 }
 
-/* Khi đã nhấn Xem thêm hoặc vào link ID trực tiếp */
 .post-main-wrapper.is-expanded {
     max-height: none !important;
     height: auto !important;
 }
 
-/* Lớp phủ mờ dần */
 .read-more-overlay {
     position: absolute;
     bottom: 0;
     left: 0;
     width: 100%;
-    height: 60px; /* Vùng mờ chiếm 60px dưới cùng */
+    height: 60px;
     display: flex;
     align-items: flex-end;
     justify-content: center;
     padding-bottom: 10px;
-    
-    /* Mờ dần bắt đầu mạnh từ px thứ 90 trong tổng số 100px */
     background: linear-gradient(to bottom, 
         rgba(255, 255, 255, 0) 0%, 
         rgba(255, 255, 255, 0.8) 50%, 
@@ -85,7 +85,6 @@ body{
     z-index: 5;
 }
 
-/* Đảm bảo ảnh/video không bị méo */
 .post-content-body img, .post-content-body iframe {
     max-width: 100%;
     border-radius: 8px;
