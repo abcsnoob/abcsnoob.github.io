@@ -395,9 +395,22 @@ window.onload = async () => {
     const urlParams = new URLSearchParams(window.location.search);
     const shareId = urlParams.get('shareId');
 
-    // Chế độ xem ShareId (GitHub Gist)
+    // 1. Cập nhật ngôn ngữ (Thêm dấu ? để tránh lỗi khi phần tử đã bị remove)
+    const titleEl = document.getElementById('welcome-title');
+    const descEl = document.getElementById('welcome-desc');
+    const refreshBtnEl = document.getElementById('btn-refresh-text');
+    const inputEl = document.getElementById('user-input');
+
+    if (titleEl) titleEl.innerText = await translate('Chào bạn!');
+    if (descEl) descEl.innerText = await translate("Tôi là Abc's Noob. Hỏi tôi về Code, Minecraft hoặc Bitcoin nhé!");
+    if (refreshBtnEl) refreshBtnEl.innerText = await translate('Đổi gợi ý khác');
+    if (inputEl) inputEl.placeholder = await translate('Hỏi gì đi ông anh...');
+
+    // 2. Chế độ xem ShareId (GitHub Gist)
     if (shareId) {
+        // Xóa màn hình chào sau khi đã thử dịch (hoặc nếu nó tồn tại)
         document.getElementById('welcome-screen')?.remove();
+        
         Toastify({ text: "Đang tải dữ liệu từ GitHub vệ tinh... 🛰️", duration: 3000 }).showToast();
         try {
             const res = await fetch(WORKER_URL, {
@@ -418,18 +431,17 @@ window.onload = async () => {
             renderMessage("❌ Lỗi: " + e.message, 'bot-message', null, true);
         }
     } else {
+        // Chế độ bình thường
         if (chatHistory.length > 0) {
             chatHistory.forEach(m => {
                 const txt = m.parts.find(p => p.text)?.text || "";
                 renderMessage(txt, m.role === 'user' ? 'user-message' : 'bot-message', null, true);
             });
-        } else { initSuggestions(); }
+        } else { 
+            initSuggestions(); 
+        }
     }
 
-    document.getElementById('welcome-title').innerText = await translate('Chào bạn!');
-    document.getElementById('welcome-desc').innerText = await translate("Tôi là Abc's Noob. Hỏi tôi về Code, Minecraft hoặc Bitcoin nhé!");
-    document.getElementById('btn-refresh-text').innerText = await translate('Đổi gợi ý khác');
-    document.getElementById('user-input').placeholder = await translate('Hỏi gì đi ông anh...');
     setTimeout(() => document.getElementById('iframe-loader')?.remove(), 600);
 };
 
