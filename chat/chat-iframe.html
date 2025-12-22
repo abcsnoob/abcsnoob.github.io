@@ -44,12 +44,21 @@
         .chat-footer { padding: 15px; border-top: 1px solid #eee; }
         .input-group { background: #f8f9fa; border-radius: 30px; padding: 5px 15px; border: 1px solid #ddd; display: flex; align-items: center; gap: 5px; }
         #user-input { border: none; background: transparent; outline: none; flex: 1; height: 40px; }
+        
+        /* Chỉnh sửa hiển thị ảnh */
+        .img-container { position: relative; display: inline-block; }
         .img-msg { max-width: 100%; max-height: 250px; border-radius: 10px; margin-bottom: 8px; display: block; }
+        .download-btn { 
+            position: absolute; top: 5px; right: 5px; 
+            background: rgba(0,0,0,0.5); color: white; 
+            border: none; border-radius: 50%; width: 30px; height: 30px; 
+            cursor: pointer; opacity: 0; transition: 0.3s;
+        }
+        .img-container:hover .download-btn { opacity: 1; }
 
         .typing::after { content: '...'; animation: blink 1s infinite; }
         @keyframes blink { 50% { opacity: 0; } }
 
-        /* Nút Stop Generating */
         #stop-btn { display: none; border-radius: 50%; width: 40px; height: 40px; transition: 0.3s; }
     </style>
 </head>
@@ -62,6 +71,7 @@
                 <i class="fa-solid fa-robot me-2"></i><strong>Abc's Noob AI</strong>
             </div>
             <div class="d-flex align-items-center">
+                <i class="fa-solid fa-share-nodes me-3" title="Chia sẻ hội thoại" style="cursor:pointer" onclick="shareChat()"></i>
                 <i class="fa-solid fa-trash-can me-3" style="cursor:pointer" onclick="clearChat()"></i>
                 <span class="badge rounded-pill bg-success notranslate">Online</span>
             </div>
@@ -112,9 +122,9 @@ const stopBtn = document.getElementById('stop-btn');
 
 let isTyping = false, 
     abortTyping = false, 
-    selectedImageData = null,      // Dùng để hiển thị preview lên UI
-    selectedImageBase64 = null,   // Dữ liệu base64 sạch gửi lên server
-    selectedImageMime = null;     // Định dạng ảnh
+    selectedImageData = null,      
+    selectedImageBase64 = null,   
+    selectedImageMime = null;     
 
 let chatHistory = JSON.parse(localStorage.getItem('abc_chat_history')) || [];
 
@@ -124,8 +134,32 @@ const questionBank = [
     { category: "Sức khỏe", questions: ["Cách ngủ ngon tự nhiên?", "Bài tập 5 phút tại chỗ."] }
 ];
 
-// --- TIỆN ÍCH ---
+// --- HÀM LƯU ẢNH ---
+function downloadImage(base64Data) {
+    const link = document.createElement('a');
+    link.href = base64Data;
+    link.download = `abcs-chat-img-${Date.now()}.png`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    Toastify({ text: "Đang tải ảnh xuống...", duration: 2000 }).showToast();
+}
 
+// --- HÀM CHIA SẺ ---
+function shareChat() {
+    const lastMsg = chatHistory.length > 0 ? chatHistory[chatHistory.length - 10].parts[0].text : "localchat";
+    const cleanMsg = encodeURIComponent(lastMsg.substring(0, 50));
+    const shareUrl = `${window.location.origin}${window.location.pathname}?abcslocalchat=${cleanMsg}`;
+    
+    navigator.clipboard.writeText(shareUrl).then(() => {
+        Toastify({ 
+            text: "Đã copy link chia sẻ kèm query!", 
+            style: { background: "linear-gradient(to right, #00b09b, #96c93d)" } 
+        }).showToast();
+    });
+}
+
+// --- TIỆN ÍCH ---
 async function translate(text) {
     if (!text || USER_LANG === 'vi') return text;
     try {
@@ -145,12 +179,10 @@ function clearChat() {
 }
 
 // --- XỬ LÝ HÌNH ẢNH ---
-
 function handleFile(input) {
     const file = input.files[0];
     if (!file) return;
 
-    // Hiển thị thông báo đang xử lý
     Toastify({ text: "Đang nén ảnh...", duration: 1000, gravity: "top", position: "center" }).showToast();
 
     const reader = new FileReader();
@@ -158,7 +190,7 @@ function handleFile(input) {
         const img = new Image();
         img.onload = function() {
             const canvas = document.createElement('canvas');
-            const MAX_WIDTH = 1024; // Giới hạn chiều rộng để tiết kiệm tài nguyên
+            const MAX_WIDTH = 1024; 
             let width = img.width;
             let height = img.height;
 
@@ -171,7 +203,6 @@ function handleFile(input) {
             const ctx = canvas.getContext('2d');
             ctx.drawImage(img, 0, 0, width, height);
             
-            // Nén chất lượng xuống 0.7 để giảm dung lượng base64
             const compressedData = canvas.toDataURL('image/jpeg', 0.7);
             
             selectedImageData = compressedData; 
@@ -189,8 +220,6 @@ function handleFile(input) {
     reader.readAsDataURL(file);
 }
 
-// --- CORE LOGIC ---
-
 async function sendMessage() {
     const prompt = userInput.value.trim();
     if ((!prompt && !selectedImageBase64) || isTyping) return;
@@ -199,10 +228,8 @@ async function sendMessage() {
     sendBtn.disabled = true;
     stopBtn.style.display = 'inline-block';
 
-    // 1. Hiển thị tin nhắn User lên màn hình
     renderMessage(prompt, 'user-message', null, true, selectedImageData);
 
-    // 2. Xây dựng mảng 'parts' cho Gemini (Hỗ trợ đa phương thức)
     let userParts = [];
     if (prompt) userParts.push({ text: prompt });
     if (selectedImageBase64) {
@@ -216,13 +243,10 @@ async function sendMessage() {
 
     chatHistory.push({ role: "user", parts: userParts });
 
-    // 3. Hiển thị trạng thái Bot đang trả lời
     const loadingId = 'load-' + Date.now();
     renderMessage('...', 'bot-message typing', loadingId, false);
     
-    // Reset ô nhập liệu và ảnh đã chọn
     userInput.value = '';
-    const tempImage = selectedImageData; // Lưu tạm để nếu lỗi có thể xử lý (nếu cần)
     selectedImageData = null;
     selectedImageBase64 = null;
     document.getElementById('file-input').value = '';
@@ -239,10 +263,8 @@ async function sendMessage() {
         botDiv.classList.remove('typing');
         botDiv.innerHTML = '';
 
-        // 4. Hiệu ứng gõ chữ cho phản hồi từ AI
         await typeText(botDiv, data.text);
 
-        // Hiển thị Provider (Gemini/Groq)
         if(data.provider) {
             const pTag = document.createElement('small');
             pTag.style = "font-size: 10px; color: #999; display: block; margin-top: 5px; font-style: italic;";
@@ -250,13 +272,11 @@ async function sendMessage() {
             botDiv.appendChild(pTag);
         }
 
-        // 5. Lưu lịch sử (Chỉ lưu text để tránh tràn LocalStorage)
         chatHistory.push({ role: "model", parts: [{ text: data.text }] });
         
-        // Cắt bớt lịch sử nếu quá dài (giữ 10 tin nhắn gần nhất)
         const historyToSave = chatHistory.slice(-10).map(msg => ({
             role: msg.role,
-            parts: msg.parts.filter(p => p.text) // Chỉ lưu text để tiết kiệm bộ nhớ local
+            parts: msg.parts.filter(p => p.text) 
         }));
         localStorage.setItem('abc_chat_history', JSON.stringify(historyToSave));
 
@@ -278,7 +298,7 @@ async function typeText(el, txt) {
                 el.innerHTML = marked.parse(txt.substring(0, i));
                 Prism.highlightAllUnder(el);
                 chatWindow.scrollTop = chatWindow.scrollHeight;
-                setTimeout(typing, 10); // Tốc độ gõ
+                setTimeout(typing, 10); 
             } else { 
                 if(abortTyping) el.innerHTML = marked.parse(txt.substring(0, i) + " [Đã dừng]");
                 resolve(); 
@@ -297,10 +317,21 @@ function renderMessage(t, c, id, mk, img) {
     if(id) d.id = id;
 
     if(img) { 
+        const container = document.createElement('div');
+        container.className = 'img-container';
+        
         const i = document.createElement('img'); 
         i.src = img; 
         i.className = 'img-msg'; 
-        d.appendChild(i); 
+        
+        const dlBtn = document.createElement('button');
+        dlBtn.className = 'download-btn';
+        dlBtn.innerHTML = '<i class="fa-solid fa-download"></i>';
+        dlBtn.onclick = () => downloadImage(img);
+        
+        container.appendChild(i);
+        container.appendChild(dlBtn);
+        d.appendChild(container); 
     }
 
     if(t) { 
@@ -313,8 +344,6 @@ function renderMessage(t, c, id, mk, img) {
     chatWindow.scrollTop = chatWindow.scrollHeight;
     if(mk) Prism.highlightAllUnder(d);
 }
-
-// --- KHỞI TẠO GIAO DIỆN ---
 
 async function initSuggestions() {
     const container = document.getElementById('suggestion-container');
@@ -335,7 +364,13 @@ async function initSuggestions() {
 }
 
 window.onload = async () => {
-    // Dịch các thành phần tĩnh
+    // Kiểm tra query string abcslocalchat
+    const urlParams = new URLSearchParams(window.location.search);
+    const sharedChat = urlParams.get('abcslocalchat');
+    if(sharedChat) {
+        Toastify({ text: "Bạn đang xem nội dung chia sẻ: " + decodeURIComponent(sharedChat), duration: 4000 }).showToast();
+    }
+
     document.getElementById('welcome-title').innerText = await translate('Chào bạn!');
     document.getElementById('welcome-desc').innerText = await translate('Tôi là Abc\'s Noob. Hỏi tôi về Code, Minecraft hoặc Bitcoin nhé!');
     document.getElementById('btn-refresh-text').innerText = await translate('Đổi gợi ý khác');
@@ -356,6 +391,6 @@ window.onload = async () => {
 userInput.addEventListener('keypress', e => {
     if(e.key === 'Enter') sendMessage();
 });
-    </script>
+</script>
 </body>
 </html>
