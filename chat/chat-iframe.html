@@ -10,9 +10,9 @@
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
     <style>
         * { box-sizing: border-box; }
-        body, html { margin: 0; padding: 0; height: 100%; width: 100%; overflow: hidden; font-family: 'Segoe UI', sans-serif; }
+        body, html { margin: 0; padding: 0; height: 100%; width: 100%; overflow: hidden; font-family: 'Segoe UI', sans-serif; background-color: #f0f2f5; }
         #iframe-loader { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #fff; display: flex; justify-content: center; align-items: center; z-index: 9999; }
-        .chat-card { background: #fff; height: 100vh; display: flex; flex-direction: column; }
+        .chat-card { background: #fff; height: 100vh; display: flex; flex-direction: column; max-width: 1000px; margin: 0 auto; box-shadow: 0 0 20px rgba(0,0,0,0.1); }
         .chat-header { background: #212529; color: white; padding: 12px 20px; display: flex; align-items: center; justify-content: space-between; }
         
         #chat-window { 
@@ -46,13 +46,14 @@
         #user-input { border: none; background: transparent; outline: none; flex: 1; height: 40px; }
         
         /* Chỉnh sửa hiển thị ảnh */
-        .img-container { position: relative; display: inline-block; }
-        .img-msg { max-width: 100%; max-height: 250px; border-radius: 10px; margin-bottom: 8px; display: block; }
+        .img-container { position: relative; display: inline-block; cursor: zoom-in; }
+        .img-msg { max-width: 100%; max-height: 250px; border-radius: 10px; margin-bottom: 8px; display: block; transition: transform 0.2s; }
+        .img-msg:hover { filter: brightness(0.9); }
         .download-btn { 
             position: absolute; top: 5px; right: 5px; 
             background: rgba(0,0,0,0.5); color: white; 
             border: none; border-radius: 50%; width: 30px; height: 30px; 
-            cursor: pointer; opacity: 0; transition: 0.3s;
+            cursor: pointer; opacity: 0; transition: 0.3s; z-index: 10;
         }
         .img-container:hover .download-btn { opacity: 1; }
 
@@ -60,19 +61,23 @@
         @keyframes blink { 50% { opacity: 0; } }
 
         #stop-btn { display: none; border-radius: 50%; width: 40px; height: 40px; transition: 0.3s; }
+
+        /* Fullscreen Image Overlay */
+        img:-webkit-full-screen { object-fit: contain; background: black; }
+        img:fullscreen { object-fit: contain; background: black; }
     </style>
 </head>
 <body>
     <div id="iframe-loader"><div class="spinner-grow text-primary"></div></div>
     
-    <div class="chat-card">
+    <div class="chat-card" id="main-app">
         <div class="chat-header">
             <div class="notranslate">
                 <i class="fa-solid fa-robot me-2"></i><strong>Abc's Noob AI</strong>
             </div>
             <div class="d-flex align-items-center">
+                <i class="fa-solid fa-expand me-3" title="Toàn màn hình" style="cursor:pointer" onclick="toggleFullScreen()"></i>
                 <i class="fa-solid fa-file-import me-3" title="Dán ID chia sẻ" style="cursor:pointer" onclick="importShareId()"></i>
-                
                 <i class="fa-solid fa-share-nodes me-3" title="Chia sẻ hội thoại" style="cursor:pointer" onclick="shareChat()"></i>
                 <i class="fa-solid fa-trash-can me-3" style="cursor:pointer" onclick="clearChat()"></i>
                 <span class="badge rounded-pill bg-success notranslate">Online</span>
@@ -136,15 +141,27 @@ const questionBank = [
     { category: "Sức khỏe", questions: ["Cách ngủ ngon tự nhiên?", "Bài tập 5 phút tại chỗ."] }
 ];
 
-// --- HÀM LƯU ẢNH ---
-function downloadImage(base64Data) {
-    const link = document.createElement('a');
-    link.href = base64Data;
-    link.download = `abcs-chat-img-${Date.now()}.png`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    Toastify({ text: "Đang tải ảnh xuống...", duration: 2000 }).showToast();
+// --- HÀM FULLSCREEN TOÀN APP ---
+function toggleFullScreen() {
+    const elem = document.documentElement;
+    if (!document.fullscreenElement) {
+        elem.requestFullscreen().catch(err => {
+            alert(`Lỗi: ${err.message}`);
+        });
+    } else {
+        document.exitFullscreen();
+    }
+}
+
+// --- HÀM PHÓNG TO ẢNH ---
+function openFullScreenImage(imgElement) {
+    if (imgElement.requestFullscreen) {
+        imgElement.requestFullscreen();
+    } else if (imgElement.webkitRequestFullscreen) {
+        imgElement.webkitRequestFullscreen();
+    } else if (imgElement.msRequestFullscreen) {
+        imgElement.msRequestFullscreen();
+    }
 }
 
 // --- HÀM CHIA SẺ ---
@@ -189,11 +206,13 @@ async function shareChat() {
     }
 }
 
-    async function importShareId() {
+async function importShareId() {
     const shareId = prompt("Nhập ID chia sẻ:");
     if (!shareId) return;
 
-    chatWindow.innerHTML = ''; // Xóa màn hình hiện tại
+    // Hiện spinner khi đang import
+    const importToast = Toastify({ text: " đang tải hội thoại...", duration: -1, avatar: "https://i.gifer.com/ZKZg.gif" }).showToast();
+
     try {
         const res = await fetch(WORKER_URL, {
             method: 'POST',
@@ -203,17 +222,24 @@ async function shareChat() {
         const result = await res.json();
         
         if (result.success) {
+            chatWindow.innerHTML = ''; // Xóa màn hình hiện tại
             result.data.history.forEach(m => {
                 const txt = m.parts.find(p => p.text)?.text || "";
                 const imgPart = m.parts.find(p => p.inline_data);
                 const imgSrc = imgPart ? `data:${imgPart.inline_data.mime_type};base64,${imgPart.inline_data.data}` : null;
-                // Render trực tiếp, không gửi lại server
                 renderMessage(txt, m.role === 'user' ? 'user-message' : 'bot-message', null, true, imgSrc);
             });
-            // Cập nhật URL ẩn
             window.history.pushState({}, '', `?shareId=${shareId}`);
+            importToast.hideToast();
+            Toastify({ text: "Đã nhập thành công!", background: "green" }).showToast();
+        } else {
+            alert("Không tìm thấy ID này!");
+            importToast.hideToast();
         }
-    } catch (e) { alert("Lỗi tải ID!"); }
+    } catch (e) { 
+        alert("Lỗi tải ID!"); 
+        importToast.hideToast();
+    }
 }
 
 // --- TIỆN ÍCH ---
@@ -229,19 +255,18 @@ async function translate(text) {
 function stopTyping() { abortTyping = true; }
 
 function clearChat() {
-    if(confirm("Xóa lịch sử trò chuyện? (Dữ liệu Bitcoin vẫn an toàn 🐧)")) {
+    if(confirm("Xóa lịch sử trò chuyện?")) {
         localStorage.removeItem('abc_chat_history');
         location.reload();
     }
 }
 
-    
 // --- XỬ LÝ HÌNH ẢNH ---
 function handleFile(input) {
     const file = input.files[0];
     if (!file) return;
 
-    Toastify({ text: "Đang nén ảnh...", duration: 1000, gravity: "top", position: "center" }).showToast();
+    Toastify({ text: "Đang nén ảnh...", duration: 1000 }).showToast();
 
     const reader = new FileReader();
     reader.onload = function(e) {
@@ -267,27 +292,13 @@ function handleFile(input) {
             selectedImageBase64 = compressedData.split(',')[1];
             selectedImageMime = 'image/jpeg';
             
-            Toastify({ 
-                text: "Đã sẵn sàng gửi ảnh!", 
-                duration: 2000, 
-                style: { background: "linear-gradient(to right, #00b09b, #96c93d)" } 
-            }).showToast();
+            Toastify({ text: "Đã sẵn sàng gửi ảnh!", duration: 2000, style: { background: "green" } }).showToast();
         };
         img.src = e.target.result;
     };
     reader.readAsDataURL(file);
 }
 
-    function saveImageToLocal(base64Data) {
-    const imgId = `cached_img_${Date.now()}`;
-    try {
-        localStorage.setItem(imgId, base64Data);
-        return imgId;
-    } catch (e) {
-        console.error("LocalStorage đầy!");
-        return null;
-    }
-}
 async function sendMessage() {
     const prompt = userInput.value.trim();
     if ((!prompt && !selectedImageBase64) || isTyping) return;
@@ -302,10 +313,7 @@ async function sendMessage() {
     if (prompt) userParts.push({ text: prompt });
     if (selectedImageBase64) {
         userParts.push({
-            inline_data: {
-                mime_type: selectedImageMime,
-                data: selectedImageBase64
-            }
+            inline_data: { mime_type: selectedImageMime, data: selectedImageBase64 }
         });
     }
 
@@ -315,6 +323,7 @@ async function sendMessage() {
     renderMessage('...', 'bot-message typing', loadingId, false);
     
     userInput.value = '';
+    const tempImg = selectedImageData;
     selectedImageData = null;
     selectedImageBase64 = null;
     document.getElementById('file-input').value = '';
@@ -350,7 +359,7 @@ async function sendMessage() {
 
     } catch (e) {
         const errDiv = document.getElementById(loadingId);
-        if(errDiv) errDiv.innerText = "Lỗi kết nối! Có vẻ như node Bitcoin đang bảo trì 🐧";
+        if(errDiv) errDiv.innerText = "Lỗi kết nối!";
     } finally {
         isTyping = false; sendBtn.disabled = false;
         stopBtn.style.display = 'none';
@@ -376,43 +385,31 @@ async function typeText(el, txt) {
     });
 }
 
-/**
- * Render tin nhắn lên cửa sổ chat
- * @param {string} t - Nội dung văn bản (Markdown)
- * @param {string} c - Class CSS (user-message hoặc bot-message)
- * @param {string} id - ID của phần tử (dùng cho hiệu ứng typing)
- * @param {boolean} mk - Có dùng marked.js để parse Markdown không
- * @param {string} img - Chuỗi Base64 của ảnh (data:image/jpeg;base64,...)
- */
 function renderMessage(t, c, id, mk, img) {
-    // 1. Tự động ẩn màn hình chào mừng khi bắt đầu có tin nhắn
     const welcome = document.getElementById('welcome-screen'); 
     if(welcome) welcome.remove();
 
-    // 2. Tạo khung chứa tin nhắn
     const msgDiv = document.createElement('div'); 
     msgDiv.className = `message ${c}`; 
     if(id) msgDiv.id = id;
 
-    // 3. XỬ LÝ HÌNH ẢNH (Nếu có)
-    // Ảnh được ưu tiên hiển thị trước văn bản trong cùng một khối tin nhắn
     if(img) { 
         const container = document.createElement('div');
         container.className = 'img-container';
+        container.onclick = () => openFullScreenImage(imageEl); // Click để xem full screen
         
         const imageEl = document.createElement('img'); 
-        imageEl.src = img; // Nguồn ảnh từ chuỗi Base64 (Local hoặc Gist)
+        imageEl.src = img; 
         imageEl.className = 'img-msg'; 
         
-        // Nút tải ảnh xuống nhanh
         const dlBtn = document.createElement('button');
         dlBtn.className = 'download-btn';
         dlBtn.innerHTML = '<i class="fa-solid fa-download"></i>';
         dlBtn.onclick = (e) => {
-            e.stopPropagation(); // Ngăn chặn sự kiện click vào tin nhắn
+            e.stopPropagation();
             const link = document.createElement('a');
             link.href = img;
-            link.download = `abcs-noob-ai-${Date.now()}.png`;
+            link.download = `img-${Date.now()}.png`;
             link.click();
         };
         
@@ -421,22 +418,15 @@ function renderMessage(t, c, id, mk, img) {
         msgDiv.appendChild(container); 
     }
 
-    // 4. XỬ LÝ VĂN BẢN (Nếu có)
     if(t) { 
         const textSpan = document.createElement('span'); 
-        // Nếu mk = true, sử dụng marked.js để hiển thị định dạng code, bold, v.v.
         textSpan.innerHTML = mk ? marked.parse(t) : t; 
         msgDiv.appendChild(textSpan); 
     }
 
-    // 5. Đưa tin nhắn vào cửa sổ chat và cuộn xuống cuối
     chatWindow.appendChild(msgDiv);
     chatWindow.scrollTop = chatWindow.scrollHeight;
-
-    // 6. Highlight code (Prism.js) nếu có khối code trong văn bản
-    if(mk) {
-        Prism.highlightAllUnder(msgDiv);
-    }
+    if(mk) Prism.highlightAllUnder(msgDiv);
 }
 
 async function initSuggestions() {
@@ -457,41 +447,48 @@ async function initSuggestions() {
     }
 }
 
+async function loadSharedChat(shareId) {
+    // Spinner cho trường hợp load từ URL tham số
+    const importToast = Toastify({ text: "Đang tải hội thoại chia sẻ...", duration: -1 }).showToast();
+    try {
+        const res = await fetch(WORKER_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'get_share', shareId: shareId.trim() })
+        });
+        const result = await res.json();
+        if (result.success) {
+            result.data.history.forEach(m => {
+                const txt = m.parts.find(p => p.text)?.text || "";
+                const imgPart = m.parts.find(p => p.inline_data);
+                const imgSrc = imgPart ? `data:${imgPart.inline_data.mime_type};base64,${imgPart.inline_data.data}` : null;
+                renderMessage(txt, m.role === 'user' ? 'user-message' : 'bot-message', null, true, imgSrc);
+            });
+        }
+    } catch (e) { console.error(e); }
+    finally { importToast.hideToast(); }
+}
+
 window.onload = async () => {
     const urlParams = new URLSearchParams(window.location.search);
     const shareId = urlParams.get('shareId');
 
-    // 1. Dịch giao diện (Chào mừng, gợi ý...)
-    const titleEl = document.getElementById('welcome-title');
-    if (titleEl) titleEl.innerText = await translate('Chào bạn!');
-    // (Thêm các dòng dịch khác của bạn ở đây)
-
-    // 2. Kiểm tra nguồn dữ liệu
     if (shareId) {
-        // Nếu truy cập qua link chia sẻ: Tải từ Worker
-        loadSharedChat(shareId);
+        await loadSharedChat(shareId);
     } else if (chatHistory.length > 0) {
-        // Nếu có lịch sử local: Render Offline hoàn toàn
         chatHistory.forEach(m => {
             const txt = m.parts.find(p => p.text)?.text || "";
             const imgPart = m.parts.find(p => p.inline_data);
             const imgSrc = imgPart ? `data:${imgPart.inline_data.mime_type};base64,${imgPart.inline_data.data}` : null;
-            
-            // Hiển thị lại ảnh từ Base64 đã lưu trong máy, không request server
             renderMessage(txt, m.role === 'user' ? 'user-message' : 'bot-message', null, true, imgSrc);
         });
     } else {
-        // Nếu máy trắng: Hiện gợi ý
         initSuggestions();
     }
-
-    // Tắt hiệu ứng loading ban đầu
     setTimeout(() => document.getElementById('iframe-loader')?.remove(), 600);
 };
 
-userInput.addEventListener('keypress', e => {
-    if(e.key === 'Enter') sendMessage();
-});
+userInput.addEventListener('keypress', e => { if(e.key === 'Enter') sendMessage(); });
 </script>
 </body>
 </html>
