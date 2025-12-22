@@ -303,7 +303,7 @@
             
             function type() {
                 if (i < fullText.length && !abortTyping) {
-                    i += 25; // Tăng tốc độ hiển thị chữ (25 ký tự mỗi lần)
+                    i += 7; // Tăng tốc độ hiển thị chữ (25 ký tự mỗi lần)
                     botEl.innerHTML = marked.parse(fullText.substring(0, i));
                     chatWindow.scrollTop = chatWindow.scrollHeight;
                     setTimeout(type, 5); // Giảm thời gian trễ
