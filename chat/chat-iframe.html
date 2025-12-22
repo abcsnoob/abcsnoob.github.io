@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Abc's Noob AI - Premium</title>
+    <title>Abc's Noob AI - Pro</title>
     
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
@@ -12,305 +12,277 @@
 
     <style>
         :root {
-            --primary-color: #0d6efd;
-            --bg-body: #f0f2f5;
-            --bg-card: #ffffff;
-            --text-main: #212529;
-            --bot-msg-bg: #f1f0f0;
-            --footer-bg: #ffffff;
-            --input-bg: #f8f9fa;
-            --border-color: #ddd;
+            --primary: #0d6efd; --bg: #ffffff; --text: #212529; --msg-bot: #f7f7f8;
+            --msg-user: #0d6efd; --border: #e5e5e5; --input-bg: #ffffff;
         }
 
-        /* DARK MODE LOGIC */
         @media (prefers-color-scheme: dark) {
             :root {
-                --bg-body: #121212;
-                --bg-card: #1e1e1e;
-                --text-main: #e0e0e0;
-                --bot-msg-bg: #2d2d2d;
-                --footer-bg: #1e1e1e;
-                --input-bg: #2d2d2d;
-                --border-color: #444;
+                --bg: #212121; --text: #ececec; --msg-bot: #2f2f2f;
+                --border: #424242; --input-bg: #2f2f2f;
             }
-            .bot-message { color: #e0e0e0 !important; }
-            #user-input { color: white; }
-            #welcome-desc { color: #aaa !important; }
+            pre { background: #000 !important; }
         }
 
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body, html { margin: 0; padding: 0; height: 100%; width: 100%; overflow: hidden; font-family: 'Segoe UI', Roboto, sans-serif; background-color: var(--bg-body); color: var(--text-main); }
+        body, html { margin: 0; padding: 0; height: 100dvh; background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
 
-        #iframe-loader { position: fixed; inset: 0; background: var(--bg-card); display: flex; justify-content: center; align-items: center; z-index: 9999; transition: opacity 0.5s; }
+        /* App Container */
+        .app-container { display: flex; flex-direction: column; height: 100dvh; max-width: 900px; margin: 0 auto; border-left: 1px solid var(--border); border-right: 1px solid var(--border); }
 
-        .chat-card { background: var(--bg-card); height: 100vh; height: 100dvh; display: flex; flex-direction: column; width: 100%; position: relative; }
+        /* Header */
+        .app-header { padding: 10px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; background: var(--bg); }
+
+        /* Chat Window */
+        #chat-window { flex: 1; overflow-y: auto; padding: 20px 10px; display: flex; flex-direction: column; gap: 24px; scroll-behavior: smooth; }
+
+        /* Messages */
+        .message { display: flex; gap: 15px; width: 100%; max-width: 100%; animation: fadeIn 0.3s ease; }
+        .avatar { width: 32px; height: 32px; border-radius: 4px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 14px; }
+        .msg-content { flex: 1; overflow-x: auto; line-height: 1.6; font-size: 16px; }
         
-        .chat-header { 
-            background: #212529; color: white; padding: 12px 15px; 
-            display: flex; align-items: center; justify-content: space-between; 
-            z-index: 10; box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
-
-        #chat-window { 
-            flex: 1; overflow-y: auto; padding: 15px; 
-            display: flex; flex-direction: column; gap: 15px; 
-            background: transparent; scroll-behavior: smooth;
-        }
-
-        .message { 
-            max-width: 85%; padding: 10px 16px; border-radius: 18px; 
-            font-size: 15px; line-height: 1.5; word-wrap: break-word; 
-            animation: fadeIn 0.3s ease; position: relative;
-        }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
-        .user-message { align-self: flex-end; background: var(--primary-color); color: white; border-bottom-right-radius: 4px; }
-        .bot-message { align-self: flex-start; background: var(--bot-msg-bg); color: var(--text-main); border-bottom-left-radius: 4px; }
+        .bot-message { background: var(--msg-bot); padding: 15px; border-radius: 8px; }
+        .user-message-container { flex-direction: row-reverse; }
+        .user-message { background: var(--primary); color: white; padding: 10px 18px; border-radius: 20px; max-width: 80%; }
         
-        .bot-message pre { background: #2d2d2d !important; border-radius: 8px; margin: 10px 0; padding: 10px; overflow-x: auto; }
+        /* Code Styling */
+        pre { position: relative; padding: 15px !important; border-radius: 8px !important; margin: 15px 0 !important; }
+        .copy-code { position: absolute; top: 5px; right: 5px; font-size: 12px; padding: 2px 8px; background: rgba(255,255,255,0.1); color: #fff; border: none; border-radius: 4px; cursor: pointer; }
 
-        .chat-footer { padding: 12px; border-top: 1px solid var(--border-color); background: var(--footer-bg); }
-        .input-group-custom { 
-            background: var(--input-bg); border-radius: 30px; padding: 5px 15px; 
-            border: 1px solid var(--border-color); display: flex; align-items: center; gap: 10px;
-        }
-        #user-input { border: none; background: transparent; outline: none; flex: 1; min-height: 40px; font-size: 15px; }
+        /* Footer Input */
+        .app-footer { padding: 20px; background: var(--bg); }
+        .input-wrapper { position: relative; background: var(--input-bg); border: 1px solid var(--border); border-radius: 16px; padding: 10px 15px; display: flex; flex-direction: column; gap: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        #user-input { border: none; background: transparent; color: var(--text); outline: none; resize: none; width: 100%; max-height: 200px; font-size: 16px; }
+        .input-actions { display: flex; justify-content: space-between; align-items: center; }
 
-        #tut-box { 
-            position: absolute; z-index: 9992; background: var(--bg-card); color: var(--text-main);
-            padding: 15px; border-radius: 12px; width: 280px; 
-            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-        }
+        .btn-send { width: 32px; height: 32px; border-radius: 8px; border: none; background: var(--primary); color: white; transition: 0.2s; }
+        .btn-send:disabled { background: #ccc; cursor: not-allowed; }
 
-        #welcome-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; text-align: center; }
-        .img-container { position: relative; margin-bottom: 5px; border-radius: 10px; overflow: hidden; border: 1px solid var(--border-color); }
-        .img-msg { max-width: 100%; max-height: 300px; display: block; cursor: zoom-in; }
-        
-        @media (max-width: 768px) {
-            .message { max-width: 92%; }
-            .chat-header strong { font-size: 14px; }
-        }
+        #image-preview-strip { display: none; margin-bottom: 5px; position: relative; width: 60px; height: 60px; }
+        #image-preview-strip img { width: 100%; height: 100%; object-fit: cover; border-radius: 8px; }
+        .remove-img { position: absolute; -5px; right: -5px; background: red; color: white; border-radius: 50%; width: 18px; height: 18px; font-size: 12px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        /* Markdown tables */
+        table { border-collapse: collapse; width: 100%; margin: 10px 0; }
+        table, th, td { border: 1px solid var(--border); padding: 8px; }
     </style>
 </head>
 <body>
 
-    <div id="iframe-loader"><div class="spinner-border text-primary"></div></div>
+<div id="iframe-loader" style="position:fixed; inset:0; background:var(--bg); z-index:9999; display:flex; align-items:center; justify-content:center;">
+    <div class="spinner-border text-primary"></div>
+</div>
 
-    <div id="tut-overlay" onclick="nextStep()" style="position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 9990; display: none;"></div>
-    <div id="tut-box" style="display:none">
-        <h6 id="tut-title" class="fw-bold text-primary mb-2"></h6>
-        <p id="tut-desc" class="small mb-3"></p>
-        <div class="d-flex justify-content-between align-items-center">
-            <span id="tut-step-count" class="badge bg-secondary"></span>
-            <button class="btn btn-sm btn-primary px-3" onclick="nextStep()">Tiếp tục</button>
+<div class="app-container">
+    <header class="app-header" id="header-area">
+        <div class="fw-bold fs-5"><i class="fa-solid fa-bolt text-warning me-2"></i>Abc Noob Pro</div>
+        <div class="d-flex gap-3 text-muted">
+            <i class="fa-solid fa-cloud-arrow-down" onclick="importShare()" style="cursor:pointer"></i>
+            <i class="fa-solid fa-share-nodes" id="btn-share" onclick="shareChat()" style="cursor:pointer"></i>
+            <i class="fa-solid fa-trash" onclick="clearChat()" style="cursor:pointer"></i>
         </div>
-    </div>
+    </header>
 
-    <div class="chat-card" id="main-app">
-        <div class="chat-header" id="header-area">
-            <div><i class="fa-solid fa-robot me-2"></i><strong>Abc's Noob AI</strong></div>
-            <div class="d-flex gap-3 align-items-center">
-                <i id="btn-import" class="fa-solid fa-cloud-arrow-down" title="Nhập ID" style="cursor:pointer" onclick="importShare()"></i>
-                <i id="btn-share" class="fa-solid fa-share-nodes" title="Chia sẻ" style="cursor:pointer" onclick="shareChat()"></i>
-                <i id="btn-clear" class="fa-solid fa-trash-can" title="Xóa" style="cursor:pointer" onclick="clearChat()"></i>
-                <span class="badge rounded-pill bg-success">Online</span>
+    <main id="chat-window">
+        <div id="welcome-screen" class="text-center my-auto px-4">
+            <h2 class="fw-bold mb-3">Tôi có thể giúp gì cho bạn?</h2>
+            <div class="d-flex flex-wrap justify-content-center gap-2">
+                <button class="btn btn-outline-secondary rounded-pill btn-sm" onclick="quickChat('Viết code Python tạo bot Telegram')">Bot Telegram</button>
+                <button class="btn btn-outline-secondary rounded-pill btn-sm" onclick="quickChat('Lệnh build trong Minecraft Bedrock')">Minecraft Bedrock</button>
+                <button class="btn btn-outline-secondary rounded-pill btn-sm" onclick="quickChat('Phân tích giá Bitcoin hôm nay')">Phân tích BTC</button>
             </div>
         </div>
+    </main>
 
-        <div id="chat-window">
-            <div id="welcome-screen">
-                <img src="/assets/image/abcsnoob.webp" width="80" height="80" class="rounded-circle mb-3" onerror="this.src='https://via.placeholder.com/80'">
-                <h4>Xin chào!</h4>
-                <p id="welcome-desc" class="text-muted">Nhập tin nhắn hoặc ID để bắt đầu.</p>
+    <footer class="app-footer" id="footer-area">
+        <div class="input-wrapper">
+            <div id="image-preview-strip">
+                <img src="" id="preview-img">
+                <div class="remove-img" onclick="cancelImage()">×</div>
             </div>
-        </div>
-
-        <div class="chat-footer" id="footer-area">
-            <div class="input-group-custom">
-                <button id="btn-img" class="btn btn-link p-0 text-muted" onclick="document.getElementById('file-input').click()">
-                    <i class="fa-solid fa-image fs-5"></i>
+            <textarea id="user-input" rows="1" placeholder="Nhắn tin cho Noob AI..." oninput="autoResize(this)"></textarea>
+            <div class="input-actions">
+                <button class="btn btn-link p-0 text-muted" onclick="document.getElementById('file-input').click()">
+                    <i class="fa-solid fa-paperclip fs-5"></i>
                 </button>
                 <input type="file" id="file-input" accept="image/*" hidden onchange="handleFile(this)">
-                <input type="text" id="user-input" placeholder="Hỏi gì đó..." autocomplete="off">
-                <button id="stop-btn" class="btn btn-link text-danger p-0" style="display:none" onclick="stopTyping()"><i class="fa-solid fa-circle-stop fs-5"></i></button>
-                <button id="send-btn" class="btn btn-primary rounded-circle d-flex align-items-center justify-content-center" style="width:35px; height:35px" onclick="sendMessage()">
-                    <i class="fa-solid fa-paper-plane" style="font-size: 14px;"></i>
-                </button>
+                
+                <div class="d-flex gap-2">
+                    <button id="stop-btn" class="btn btn-outline-danger btn-sm" style="display:none" onclick="abortTyping=true">Dừng</button>
+                    <button id="send-btn" class="btn-send" onclick="sendMessage()"><i class="fa-solid fa-arrow-up"></i></button>
+                </div>
             </div>
         </div>
-    </div>
+        <p class="text-center text-muted small mt-2">Noob AI có thể mắc sai lầm. Hãy kiểm tra thông tin quan trọng.</p>
+    </footer>
+</div>
 
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
 
-    <script>
-        const WORKER_URL = 'https://abcsnoobai.abcsnoob.workers.dev';
-        const USER_LANG = localStorage.getItem('user_lang') || 'vi';
-        const chatWindow = document.getElementById('chat-window');
-        const userInput = document.getElementById('user-input');
-        const sendBtn = document.getElementById('send-btn');
-        const stopBtn = document.getElementById('stop-btn');
+<script>
+    const WORKER_URL = 'https://abcsnoobai.abcsnoob.workers.dev';
+    const chatWindow = document.getElementById('chat-window');
+    const userInput = document.getElementById('user-input');
+    const sendBtn = document.getElementById('send-btn');
+    const stopBtn = document.getElementById('stop-btn');
+    let isTyping = false, abortTyping = false, selectedImageData = null;
+    let chatHistory = JSON.parse(localStorage.getItem('abc_chat_pro')) || [];
 
-        let isTyping = false, abortTyping = false, selectedImageData = null, currentStep = 0;
-        let chatHistory = JSON.parse(localStorage.getItem('abc_chat_history')) || [];
+    // --- UTILS ---
+    function autoResize(el) { el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px'; }
 
-        // --- DARK MODE THEME FOR SWAL ---
-        const isDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-        const swalConfig = {
-            background: isDark ? '#1e1e1e' : '#fff',
-            color: isDark ? '#fff' : '#000'
+    function quickChat(txt) { userInput.value = txt; sendMessage(); }
+
+    function handleFile(input) {
+        const file = input.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            selectedImageData = e.target.result;
+            document.getElementById('image-preview-strip').style.display = 'block';
+            document.getElementById('preview-img').src = selectedImageData;
         };
+        reader.readAsDataURL(file);
+    }
+    function cancelImage() { selectedImageData = null; document.getElementById('image-preview-strip').style.display = 'none'; }
 
-        // --- SHARE & IMPORT ---
-        async function shareChat() {
-            if (!chatHistory.length) return;
-            Swal.fire({ title: 'Đang lưu...', allowOutsideClick: false, ...swalConfig, didOpen: () => Swal.showLoading() });
-            try {
-                const res = await fetch(WORKER_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ action: 'share', data: chatHistory })
-                });
-                const result = await res.json();
-                if (result.success) {
-                    const shareUrl = `${window.location.origin}${window.location.pathname}?shareId=${result.shareId}`;
-                    navigator.clipboard.writeText(shareUrl);
-                    Swal.fire({ icon: 'success', title: 'Đã copy Link!', text: `ID: ${result.shareId}`, ...swalConfig });
-                }
-            } catch (e) { Swal.fire('Lỗi!', 'Không thể share.', 'error'); }
+    // --- RENDER ---
+    function renderMessage(text, role, id = null, imgSrc = null) {
+        if (document.getElementById('welcome-screen')) document.getElementById('welcome-screen').style.display = 'none';
+        
+        const container = document.createElement('div');
+        container.className = role === 'user' ? 'message user-message-container' : 'message';
+        
+        const avatar = document.createElement('div');
+        avatar.className = 'avatar';
+        avatar.innerHTML = role === 'user' ? '<i class="fa-solid fa-circle-user fs-4 text-primary"></i>' : '<i class="fa-solid fa-robot fs-4 text-success"></i>';
+        
+        const content = document.createElement('div');
+        content.className = role === 'user' ? 'user-message' : 'msg-content bot-message';
+        if (id) content.id = id;
+
+        if (imgSrc) {
+            content.innerHTML += `<img src="${imgSrc}" style="max-width:200px; border-radius:8px; display:block; margin-bottom:10px; cursor:zoom-in" onclick="window.open(this.src)">`;
         }
+        
+        const textSpan = document.createElement('div');
+        textSpan.innerHTML = marked.parse(text || "");
+        content.appendChild(textSpan);
+        
+        container.appendChild(avatar);
+        container.appendChild(content);
+        chatWindow.appendChild(container);
+        chatWindow.scrollTop = chatWindow.scrollHeight;
+        
+        addCopyButtons(content);
+        Prism.highlightAllUnder(content);
+    }
 
-        async function importShare() {
-            const { value: shareId } = await Swal.fire({
-                title: 'Nhập ID Share',
-                input: 'text',
-                showCancelButton: true,
-                ...swalConfig
-            });
-            if (shareId) {
-                Swal.fire({ title: 'Đang tải...', ...swalConfig, didOpen: () => Swal.showLoading() });
-                try {
-                    const res = await fetch(WORKER_URL, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ action: 'get_share', shareId: shareId.trim() })
-                    });
-                    const result = await res.json();
-                    if (result.success) {
-                        chatWindow.innerHTML = '';
-                        chatHistory = result.data;
-                        localStorage.setItem('abc_chat_history', JSON.stringify(chatHistory));
-                        chatHistory.forEach(m => renderMessage(m.parts.find(p => p.text)?.text, m.role === 'user' ? 'user-message' : 'bot-message'));
-                        Swal.close();
-                    }
-                } catch (e) { Swal.fire('Lỗi!', 'ID sai hoặc lỗi mạng.', 'error'); }
-            }
-        }
+    function addCopyButtons(parent) {
+        parent.querySelectorAll('pre').forEach(block => {
+            if (block.querySelector('.copy-code')) return;
+            const btn = document.createElement('button');
+            btn.className = 'copy-code';
+            btn.innerText = 'Copy';
+            btn.onclick = () => {
+                navigator.clipboard.writeText(block.innerText.replace('Copy', ''));
+                btn.innerText = 'Done!';
+                setTimeout(() => btn.innerText = 'Copy', 2000);
+            };
+            block.appendChild(btn);
+        });
+    }
 
-        // --- CORE LOGIC ---
-        function renderMessage(text, className, id = null, isMarkdown = true, imgSrc = null) {
-            const welcome = document.getElementById('welcome-screen');
-            if (welcome) welcome.style.display = 'none';
-            const msgDiv = document.createElement('div');
-            msgDiv.className = `message ${className}`;
-            if (id) msgDiv.id = id;
-            if (imgSrc) {
-                const imgCont = document.createElement('div');
-                imgCont.className = 'img-container';
-                imgCont.innerHTML = `<img src="${imgSrc}" class="img-msg" onclick="this.requestFullscreen()">`;
-                msgDiv.appendChild(imgCont);
-            }
-            if (text) {
-                const span = document.createElement('span');
-                span.innerHTML = isMarkdown ? marked.parse(text) : text;
-                msgDiv.appendChild(span);
-            }
-            chatWindow.appendChild(msgDiv);
-            chatWindow.scrollTop = chatWindow.scrollHeight;
-            if (isMarkdown) Prism.highlightAllUnder(msgDiv);
-        }
+    // --- CORE ---
+    async function sendMessage() {
+        const text = userInput.value.trim();
+        if ((!text && !selectedImageData) || isTyping) return;
 
-        async function sendMessage() {
-            const text = userInput.value.trim();
-            if ((!text && !selectedImageData) || isTyping) return;
-            const currentImg = selectedImageData;
-            renderMessage(text, 'user-message', null, true, currentImg);
-            userInput.value = ''; selectedImageData = null;
-            isTyping = true; sendBtn.disabled = true; stopBtn.style.display = 'block';
+        const currentImg = selectedImageData;
+        renderMessage(text, 'user', null, currentImg);
+        
+        let entry = { role: "user", parts: [] };
+        if (text) entry.parts.push({ text: text });
+        if (currentImg) entry.parts.push({ inline_data: { mime_type: "image/jpeg", data: currentImg } });
+        chatHistory.push(entry);
 
-            let userParts = [];
-            if (text) userParts.push({ text: text });
-            if (currentImg) userParts.push({ inline_data: { mime_type: "image/jpeg", data: currentImg.split(',')[1] } });
-            chatHistory.push({ role: "user", parts: userParts });
+        userInput.value = ''; userInput.style.height = 'auto'; cancelImage();
+        isTyping = true; sendBtn.disabled = true; stopBtn.style.display = 'inline-block';
 
-            const botMsgId = 'bot-' + Date.now();
-            renderMessage('...', 'bot-message typing', botMsgId, false);
+        const botMsgId = 'bot-' + Date.now();
+        renderMessage('', 'model', botMsgId);
+        const botEl = document.getElementById(botMsgId).querySelector('div');
 
-            try {
-                const res = await fetch(WORKER_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ messages: chatHistory, user_lang: USER_LANG })
-                });
-                const data = await res.json();
-                const botEl = document.getElementById(botMsgId);
-                botEl.classList.remove('typing'); botEl.innerHTML = '';
-                await typeEffect(botEl, data.text);
-                chatHistory.push({ role: "model", parts: [{ text: data.text }] });
-                localStorage.setItem('abc_chat_history', JSON.stringify(chatHistory.slice(-15)));
-            } catch (e) { document.getElementById(botMsgId).innerText = "Lỗi kết nối!"; }
-            finally { isTyping = false; sendBtn.disabled = false; stopBtn.style.display = 'none'; }
-        }
+        // Gửi AI (chỉ gửi ảnh cuối để tiết kiệm)
+        const cleanHistory = chatHistory.map((m, i) => (i === chatHistory.length - 1) ? m : { role: m.role, parts: m.parts.filter(p => p.text) });
 
-        async function typeEffect(el, text) {
+        try {
+            const res = await fetch(WORKER_URL, { method: 'POST', body: JSON.stringify({ messages: cleanHistory }) });
+            const data = await res.json();
+            
             let i = 0; abortTyping = false;
-            return new Promise(resolve => {
-                function inner() {
-                    if (i < text.length && !abortTyping) {
-                        i += 4; el.innerHTML = marked.parse(text.substring(0, i));
-                        chatWindow.scrollTop = chatWindow.scrollHeight;
-                        setTimeout(inner, 10);
-                    } else { el.innerHTML = marked.parse(text); Prism.highlightAllUnder(el); resolve(); }
+            const fullText = data.text;
+            function type() {
+                if (i < fullText.length && !abortTyping) {
+                    i += 8; botEl.innerHTML = marked.parse(fullText.substring(0, i));
+                    chatWindow.scrollTop = chatWindow.scrollHeight;
+                    setTimeout(type, 10);
+                } else {
+                    botEl.innerHTML = marked.parse(fullText);
+                    addCopyButtons(botEl.parentElement);
+                    Prism.highlightAllUnder(botEl.parentElement);
+                    chatHistory.push({ role: "model", parts: [{ text: fullText }] });
+                    localStorage.setItem('abc_chat_pro', JSON.stringify(chatHistory.slice(-20)));
+                    isTyping = false; sendBtn.disabled = false; stopBtn.style.display = 'none';
                 }
-                inner();
-            });
-        }
-
-        function handleFile(input) {
-            const file = input.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = (e) => { selectedImageData = e.target.result; Toastify({ text: "Đã chọn ảnh!", background: "green" }).showToast(); };
-            reader.readAsDataURL(file);
-        }
-
-        function clearChat() { if (confirm("Xóa lịch sử?")) { localStorage.removeItem('abc_chat_history'); location.reload(); } }
-        function stopTyping() { abortTyping = true; }
-
-        window.onload = async () => {
-            const urlParams = new URLSearchParams(window.location.search);
-            const shareId = urlParams.get('shareId');
-            if (shareId) {
-                // Tải từ URL nếu có
-                const res = await fetch(WORKER_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'get_share', shareId: shareId }) });
-                const result = await res.json();
-                if (result.success) {
-                    document.getElementById('welcome-screen').style.display = 'none';
-                    result.data.forEach(m => renderMessage(m.parts.find(p => p.text)?.text, m.role === 'user' ? 'user-message' : 'bot-message'));
-                }
-            } else if (chatHistory.length > 0) {
-                document.getElementById('welcome-screen').style.display = 'none';
-                chatHistory.forEach(m => renderMessage(m.parts.find(p => p.text)?.text, m.role === 'user' ? 'user-message' : 'bot-message'));
             }
-            setTimeout(() => {
-                document.getElementById('iframe-loader').style.opacity = '0';
-                setTimeout(() => document.getElementById('iframe-loader').remove(), 500);
-            }, 800);
-        };
+            type();
+        } catch (e) { botEl.innerText = "Lỗi kết nối!"; isTyping = false; sendBtn.disabled = false; }
+    }
 
-        userInput.onkeypress = (e) => { if(e.key === 'Enter') sendMessage(); };
-    </script>
+    // --- DATA ---
+    async function shareChat() {
+        Swal.fire({ title: 'Đang tạo bản lưu...', didOpen: () => Swal.showLoading() });
+        const res = await fetch(WORKER_URL, { method: 'POST', body: JSON.stringify({ action: 'share', data: chatHistory }) });
+        const result = await res.json();
+        const url = `${window.location.origin}${window.location.pathname}?shareId=${result.shareId}`;
+        navigator.clipboard.writeText(url);
+        Swal.fire('Thành công!', 'Link chia sẻ (kèm ảnh) đã được copy!', 'success');
+    }
+
+    async function importShare() {
+        const { value: id } = await Swal.fire({ title: 'Nhập ID Gist', input: 'text' });
+        if (id) {
+            const res = await fetch(WORKER_URL, { method: 'POST', body: JSON.stringify({ action: 'get_share', shareId: id }) });
+            const result = await res.json();
+            if (result.success) {
+                chatHistory = result.data;
+                localStorage.setItem('abc_chat_pro', JSON.stringify(chatHistory));
+                location.reload();
+            }
+        }
+    }
+
+    function clearChat() { if (confirm("Xóa lịch sử?")) { localStorage.clear(); location.reload(); } }
+
+    window.onload = async () => {
+        const sId = new URLSearchParams(window.location.search).get('shareId');
+        if (sId) {
+            const res = await fetch(WORKER_URL, { method: 'POST', body: JSON.stringify({ action: 'get_share', shareId: sId }) });
+            const r = await res.json();
+            if (r.success) r.data.forEach(m => renderMessage(m.parts.find(p=>p.text)?.text, m.role === 'user' ? 'user' : 'model', null, m.parts.find(p=>p.inline_data)?.inline_data.data));
+        } else {
+            chatHistory.forEach(m => renderMessage(m.parts.find(p=>p.text)?.text, m.role === 'user' ? 'user' : 'model', null, m.parts.find(p=>p.inline_data)?.inline_data.data));
+        }
+        document.getElementById('iframe-loader').remove();
+    };
+
+    userInput.onkeydown = (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } };
+</script>
 </body>
 </html>
