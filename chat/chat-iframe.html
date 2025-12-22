@@ -146,17 +146,58 @@ function downloadImage(base64Data) {
 }
 
 // --- HÀM CHIA SẺ ---
-function shareChat() {
-    const lastMsg = chatHistory.length > 0 ? chatHistory[chatHistory.length - 10].parts[0].text : "localchat";
-    const cleanMsg = encodeURIComponent(lastMsg.substring(0, 50));
-    const shareUrl = `${window.location.origin}${window.location.pathname}?abcslocalchat=${cleanMsg}`;
-    
-    navigator.clipboard.writeText(shareUrl).then(() => {
-        Toastify({ 
-            text: "Đã copy link chia sẻ kèm query!", 
-            style: { background: "linear-gradient(to right, #00b09b, #96c93d)" } 
-        }).showToast();
-    });
+async function shareChat() {
+    if (chatHistory.length === 0) {
+        Toastify({ text: "Chưa có nội dung để chia sẻ!", background: "orange" }).showToast();
+        return;
+    }
+
+    Toastify({ text: "Đang tạo liên kết chia sẻ...", duration: 2000 }).showToast();
+
+    try {
+        // Chuẩn bị dữ liệu để share (bao gồm cả lịch sử chat)
+        const shareData = {
+            title: "Cuộc trò chuyện từ Abc's Noob AI",
+            timestamp: new Date().toISOString(),
+            history: chatHistory
+        };
+
+        // Gửi lên file.io (Host JSON free, tự xóa sau khi xem hoặc hết hạn)
+        // expires=3d là tham số để file tồn tại trong 3 ngày
+        const response = await fetch('https://file.io/?expires=3d', {
+            method: 'POST',
+            body: new FormData() 
+        });
+        
+        // File.io yêu cầu gửi qua FormData để up file
+        const formData = new FormData();
+        const blob = new Blob([JSON.stringify(shareData)], { type: 'application/json' });
+        formData.append('file', blob, 'chat_history.json');
+
+        const res = await fetch('https://file.io/?expires=3d', {
+            method: 'POST',
+            body: formData
+        });
+
+        const result = await res.json();
+
+        if (result.success) {
+            // Tạo link share với ID từ file.io
+            const shareUrl = `${window.location.origin}${window.location.pathname}?shareId=${result.key}`;
+            
+            await navigator.clipboard.writeText(shareUrl);
+            
+            Toastify({ 
+                text: "Đã copy link chia sẻ (Hết hạn sau 3 ngày)!", 
+                style: { background: "linear-gradient(to right, #00b09b, #96c93d)" } 
+            }).showToast();
+        } else {
+            throw new Error("Không thể upload");
+        }
+    } catch (e) {
+        console.error(e);
+        Toastify({ text: "Lỗi tạo link chia sẻ!", background: "red" }).showToast();
+    }
 }
 
 // --- TIỆN ÍCH ---
