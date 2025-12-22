@@ -147,16 +147,14 @@ function downloadImage(base64Data) {
 
 // --- HÀM CHIA SẺ ---
 async function shareChat() {
-    // Kiểm tra lịch sử có rỗng không
     if (!chatHistory || chatHistory.length === 0) {
-        Toastify({ text: "Chưa có tin nhắn nào để share!", background: "#ff9800" }).showToast();
+        Toastify({ text: "Chưa có gì để share hết ông giáo ạ!", background: "orange" }).showToast();
         return;
     }
 
-    Toastify({ text: "Đang nén dữ liệu và gửi qua Proxy...", duration: 2000 }).showToast();
+    const loadToast = Toastify({ text: "Đang đóng gói và gửi lên GitHub Gist...", duration: -1 }).showToast();
 
     try {
-        // Gửi sang Worker với action 'share'
         const response = await fetch(WORKER_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -171,23 +169,20 @@ async function shareChat() {
 
         const result = await response.json();
 
-        if (result.success && result.key) {
-            // Tạo link share
-            const shareUrl = `${window.location.origin}${window.location.pathname}?shareId=${result.key}`;
-            
-            // Copy vào clipboard
+        if (result.success && result.shareId) {
+            const shareUrl = `${window.location.origin}${window.location.pathname}?shareId=${result.shareId}`;
             await navigator.clipboard.writeText(shareUrl);
-            
+            loadToast.hideToast();
             Toastify({ 
-                text: "✅ Đã copy link chia sẻ! (Hết hạn sau 3 ngày hoặc 1 lần xem)", 
+                text: "✅ Đã copy link chia sẻ vĩnh viễn!", 
                 duration: 5000,
                 style: { background: "linear-gradient(to right, #00b09b, #96c93d)" }
             }).showToast();
         } else {
-            throw new Error("Worker không lấy được key từ file.io");
+            throw new Error("Worker không tạo được Gist");
         }
     } catch (e) {
-        console.error("Share error:", e);
+        loadToast.hideToast();
         Toastify({ text: "Lỗi: " + e.message, background: "#f44336" }).showToast();
     }
 }
@@ -399,89 +394,44 @@ async function initSuggestions() {
 window.onload = async () => {
     const urlParams = new URLSearchParams(window.location.search);
     const shareId = urlParams.get('shareId');
-    const sharedChatOld = urlParams.get('abcslocalchat'); // Giữ lại logic cũ nếu cần
 
-    // 1. Cập nhật giao diện ngôn ngữ
-    try {
-        document.getElementById('welcome-title').innerText = await translate('Chào bạn!');
-        document.getElementById('welcome-desc').innerText = await translate("Tôi là Abc's Noob. Hỏi tôi về Code, Minecraft hoặc Bitcoin nhé!");
-        document.getElementById('btn-refresh-text').innerText = await translate('Đổi gợi ý khác');
-        document.getElementById('user-input').placeholder = await translate('Hỏi gì đi ông anh...');
-    } catch (e) {
-        console.error("Dịch lỗi:", e);
-    }
-
-    // 2. Kiểm tra nếu đang mở Link Chia Sẻ
+    // Chế độ xem ShareId (GitHub Gist)
     if (shareId) {
-        // Xóa màn hình chào mừng để chuẩn bị hiện nội dung chat
         document.getElementById('welcome-screen')?.remove();
-        
-        Toastify({ 
-            text: "Đang tải nội dung chia sẻ từ vệ tinh... 🚀", 
-            duration: 3000,
-            style: { background: "#0d6efd" }
-        }).showToast();
-
+        Toastify({ text: "Đang tải dữ liệu từ GitHub vệ tinh... 🛰️", duration: 3000 }).showToast();
         try {
-            // Tải dữ liệu từ file.io thông qua key (shareId)
-            const res = await fetch(`https://file.io/${shareId}`);
-            if (!res.ok) throw new Error("Link đã hết hạn hoặc đã bị xóa (Burn-on-read).");
-            
-            const sharedData = await res.json();
-            
-            // Render từng tin nhắn từ file JSON
-            if (sharedData && sharedData.history) {
-                sharedData.history.forEach(m => {
-                    const textContent = m.parts.find(p => p.text)?.text || "";
-                    const imgPart = m.parts.find(p => p.inline_data);
-                    
-                    // Nếu có ảnh Base64, tái tạo lại Data URL
-                    let imgSrc = null;
-                    if (imgPart && imgPart.inline_data) {
-                        imgSrc = `data:${imgPart.inline_data.mime_type};base64,${imgPart.inline_data.data}`;
-                    }
-                    
-                    renderMessage(textContent, m.role === 'user' ? 'user-message' : 'bot-message', null, true, imgSrc);
-                });
-                
-                Toastify({ text: "Tải hoàn tất!", style: { background: "green" } }).showToast();
-            }
+            const res = await fetch(WORKER_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'get_share', shareId: shareId })
+            });
+            const result = await res.json();
+            if (!result.success) throw new Error("Gist không tồn tại");
+
+            result.data.history.forEach(m => {
+                const txt = m.parts.find(p => p.text)?.text || "";
+                const imgPart = m.parts.find(p => p.inline_data);
+                const imgSrc = imgPart ? `data:${imgPart.inline_data.mime_type};base64,${imgPart.inline_data.data}` : null;
+                renderMessage(txt, m.role === 'user' ? 'user-message' : 'bot-message', null, true, imgSrc);
+            });
         } catch (e) {
-            console.error(e);
-            renderMessage("❌ Không thể tải nội dung: " + e.message, 'bot-message', null, true);
-            Toastify({ text: "Lỗi tải link!", background: "red" }).showToast();
+            renderMessage("❌ Lỗi: " + e.message, 'bot-message', null, true);
         }
-    } 
-    // 3. Nếu có link cũ (abcslocalchat)
-    else if (sharedChatOld) {
-        Toastify({ text: "Bạn đang xem: " + decodeURIComponent(sharedChatOld), duration: 4000 }).showToast();
-        if (chatHistory.length > 0) loadLocalHistory(); else initSuggestions();
-    }
-    // 4. Chế độ bình thường: Load từ LocalStorage
-    else {
+    } else {
         if (chatHistory.length > 0) {
-            loadLocalHistory();
-        } else {
-            initSuggestions();
-        }
+            chatHistory.forEach(m => {
+                const txt = m.parts.find(p => p.text)?.text || "";
+                renderMessage(txt, m.role === 'user' ? 'user-message' : 'bot-message', null, true);
+            });
+        } else { initSuggestions(); }
     }
 
-    // Tắt màn hình chờ (Loader)
-    setTimeout(() => {
-        const loader = document.getElementById('iframe-loader');
-        if (loader) loader.style.display = 'none';
-    }, 600);
+    document.getElementById('welcome-title').innerText = await translate('Chào bạn!');
+    document.getElementById('welcome-desc').innerText = await translate("Tôi là Abc's Noob. Hỏi tôi về Code, Minecraft hoặc Bitcoin nhé!");
+    document.getElementById('btn-refresh-text').innerText = await translate('Đổi gợi ý khác');
+    document.getElementById('user-input').placeholder = await translate('Hỏi gì đi ông anh...');
+    setTimeout(() => document.getElementById('iframe-loader')?.remove(), 600);
 };
-
-// Hàm phụ trợ để render lịch sử local
-function loadLocalHistory() {
-    chatHistory.forEach(m => {
-        const textContent = m.parts.find(p => p.text)?.text || "";
-        // Ảnh trong local thường bị lược bỏ để tiết kiệm dung lượng, 
-        // nhưng nếu bạn có lưu thì renderMessage vẫn xử lý được.
-        renderMessage(textContent, m.role === 'user' ? 'user-message' : 'bot-message', null, true);
-    });
-}
 
 userInput.addEventListener('keypress', e => {
     if(e.key === 'Enter') sendMessage();
