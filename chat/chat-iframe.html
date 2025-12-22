@@ -172,22 +172,43 @@
     let isTyping = false, abortTyping = false, selectedImageData = null;
     let chatHistory = JSON.parse(localStorage.getItem('abc_chat_pro')) || [];
 
-    // --- CÁC HÀM CƠ BẢN (KHAI BÁO DẠNG GLOBAL ĐỂ HTML GỌI ĐƯỢC) ---
-    window.quick = function(txt) { 
-        userInput.value = txt; 
-        window.send(); 
-    };
-
+    // --- CÁC HÀM TIỆN ÍCH ---
+    
+    // Tối ưu: Nén ảnh để giảm dung lượng trước khi gửi lên AI
     window.handleFile = function(input) {
         const file = input.files[0];
         if (!file) return;
         const reader = new FileReader();
         reader.onload = (e) => {
-            selectedImageData = e.target.result;
-            document.getElementById('p-strip').style.display = 'block';
-            document.getElementById('p-img').src = selectedImageData;
+            const img = new Image();
+            img.src = e.target.result;
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                const MAX_WIDTH = 800; // Giới hạn chiều rộng ảnh
+                let width = img.width;
+                let height = img.height;
+
+                if (width > MAX_WIDTH) {
+                    height *= MAX_WIDTH / width;
+                    width = MAX_WIDTH;
+                }
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+                
+                // Nén chất lượng xuống 0.7 để gửi cực nhanh
+                selectedImageData = canvas.toDataURL('image/jpeg', 0.7);
+                document.getElementById('p-strip').style.display = 'block';
+                document.getElementById('p-img').src = selectedImageData;
+            };
         };
         reader.readAsDataURL(file);
+    };
+
+    window.quick = function(txt) { 
+        userInput.value = txt; 
+        window.send(); 
     };
 
     window.cancelImg = function() { 
@@ -240,7 +261,7 @@
         });
     }
 
-    // --- CORE CHAT ---
+    // --- LÕI CHAT ---
     window.send = async function() {
         const text = userInput.value.trim();
         if ((!text && !selectedImageData) || isTyping) return;
@@ -268,7 +289,10 @@
         renderMessage('', 'model', botMsgId);
         const botEl = document.getElementById(botMsgId).lastChild;
 
-        const cleanHistory = chatHistory.map((m, i) => (i === chatHistory.length - 1) ? m : { role: m.role, parts: m.parts.filter(p => p.text) });
+        // Chỉ gửi lịch sử gần nhất và rút gọn ảnh cũ để nhẹ Request
+        const cleanHistory = chatHistory.slice(-10).map((m, i, arr) => 
+            (i === arr.length - 1) ? m : { role: m.role, parts: m.parts.filter(p => p.text) }
+        );
 
         try {
             const res = await fetch(WORKER_URL, { method: 'POST', body: JSON.stringify({ messages: cleanHistory }) });
@@ -279,17 +303,19 @@
             
             function type() {
                 if (i < fullText.length && !abortTyping) {
-                    i += 8;
+                    i += 25; // Tăng tốc độ hiển thị chữ (25 ký tự mỗi lần)
                     botEl.innerHTML = marked.parse(fullText.substring(0, i));
                     chatWindow.scrollTop = chatWindow.scrollHeight;
-                    setTimeout(type, 10);
+                    setTimeout(type, 5); // Giảm thời gian trễ
                 } else {
                     botEl.innerHTML = marked.parse(fullText);
                     addCopyButtons(botEl.parentElement);
                     Prism.highlightAllUnder(botEl.parentElement);
                     chatHistory.push({ role: "model", parts: [{ text: fullText }] });
                     localStorage.setItem('abc_chat_pro', JSON.stringify(chatHistory.slice(-20)));
-                    isTyping = false; sendBtn.disabled = false; stopBtn.style.display = 'none';
+                    isTyping = false; 
+                    sendBtn.disabled = false; 
+                    stopBtn.style.display = 'none';
                 }
             }
             type();
@@ -299,13 +325,12 @@
         }
     };
 
-    // --- DATA & SHARING ---
+    // --- CHIA SẺ & DỮ LIỆU ---
     window.shareChat = async function() {
         Swal.fire({ title: 'Đang tạo mã ID...', didOpen: () => Swal.showLoading() });
         try {
             const res = await fetch(WORKER_URL, { method: 'POST', body: JSON.stringify({ action: 'share', data: chatHistory }) });
             const result = await res.json();
-            // CHỈ SAO CHÉP ID GIST (KHÔNG PHẢI URL)
             if (result.shareId) {
                 navigator.clipboard.writeText(result.shareId);
                 Swal.fire('Thành công!', `Đã chép mã ID: ${result.shareId}`, 'success');
@@ -314,9 +339,9 @@
     };
 
     window.importShare = async function() {
-        const { value: id } = await Swal.fire({ title: 'Nhập ID Gist', input: 'text', inputPlaceholder: 'Dán mã ID đã nhận vào đây...' });
+        const { value: id } = await Swal.fire({ title: 'Nhập ID Gist', input: 'text', inputPlaceholder: 'Dán mã ID vào đây...' });
         if (id) {
-            Swal.fire({ title: 'Đang tải dữ liệu...', didOpen: () => Swal.showLoading() });
+            Swal.fire({ title: 'Đang tải...', didOpen: () => Swal.showLoading() });
             try {
                 const res = await fetch(WORKER_URL, { method: 'POST', body: JSON.stringify({ action: 'get_share', shareId: id }) });
                 const result = await res.json();
@@ -336,8 +361,14 @@
         } 
     };
 
-    // --- KHỞI TẠO ---
+    // --- KHỞI TẠO (WINDOW ONLOAD) ---
     window.onload = async () => {
+        // "Cầu chì" bảo vệ: Tự động xóa loader sau 4 giây nếu kẹt
+        setTimeout(() => {
+            const l = document.getElementById('loader');
+            if (l) l.remove();
+        }, 4000);
+
         const sId = new URLSearchParams(window.location.search).get('shareId');
         if (sId) {
             try {
@@ -359,6 +390,7 @@
                 renderMessage(txt, m.role, null, imgSrc);
             });
         }
+        
         const loader = document.getElementById('loader');
         if (loader) loader.remove();
     };
