@@ -8,63 +8,65 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
-    <style>
-        * { box-sizing: border-box; }
+<style>
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body, html { margin: 0; padding: 0; height: 100%; width: 100%; overflow: hidden; font-family: 'Segoe UI', sans-serif; background-color: #f0f2f5; }
-        #iframe-loader { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #fff; display: flex; justify-content: center; align-items: center; z-index: 9999; }
-        .chat-card { background: #fff; height: 100vh; display: flex; flex-direction: column; max-width: 1000px; margin: 0 auto; box-shadow: 0 0 20px rgba(0,0,0,0.1); }
-        .chat-header { background: #212529; color: white; padding: 12px 20px; display: flex; align-items: center; justify-content: space-between; }
         
+        #iframe-loader { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #fff; display: flex; justify-content: center; align-items: center; z-index: 9999; }
+        
+        .chat-card { background: #fff; height: 100vh; display: flex; flex-direction: column; max-width: 1000px; margin: 0 auto; box-shadow: 0 0 20px rgba(0,0,0,0.1); position: relative; }
+        
+        .chat-header { background: #212529; color: white; padding: 10px 15px; display: flex; align-items: center; justify-content: space-between; z-index: 10; }
+        .chat-header strong { font-size: 16px; }
+
         #chat-window { 
             flex: 1; 
             overflow-y: auto; 
-            padding: 20px; 
+            padding: 15px; 
             display: flex; 
             flex-direction: column; 
-            gap: 15px; 
+            gap: 12px; 
             background: #fff; 
-            position: relative;
             scroll-behavior: smooth;
         }
         
-        #welcome-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; text-align: center; }
-        #welcome-screen img { width: 100px; height: 100px; border-radius: 50%; margin-bottom: 15px; border: 2px solid #eee; }
+        #welcome-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; text-align: center; padding: 20px; }
+        #welcome-screen img { width: 80px; height: 80px; border-radius: 50%; margin-bottom: 15px; }
         
-        .suggestion-container { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 20px; max-width: 500px; }
-        .suggestion-chip { padding: 8px 16px; background: #f8f9fa; border: 1px solid #ddd; border-radius: 20px; font-size: 14px; cursor: pointer; transition: 0.2s; }
-        .suggestion-chip:hover { background: #0d6efd; color: white; border-color: #0d6efd; }
-        
-        .refresh-btn { margin-top: 15px; font-size: 13px; color: #6c757d; cursor: pointer; text-decoration: underline; background: none; border: none; }
-        .refresh-btn:hover { color: #0d6efd; }
+        .suggestion-container { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 15px; width: 100%; }
+        .suggestion-chip { padding: 6px 12px; background: #f8f9fa; border: 1px solid #ddd; border-radius: 18px; font-size: 13px; cursor: pointer; }
 
-        .message { max-width: 85%; padding: 12px 16px; border-radius: 18px; font-size: 15px; line-height: 1.5; word-wrap: break-word; position: relative; }
+        .message { max-width: 85%; padding: 10px 14px; border-radius: 18px; font-size: 15px; line-height: 1.4; word-wrap: break-word; position: relative; }
         .user-message { align-self: flex-end; background: #0d6efd; color: white; border-bottom-right-radius: 2px; }
         .bot-message { align-self: flex-start; background: #f1f0f0; color: #333; border-bottom-left-radius: 2px; }
         
-        .chat-footer { padding: 15px; border-top: 1px solid #eee; }
-        .input-group { background: #f8f9fa; border-radius: 30px; padding: 5px 15px; border: 1px solid #ddd; display: flex; align-items: center; gap: 5px; }
-        #user-input { border: none; background: transparent; outline: none; flex: 1; height: 40px; }
+        .chat-footer { padding: 10px; border-top: 1px solid #eee; background: white; }
+        .input-group { background: #f8f9fa; border-radius: 25px; padding: 2px 10px; border: 1px solid #ddd; display: flex; align-items: center; }
+        #user-input { border: none; background: transparent; outline: none; flex: 1; height: 38px; padding: 0 10px; font-size: 15px; }
         
         /* Chỉnh sửa hiển thị ảnh */
-        .img-container { position: relative; display: inline-block; cursor: zoom-in; }
-        .img-msg { max-width: 100%; max-height: 250px; border-radius: 10px; margin-bottom: 8px; display: block; transition: transform 0.2s; }
-        .img-msg:hover { filter: brightness(0.9); }
-        .download-btn { 
-            position: absolute; top: 5px; right: 5px; 
-            background: rgba(0,0,0,0.5); color: white; 
-            border: none; border-radius: 50%; width: 30px; height: 30px; 
-            cursor: pointer; opacity: 0; transition: 0.3s; z-index: 10;
-        }
-        .img-container:hover .download-btn { opacity: 1; }
+        .img-container { position: relative; display: inline-block; cursor: zoom-in; margin-top: 5px; }
+        .img-msg { max-width: 100%; max-height: 300px; border-radius: 10px; display: block; }
+        .download-btn { position: absolute; top: 5px; right: 5px; background: rgba(0,0,0,0.5); color: white; border: none; border-radius: 50%; width: 28px; height: 28px; opacity: 0.8; }
 
+        /* Spinner & Typing */
         .typing::after { content: '...'; animation: blink 1s infinite; }
         @keyframes blink { 50% { opacity: 0; } }
+        #stop-btn { display: none; border-radius: 50%; width: 35px; height: 35px; margin-right: 5px; }
 
-        #stop-btn { display: none; border-radius: 50%; width: 40px; height: 40px; transition: 0.3s; }
+        /* RESPONSIVE QUERIES */
+        @media (max-width: 768px) {
+            .chat-card { width: 100%; height: 100vh; border-radius: 0; }
+            .message { max-width: 92%; font-size: 14px; }
+            .chat-header strong { font-size: 14px; }
+            .chat-header .fa-expand { display: none; } /* Mobile không cần nút này lắm */
+            .img-msg { max-height: 200px; }
+            .suggestion-chip { font-size: 12px; }
+        }
 
-        /* Fullscreen Image Overlay */
-        img:-webkit-full-screen { object-fit: contain; background: black; }
+        /* Fullscreen Image */
         img:fullscreen { object-fit: contain; background: black; }
+        img:-webkit-full-screen { object-fit: contain; background: black; }
     </style>
 </head>
 <body>
