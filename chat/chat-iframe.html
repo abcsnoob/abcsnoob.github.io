@@ -309,67 +309,78 @@
     }
 
     // --- LÕI CHAT ---
-    window.send = async function() {
-        const text = userInput.value.trim();
-        if ((!text && !selectedImageData) || isTyping) return;
+window.send = async function() {
+    const text = userInput.value.trim();
+    if ((!text && !selectedImageData) || isTyping) return;
 
-        const currentImg = selectedImageData;
-        renderMessage(text, 'user', null, currentImg);
+    const currentImg = selectedImageData;
+    renderMessage(text, 'user', null, currentImg);
+    
+    let entry = { role: "user", parts: [] };
+    if (text) entry.parts.push({ text: text });
+    if (currentImg) {
+        const base64Data = currentImg.split(',')[1];
+        entry.parts.push({ inline_data: { mime_type: "image/jpeg", data: base64Data } });
+    }
+    chatHistory.push(entry);
+
+    userInput.value = ''; 
+    userInput.style.height = 'auto'; 
+    window.cancelImg();
+    
+    isTyping = true; 
+    sendBtn.disabled = true; 
+    stopBtn.style.display = 'inline-block';
+
+    const botMsgId = 'bot-' + Date.now();
+    renderMessage('', 'model', botMsgId);
+    const botEl = document.getElementById(botMsgId).lastChild;
+
+    // Chỉ lấy 10 tin nhắn gần nhất để tiết kiệm năng lượng (Satoshi)
+    const cleanHistory = chatHistory.slice(-10).map((m, i, arr) => 
+        (i === arr.length - 1) ? m : { role: m.role, parts: m.parts.filter(p => p.text) }
+    );
+
+    try {
+        const res = await fetch(WORKER_URL, { 
+            method: 'POST', 
+            headers: { 'Content-Type': 'application/json' }, // Thêm header cho chuẩn cơm mẹ nấu
+            body: JSON.stringify({ 
+                messages: cleanHistory,
+                user_lang: USER_LANG // <--- Gửi ngôn ngữ đã lưu ở localStorage lên đây
+            }) 
+        });
         
-        let entry = { role: "user", parts: [] };
-        if (text) entry.parts.push({ text: text });
-        if (currentImg) {
-            const base64Data = currentImg.split(',')[1];
-            entry.parts.push({ inline_data: { mime_type: "image/jpeg", data: base64Data } });
-        }
-        chatHistory.push(entry);
+        const data = await res.json();
+        if (data.error) throw new Error(data.error);
 
-        userInput.value = ''; 
-        userInput.style.height = 'auto'; 
-        window.cancelImg();
+        let i = 0; abortTyping = false;
+        const fullText = data.text || "AI không phản hồi.";
         
-        isTyping = true; 
-        sendBtn.disabled = true; 
-        stopBtn.style.display = 'inline-block';
-
-        const botMsgId = 'bot-' + Date.now();
-        renderMessage('', 'model', botMsgId);
-        const botEl = document.getElementById(botMsgId).lastChild;
-
-        const cleanHistory = chatHistory.slice(-10).map((m, i, arr) => 
-            (i === arr.length - 1) ? m : { role: m.role, parts: m.parts.filter(p => p.text) }
-        );
-
-        try {
-            const res = await fetch(WORKER_URL, { method: 'POST', body: JSON.stringify({ messages: cleanHistory }) });
-            const data = await res.json();
-            
-            let i = 0; abortTyping = false;
-            const fullText = data.text || "AI không phản hồi.";
-            
-            function type() {
-                if (i < fullText.length && !abortTyping) {
-                    i += 7;
-                    botEl.innerHTML = marked.parse(fullText.substring(0, i));
-                    chatWindow.scrollTop = chatWindow.scrollHeight;
-                    setTimeout(type, 5);
-                } else {
-                    botEl.innerHTML = marked.parse(fullText);
-                    addCopyButtons(botEl.parentElement);
-                    Prism.highlightAllUnder(botEl.parentElement);
-                    chatHistory.push({ role: "model", parts: [{ text: fullText }] });
-                    localStorage.setItem('abc_chat_pro', JSON.stringify(chatHistory.slice(-20)));
-                    isTyping = false; 
-                    sendBtn.disabled = false; 
-                    stopBtn.style.display = 'none';
-                }
+        // Hiệu ứng gõ chữ (Typewriter)
+        function type() {
+            if (i < fullText.length && !abortTyping) {
+                i += 7;
+                botEl.innerHTML = marked.parse(fullText.substring(0, i));
+                chatWindow.scrollTop = chatWindow.scrollHeight;
+                setTimeout(type, 5);
+            } else {
+                botEl.innerHTML = marked.parse(fullText);
+                addCopyButtons(botEl.parentElement);
+                Prism.highlightAllUnder(botEl.parentElement);
+                chatHistory.push({ role: "model", parts: [{ text: fullText }] });
+                localStorage.setItem('abc_chat_pro', JSON.stringify(chatHistory.slice(-20)));
+                isTyping = false; 
+                sendBtn.disabled = false; 
+                stopBtn.style.display = 'none';
             }
-            type();
-        } catch (e) { 
-            botEl.innerText = "Lỗi kết nối Server!"; 
-            isTyping = false; sendBtn.disabled = false; stopBtn.style.display = 'none';
         }
-    };
+        type();
+    } catch (e) { 
+        botEl.innerText = "Satoshi low! Server đang bị gank hoặc lỗi kết nối. ⚡"; 
+        isTyping = false; sendBtn.disabled = false; stopBtn.style.display = 'none';
+    }
+};
 
     // --- CHIA SẺ & DỮ LIỆU ---
     window.shareChat = async function() {
