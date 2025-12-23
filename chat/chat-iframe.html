@@ -172,9 +172,59 @@
     let isTyping = false, abortTyping = false, selectedImageData = null;
     let chatHistory = JSON.parse(localStorage.getItem('abc_chat_pro')) || [];
 
+    // --- CẤU HÌNH DỊCH (GOOGLE TRANSLATE) ---
+    // Lấy ngôn ngữ từ localStorage (do trang home set)
+    const USER_LANG = localStorage.getItem('user_lang') || 'vi';
+
+    async function gTranslate(text) {
+        // Nếu là tiếng Việt hoặc không có text thì không dịch
+        if (USER_LANG === 'vi' || !text || text.trim() === "") return text;
+        try {
+            const res = await fetch(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=vi&tl=${USER_LANG}&dt=t&q=${encodeURI(text)}`);
+            const data = await res.json();
+            return data[0].map(x => x[0]).join('');
+        } catch (e) {
+            console.error("Lỗi dịch:", e);
+            return text;
+        }
+    }
+
+    async function applyLocalization() {
+        // 1. Dịch các text tĩnh trong giao diện
+        const targets = [
+            { sel: '.app-header .fw-bold', text: "Abc's Noob AI", isHtml: true, icon: '<i class="fa-solid fa-wand-sparkles me-2"></i>' },
+            { sel: '#welcome h2', text: "Abc's Noob AI" },
+            { sel: '#welcome p', text: "Giao diện chuẩn AI, hỗ trợ ảnh & mã nguồn." },
+            { sel: '.app-footer .small', text: "Abc's Noob AI có thể mắc sai lầm. Hãy kiểm tra thông tin quan trọng." },
+            { sel: '#user-input', text: "Hỏi tôi bất cứ điều gì...", isPlaceHolder: true }
+        ];
+
+        for (let t of targets) {
+            const el = document.querySelector(t.sel);
+            if (el) {
+                const translated = await gTranslate(t.text);
+                if (t.isPlaceHolder) el.placeholder = translated;
+                else if (t.isHtml) el.innerHTML = t.icon + translated;
+                else el.innerText = translated;
+            }
+        }
+
+        // 2. Dịch các đề xuất (Chips)
+        const chips = document.querySelectorAll('.chip');
+        for (let chip of chips) {
+            chip.innerText = await gTranslate(chip.innerText);
+        }
+
+        // 3. Dịch Tooltips cho các icon tool
+        const tools = document.querySelectorAll('.header-tools i');
+        const toolTexts = ["Nhập ID", "Chia sẻ", "Xóa lịch sử"];
+        for (let i = 0; i < tools.length; i++) {
+            if (tools[i]) tools[i].title = await gTranslate(toolTexts[i]);
+        }
+    }
+
     // --- CÁC HÀM TIỆN ÍCH ---
     
-    // Tối ưu: Nén ảnh để giảm dung lượng trước khi gửi lên AI
     window.handleFile = function(input) {
         const file = input.files[0];
         if (!file) return;
@@ -184,20 +234,13 @@
             img.src = e.target.result;
             img.onload = () => {
                 const canvas = document.createElement('canvas');
-                const MAX_WIDTH = 800; // Giới hạn chiều rộng ảnh
+                const MAX_WIDTH = 800;
                 let width = img.width;
                 let height = img.height;
-
-                if (width > MAX_WIDTH) {
-                    height *= MAX_WIDTH / width;
-                    width = MAX_WIDTH;
-                }
-                canvas.width = width;
-                canvas.height = height;
+                if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
+                canvas.width = width; canvas.height = height;
                 const ctx = canvas.getContext('2d');
                 ctx.drawImage(img, 0, 0, width, height);
-                
-                // Nén chất lượng xuống 0.7 để gửi cực nhanh
                 selectedImageData = canvas.toDataURL('image/jpeg', 0.7);
                 document.getElementById('p-strip').style.display = 'block';
                 document.getElementById('p-img').src = selectedImageData;
@@ -234,6 +277,7 @@
         }
         
         const textSpan = document.createElement('div');
+        // CHAT KHÔNG DỊCH: Giữ nguyên text gốc
         textSpan.innerHTML = marked.parse(text || "");
         content.appendChild(textSpan);
         
@@ -245,17 +289,20 @@
         Prism.highlightAllUnder(content);
     }
 
-    function addCopyButtons(parent) {
+    async function addCopyButtons(parent) {
+        const copyText = await gTranslate('Copy');
+        const copiedText = await gTranslate('Đã chép!');
+
         parent.querySelectorAll('pre').forEach(block => {
             if (block.querySelector('.copy-btn')) return;
             const btn = document.createElement('button');
             btn.className = 'copy-btn';
-            btn.innerText = 'Copy';
+            btn.innerText = copyText;
             btn.onclick = () => {
-                const code = block.querySelector('code')?.innerText || block.innerText.replace('Copy', '');
+                const code = block.querySelector('code')?.innerText || block.innerText.replace(copyText, '');
                 navigator.clipboard.writeText(code);
-                btn.innerText = 'Đã chép!';
-                setTimeout(() => btn.innerText = 'Copy', 2000);
+                btn.innerText = copiedText;
+                setTimeout(() => btn.innerText = copyText, 2000);
             };
             block.appendChild(btn);
         });
@@ -289,7 +336,6 @@
         renderMessage('', 'model', botMsgId);
         const botEl = document.getElementById(botMsgId).lastChild;
 
-        // Chỉ gửi lịch sử gần nhất và rút gọn ảnh cũ để nhẹ Request
         const cleanHistory = chatHistory.slice(-10).map((m, i, arr) => 
             (i === arr.length - 1) ? m : { role: m.role, parts: m.parts.filter(p => p.text) }
         );
@@ -303,10 +349,10 @@
             
             function type() {
                 if (i < fullText.length && !abortTyping) {
-                    i += 7; // Tăng tốc độ hiển thị chữ (25 ký tự mỗi lần)
+                    i += 7;
                     botEl.innerHTML = marked.parse(fullText.substring(0, i));
                     chatWindow.scrollTop = chatWindow.scrollHeight;
-                    setTimeout(type, 5); // Giảm thời gian trễ
+                    setTimeout(type, 5);
                 } else {
                     botEl.innerHTML = marked.parse(fullText);
                     addCopyButtons(botEl.parentElement);
@@ -327,21 +373,23 @@
 
     // --- CHIA SẺ & DỮ LIỆU ---
     window.shareChat = async function() {
-        Swal.fire({ title: 'Đang tạo mã ID...', didOpen: () => Swal.showLoading() });
+        Swal.fire({ title: await gTranslate('Đang tạo mã ID...'), didOpen: () => Swal.showLoading() });
         try {
             const res = await fetch(WORKER_URL, { method: 'POST', body: JSON.stringify({ action: 'share', data: chatHistory }) });
             const result = await res.json();
             if (result.shareId) {
                 navigator.clipboard.writeText(result.shareId);
-                Swal.fire('Thành công!', `Đã chép mã ID: ${result.shareId}`, 'success');
+                Swal.fire(await gTranslate('Thành công!'), `${await gTranslate('Đã chép mã ID')}: ${result.shareId}`, 'success');
             }
-        } catch(e) { Swal.fire('Lỗi', 'Không thể chia sẻ lúc này.', 'error'); }
+        } catch(e) { Swal.fire(await gTranslate('Lỗi'), await gTranslate('Không thể chia sẻ lúc này.'), 'error'); }
     };
 
     window.importShare = async function() {
-        const { value: id } = await Swal.fire({ title: 'Nhập ID Gist', input: 'text', inputPlaceholder: 'Dán mã ID vào đây...' });
+        const title = await gTranslate('Nhập ID Gist');
+        const placeholder = await gTranslate('Dán mã ID vào đây...');
+        const { value: id } = await Swal.fire({ title: title, input: 'text', inputPlaceholder: placeholder });
         if (id) {
-            Swal.fire({ title: 'Đang tải...', didOpen: () => Swal.showLoading() });
+            Swal.fire({ title: await gTranslate('Đang tải...'), didOpen: () => Swal.showLoading() });
             try {
                 const res = await fetch(WORKER_URL, { method: 'POST', body: JSON.stringify({ action: 'get_share', shareId: id }) });
                 const result = await res.json();
@@ -349,13 +397,14 @@
                     chatHistory = result.data;
                     localStorage.setItem('abc_chat_pro', JSON.stringify(chatHistory));
                     location.reload();
-                } else { Swal.fire('Lỗi', 'ID không hợp lệ!', 'error'); }
-            } catch(e) { Swal.fire('Lỗi', 'Kết nối thất bại.', 'error'); }
+                } else { Swal.fire(await gTranslate('Lỗi'), await gTranslate('ID không hợp lệ!'), 'error'); }
+            } catch(e) { Swal.fire(await gTranslate('Lỗi'), await gTranslate('Kết nối thất bại.'), 'error'); }
         }
     };
 
-    window.clearChat = function() { 
-        if (confirm("Xóa toàn bộ lịch sử trò chuyện?")) { 
+    window.clearChat = async function() { 
+        const confirmMsg = await gTranslate("Xóa toàn bộ lịch sử trò chuyện?");
+        if (confirm(confirmMsg)) { 
             localStorage.removeItem('abc_chat_pro'); 
             location.reload(); 
         } 
@@ -363,7 +412,10 @@
 
     // --- KHỞI TẠO (WINDOW ONLOAD) ---
     window.onload = async () => {
-        // "Cầu chì" bảo vệ: Tự động xóa loader sau 4 giây nếu kẹt
+        // 1. Áp dụng dịch giao diện
+        await applyLocalization();
+
+        // "Cầu chì" bảo vệ loader
         setTimeout(() => {
             const l = document.getElementById('loader');
             if (l) l.remove();
