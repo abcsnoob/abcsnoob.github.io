@@ -1,1 +1,189 @@
-Building Sites...
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Abc's Noob Open Social</title>
+  <meta name="description" content="A serverless, peer-powered social network that survives censorship, disasters, and time." />
+  <style>
+    :root {
+      --bg: #0b0d10;
+      --fg: #e6e6e6;
+      --muted: #9aa0a6;
+      --accent: #4ade80;
+      --border: #1f2937;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--fg);
+      line-height: 1.6;
+    }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .container {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 3rem 1.5rem;
+    }
+    header {
+      text-align: center;
+      margin-bottom: 4rem;
+    }
+    header h1 {
+      font-size: 2.8rem;
+      margin-bottom: 1rem;
+    }
+    header p {
+      color: var(--muted);
+      font-size: 1.2rem;
+      max-width: 700px;
+      margin: 0 auto 2rem;
+    }
+    .buttons {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 1rem;
+    }
+    .btn {
+      padding: 0.9rem 1.5rem;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--fg);
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .btn.primary {
+      background: var(--accent);
+      color: #052e16;
+      border-color: var(--accent);
+    }
+    section {
+      margin-bottom: 3.5rem;
+    }
+    h2 {
+      font-size: 1.9rem;
+      margin-bottom: 1rem;
+    }
+    ul {
+      padding-left: 1.2rem;
+    }
+    li {
+      margin-bottom: 0.5rem;
+    }
+    .quote {
+      border-left: 4px solid var(--accent);
+      padding-left: 1rem;
+      color: var(--muted);
+      font-style: italic;
+    }
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 2rem 1.5rem;
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Abc's Noob Open Social</h1>
+      <p>A serverless, peer-powered social network that survives censorship, disasters, and time.</p>
+      <div class="buttons">
+        <a class="btn primary" href="#downloads">Download</a>
+        <a class="btn" href="https://github.com/abcsnoob/AbcsNoobOpenSocial">View Source</a>
+        <a class="btn" href="#manifesto">Manifesto</a>
+      </div>
+    </header>
+
+    <section id="manifesto">
+      <h2>What Is This?</h2>
+      <p>
+        Abc's Noob Open Social is an experimental social network where <strong>every installed app is a node</strong>
+        and <strong>no central server exists</strong>.
+      </p>
+      <p class="quote">
+        "What if social communication behaved like life itself — slow, resilient, and impossible to fully destroy?"
+      </p>
+    </section>
+
+    <section>
+      <h2>Core Properties</h2>
+      <ul>
+        <li><strong>Serverless by design</strong> — nothing to shut down</li>
+        <li><strong>Cryptographic identity</strong> — no accounts, no resets</li>
+        <li><strong>Offline-first</strong> — works with or without Internet</li>
+        <li><strong>Peer-powered</strong> — users carry the network</li>
+        <li><strong>Fork-based governance</strong> — control requires consent</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>What This Is Not</h2>
+      <ul>
+        <li>Not real-time</li>
+        <li>Not algorithm-driven</li>
+        <li>Not ad-based</li>
+        <li>Not engagement-optimized</li>
+      </ul>
+      <p class="quote">Latency is acceptable. Durability is mandatory.</p>
+    </section>
+
+    <section>
+      <h2>Technology Direction</h2>
+      <ul>
+        <li>Language: Go (Golang)</li>
+        <li>Append-only local storage</li>
+        <li>Content-addressed data</li>
+        <li>Peer-to-peer replication</li>
+        <li>No global clock</li>
+      </ul>
+    </section>
+
+    <section id="downloads">
+      <h2>Download</h2>
+      <p>
+        Choose your platform. Each download is a standalone node.
+      </p>
+      <div class="buttons">
+        <a class="btn primary" href="downloads/abcsnoob-open-social-windows.zip">Windows</a>
+        <a class="btn primary" href="downloads/abcsnoob-open-social-linux.tar.gz">Linux</a>
+        <a class="btn primary" href="downloads/abcsnoob-open-social-android.apk">Android</a>
+        <a class="btn" href="#ios-note">iOS</a>
+      </div>
+    </section>
+
+    <section id="ios-note">
+      <h2>iOS Note</h2>
+      <p>
+        iOS does not allow true peer-to-peer background networking without restrictions.
+        An experimental build may be distributed via TestFlight or sideloading in the future.
+      </p>
+    </section>
+
+    <section>
+      <h2>Get Involved</h2>
+      <p>
+        There is no owner. No admin. No special powers.
+        If you want to change the project, fork it.
+      </p>
+      <div class="buttons">
+        <a class="btn" href="https://github.com/abcsnoob/AbcsNoobOpenSocial">GitHub Repository</a>
+      </div>
+    </section>
+  </div>
+
+  <footer>
+    <p>
+      &copy; Abc's Noob Open Social — GPLv3<br />
+      If you want to control it, you must fork it.
+    </p>
+  </footer>
+</body>
+</html>
