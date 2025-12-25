@@ -310,36 +310,31 @@ div.innerHTML = `
 async function send() {
     const input = document.getElementById('user-input');
     const text = input.value.trim();
-    
     if ((!text && !selectedImageData) || isTyping) return;
 
     const currentImg = selectedImageData;
     createMsgUI(text, 'user', currentImg);
     
-    // Chuẩn bị payload cho Gemini
-    let entry = { role: "user", parts: [{ text: text || "Phân tích nội dung này" }] };
-    if (currentImg) {
-        entry.parts.push({ 
-            inline_data: { 
-                mime_type: "image/jpeg", 
-                data: currentImg.split(',')[1] 
-            } 
-        });
-    }
-    
-    chatHistory.push(entry);
-    input.value = '';
+    chatHistory.push({ role: "user", parts: [{ text: text || "Analyze this content" }] });
+    input.value = ''; 
     input.style.height = 'auto';
-    cancelImg();
+    if (window.cancelImg) cancelImg();
     isTyping = true;
 
-    // Hiệu ứng loading
-    const loadingId = 'loading-' + Date.now();
+    // 1. Tạo node Loading trước
+    const chatWindow = document.getElementById('chat-window');
     const loadingDiv = document.createElement('div');
+    const loadingId = 'loading-' + Date.now();
     loadingDiv.id = loadingId;
-    loadingDiv.className = 'msg-group';
-    loadingDiv.innerHTML = `<div class="msg-header"><i class="fa-solid fa-circle-notch fa-spin"></i> Noob AI đang suy nghĩ...</div>`;
-    document.getElementById('chat-window').appendChild(loadingDiv);
+    loadingDiv.className = 'msg-group notranslate mb-4';
+    
+    // 2. Dịch văn bản loading
+    const loadingText = await gt("Noob AI đang suy nghĩ...");
+    loadingDiv.innerHTML = `<div class="msg-header" style="color:#00ff88"><i class="fa-solid fa-circle-notch fa-spin"></i> ${loadingText}</div>`;
+    
+    // 3. Đưa vào giao diện
+    chatWindow.appendChild(loadingDiv);
+    chatWindow.scrollTo({ top: chatWindow.scrollHeight, behavior: 'smooth' });
 
     try {
         const response = await fetch(WORKER_URL, {
@@ -348,23 +343,31 @@ async function send() {
             body: JSON.stringify({ 
                 action: 'chat_ai', 
                 messages: chatHistory.slice(-12),
-                user_lang: user_lang
+                user_lang: user_lang 
             })
         });
 
         const data = await response.json();
+        
+        // 4. KIỂM TRA TRƯỚC KHI TÁC ĐỘNG VÀO DOM
         const loaderEl = document.getElementById(loadingId);
-        if (loaderEl) loaderEl.remove();
-
+        
         if (data.success) {
+            if (loaderEl) loaderEl.remove(); // Chỉ xóa khi đã có dữ liệu thật
             createMsgUI(data.text, 'model');
             chatHistory.push({ role: "model", parts: [{ text: data.text }] });
-            saveToLocal();
+            if (window.saveToLocal) saveToLocal();
         } else {
-            throw new Error(data.error);
+            throw new Error(data.error || "API Error");
         }
     } catch (error) {
-        document.getElementById(loadingId).innerHTML = `<span class="text-danger">Lỗi: ${error.message}</span>`;
+        // 5. XỬ LÝ LỖI AN TOÀN
+        const loaderEl = document.getElementById(loadingId);
+        if (loaderEl) {
+            const errorText = await gt("Lỗi");
+            loaderEl.innerHTML = `<div class="text-danger fw-bold"><i class="fa-solid fa-triangle-exclamation"></i> ${errorText}: ${error.message}</div>`;
+        }
+        console.error("Chat Error:", error);
     } finally {
         isTyping = false;
     }
