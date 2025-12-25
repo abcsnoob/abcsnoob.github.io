@@ -163,7 +163,34 @@ marked.setOptions({
     breaks: true,
     gfm: true
 });
-
+async function typeEffect(element, text) {
+    let i = 0;
+    element.innerHTML = ""; // Xóa trắng trước khi đánh máy
+    
+    return new Promise((resolve) => {
+        function typing() {
+            if (i < text.length) {
+                // Lấy một cụm ký tự để tốc độ đánh máy trông tự nhiên hơn
+                let char = text.charAt(i);
+                element.innerHTML += char;
+                i++;
+                
+                // Cuộn xuống theo từng dòng chữ
+                const win = document.getElementById('chat-window');
+                win.scrollTop = win.scrollHeight;
+                
+                setTimeout(typing, 15); // Tốc độ đánh máy (15ms mỗi ký tự)
+            } else {
+                // Sau khi đánh máy xong, render Markdown để hiện format chuẩn (Bold, Code, Table...)
+                element.innerHTML = marked.parse(text);
+                if (window.Prism) Prism.highlightAllUnder(element);
+                resolve();
+            }
+        }
+        typing();
+    });
+}
+    
 // Hàm dịch trung tâm
 async function gt(text) {
     if (!text || user_lang === 'vi' || text.length < 2 || text.includes('Noob AI')) return text;
@@ -273,37 +300,38 @@ function cancelImg() {
 }
 
 // 3. RENDER TIN NHẮN LÊN GIAO DIỆN
-function createMsgUI(text, role, imgSrc = null) {
-    const windowEl = document.getElementById('chat-window');
+async function createMsgUI(text, role, image = null) {
+    const win = document.getElementById('chat-window');
     const div = document.createElement('div');
-    div.className = 'msg-group';
+    div.className = 'msg-group notranslate mb-4';
     
     const isUser = (role === 'user');
-    
-div.innerHTML = `
-        <div class="msg-header notranslate" translate="no" style="color: ${isUser ? 'var(--primary)' : '#00ff88'}">
-            <i class="fa-solid ${isUser ? 'fa-user' : 'fa-robot'}"></i> ${isUser ? 'BẠN' : 'NOOB AI'}
+    const color = isUser ? 'var(--primary)' : '#00ff88';
+    const name = isUser ? 'YOU' : "ABC'S SOOB AI";
+    const icon = isUser ? 'fa-user' : 'fa-robot';
+
+    let html = `
+        <div class="msg-header" style="color:${color}">
+            <i class="fa-solid ${icon}"></i> ${name}
         </div>
-        <div class="msg-content notranslate" translate="no">
-            ${imgSrc ? `<img src="${imgSrc}" class="mb-3 rounded shadow" style="max-width:250px; display:block;">` : ''}
-            <div class="text-body">${marked.parse(text || "")}</div>
-        </div>`;
+        ${image ? `<img src="${image}" class="img-fluid rounded mb-2" style="max-width:200px; display:block;">` : ''}
+        <div class="msg-content"></div>
+    `;
     
-    windowEl.appendChild(div);
-    windowEl.scrollTo({ top: windowEl.scrollHeight, behavior: 'smooth' });
+    div.innerHTML = html;
+    win.appendChild(div);
     
-    // Thêm nút Copy cho các khối code
-    div.querySelectorAll('pre').forEach(block => {
-        const btn = document.createElement('button');
-        btn.className = 'copy-btn';
-        btn.innerText = 'Copy';
-        btn.onclick = () => {
-            navigator.clipboard.writeText(block.innerText.replace('Copy', ''));
-            btn.innerText = 'Đã chép!';
-            setTimeout(() => btn.innerText = 'Copy', 2000);
-        };
-        block.appendChild(btn);
-    });
+    const contentDiv = div.querySelector('.msg-content');
+
+    if (isUser) {
+        // User thì hiện thẳng luôn cho nhanh
+        contentDiv.innerHTML = marked.parse(text || "");
+    } else {
+        // AI thì chạy hiệu ứng đánh máy
+        await typeEffect(contentDiv, text || "");
+    }
+
+    win.scrollTo({ top: win.scrollHeight, behavior: 'smooth' });
 }
 
 // 4. LOGIC GỬI TIN NHẮN & GỌI AI
