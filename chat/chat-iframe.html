@@ -140,25 +140,47 @@ marked.setOptions({
     gfm: true
 });
 
-    function toggleSidebar() {
+function toggleSidebar() {
     const sidebar = document.getElementById('sidebar');
     if (!sidebar) return;
 
-    // Kiểm tra nếu đang ở mobile (dựa trên class hoặc display)
     if (window.innerWidth <= 768) {
-        if (sidebar.style.display === 'flex') {
+        // Kiểm tra xem Sidebar có đang hiện không
+        const isShowing = sidebar.style.display === 'flex';
+        
+        if (isShowing) {
             sidebar.style.display = 'none';
         } else {
             sidebar.style.display = 'flex';
             sidebar.style.position = 'fixed';
-            sidebar.style.zIndex = '1000';
-            sidebar.style.height = '100%';
+            sidebar.style.zIndex = '1001'; // Cao hơn top-nav
+            sidebar.style.left = '0';
+            sidebar.style.top = '0';
             sidebar.style.width = '280px';
+            sidebar.style.height = '100%';
+            
+            // Thêm lớp phủ mờ (overlay) nếu ông giáo muốn xịn hơn
+            createOverlay(); 
         }
     } else {
-        // Cho desktop nếu ông muốn ẩn/hiện
         sidebar.classList.toggle('d-none');
     }
+}
+
+// Hàm phụ để tạo lớp phủ đen khi mở Sidebar trên Mobile
+function createOverlay() {
+    if (document.getElementById('sidebar-overlay')) return;
+    const overlay = document.createElement('div');
+    overlay.id = 'sidebar-overlay';
+    overlay.style = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000;";
+    overlay.onclick = toggleSidebar; // Bấm ra ngoài là đóng
+    document.body.appendChild(overlay);
+}
+
+// Cập nhật lại: Mỗi khi đóng sidebar thì xóa overlay
+function removeOverlay() {
+    const overlay = document.getElementById('sidebar-overlay');
+    if (overlay) overlay.remove();
 }
 
 // 2. XỬ LÝ ẢNH (VISION)
