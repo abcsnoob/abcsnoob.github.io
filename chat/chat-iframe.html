@@ -164,7 +164,9 @@ let chatHistory = JSON.parse(localStorage.getItem('abc_chat_pro')) || [];
 let selectedImageData = null;
 let isTyping = false;
 let user_lang = localStorage.getItem('user_lang') || 'auto';
-let skipTyping = false; // Biến đánh dấu trạng thái bỏ qua đánh máy
+let allChats = JSON.parse(localStorage.getItem('all_chats_list')) || [];
+let currentChatId = null;
+let skipTyping = false; 
 
 // 1. CẤU HÌNH MARKED (Hiển thị Markdown & Code Highlight)
 marked.setOptions({
@@ -180,46 +182,91 @@ marked.setOptions({
 async function typeEffect(element, text) {
     let i = 0;
     let currentText = "";
-    element.innerHTML = ""; 
-    skipTyping = false; // Reset trạng thái mỗi khi bắt đầu tin nhắn mới
-    
+    skipTyping = false; 
     element.classList.add('typing-cursor');
     
     return new Promise((resolve) => {
         function typing() {
-            // Nếu người dùng nhấn ESC, skipTyping sẽ thành true
-            if (skipTyping) {
+            if (skipTyping) { // Nhấn ESC sẽ nhả hết text
+                element.innerHTML = marked.parse(text);
                 element.classList.remove('typing-cursor');
-                element.innerHTML = marked.parse(text); // Nhả hết text vào mặt luôn
-                if (window.Prism) Prism.highlightAllUnder(element);
-                
-                const win = document.getElementById('chat-window');
-                if (win) win.scrollTop = win.scrollHeight;
-                
-                resolve();
-                return; // Thoát hàm ngay lập tức
+                resolve(); return;
             }
-
             if (i < text.length) {
                 currentText += text.charAt(i);
-                element.innerHTML = marked.parse(currentText);
+                element.innerHTML = marked.parse(currentText); // Vừa đánh máy vừa Markdown
                 i++;
-                
-                const win = document.getElementById('chat-window');
-                if (win) win.scrollTop = win.scrollHeight;
-                
                 setTimeout(typing, 10);
             } else {
                 element.classList.remove('typing-cursor');
-                element.innerHTML = marked.parse(text);
-                if (window.Prism) Prism.highlightAllUnder(element);
                 resolve();
             }
         }
         typing();
     });
 }
+    // 1. Lưu chat hiện tại vào danh sách folder
+function saveCurrentChat() {
+    if (chatHistory.length === 0) return;
+
+    if (!currentChatId) {
+        // Nếu là chat mới, tạo ID và lấy tên từ tin nhắn đầu của User
+        currentChatId = Date.now().toString();
+        const firstMsg = chatHistory.find(m => m.role === 'user')?.parts[0]?.text || "Cuộc trò chuyện mới";
+        const chatName = firstMsg.length > 30 ? firstMsg.substring(0, 30) + "..." : firstMsg;
+        
+        allChats.unshift({
+            id: currentChatId,
+            name: chatName,
+            history: chatHistory
+        });
+    } else {
+        // Cập nhật history cho folder hiện tại
+        const index = allChats.findIndex(c => c.id === currentChatId);
+        if (index !== -1) allChats[index].history = JSON.parse(JSON.stringify(chatHistory));
+    }
+
+    localStorage.setItem('all_chats_list', JSON.stringify(allChats));
+    renderHistorySidebar();
+}
+
+// 2. Tải nội dung một cuộc chat khi click sidebar
+async function loadChat(id) {
+    const chat = allChats.find(c => c.id === id);
+    if (!chat) return;
+
+    currentChatId = id;
+    chatHistory = JSON.parse(JSON.stringify(chat.history));
     
+    const win = document.getElementById('chat-window');
+    win.innerHTML = '';
+    
+    // Hiển thị lại toàn bộ nội dung với Markdown (không đánh máy lại)
+    for (const m of chatHistory) {
+        const txt = m.parts.find(p => p.text)?.text;
+        // Tham số 'true' để báo đây là history, hiện ngay lập tức
+        await createMsgUI(txt, m.role, null, true); 
+    }
+}
+
+// 3. Xóa một folder chat
+async function deleteChat(id, event) {
+    event.stopPropagation(); // Ngăn không cho loadChat chạy khi bấm xóa
+    const result = await Swal.fire({
+        title: "Xóa đoạn chat?",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: "Xóa",
+        confirmButtonColor: '#d33'
+    });
+    
+    if (result.isConfirmed) {
+        allChats = allChats.filter(c => c.id !== id);
+        if (currentChatId === id) newChat();
+        localStorage.setItem('all_chats_list', JSON.stringify(allChats));
+        renderHistorySidebar();
+    }
+}
 // Hàm dịch trung tâm
 async function gt(text) {
     if (!text || user_lang === 'vi' || text.length < 2 || text.includes('Noob AI')) return text;
@@ -336,30 +383,24 @@ async function createMsgUI(text, role, image = null, isHistory = false) {
     
     const isUser = (role === 'user');
     const color = isUser ? 'var(--primary)' : '#00ff88';
-    const name = isUser ? 'YOU' : 'NOOB AI';
-    const icon = isUser ? 'fa-user' : 'fa-robot';
 
     div.innerHTML = `
-        <div class="msg-header" style="color:${color}">
-            <i class="fa-solid ${icon}"></i> ${name}
+        <div class="msg-header" style="color:${color}; font-weight:bold;">
+            <i class="fa-solid ${isUser ? 'fa-user' : 'fa-robot'}"></i> ${isUser ? 'YOU' : "ABC'S NOOB"}
         </div>
-        ${image ? `<img src="${image}" class="img-fluid rounded mb-2" style="max-width:200px; display:block;">` : ''}
+        ${image ? `<img src="${image}" class="img-fluid rounded mb-2" style="max-width:200px;">` : ''}
         <div class="msg-content"></div>
     `;
     
     win.appendChild(div);
     const contentDiv = div.querySelector('.msg-content');
 
-    // NẾU LÀ TIN NHẮN CŨ (HISTORY) HOẶC TIN NHẮN CỦA USER: Hiển thị luôn
     if (isHistory || isUser) {
         contentDiv.innerHTML = marked.parse(text || "");
         if (window.Prism) Prism.highlightAllUnder(contentDiv);
-    } 
-    // NẾU LÀ TIN NHẮN MỚI CỦA AI: Chạy hiệu ứng đánh máy
-    else {
+    } else {
         await typeEffect(contentDiv, text || "");
     }
-
     win.scrollTo({ top: win.scrollHeight, behavior: 'smooth' });
 }
 
@@ -630,11 +671,24 @@ window.onload = async () => {
     }
 
     window.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') {
-        skipTyping = true; // Kích hoạt bỏ qua khi nhấn Esc
-    }
+    if (e.key === 'Escape') skipTyping = true; // Bắt sự kiện ESC
 });
+
+function newChat() {
+    currentChatId = null;
+    chatHistory = [];
+    document.getElementById('chat-window').innerHTML = '';
+    if (window.cancelImg) cancelImg();
+    renderHistorySidebar();
+}
+
+// Gọi renderHistorySidebar() khi load trang để hiện danh sách chat cũ
+window.onload = async () => {
+    // 1. Khởi tạo danh sách folder và giao diện sidebar
+    renderHistorySidebar();
+
     // 2. Hiển thị thông tin user (Auth UI)
+    const token = localStorage.getItem('token');
     if (token) {
         try {
             const email = atob(token);
@@ -646,29 +700,36 @@ window.onload = async () => {
                 authBtnText.innerText = (user_lang === 'vi') ? 'Đăng xuất' : 'Logout';
             }
         } catch (e) {
+            console.error("Token lỗi, đang xóa...");
             localStorage.removeItem('token');
         }
     }
 
-    // 3. Render lại lịch sử cũ
+    // 3. Render lại tin nhắn của phiên làm việc hiện tại (nếu có)
     const win = document.getElementById('chat-window');
     if (win) {
         win.innerHTML = '';
-// Khi load lại trang, truyền thêm tham số true (isHistory)
-chatHistory.forEach(m => {
-    const txt = m.parts.find(p => p.text)?.text;
-    // Thêm tham số true ở cuối để báo đây là tin nhắn cũ
-    createMsgUI(txt, m.role, null, true); 
-});
+        // Nếu chatHistory có dữ liệu, nạp lên màn hình ngay
+        if (chatHistory && chatHistory.length > 0) {
+            for (const m of chatHistory) {
+                const txt = m.parts.find(p => p.text)?.text;
+                // Truyền 'true' để hiện ngay Markdown, không đánh máy lại gây ức chế
+                await createMsgUI(txt, m.role, null, true); 
+            }
+        }
     }
     
-    // 4. Cập nhật Sidebar và dịch giao diện
-    renderHistorySidebar();
-    
-    // Chỉ dịch nếu ngôn ngữ không phải là Tiếng Việt
+    // 4. Dịch giao diện dựa trên user_lang
     if (user_lang !== 'vi') {
         translateUI(); 
     }
+
+    // 5. Đăng ký sự kiện ESC để nhả text nhanh
+    window.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') skipTyping = true;
+    });
+
+    console.log("Hệ thống đã sẵn sàng! #FreeAbcsnoobhelper");
 };
 
 async function translateUI() {
