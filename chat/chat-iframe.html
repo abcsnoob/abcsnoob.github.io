@@ -382,7 +382,7 @@ async function send() {
         
 if (data.success) {
     // Chỗ này hàm createMsgUI giờ đã có async/await nên sẽ chạy hiệu ứng đánh máy
-    await createMsgUI(data.text, 'model'); 
+await createMsgUI(data.text, 'model', null, false); 
     chatHistory.push({ role: "model", parts: [{ text: data.text }] });
     saveToLocal();
 } else {
@@ -620,11 +620,12 @@ window.onload = async () => {
     const win = document.getElementById('chat-window');
     if (win) {
         win.innerHTML = '';
-        chatHistory.forEach(m => {
-            const txt = m.parts.find(p => p.text)?.text;
-            const img = m.parts.find(p => p.inline_data)?.inline_data.data;
-            createMsgUI(txt, m.role, img ? `data:image/jpeg;base64,${img}` : null);
-        });
+// Khi load lại trang, truyền thêm tham số true (isHistory)
+chatHistory.forEach(m => {
+    const txt = m.parts.find(p => p.text)?.text;
+    // Thêm tham số true ở cuối để báo đây là tin nhắn cũ
+    createMsgUI(txt, m.role, null, true); 
+});
     }
     
     // 4. Cập nhật Sidebar và dịch giao diện
