@@ -123,6 +123,7 @@ let token = localStorage.getItem('token');
 let chatHistory = JSON.parse(localStorage.getItem('abc_chat_pro')) || [];
 let selectedImageData = null;
 let isTyping = false;
+let user_lang = localStorage.getItem('user_lang') || 'auto';
 
 // 1. CẤU HÌNH MARKED (Hiển thị Markdown & Code Highlight)
 marked.setOptions({
@@ -440,14 +441,14 @@ function clearChat() {
 
 // 8. KHỞI TẠO HỆ THỐNG KHI LOAD TRANG
 window.onload = async () => {
-    // A. Tự động nhận diện ngôn ngữ nếu đang để 'auto'
-    if (user_lang === 'auto') {
-        const browserLang = navigator.language.split('-')[0]; // Ví dụ: 'en', 'vi'
+    // 1. Tự động nhận diện ngôn ngữ nếu chưa thiết lập hoặc đang để 'auto'
+    if (!user_lang || user_lang === 'auto') {
+        const browserLang = navigator.language.split('-')[0]; // Ví dụ: 'en', 'vi', 'ja'
         user_lang = browserLang;
         localStorage.setItem('user_lang', user_lang);
     }
 
-    // B. Hiển thị thông tin người dùng (Auth UI)
+    // 2. Hiển thị thông tin user (Auth UI)
     if (token) {
         try {
             const email = atob(token);
@@ -456,7 +457,6 @@ window.onload = async () => {
             
             const authBtnText = document.getElementById('auth-text');
             if (authBtnText) {
-                // Nếu không phải tiếng Việt, dịch chữ "Đăng xuất"
                 authBtnText.innerText = (user_lang === 'vi') ? 'Đăng xuất' : 'Logout';
             }
         } catch (e) {
@@ -464,7 +464,7 @@ window.onload = async () => {
         }
     }
 
-    // C. Render lại lịch sử cũ vào khung chat
+    // 3. Render lại lịch sử cũ
     const win = document.getElementById('chat-window');
     if (win) {
         win.innerHTML = '';
@@ -475,12 +475,11 @@ window.onload = async () => {
         });
     }
     
-    // D. Vẽ lại danh sách bên Sidebar
+    // 4. Cập nhật Sidebar và dịch giao diện
     renderHistorySidebar();
-
-    // E. Kích hoạt dịch tự động giao diện (NẾU KHÔNG PHẢI TIẾNG VIỆT)
+    
+    // Chỉ dịch nếu ngôn ngữ không phải là Tiếng Việt
     if (user_lang !== 'vi') {
-        console.log("Kích hoạt dịch tự động sang:", user_lang);
         translateUI(); 
     }
 };
