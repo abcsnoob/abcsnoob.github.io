@@ -380,12 +380,12 @@ async function send() {
         // 4. KIỂM TRA TRƯỚC KHI TÁC ĐỘNG VÀO DOM
         const loaderEl = document.getElementById(loadingId);
         
-        if (data.success) {
-            if (loaderEl) loaderEl.remove(); // Chỉ xóa khi đã có dữ liệu thật
-            createMsgUI(data.text, 'model');
-            chatHistory.push({ role: "model", parts: [{ text: data.text }] });
-            if (window.saveToLocal) saveToLocal();
-        } else {
+if (data.success) {
+    // Chỗ này hàm createMsgUI giờ đã có async/await nên sẽ chạy hiệu ứng đánh máy
+    await createMsgUI(data.text, 'model'); 
+    chatHistory.push({ role: "model", parts: [{ text: data.text }] });
+    saveToLocal();
+} else {
             throw new Error(data.error || "API Error");
         }
     } catch (error) {
