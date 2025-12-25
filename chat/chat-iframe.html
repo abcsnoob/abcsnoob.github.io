@@ -165,24 +165,26 @@ marked.setOptions({
 });
 async function typeEffect(element, text) {
     let i = 0;
-    element.innerHTML = ""; // Xóa trắng trước khi đánh máy
+    let currentText = "";
+    element.innerHTML = ""; 
     
     return new Promise((resolve) => {
         function typing() {
             if (i < text.length) {
-                // Lấy một cụm ký tự để tốc độ đánh máy trông tự nhiên hơn
-                let char = text.charAt(i);
-                element.innerHTML += char;
+                currentText += text.charAt(i);
+                // Render Markdown liên tục ngay khi đang đánh máy
+                element.innerHTML = marked.parse(currentText);
+                
                 i++;
                 
-                // Cuộn xuống theo từng dòng chữ
+                // Cuộn trang theo nội dung mới
                 const win = document.getElementById('chat-window');
-                win.scrollTop = win.scrollHeight;
+                if (win) win.scrollTop = win.scrollHeight;
                 
-                setTimeout(typing, 15); // Tốc độ đánh máy (15ms mỗi ký tự)
+                // Tốc độ đánh máy (10ms để mượt mà nhất)
+                setTimeout(typing, 10);
             } else {
-                // Sau khi đánh máy xong, render Markdown để hiện format chuẩn (Bold, Code, Table...)
-                element.innerHTML = marked.parse(text);
+                // Kết thúc: Highlight code block lần cuối cho chắc
                 if (window.Prism) Prism.highlightAllUnder(element);
                 resolve();
             }
