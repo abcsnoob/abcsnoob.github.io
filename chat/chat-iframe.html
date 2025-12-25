@@ -760,6 +760,77 @@ async function translateUI(lang) {
         console.error("Lỗi dịch UI:", e);
     }
 }
+// Hàm bắt đầu một cuộc trò chuyện mới hoàn toàn
+function newChat() {
+    // 1. Lưu lại cuộc trò chuyện hiện tại vào danh sách nếu có nội dung
+    if (chatHistory.length > 0) {
+        saveCurrentChat();
+    }
+
+    // 2. Reset các biến trạng thái
+    chatHistory = [];
+    currentChatId = null;
+    selectedImageData = null;
+    isTyping = false;
+
+    // 3. Xóa trắng màn hình chat và preview ảnh
+    const win = document.getElementById('chat-window');
+    if (win) win.innerHTML = '';
+    
+    const preview = document.getElementById('image-preview');
+    if (preview) preview.style.display = 'none';
+
+    // 4. Xóa dữ liệu phiên tạm thời trong LocalStorage (không xóa all_chats_list)
+    localStorage.removeItem('abc_chat_pro');
+
+    // 5. Cập nhật lại giao diện sidebar
+    renderHistorySidebar();
+
+    // 6. Thông báo cho người dùng (tùy chọn)
+    console.log("Đã bắt đầu phiên hội thoại mới.");
+}
+
+// Cập nhật lại hàm renderHistorySidebar để hỗ trợ tải lại chat cũ
+function renderHistorySidebar() {
+    const container = document.getElementById('history-container');
+    if (!container) return;
+    container.innerHTML = '';
+    
+    // Nếu có danh sách các cuộc hội thoại đã lưu (allChats)
+    if (allChats && allChats.length > 0) {
+        allChats.forEach(chat => {
+            const item = document.createElement('div');
+            item.className = 'history-item d-flex justify-content-between align-items-center';
+            
+            // Nội dung tiêu đề
+            const content = document.createElement('div');
+            content.style.overflow = 'hidden';
+            content.style.textOverflow = 'ellipsis';
+            content.innerHTML = `<i class="fa-regular fa-message me-2"></i> ${chat.name}`;
+            content.onclick = () => loadChat(chat.id);
+            
+            // Nút xóa nhanh
+            const delBtn = document.createElement('i');
+            delBtn.className = 'fa-solid fa-trash-can ms-2 text-secondary';
+            delBtn.style.fontSize = '12px';
+            delBtn.onclick = (e) => deleteChat(chat.id, e);
+
+            item.appendChild(content);
+            item.appendChild(delBtn);
+            container.appendChild(item);
+        });
+    } else {
+        // Nếu không có allChats, hiển thị tin nhắn từ chatHistory hiện tại như cũ
+        const titles = chatHistory.filter(m => m.role === 'user').reverse();
+        titles.forEach(msg => {
+            const item = document.createElement('div');
+            item.className = 'history-item';
+            const text = msg.parts.find(p => p.text)?.text || "Tin nhắn ảnh";
+            item.innerHTML = `<i class="fa-regular fa-message me-2"></i> ${text.substring(0, 25)}...`;
+            container.appendChild(item);
+        });
+    }
+}
     </script>
 </body>
 </html>
