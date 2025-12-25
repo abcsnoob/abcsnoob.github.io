@@ -137,6 +137,27 @@ marked.setOptions({
     gfm: true
 });
 
+    function toggleSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    if (!sidebar) return;
+
+    // Kiểm tra nếu đang ở mobile (dựa trên class hoặc display)
+    if (window.innerWidth <= 768) {
+        if (sidebar.style.display === 'flex') {
+            sidebar.style.display = 'none';
+        } else {
+            sidebar.style.display = 'flex';
+            sidebar.style.position = 'fixed';
+            sidebar.style.zIndex = '1000';
+            sidebar.style.height = '100%';
+            sidebar.style.width = '280px';
+        }
+    } else {
+        // Cho desktop nếu ông muốn ẩn/hiện
+        sidebar.classList.toggle('d-none');
+    }
+}
+
 // 2. XỬ LÝ ẢNH (VISION)
 function handleFile(input) {
     const file = input.files[0];
