@@ -21,7 +21,32 @@
         body { background: var(--bg-dark); color: var(--text-main); font-family: 'Inter', sans-serif; height: 100dvh; overflow: hidden; display: flex; }
 
         /* Sidebar - Chỉ hiện trên máy tính, mobile dùng menu drawer */
-        #sidebar { width: 280px; background: var(--sidebar-bg); border-right: 1px solid var(--border-color); display: flex; flex-direction: column; transition: 0.3s; }
+        #sidebar {
+    width: 280px;
+    background: var(--sidebar-bg);
+    border-right: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.3s ease, visibility 0.3s; /* Hiệu ứng trượt */
+    z-index: 1001;
+}
+
+@media (max-width: 768px) {
+    #sidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        height: 100%;
+        transform: translateX(-100%); /* Mặc định đẩy ra ngoài màn hình bên trái */
+        visibility: hidden;
+    }
+    /* Khi có class 'active' thì trượt vào */
+    #sidebar.active {
+        transform: translateX(0);
+        visibility: visible;
+        display: flex !important;
+    }
+}
         .sidebar-header { padding: 20px; border-bottom: 1px solid var(--border-color); }
         .history-list { flex: 1; overflow-y: auto; padding: 10px; }
         .history-item { padding: 12px; border-radius: 8px; margin-bottom: 5px; cursor: pointer; transition: 0.2s; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -55,7 +80,6 @@
         .preview-img { width: 60px; height: 60px; object-fit: cover; border-radius: 8px; position: relative; }
 
         @keyframes fadeInUp { to { opacity: 1; transform: translateY(0); } }
-        @media (max-width: 768px) { #sidebar { display: none; } #chat-window { padding: 20px 15px 120px 15px; } }
     </style>
 </head>
 <body>
@@ -145,42 +169,40 @@ function toggleSidebar() {
     if (!sidebar) return;
 
     if (window.innerWidth <= 768) {
-        // Kiểm tra xem Sidebar có đang hiện không
-        const isShowing = sidebar.style.display === 'flex';
+        const isActive = sidebar.classList.contains('active');
         
-        if (isShowing) {
-            sidebar.style.display = 'none';
+        if (isActive) {
+            // ĐANG MỞ -> ĐÓNG LẠI
+            sidebar.classList.remove('active');
+            removeOverlay();
         } else {
-            sidebar.style.display = 'flex';
-            sidebar.style.position = 'fixed';
-            sidebar.style.zIndex = '1001'; // Cao hơn top-nav
-            sidebar.style.left = '0';
-            sidebar.style.top = '0';
-            sidebar.style.width = '280px';
-            sidebar.style.height = '100%';
-            
-            // Thêm lớp phủ mờ (overlay) nếu ông giáo muốn xịn hơn
-            createOverlay(); 
+            // ĐANG ĐÓNG -> MỞ RA
+            sidebar.classList.add('active');
+            createOverlay();
         }
     } else {
+        // Trên Desktop: Ẩn/Hiện bình thường
         sidebar.classList.toggle('d-none');
     }
 }
 
-// Hàm phụ để tạo lớp phủ đen khi mở Sidebar trên Mobile
 function createOverlay() {
     if (document.getElementById('sidebar-overlay')) return;
     const overlay = document.createElement('div');
     overlay.id = 'sidebar-overlay';
-    overlay.style = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000;";
-    overlay.onclick = toggleSidebar; // Bấm ra ngoài là đóng
+    // Style trực tiếp để đảm bảo luôn nằm dưới Sidebar (1000) và trên Chat (999)
+    overlay.style = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000; cursor:pointer;";
+    
+    // Bấm vào overlay cũng phải đóng sidebar và xóa chính nó
+    overlay.onclick = toggleSidebar; 
     document.body.appendChild(overlay);
 }
 
-// Cập nhật lại: Mỗi khi đóng sidebar thì xóa overlay
 function removeOverlay() {
     const overlay = document.getElementById('sidebar-overlay');
-    if (overlay) overlay.remove();
+    if (overlay) {
+        overlay.remove();
+    }
 }
 
 // 2. XỬ LÝ ẢNH (VISION)
