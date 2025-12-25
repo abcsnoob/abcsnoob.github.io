@@ -164,6 +164,7 @@ let chatHistory = JSON.parse(localStorage.getItem('abc_chat_pro')) || [];
 let selectedImageData = null;
 let isTyping = false;
 let user_lang = localStorage.getItem('user_lang') || 'auto';
+let skipTyping = false; // Biến đánh dấu trạng thái bỏ qua đánh máy
 
 // 1. CẤU HÌNH MARKED (Hiển thị Markdown & Code Highlight)
 marked.setOptions({
@@ -180,32 +181,38 @@ async function typeEffect(element, text) {
     let i = 0;
     let currentText = "";
     element.innerHTML = ""; 
+    skipTyping = false; // Reset trạng thái mỗi khi bắt đầu tin nhắn mới
     
-    // Thêm class để hiện dấu gạch đứng nhấp nháy
     element.classList.add('typing-cursor');
     
     return new Promise((resolve) => {
         function typing() {
+            // Nếu người dùng nhấn ESC, skipTyping sẽ thành true
+            if (skipTyping) {
+                element.classList.remove('typing-cursor');
+                element.innerHTML = marked.parse(text); // Nhả hết text vào mặt luôn
+                if (window.Prism) Prism.highlightAllUnder(element);
+                
+                const win = document.getElementById('chat-window');
+                if (win) win.scrollTop = win.scrollHeight;
+                
+                resolve();
+                return; // Thoát hàm ngay lập tức
+            }
+
             if (i < text.length) {
                 currentText += text.charAt(i);
-                
-                // Vừa nhả chữ vừa render Markdown
                 element.innerHTML = marked.parse(currentText);
-                
                 i++;
                 
                 const win = document.getElementById('chat-window');
                 if (win) win.scrollTop = win.scrollHeight;
                 
-                setTimeout(typing, 10); // Tốc độ 10ms
+                setTimeout(typing, 10);
             } else {
-                // ĐÃ XONG: Gỡ bỏ class con trỏ
                 element.classList.remove('typing-cursor');
-                
-                // Render lại Markdown lần cuối và highlight code
                 element.innerHTML = marked.parse(text);
                 if (window.Prism) Prism.highlightAllUnder(element);
-                
                 resolve();
             }
         }
@@ -622,6 +629,11 @@ window.onload = async () => {
         localStorage.setItem('user_lang', user_lang);
     }
 
+    window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+        skipTyping = true; // Kích hoạt bỏ qua khi nhấn Esc
+    }
+});
     // 2. Hiển thị thông tin user (Auth UI)
     if (token) {
         try {
