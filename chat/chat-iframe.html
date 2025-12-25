@@ -112,191 +112,365 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
-
 <script>
-    const WORKER_URL = 'https://abcsnoobai.abcsnoob.workers.dev';
-    let token = localStorage.getItem('token');
-    let chatHistory = JSON.parse(localStorage.getItem('abc_chat_pro')) || [];
-    let selectedImageData = null, isTyping = false;
+/** * NOOB AI PRO - CORE JAVASCRIPT SYSTEM
+ * Version: 2.0 (Premium)
+ * Features: Auth, D1 Database, AI Vision, OTP Verification, Group Chat
+ */
 
-    // --- Cấu hình Markdown ---
-    marked.setOptions({
-        highlight: (code, lang) => Prism.highlight(code, Prism.languages[lang] || Prism.languages.javascript, lang),
-        breaks: true
-    });
+const WORKER_URL = 'https://abcsnoobai.abcsnoob.workers.dev';
+let token = localStorage.getItem('token');
+let chatHistory = JSON.parse(localStorage.getItem('abc_chat_pro')) || [];
+let selectedImageData = null;
+let isTyping = false;
 
-    // --- VISION ---
-    function handleFile(input) {
-        const file = input.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            selectedImageData = e.target.result;
-            document.getElementById('image-preview').style.display = 'block';
-            document.getElementById('p-img').src = selectedImageData;
+// 1. CẤU HÌNH MARKED (Hiển thị Markdown & Code Highlight)
+marked.setOptions({
+    highlight: function(code, lang) {
+        if (Prism.languages[lang]) {
+            return Prism.highlight(code, Prism.languages[lang], lang);
+        }
+        return code;
+    },
+    breaks: true,
+    gfm: true
+});
+
+// 2. XỬ LÝ ẢNH (VISION)
+function handleFile(input) {
+    const file = input.files[0];
+    if (!file) return;
+    
+    // Kiểm tra dung lượng (giới hạn 4MB cho Gemini)
+    if (file.size > 4 * 1024 * 1024) {
+        Swal.fire('Lỗi', 'Ảnh quá lớn (tối đa 4MB)', 'error');
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        selectedImageData = e.target.result;
+        document.getElementById('image-preview').style.display = 'block';
+        document.getElementById('p-img').src = selectedImageData;
+    };
+    reader.readAsDataURL(file);
+}
+
+function cancelImg() {
+    selectedImageData = null;
+    document.getElementById('image-preview').style.display = 'none';
+    document.getElementById('file-in').value = '';
+}
+
+// 3. RENDER TIN NHẮN LÊN GIAO DIỆN
+function createMsgUI(text, role, imgSrc = null) {
+    const windowEl = document.getElementById('chat-window');
+    const div = document.createElement('div');
+    div.className = 'msg-group';
+    
+    const isUser = (role === 'user');
+    
+    div.innerHTML = `
+        <div class="msg-header" style="color: ${isUser ? 'var(--primary)' : '#00ff88'}">
+            <i class="fa-solid ${isUser ? 'fa-user-astronaut' : 'fa-robot'}"></i>
+            ${isUser ? 'BẠN' : 'NOOB AI'}
+        </div>
+        <div class="msg-content">
+            ${imgSrc ? `<img src="${imgSrc}" class="mb-3 rounded shadow-lg" style="max-width:280px; display:block; border: 1px solid #333;">` : ''}
+            <div class="text-body">${marked.parse(text || "")}</div>
+        </div>
+    `;
+    
+    windowEl.appendChild(div);
+    windowEl.scrollTo({ top: windowEl.scrollHeight, behavior: 'smooth' });
+    
+    // Thêm nút Copy cho các khối code
+    div.querySelectorAll('pre').forEach(block => {
+        const btn = document.createElement('button');
+        btn.className = 'copy-btn';
+        btn.innerText = 'Copy';
+        btn.onclick = () => {
+            navigator.clipboard.writeText(block.innerText.replace('Copy', ''));
+            btn.innerText = 'Đã chép!';
+            setTimeout(() => btn.innerText = 'Copy', 2000);
         };
-        reader.readAsDataURL(file);
+        block.appendChild(btn);
+    });
+}
+
+// 4. LOGIC GỬI TIN NHẮN & GỌI AI
+async function send() {
+    const input = document.getElementById('user-input');
+    const text = input.value.trim();
+    
+    if ((!text && !selectedImageData) || isTyping) return;
+
+    const currentImg = selectedImageData;
+    createMsgUI(text, 'user', currentImg);
+    
+    // Chuẩn bị payload cho Gemini
+    let entry = { role: "user", parts: [{ text: text || "Phân tích nội dung này" }] };
+    if (currentImg) {
+        entry.parts.push({ 
+            inline_data: { 
+                mime_type: "image/jpeg", 
+                data: currentImg.split(',')[1] 
+            } 
+        });
     }
-    function cancelImg() { selectedImageData = null; document.getElementById('image-preview').style.display = 'none'; }
+    
+    chatHistory.push(entry);
+    input.value = '';
+    input.style.height = 'auto';
+    cancelImg();
+    isTyping = true;
 
-    // --- CORE RENDER ---
-    function createMsgUI(text, role, imgSrc = null) {
-        const div = document.createElement('div');
-        div.className = 'msg-group';
-        div.innerHTML = `
-            <div class="msg-header">
-                <i class="fa-solid ${role === 'user' ? 'fa-user-astronaut text-primary' : 'fa-robot text-success'}"></i>
-                ${role === 'user' ? 'BẠN' : 'NOOB AI'}
-            </div>
-            <div class="msg-content">
-                ${imgSrc ? `<img src="${imgSrc}" class="mb-3 rounded-3 shadow" style="max-width:300px; display:block;">` : ''}
-                <div class="text-body">${marked.parse(text || "")}</div>
-            </div>
-        `;
-        document.getElementById('chat-window').appendChild(div);
-        document.getElementById('chat-window').scrollTop = document.getElementById('chat-window').scrollHeight;
-        Prism.highlightAllUnder(div);
-    }
+    // Hiệu ứng loading
+    const loadingId = 'loading-' + Date.now();
+    const loadingDiv = document.createElement('div');
+    loadingDiv.id = loadingId;
+    loadingDiv.className = 'msg-group';
+    loadingDiv.innerHTML = `<div class="msg-header"><i class="fa-solid fa-circle-notch fa-spin"></i> Noob AI đang suy nghĩ...</div>`;
+    document.getElementById('chat-window').appendChild(loadingDiv);
 
-    // --- AI CHAT ---
-    async function send() {
-        const input = document.getElementById('user-input');
-        const text = input.value.trim();
-        if ((!text && !selectedImageData) || isTyping) return;
+    try {
+        const response = await fetch(WORKER_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                action: 'chat_ai', 
+                messages: chatHistory.slice(-12) // Giữ ngữ cảnh 12 tin gần nhất
+            })
+        });
 
-        const currentImg = selectedImageData;
-        createMsgUI(text, 'user', currentImg);
-        
-        let entry = { role: "user", parts: [{ text: text || "Phân tích nội dung này" }] };
-        if (currentImg) entry.parts.push({ inline_data: { mime_type: "image/jpeg", data: currentImg.split(',')[1] } });
-        
-        chatHistory.push(entry);
-        input.value = '';
-        cancelImg();
-        isTyping = true;
+        const data = await response.json();
+        document.getElementById(loadingId).remove();
 
-        // Giả lập bot đang suy nghĩ
-        const loadingDiv = document.createElement('div');
-        loadingDiv.className = 'msg-group';
-        loadingDiv.innerHTML = `<div class="msg-header"><i class="fa-solid fa-spinner fa-spin"></i> Đang trả lời...</div>`;
-        document.getElementById('chat-window').appendChild(loadingDiv);
-
-        try {
-            const res = await fetch(WORKER_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ action: 'chat_ai', messages: chatHistory.slice(-10) })
-            });
-            const data = await res.json();
-            loadingDiv.remove();
-            
+        if (data.success) {
             createMsgUI(data.text, 'model');
             chatHistory.push({ role: "model", parts: [{ text: data.text }] });
-            saveHistory();
-        } catch (e) { 
-            loadingDiv.innerHTML = '<span class="text-danger">Lỗi kết nối máy chủ!</span>';
-            isTyping = false; 
-        } finally { isTyping = false; }
-    }
-
-    // --- AUTH & D1 FUNCTIONS (Xác minh OTP) ---
-    async function authUI() {
-        if (token) {
-            Swal.fire({ title: 'Đăng xuất?', text: `User: ${atob(token)}`, showCancelButton: true }).then(r => {
-                if(r.isConfirmed) { localStorage.removeItem('token'); location.reload(); }
-            });
-            return;
+            saveToLocal();
+        } else {
+            throw new Error(data.error);
         }
-        const { value: form } = await Swal.fire({
-            title: 'Hệ thống xác minh',
-            html: `
-                <input id="em" class="swal2-input" placeholder="Email">
-                <input id="pw" type="password" class="swal2-input" placeholder="Mật khẩu">
-            `,
-            showDenyButton: true, confirmButtonText: 'Đăng nhập', denyButtonText: 'Đăng ký mới'
+    } catch (error) {
+        document.getElementById(loadingId).innerHTML = `<span class="text-danger">Lỗi: ${error.message}</span>`;
+    } finally {
+        isTyping = false;
+    }
+}
+
+// 5. HỆ THỐNG XÁC THỰC (SỬA LỖI SWAL)
+async function authUI() {
+    if (token) {
+        const result = await Swal.fire({
+            title: 'Tài khoản',
+            text: `Bạn đang đăng nhập với: ${atob(token)}`,
+            icon: 'info',
+            showCancelButton: true,
+            confirmButtonText: 'Đăng xuất',
+            cancelButtonText: 'Đóng',
+            confirmButtonColor: '#d33'
         });
-        if (!form) return;
-        const email = document.getElementById('em').value;
-        const password = document.getElementById('pw').value;
-        const action = Swal.getConfirmedButton() === document.activeElement ? 'login' : 'register';
-
-        const res = await fetch(WORKER_URL, { method: 'POST', body: JSON.stringify({ action, email, password }) });
-        const d = await res.json();
-
-        if (d.success) {
-            if (action === 'register') return verifyOTPUI(email);
-            localStorage.setItem('token', d.token);
+        if (result.isConfirmed) {
+            localStorage.removeItem('token');
             location.reload();
-        } else if (d.needs_verify) {
-            verifyOTPUI(email);
-        } else {
-            Swal.fire('Lỗi', d.error, 'error');
         }
+        return;
     }
 
-    async function verifyOTPUI(email) {
-        const { value: otp } = await Swal.fire({ title: 'Mã OTP', text: `Kiểm tra mã tại ${email}`, input: 'text' });
-        if (!otp) return;
-        const res = await fetch(WORKER_URL, { method: 'POST', body: JSON.stringify({ action: 'verify_otp', email, otp }) });
-        const d = await res.json();
-        if (d.success) {
-            localStorage.setItem('token', d.token);
-            Swal.fire('Hoàn tất!', 'Tài khoản đã được kích hoạt', 'success').then(()=>location.reload());
-        } else {
-            Swal.fire('Sai mã OTP', 'Vui lòng thử lại', 'error');
+    const { value: form, isConfirmed, isDenied } = await Swal.fire({
+        title: 'Đăng nhập / Đăng ký',
+        html: `
+            <input id="swal-email" class="swal2-input" placeholder="Email">
+            <input id="swal-pass" type="password" class="swal2-input" placeholder="Mật khẩu">
+        `,
+        showDenyButton: true,
+        confirmButtonText: 'Đăng nhập',
+        denyButtonText: 'Tạo tài khoản mới',
+        preConfirm: () => {
+            const email = document.getElementById('swal-email').value;
+            const password = document.getElementById('swal-pass').value;
+            if (!email || !password) return Swal.showValidationMessage('Vui lòng nhập đủ thông tin');
+            return { email, password };
         }
-    }
+    });
 
-    // --- UTILS ---
-    function saveHistory() {
-        localStorage.setItem('abc_chat_pro', JSON.stringify(chatHistory.slice(-30)));
-        renderHistoryList();
-    }
+    if (!form) return;
 
-    function renderHistoryList() {
-        const cont = document.getElementById('history-container');
-        cont.innerHTML = '';
-        const userMsgs = chatHistory.filter(m => m.role === 'user');
-        userMsgs.reverse().forEach((m, i) => {
-            const item = document.createElement('div');
-            item.className = 'history-item';
-            item.innerHTML = `<i class="fa-regular fa-message me-2"></i> ${m.parts[0].text}`;
-            cont.appendChild(item);
+    const action = isConfirmed ? 'login' : 'register';
+    Swal.showLoading();
+
+    try {
+        const res = await fetch(WORKER_URL, {
+            method: 'POST',
+            body: JSON.stringify({ action, email: form.email, password: form.password })
         });
-    }
+        const data = await res.json();
 
-    function newChat() {
-        if(confirm('Bắt đầu đoạn chat mới?')) {
+        if (data.success) {
+            if (action === 'register') {
+                Swal.fire('Thành công', 'Vui lòng kiểm tra mã OTP trong Email của bạn!', 'success')
+                    .then(() => verifyOTPUI(form.email));
+            } else {
+                localStorage.setItem('token', data.token);
+                location.reload();
+            }
+        } else if (data.needs_verify) {
+            verifyOTPUI(form.email);
+        } else {
+            Swal.fire('Thất bại', data.error || 'Lỗi không xác định', 'error');
+        }
+    } catch (e) {
+        Swal.fire('Lỗi kết nối', 'Server không phản hồi', 'error');
+    }
+}
+
+async function verifyOTPUI(email) {
+    const { value: otp } = await Swal.fire({
+        title: 'Xác minh OTP',
+        text: `Nhập mã 6 số đã gửi tới ${email}`,
+        input: 'text',
+        inputAttributes: { maxlength: 6 },
+        showCancelButton: true,
+        allowOutsideClick: false
+    });
+
+    if (!otp) return;
+
+    Swal.showLoading();
+    const res = await fetch(WORKER_URL, {
+        method: 'POST',
+        body: JSON.stringify({ action: 'verify_otp', email, otp })
+    });
+    const data = await res.json();
+
+    if (data.success) {
+        localStorage.setItem('token', data.token);
+        Swal.fire('Tuyệt vời!', 'Tài khoản đã được kích hoạt thành công.', 'success')
+            .then(() => location.reload());
+    } else {
+        Swal.fire('Sai mã OTP', 'Vui lòng kiểm tra lại email', 'error').then(() => verifyOTPUI(email));
+    }
+}
+
+// 6. CHIA SẺ & NHÓM (D1)
+async function shareUI() {
+    if (!token) return authUI();
+    Swal.showLoading();
+    const res = await fetch(WORKER_URL, {
+        method: 'POST',
+        body: JSON.stringify({ action: 'share', token, data: chatHistory })
+    });
+    const d = await res.json();
+    if (d.shareId) {
+        navigator.clipboard.writeText(d.shareId);
+        Swal.fire('Đã tạo liên kết', `Mã ID: ${d.shareId}\n(Đã chép vào bộ nhớ tạm)`, 'success');
+    }
+}
+
+async function groupUI() {
+    if (!token) return authUI();
+    const { value: mode } = await Swal.fire({
+        title: 'Nhóm Chat D1',
+        showDenyButton: true,
+        confirmButtonText: 'Vào nhóm',
+        denyButtonText: 'Tạo nhóm mới'
+    });
+    if (mode === undefined) return;
+
+    const { value: val } = await Swal.fire({
+        title: mode ? 'Nhập mã nhóm' : 'Tên nhóm của bạn',
+        input: 'text'
+    });
+    if (!val) return;
+
+    const res = await fetch(WORKER_URL, {
+        method: 'POST',
+        body: JSON.stringify({ 
+            action: mode ? 'join_group' : 'create_group', 
+            token, 
+            [mode ? 'groupId' : 'groupName']: val 
+        })
+    });
+    const d = await res.json();
+    if (d.success) {
+        Swal.fire('Xong!', d.groupId ? `Mã nhóm của bạn: ${d.groupId}` : `Bạn đã vào nhóm: ${d.message}`, 'success');
+    }
+}
+
+// 7. QUẢN LÝ LỊCH SỬ LOCAL
+function saveToLocal() {
+    localStorage.setItem('abc_chat_pro', JSON.stringify(chatHistory.slice(-30)));
+    renderHistorySidebar();
+}
+
+function renderHistorySidebar() {
+    const container = document.getElementById('history-container');
+    if (!container) return;
+    container.innerHTML = '';
+    
+    // Chỉ lấy tin nhắn người dùng để làm tiêu đề
+    const titles = chatHistory.filter(m => m.role === 'user').reverse();
+    titles.forEach(msg => {
+        const item = document.createElement('div');
+        item.className = 'history-item';
+        const text = msg.parts.find(p => p.text)?.text || "Tin nhắn ảnh";
+        item.innerHTML = `<i class="fa-regular fa-message me-2"></i> ${text.substring(0, 25)}...`;
+        container.appendChild(item);
+    });
+}
+
+function clearChat() {
+    Swal.fire({
+        title: 'Xóa lịch sử?',
+        text: "Hành động này sẽ xóa toàn bộ tin nhắn hiện tại.",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33'
+    }).then(r => {
+        if (r.isConfirmed) {
             chatHistory = [];
             localStorage.removeItem('abc_chat_pro');
             document.getElementById('chat-window').innerHTML = '';
-            renderHistoryList();
-        }
-    }
-
-    function clearChat() { newChat(); }
-
-    window.onload = () => {
-        if (token) {
-            document.getElementById('user-info').innerText = atob(token);
-            document.getElementById('auth-text').innerText = 'Đăng xuất';
-        }
-        chatHistory.forEach(m => {
-            const txt = m.parts.find(p=>p.text)?.text;
-            const img = m.parts.find(p=>p.inline_data)?.inline_data.data;
-            createMsgUI(txt, m.role, img ? `data:image/jpeg;base64,${img}` : null);
-        });
-        renderHistoryList();
-    };
-
-    // Keyboard support
-    document.getElementById('user-input').addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' && !e.shiftKey) {
-            e.preventDefault();
-            send();
+            renderHistorySidebar();
         }
     });
+}
 
-</script>
+// 8. KHỞI TẠO HỆ THỐNG KHI LOAD TRANG
+window.onload = () => {
+    // Hiển thị thông tin user
+    if (token) {
+        const email = atob(token);
+        const userInfo = document.getElementById('user-info');
+        if (userInfo) userInfo.innerText = email;
+        const authBtnText = document.getElementById('auth-text');
+        if (authBtnText) authBtnText.innerText = 'Đăng xuất';
+    }
+
+    // Render lại lịch sử cũ
+    chatHistory.forEach(m => {
+        const txt = m.parts.find(p => p.text)?.text;
+        const img = m.parts.find(p => p.inline_data)?.inline_data.data;
+        createMsgUI(txt, m.role, img ? `data:image/jpeg;base64,${img}` : null);
+    });
+    
+    renderHistorySidebar();
+};
+
+// Listeners
+document.getElementById('user-input').addEventListener('input', function() {
+    this.style.height = 'auto';
+    this.style.height = (this.scrollHeight) + 'px';
+});
+
+document.getElementById('user-input').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        send();
+    }
+});
+    </script>
 </body>
 </html>
