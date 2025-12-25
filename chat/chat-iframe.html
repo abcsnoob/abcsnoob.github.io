@@ -80,6 +80,19 @@
         .preview-img { width: 60px; height: 60px; object-fit: cover; border-radius: 8px; position: relative; }
 
         @keyframes fadeInUp { to { opacity: 1; transform: translateY(0); } }
+        /* Hiệu ứng con trỏ nhấp nháy */
+.typing-cursor::after {
+    content: "|";
+    animation: blink 0.7s infinite;
+    margin-left: 2px;
+    color: var(--primary);
+    font-weight: bold;
+}
+
+@keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+}
     </style>
 </head>
 <body>
@@ -168,24 +181,31 @@ async function typeEffect(element, text) {
     let currentText = "";
     element.innerHTML = ""; 
     
+    // Thêm class để hiện dấu gạch đứng nhấp nháy
+    element.classList.add('typing-cursor');
+    
     return new Promise((resolve) => {
         function typing() {
             if (i < text.length) {
                 currentText += text.charAt(i);
-                // Render Markdown liên tục ngay khi đang đánh máy
+                
+                // Vừa nhả chữ vừa render Markdown
                 element.innerHTML = marked.parse(currentText);
                 
                 i++;
                 
-                // Cuộn trang theo nội dung mới
                 const win = document.getElementById('chat-window');
                 if (win) win.scrollTop = win.scrollHeight;
                 
-                // Tốc độ đánh máy (10ms để mượt mà nhất)
-                setTimeout(typing, 10);
+                setTimeout(typing, 10); // Tốc độ 10ms
             } else {
-                // Kết thúc: Highlight code block lần cuối cho chắc
+                // ĐÃ XONG: Gỡ bỏ class con trỏ
+                element.classList.remove('typing-cursor');
+                
+                // Render lại Markdown lần cuối và highlight code
+                element.innerHTML = marked.parse(text);
                 if (window.Prism) Prism.highlightAllUnder(element);
+                
                 resolve();
             }
         }
