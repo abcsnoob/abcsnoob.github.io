@@ -170,16 +170,14 @@ function createMsgUI(text, role, imgSrc = null) {
     
     const isUser = (role === 'user');
     
-    div.innerHTML = `
-        <div class="msg-header" style="color: ${isUser ? 'var(--primary)' : '#00ff88'}">
-            <i class="fa-solid ${isUser ? 'fa-user-astronaut' : 'fa-robot'}"></i>
-            ${isUser ? 'BẠN' : 'NOOB AI'}
+div.innerHTML = `
+        <div class="msg-header notranslate" translate="no" style="color: ${isUser ? 'var(--primary)' : '#00ff88'}">
+            <i class="fa-solid ${isUser ? 'fa-user' : 'fa-robot'}"></i> ${isUser ? 'BẠN' : 'NOOB AI'}
         </div>
-        <div class="msg-content">
-            ${imgSrc ? `<img src="${imgSrc}" class="mb-3 rounded shadow-lg" style="max-width:280px; display:block; border: 1px solid #333;">` : ''}
+        <div class="msg-content notranslate" translate="no">
+            ${imgSrc ? `<img src="${imgSrc}" class="mb-3 rounded shadow" style="max-width:250px; display:block;">` : ''}
             <div class="text-body">${marked.parse(text || "")}</div>
-        </div>
-    `;
+        </div>`;
     
     windowEl.appendChild(div);
     windowEl.scrollTo({ top: windowEl.scrollHeight, behavior: 'smooth' });
@@ -239,12 +237,14 @@ async function send() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ 
                 action: 'chat_ai', 
-                messages: chatHistory.slice(-12) // Giữ ngữ cảnh 12 tin gần nhất
+                messages: chatHistory.slice(-12),
+                user_lang: user_lang
             })
         });
 
         const data = await response.json();
-        document.getElementById(loadingId).remove();
+        const loaderEl = document.getElementById(loadingId);
+        if (loaderEl) loaderEl.remove();
 
         if (data.success) {
             createMsgUI(data.text, 'model');
@@ -439,25 +439,87 @@ function clearChat() {
 }
 
 // 8. KHỞI TẠO HỆ THỐNG KHI LOAD TRANG
-window.onload = () => {
-    // Hiển thị thông tin user
-    if (token) {
-        const email = atob(token);
-        const userInfo = document.getElementById('user-info');
-        if (userInfo) userInfo.innerText = email;
-        const authBtnText = document.getElementById('auth-text');
-        if (authBtnText) authBtnText.innerText = 'Đăng xuất';
+window.onload = async () => {
+    // A. Tự động nhận diện ngôn ngữ nếu đang để 'auto'
+    if (user_lang === 'auto') {
+        const browserLang = navigator.language.split('-')[0]; // Ví dụ: 'en', 'vi'
+        user_lang = browserLang;
+        localStorage.setItem('user_lang', user_lang);
     }
 
-    // Render lại lịch sử cũ
-    chatHistory.forEach(m => {
-        const txt = m.parts.find(p => p.text)?.text;
-        const img = m.parts.find(p => p.inline_data)?.inline_data.data;
-        createMsgUI(txt, m.role, img ? `data:image/jpeg;base64,${img}` : null);
-    });
+    // B. Hiển thị thông tin người dùng (Auth UI)
+    if (token) {
+        try {
+            const email = atob(token);
+            const userInfo = document.getElementById('user-info');
+            if (userInfo) userInfo.innerText = email;
+            
+            const authBtnText = document.getElementById('auth-text');
+            if (authBtnText) {
+                // Nếu không phải tiếng Việt, dịch chữ "Đăng xuất"
+                authBtnText.innerText = (user_lang === 'vi') ? 'Đăng xuất' : 'Logout';
+            }
+        } catch (e) {
+            localStorage.removeItem('token');
+        }
+    }
+
+    // C. Render lại lịch sử cũ vào khung chat
+    const win = document.getElementById('chat-window');
+    if (win) {
+        win.innerHTML = '';
+        chatHistory.forEach(m => {
+            const txt = m.parts.find(p => p.text)?.text;
+            const img = m.parts.find(p => p.inline_data)?.inline_data.data;
+            createMsgUI(txt, m.role, img ? `data:image/jpeg;base64,${img}` : null);
+        });
+    }
     
+    // D. Vẽ lại danh sách bên Sidebar
     renderHistorySidebar();
+
+    // E. Kích hoạt dịch tự động giao diện (NẾU KHÔNG PHẢI TIẾNG VIỆT)
+    if (user_lang !== 'vi') {
+        console.log("Kích hoạt dịch tự động sang:", user_lang);
+        translateUI(); 
+    }
 };
+
+async function translateUI() {
+    if (user_lang === 'vi') return;
+
+    // Chọn các thành phần giao diện cố định (Nút, nhãn, hướng dẫn)
+    const elements = document.querySelectorAll('button, span, div.small, textarea, .fw-bold, #user-info');
+    
+    for (let el of elements) {
+        // TUYỆT ĐỐI KHÔNG DỊCH: Tin nhắn trong khung chat và các icon FontAwesome
+        if (el.closest('#chat-window') || el.classList.contains('fa-solid') || el.classList.contains('fa-regular')) continue;
+
+        let originalText = el.innerText || el.placeholder;
+        if (!originalText || originalText.trim().length < 2 || originalText.includes('Noob AI')) continue;
+
+        try {
+            const res = await fetch(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=vi&tl=${user_lang}&dt=t&q=${encodeURIComponent(originalText)}`);
+            const data = await res.json();
+            const translated = data[0][0][0];
+            
+            if (el.placeholder) el.placeholder = translated; 
+            else {
+                // Giữ lại icon nếu có bên trong tag
+                const icon = el.querySelector('i');
+                if (icon) {
+                    el.innerHTML = '';
+                    el.appendChild(icon);
+                    el.appendChild(document.createTextNode(' ' + translated));
+                } else {
+                    el.innerText = translated;
+                }
+            }
+        } catch (e) {
+            console.error("Lỗi dịch UI:", e);
+        }
+    }
+}
 
 // Listeners
 document.getElementById('user-input').addEventListener('input', function() {
