@@ -300,17 +300,17 @@ function cancelImg() {
 }
 
 // 3. RENDER TIN NHẮN LÊN GIAO DIỆN
-async function createMsgUI(text, role, image = null) {
+async function createMsgUI(text, role, image = null, isHistory = false) {
     const win = document.getElementById('chat-window');
     const div = document.createElement('div');
     div.className = 'msg-group notranslate mb-4';
     
     const isUser = (role === 'user');
     const color = isUser ? 'var(--primary)' : '#00ff88';
-    const name = isUser ? 'YOU' : "ABC'S NOOB AI";
+    const name = isUser ? 'YOU' : 'NOOB AI';
     const icon = isUser ? 'fa-user' : 'fa-robot';
 
-    let html = `
+    div.innerHTML = `
         <div class="msg-header" style="color:${color}">
             <i class="fa-solid ${icon}"></i> ${name}
         </div>
@@ -318,16 +318,16 @@ async function createMsgUI(text, role, image = null) {
         <div class="msg-content"></div>
     `;
     
-    div.innerHTML = html;
     win.appendChild(div);
-    
     const contentDiv = div.querySelector('.msg-content');
 
-    if (isUser) {
-        // User thì hiện thẳng luôn cho nhanh
+    // NẾU LÀ TIN NHẮN CŨ (HISTORY) HOẶC TIN NHẮN CỦA USER: Hiển thị luôn
+    if (isHistory || isUser) {
         contentDiv.innerHTML = marked.parse(text || "");
-    } else {
-        // AI thì chạy hiệu ứng đánh máy
+        if (window.Prism) Prism.highlightAllUnder(contentDiv);
+    } 
+    // NẾU LÀ TIN NHẮN MỚI CỦA AI: Chạy hiệu ứng đánh máy
+    else {
         await typeEffect(contentDiv, text || "");
     }
 
