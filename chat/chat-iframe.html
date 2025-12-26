@@ -473,7 +473,7 @@ await createMsgUI(data.text, 'model', null, false);
 
 // 5. HỆ THỐNG XÁC THỰC (SỬA LỖI SWAL)
 async function authUI() {
-if (token) {
+    if (token) {
         const result = await Swal.fire({
             title: await gt('Tài khoản'),
             text: `${await gt('Bạn đang đăng nhập với')}: ${atob(token)}`,
@@ -490,7 +490,7 @@ if (token) {
         return;
     }
 
-    const { value: form, isConfirmed } = await Swal.fire({
+    const { value: form, isConfirmed, isDenied } = await Swal.fire({
         title: await gt('Đăng nhập / Đăng ký'),
         html: `
             <input id="swal-email" class="swal2-input" placeholder="${await gt('Email')}">
@@ -502,27 +502,29 @@ if (token) {
         preConfirm: () => {
             const email = document.getElementById('swal-email').value;
             const password = document.getElementById('swal-pass').value;
-            if (!email || !password) return Swal.showValidationMessage('Vui lòng nhập đủ thông tin'); // MutationObserver sẽ dịch cái này
+            if (!email || !password) return Swal.showValidationMessage('Vui lòng nhập đủ thông tin');
             return { email, password };
         }
     });
 
     if (!form) return;
 
+    // Xác định action dựa trên nút bấm (Confirm = login, Deny = register)
     const action = isConfirmed ? 'login' : 'register';
     Swal.showLoading();
 
     try {
         const res = await fetch(WORKER_URL, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' }, // THÊM DÒNG NÀY
+            headers: { 'Content-Type': 'application/json' }, // Fix lỗi Content-Type
             body: JSON.stringify({ action, email: form.email, password: form.password })
         });
         const data = await res.json();
 
         if (data.success) {
             if (action === 'register') {
-                Swal.fire('Thành công', 'Vui lòng kiểm tra mã OTP trong Email của bạn!', 'success')
+                // Hiện "Check OTP trong email đi ông giáo!" từ server
+                Swal.fire('Thành công', data.message, 'success')
                     .then(() => verifyOTPUI(form.email));
             } else {
                 localStorage.setItem('token', data.token);
@@ -531,15 +533,16 @@ if (token) {
         } else if (data.needs_verify) {
             verifyOTPUI(form.email);
         } else {
+            // Hiện "Email này đã được deploy (tồn tại)..." từ server
             Swal.fire('Thất bại', data.error || 'Lỗi không xác định', 'error');
         }
     } catch (e) {
-        Swal.fire('Lỗi kết nối', 'Server không phản hồi', 'error');
+        Swal.fire('Lỗi kết nối', 'Server lag rồi ông giáo ơi: ' + e.message, 'error');
     }
 }
 
 async function verifyOTPUI(email) {
-const { value: otp } = await Swal.fire({
+    const { value: otp } = await Swal.fire({
         title: await gt('Xác minh OTP'),
         text: `${await gt('Nhập mã 6 số đã gửi tới')} ${email}`,
         input: 'text',
@@ -551,19 +554,25 @@ const { value: otp } = await Swal.fire({
     if (!otp) return;
 
     Swal.showLoading();
-    const res = await fetch(WORKER_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' }, // THÊM DÒNG NÀY
-        body: JSON.stringify({ action: 'verify_otp', email, otp })
-    });
-    const data = await res.json();
+    try {
+        const res = await fetch(WORKER_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }, // Phải có header JSON
+            body: JSON.stringify({ action: 'verify_otp', email, otp })
+        });
+        const data = await res.json();
 
-    if (data.success) {
-        localStorage.setItem('token', data.token);
-        Swal.fire('Tuyệt vời!', 'Tài khoản đã được kích hoạt thành công.', 'success')
-            .then(() => location.reload());
-    } else {
-        Swal.fire('Sai mã OTP', 'Vui lòng kiểm tra lại email', 'error').then(() => verifyOTPUI(email));
+        if (data.success) {
+            localStorage.setItem('token', data.token);
+            Swal.fire('Tuyệt vời!', 'Tài khoản đã được kích hoạt thành công.', 'success')
+                .then(() => location.reload());
+        } else {
+            // Hiện lỗi sai OTP từ Backend
+            Swal.fire('Thất bại', data.error || 'Sai mã OTP', 'error')
+                .then(() => verifyOTPUI(email)); // Cho nhập lại
+        }
+    } catch (e) {
+        Swal.fire('Lỗi', 'Không thể xác minh OTP', 'error');
     }
 }
 
