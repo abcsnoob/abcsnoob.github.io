@@ -472,8 +472,8 @@ await createMsgUI(data.text, 'model', null, false);
 }
 
 // 5. HỆ THỐNG XÁC THỰC (SỬA LỖI SWAL)
-// 5. HỆ THỐNG XÁC THỰC (ĐÃ TỐI ƯU QUY TRÌNH OTP)
 async function authUI() {
+    // 1. Kiểm tra trạng thái đăng nhập
     if (token) {
         const result = await Swal.fire({
             title: await gt('Tài khoản'),
@@ -491,6 +491,7 @@ async function authUI() {
         return;
     }
 
+    // 2. Giao diện Form
     const { value: form, isConfirmed, isDenied } = await Swal.fire({
         title: await gt('Đăng nhập / Đăng ký'),
         html: `
@@ -523,28 +524,32 @@ async function authUI() {
 
         if (data.success) {
             if (action === 'register') {
-                // Đóng UI cũ và hiện thông báo "ông giáo"
+                // Tắt loading và hiện thông báo "ông giáo"
                 await Swal.fire({
                     title: await gt('Thành công'),
-                    text: data.message, // Hiển thị: "Check OTP trong email đi ông giáo!"
+                    text: data.message, // "Check OTP trong email đi ông giáo!"
                     icon: 'success',
                     timer: 2500,
                     timerProgressBar: true,
-                    confirmButtonText: 'Nhập mã ngay'
+                    confirmButtonText: 'Nhập OTP'
                 });
-                // Tự động chuyển sang UI OTP
+                
+                // TỰ ĐỘNG TẮT UI TRƯỚC VÀ HIỆN OTP
                 verifyOTPUI(form.email);
             } else {
                 localStorage.setItem('token', data.token);
                 location.reload();
             }
-        } else if (data.needs_verify) {
-            verifyOTPUI(form.email);
         } else {
-            Swal.fire('Thất bại', data.error || 'Lỗi không xác định', 'error');
+            // Trường hợp lỗi (Ví dụ: Email đã tồn tại)
+            Swal.fire({
+                title: await gt('Thất bại'),
+                text: await gt(data.error || 'Lỗi không xác định'),
+                icon: 'error'
+            });
         }
     } catch (e) {
-        Swal.fire('Lỗi kết nối', 'Server không phản hồi', 'error');
+        Swal.fire('Lỗi', 'Không thể kết nối Server', 'error');
     }
 }
 
