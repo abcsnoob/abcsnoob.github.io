@@ -405,32 +405,62 @@ async function createMsgUI(text, role, image = null, isHistory = false) {
 }
 
 // 4. LOGIC GỬI TIN NHẮN & GỌI AI
+// 4. LOGIC GỬI TIN NHẮN & GỌI AI (Bản đã fix lỗi Vision)
 async function send() {
     const input = document.getElementById('user-input');
     const text = input.value.trim();
+    
+    // Kiểm tra nếu không có cả text lẫn ảnh thì không gửi
     if ((!text && !selectedImageData) || isTyping) return;
 
     const currentImg = selectedImageData;
+    
+    // Hiển thị tin nhắn của người dùng lên UI ngay lập tức
     createMsgUI(text, 'user', currentImg);
     
-    chatHistory.push({ role: "user", parts: [{ text: text || "Analyze this content" }] });
+    // --- BẮT ĐẦU LOGIC ĐÓNG GÓI DỮ LIỆU ---
+    let userParts = [];
+    
+    // 1. Thêm phần văn bản
+    userParts.push({ text: text || "Hãy phân tích hình ảnh này cho tôi." });
+    
+    // 2. Nếu có ảnh, thêm phần inline_data (Multimodal)
+    if (currentImg) {
+        try {
+            const base64Content = currentImg.split(',')[1]; // Bỏ phần tiền tố data:image/...
+            const mimeType = currentImg.split(';')[0].split(':')[1]; // Lấy image/png hoặc image/jpeg
+            
+            userParts.push({
+                inline_data: {
+                    mime_type: mimeType,
+                    data: base64Content
+                }
+            });
+        } catch (e) {
+            console.error("Lỗi xử lý Base64 ảnh:", e);
+        }
+    }
+
+    // Đẩy vào lịch sử chat
+    chatHistory.push({ role: "user", parts: userParts });
+    // --- KẾT THÚC LOGIC ĐÓNG GÓI ---
+
+    // Reset input và preview
     input.value = ''; 
     input.style.height = 'auto';
-    if (window.cancelImg) cancelImg();
+    if (window.cancelImg) cancelImg(); 
     isTyping = true;
 
-    // 1. Tạo node Loading trước
+    // Hiển thị trạng thái đang suy nghĩ
     const chatWindow = document.getElementById('chat-window');
     const loadingDiv = document.createElement('div');
     const loadingId = 'loading-' + Date.now();
     loadingDiv.id = loadingId;
     loadingDiv.className = 'msg-group notranslate mb-4';
     
-    // 2. Dịch văn bản loading
     const loadingText = await gt("Noob AI đang suy nghĩ...");
     loadingDiv.innerHTML = `<div class="msg-header" style="color:#00ff88"><i class="fa-solid fa-circle-notch fa-spin"></i> ${loadingText}</div>`;
     
-    // 3. Đưa vào giao diện
     chatWindow.appendChild(loadingDiv);
     chatWindow.scrollTo({ top: chatWindow.scrollHeight, behavior: 'smooth' });
 
@@ -440,6 +470,7 @@ async function send() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ 
                 action: 'chat_ai', 
+                // Gửi 12 câu gần nhất để AI giữ được ngữ cảnh (context)
                 messages: chatHistory.slice(-12),
                 user_lang: user_lang 
             })
@@ -447,19 +478,19 @@ async function send() {
 
         const data = await response.json();
         
-        // 4. KIỂM TRA TRƯỚC KHI TÁC ĐỘNG VÀO DOM
+        // Xóa dòng loading
         const loaderEl = document.getElementById(loadingId);
-        
-if (data.success) {
-    // Chỗ này hàm createMsgUI giờ đã có async/await nên sẽ chạy hiệu ứng đánh máy
-await createMsgUI(data.text, 'model', null, false); 
-    chatHistory.push({ role: "model", parts: [{ text: data.text }] });
-    saveToLocal();
-} else {
+        if (loaderEl) loaderEl.remove();
+
+        if (data.success) {
+            // Hiển thị câu trả lời của AI với hiệu ứng đánh máy
+            await createMsgUI(data.text, 'model', null, false); 
+            chatHistory.push({ role: "model", parts: [{ text: data.text }] });
+            saveToLocal(); // Lưu vào localStorage
+        } else {
             throw new Error(data.error || "API Error");
         }
     } catch (error) {
-        // 5. XỬ LÝ LỖI AN TOÀN
         const loaderEl = document.getElementById(loadingId);
         if (loaderEl) {
             const errorText = await gt("Lỗi");
