@@ -515,6 +515,7 @@ if (token) {
     try {
         const res = await fetch(WORKER_URL, {
             method: 'POST',
+            headers: { 'Content-Type': 'application/json' }, // THÊM DÒNG NÀY
             body: JSON.stringify({ action, email: form.email, password: form.password })
         });
         const data = await res.json();
@@ -552,6 +553,7 @@ const { value: otp } = await Swal.fire({
     Swal.showLoading();
     const res = await fetch(WORKER_URL, {
         method: 'POST',
+        headers: { 'Content-Type': 'application/json' }, // THÊM DÒNG NÀY
         body: JSON.stringify({ action: 'verify_otp', email, otp })
     });
     const data = await res.json();
