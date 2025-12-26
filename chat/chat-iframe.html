@@ -473,7 +473,6 @@ await createMsgUI(data.text, 'model', null, false);
 
 // 5. HỆ THỐNG XÁC THỰC (SỬA LỖI SWAL)
 async function authUI() {
-    // 1. Kiểm tra nếu đã có token (đã đăng nhập)
     if (token) {
         const result = await Swal.fire({
             title: await gt('Tài khoản'),
@@ -491,7 +490,6 @@ async function authUI() {
         return;
     }
 
-    // 2. Hiện Form Đăng nhập / Đăng ký
     const { value: form, isConfirmed } = await Swal.fire({
         title: await gt('Đăng nhập / Đăng ký'),
         html: `
@@ -511,7 +509,6 @@ async function authUI() {
 
     if (!form) return;
 
-    // Xác định action: Nếu ấn nút Confirm (Đăng nhập) thì action='login', nút Deny (Tạo mới) thì action='register'
     const action = isConfirmed ? 'login' : 'register';
     Swal.showLoading();
 
@@ -525,29 +522,27 @@ async function authUI() {
 
         if (data.success) {
             if (action === 'register') {
-                // CHỖ NÀY QUAN TRỌNG: Phải dùng .then() hoặc await để đợi user ấn "OK" rồi mới gọi verifyOTPUI
-                Swal.fire({
+                // SỬA LẠI ĐOẠN NÀY: Dùng await để đảm bảo popup thành công đóng hẳn rồi mới hiện OTP
+                await Swal.fire({
                     title: 'Thành công',
                     text: data.message, // "Check OTP trong email đi ông giáo!"
                     icon: 'success',
                     confirmButtonText: 'Nhập mã OTP ngay'
-                }).then((result) => {
-                    if (result.isConfirmed || result.isDismissed) {
-                        verifyOTPUI(form.email); // Hiện chỗ nhập code ở đây!
-                    }
                 });
+                
+                // Sau khi user ấn nút OK, hàm này sẽ được gọi
+                verifyOTPUI(form.email);
             } else {
                 localStorage.setItem('token', data.token);
                 location.reload();
             }
         } else if (data.needs_verify) {
-            // Trường hợp tài khoản tồn tại nhưng chưa verify
             verifyOTPUI(form.email);
         } else {
-            Swal.fire('Thất bại', data.error, 'error');
+            Swal.fire('Thất bại', data.error || 'Lỗi không xác định', 'error');
         }
     } catch (e) {
-        Swal.fire('Lỗi', 'Server không phản hồi, chắc đang bận đào Bitcoin rồi 🐧', 'error');
+        Swal.fire('Lỗi kết nối', 'Server đang bận đào Bitcoin rồi, thử lại sau nhé! 🐧', 'error');
     }
 }
 
