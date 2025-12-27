@@ -3,383 +3,430 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Abc's Noob AI | Pro Dashboard</title>
+    <title>Noob AI | Ultimate Pro Interface</title>
     
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap" rel="stylesheet">
 
     <style>
         :root {
-            --primary: #5865F2; --primary-hover: #4752C4;
-            --bg-darker: #1e1f22; --bg-main: #2b2d31;
-            --bg-sidebar: #2b2d31; --bg-msg: #313338;
-            --text-normal: #dbdee1; --text-muted: #949ba4;
-            --border: rgba(255,255,255,0.05);
+            --primary: #00d2ff;
+            --secondary: #9d50bb;
+            --accent: #6e48aa;
+            --bg-dark: #05070a;
+            --glass: rgba(255, 255, 255, 0.03);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --text-muted: #8a8f98;
         }
 
-        /* Scrollbar tinh tế kiểu Dev */
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #1a1a1a; border-radius: 10px; }
-
-        body { 
-            background: var(--bg-darker); color: var(--text-normal); 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            height: 100dvh; overflow: hidden; display: flex; margin: 0; 
+        body {
+            background: radial-gradient(circle at top right, #111827, #05070a);
+            color: #fff;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            height: 100dvh;
+            overflow: hidden;
+            display: flex;
+            margin: 0;
         }
 
-        /* --- SIDEBAR SYSTEM --- */
+        /* --- SIDEBAR COMPLEX --- */
         #sidebar {
-            width: 300px; background: var(--bg-sidebar); border-right: 1px solid var(--border);
-            display: flex; flex-direction: column; transition: 0.3s; z-index: 1001;
+            width: 300px;
+            background: rgba(10, 12, 17, 0.8);
+            backdrop-filter: blur(20px);
+            border-right: 1px solid var(--glass-border);
+            display: flex;
+            flex-direction: column;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 1001;
         }
 
-        .server-header {
-            height: 60px; padding: 0 16px; display: flex; align-items: center;
-            border-bottom: 1px solid var(--border); font-weight: 800; font-size: 1.1rem;
-            box-shadow: 0 1px 0 rgba(0,0,0,0.1); color: #fff;
+        .brand-section {
+            padding: 30px 24px;
+            background: linear-gradient(to bottom, rgba(0, 210, 255, 0.05), transparent);
         }
 
-        .section-label {
-            padding: 20px 16px 8px; font-size: 12px; font-weight: 700;
-            color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;
-            display: flex; justify-content: space-between; align-items: center;
+        .logo-box {
+            width: 45px; height: 45px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 0 20px rgba(0, 210, 255, 0.3);
+            margin-bottom: 15px;
         }
 
-        .nav-list { flex: 1; overflow-y: auto; padding: 0 8px; }
-        .nav-item {
-            padding: 8px 12px; border-radius: 4px; margin-bottom: 2px;
-            cursor: pointer; transition: 0.1s; display: flex; align-items: center;
-            color: var(--text-muted); font-size: 15px; position: relative;
-        }
-        .nav-item:hover { background: #35373c; color: #dbdee1; }
-        .nav-item.active { background: #3f4147; color: #fff; }
-        .nav-item i { width: 24px; font-size: 18px; margin-right: 12px; opacity: 0.7; }
-
-        .user-panel {
-            background: #232428; padding: 10px 16px; display: flex; 
-            align-items: center; gap: 12px; border-top: 1px solid var(--border);
-        }
-        .avatar {
-            width: 38px; height: 38px; border-radius: 50%; background: var(--primary);
-            display: flex; align-items: center; justify-content: center; font-weight: bold;
-        }
-
-        /* --- MAIN CHAT AREA --- */
-        #main-container { flex: 1; display: flex; flex-direction: column; background: var(--bg-main); }
+        .nav-container { flex: 1; overflow-y: auto; padding: 10px 16px; }
         
-        .chat-header {
-            height: 60px; padding: 0 20px; display: flex; align-items: center;
-            justify-content: space-between; border-bottom: 1px solid var(--border);
-            background: var(--bg-main);
+        .nav-label {
+            font-size: 11px; font-weight: 800; color: var(--text-muted);
+            text-transform: uppercase; letter-spacing: 1.5px;
+            margin: 25px 0 10px 10px;
+        }
+
+        .chat-item {
+            padding: 12px 16px; border-radius: 14px; margin-bottom: 6px;
+            cursor: pointer; transition: 0.3s;
+            display: flex; align-items: center; gap: 12px;
+            border: 1px solid transparent; color: #ced4da;
+            position: relative; overflow: hidden;
+        }
+
+        .chat-item:hover { background: var(--glass); color: #fff; border-color: var(--glass-border); }
+        .chat-item.active {
+            background: linear-gradient(90deg, rgba(0, 210, 255, 0.1), transparent);
+            border-color: rgba(0, 210, 255, 0.3); color: var(--primary);
+        }
+        .chat-item.active::before {
+            content: ''; position: absolute; left: 0; top: 20%; bottom: 20%;
+            width: 3px; background: var(--primary); border-radius: 0 4px 4px 0;
+        }
+
+        /* --- MAIN AREA --- */
+        #main-content { flex: 1; display: flex; flex-direction: column; position: relative; }
+
+        .header-bar {
+            height: 75px; padding: 0 30px; border-bottom: 1px solid var(--glass-border);
+            display: flex; align-items: center; justify-content: space-between;
+            background: rgba(5, 7, 10, 0.4); backdrop-filter: blur(10px);
         }
 
         #chat-window {
-            flex: 1; overflow-y: auto; padding: 20px 0; display: flex; flex-direction: column;
+            flex: 1; overflow-y: auto; padding: 40px 15%;
+            scroll-behavior: smooth;
         }
 
-        .msg-row {
-            padding: 10px 20px; display: flex; gap: 16px; transition: 0.1s;
+        /* --- MESSAGE STYLING --- */
+        .msg-box { margin-bottom: 40px; display: flex; gap: 20px; animation: slideUp 0.5s ease; }
+        .msg-avatar {
+            width: 42px; height: 42px; border-radius: 12px; flex-shrink: 0;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 800; border: 1px solid var(--glass-border);
         }
-        .msg-row:hover { background: rgba(0,0,0,0.05); }
-        .msg-avatar { width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0; }
-        .msg-body { flex: 1; }
-        .msg-info { display: flex; align-items: baseline; gap: 8px; margin-bottom: 4px; }
-        .msg-author { font-weight: 600; color: #fff; }
-        .msg-time { font-size: 12px; color: var(--text-muted); }
-        .msg-content { line-height: 1.5; font-size: 15px; white-space: pre-wrap; }
+        .msg-content-wrapper { flex: 1; }
+        .msg-header { margin-bottom: 8px; display: flex; align-items: center; gap: 10px; }
+        .msg-name { font-weight: 700; font-size: 14px; letter-spacing: 0.5px; }
+        .msg-text { 
+            font-size: 16px; line-height: 1.8; color: #e1e1e1;
+            background: var(--glass); padding: 15px 20px; border-radius: 0 18px 18px 18px;
+            border: 1px solid var(--glass-border);
+        }
+        .user-msg .msg-text { background: rgba(0, 210, 255, 0.05); border-color: rgba(0, 210, 255, 0.1); }
 
-        /* --- INPUT AREA --- */
-        .input-wrapper { padding: 0 20px 24px; position: relative; }
-        .input-box {
-            background: #383a40; border-radius: 8px; padding: 10px 16px;
+        /* --- INPUT COMPLEX --- */
+        .input-floating-area {
+            padding: 20px 15% 40px;
+            background: linear-gradient(to top, var(--bg-dark) 60%, transparent);
+        }
+
+        .input-glass-box {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px; padding: 12px 20px;
             display: flex; align-items: flex-end; gap: 15px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.4);
+            transition: 0.3s;
         }
-        #user-input {
-            flex: 1; background: transparent; border: none; color: #dbdee1;
-            outline: none; resize: none; max-height: 400px; padding: 5px 0;
+        .input-glass-box:focus-within { border-color: var(--primary); box-shadow: 0 0 25px rgba(0, 210, 255, 0.15); }
+
+        textarea#user-input {
+            flex: 1; background: transparent; border: none; color: #fff;
+            outline: none; resize: none; min-height: 30px; max-height: 200px;
+            font-size: 15px; padding: 8px 0;
         }
 
-        /* --- MODAL & OVERLAY --- */
+        /* --- MODALS --- */
         .noob-overlay {
-            position: fixed; inset: 0; background: rgba(0,0,0,0.8);
-            display: none; align-items: center; justify-content: center; z-index: 2000;
-            backdrop-filter: blur(5px);
+            position: fixed; inset: 0; background: rgba(0,0,0,0.85);
+            display: none; align-items: center; justify-content: center;
+            z-index: 9999; backdrop-filter: blur(15px);
         }
-        .noob-modal {
-            background: var(--bg-main); width: 90%; max-width: 440px;
-            border-radius: 8px; padding: 24px; box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+        .noob-card {
+            background: #0f1218; border: 1px solid var(--glass-border);
+            border-radius: 30px; width: 90%; max-width: 440px; padding: 40px;
+            box-shadow: 0 30px 100px rgba(0,0,0,0.8);
         }
-        .form-control-noob {
-            background: #1e1f22; border: 1px solid transparent; color: #fff;
-            padding: 10px; border-radius: 4px; width: 100%; margin-bottom: 15px;
-        }
-        .form-control-noob:focus { border-color: var(--primary); outline: none; }
 
-        /* Mobile Fix */
-        @media (max-width: 768px) {
-            #sidebar { position: fixed; left: -300px; height: 100%; width: 280px; }
-            #sidebar.open { left: 0; }
+        .modern-input {
+            width: 100%; background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border);
+            color: #fff; padding: 16px 20px; border-radius: 16px; margin-bottom: 20px;
+            outline: none; transition: 0.3s;
         }
+        .modern-input:focus { border-color: var(--primary); background: rgba(255,255,255,0.05); }
+
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-thumb { background: var(--glass-border); border-radius: 10px; }
     </style>
 </head>
 <body>
 
     <aside id="sidebar">
-        <div class="server-header">
-            <i class="fa-solid fa-code-branch me-2 text-primary"></i> NOOB DEV CENTER
+        <div class="brand-section">
+            <div class="logo-box"><i class="fa-solid fa-bolt-lightning text-white fs-4"></i></div>
+            <h4 class="fw-800 m-0">NOOB <span class="text-primary">AI</span></h4>
+            <p class="small text-muted m-0">Ultimate Developer Kit</p>
         </div>
 
-        <div class="nav-list">
-            <div class="section-label">Tin nhắn riêng</div>
-            <div id="personal-chats"></div>
+        <div class="px-3 mb-3">
+            <button class="btn btn-primary w-100 py-3 rounded-4 fw-bold shadow-lg" onclick="startNewChat()">
+                <i class="fa-solid fa-plus me-2"></i> Trò chuyện mới
+            </button>
+        </div>
 
-            <div class="section-label">
-                Nhóm của ông giáo
-                <i class="fa-solid fa-plus-circle ms-auto" style="cursor:pointer" onclick="openModal('modal-create-group')"></i>
-            </div>
+        <div class="nav-container">
+            <div class="nav-label">Personal History</div>
+            <div id="history-list"></div>
+
+            <div class="nav-label">Team Groups</div>
             <div id="group-list"></div>
         </div>
 
-        <div class="user-panel">
-            <div class="avatar" id="user-avatar">?</div>
-            <div class="flex-grow-1 overflow-hidden">
-                <div class="fw-bold text-white text-truncate" id="user-name">Guest Noob</div>
-                <div class="small text-muted" id="user-email-display">Đăng nhập để lưu data</div>
+        <div class="p-4 border-top border-secondary mt-auto">
+            <div id="user-display" class="d-flex align-items-center gap-3 mb-3">
+                <div class="avatar-sm rounded-circle bg-secondary p-1" style="width:35px;height:35px"></div>
+                <span class="small fw-bold opacity-75">Guest Mode</span>
             </div>
-            <i class="fa-solid fa-gear text-muted" style="cursor:pointer" onclick="openModal('modal-profile')"></i>
+            <button class="btn btn-outline-light w-100 rounded-3 py-2 border-0 bg-white bg-opacity-10" onclick="handleAuthAction()">
+                <i class="fa-solid fa-gear me-2"></i> <span id="auth-text">Cài đặt / Đăng nhập</span>
+            </button>
         </div>
     </aside>
 
-    <div id="main-container">
-        <nav class="chat-header">
-            <div class="d-flex align-items-center">
-                <i class="fa-solid fa-bars d-md-none me-3" onclick="toggleSidebar()"></i>
-                <span class="text-muted fs-4 me-2">#</span>
-                <span class="fw-bold" id="active-chat-title">Chào mừng ông giáo</span>
+    <main id="main-content">
+        <nav class="header-bar">
+            <div class="d-flex align-items-center gap-3">
+                <i class="fa-solid fa-bars-staggered d-md-none fs-4" onclick="document.getElementById('sidebar').classList.toggle('active')"></i>
+                <h5 class="m-0 fw-bold" id="chat-title">Hệ thống sẵn sàng</h5>
             </div>
             <div class="d-flex gap-3">
-                <i class="fa-solid fa-users text-muted" style="cursor:pointer" onclick="showGroupMembers()" id="member-btn" style="display:none"></i>
-                <i class="fa-solid fa-user-plus text-muted" style="cursor:pointer" onclick="openModal('modal-invite')" id="invite-btn" style="display:none"></i>
-                <i class="fa-solid fa-trash-can text-muted" onclick="clearCurrentChat()"></i>
+                <button class="btn btn-dark rounded-circle" onclick="openModal('modal-create-group')"><i class="fa-solid fa-plus"></i></button>
+                <div class="vr mx-2 opacity-25"></div>
+                <button class="btn btn-danger btn-sm rounded-pill px-3" onclick="clearChat()">Làm sạch</button>
             </div>
         </nav>
 
-        <main id="chat-window">
-            <div class="text-center p-5 opacity-25">
-                <i class="fa-solid fa-comments fa-4x mb-3"></i>
-                <h4>Chưa có hội thoại nào</h4>
-                <p>Chọn một nhóm hoặc tạo tin nhắn mới để bắt đầu gank code.</p>
-            </div>
-        </main>
-
-        <div class="input-wrapper">
-            <div class="input-box">
-                <button class="btn p-0 text-muted" onclick="document.getElementById('img-upload').click()">
-                    <i class="fa-solid fa-circle-plus fs-5"></i>
-                </button>
-                <input type="file" id="img-upload" hidden accept="image/*" onchange="previewImage(this)">
-                <textarea id="user-input" rows="1" placeholder="Gửi tin nhắn..."></textarea>
-                <button class="btn btn-link text-primary p-0" onclick="sendMessage()">
-                    <i class="fa-solid fa-paper-plane fs-5"></i>
-                </button>
-            </div>
-            <div id="p-preview-container" class="mt-2" style="display:none">
-                 <img id="p-preview" style="height:60px; border-radius:8px; border:1px solid var(--primary)">
-            </div>
-        </div>
-    </div>
-
-    <div class="noob-overlay" id="overlay" onclick="handleOverlayClick(event)">
-        <div id="modal-profile" class="noob-modal" style="display:none">
-            <h5 class="fw-bold mb-3">Hồ sơ Pro</h5>
-            <div id="auth-section">
-                <input type="email" id="auth-email" class="form-control-noob" placeholder="Email">
-                <input type="password" id="auth-pass" class="form-control-noob" placeholder="Mật khẩu">
-                <div class="d-flex gap-2">
-                    <button class="btn btn-primary flex-grow-1" onclick="handleAuth('login')">Đăng nhập</button>
-                    <button class="btn btn-outline-light flex-grow-1" onclick="handleAuth('register')">Đăng ký</button>
+        <section id="chat-window">
+            <div class="text-center py-5 mt-5 welcome-view">
+                <h1 class="display-4 fw-800 mb-3" style="background: linear-gradient(to right, #fff, #444); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Build something great.</h1>
+                <p class="text-muted fs-5">Hỏi Noob AI về JS/CSS, tối ưu hệ thống Minecraft hoặc Bitcoin logic.</p>
+                <div class="d-flex justify-content-center gap-2 mt-4">
+                    <span class="badge bg-white bg-opacity-10 p-3 rounded-4">#JavaScript</span>
+                    <span class="badge bg-white bg-opacity-10 p-3 rounded-4">#Satoshi</span>
+                    <span class="badge bg-white bg-opacity-10 p-3 rounded-4">#DevLogic</span>
                 </div>
             </div>
-            <div id="profile-section" style="display:none">
-                <label class="small text-muted mb-2">Username hiển thị</label>
-                <input type="text" id="new-username" class="form-control-noob">
-                <button class="btn btn-primary w-100" onclick="updateUsername()">Lưu thay đổi</button>
-                <button class="btn btn-danger w-100 mt-2" onclick="logout()">Đăng xuất</button>
+        </section>
+
+        <div class="input-floating-area">
+            <div id="image-preview-container" class="mb-3" style="display:none">
+                <div class="position-relative d-inline-block">
+                    <img id="img-render" style="height:80px; border-radius:15px; border:2px solid var(--primary)">
+                    <button class="btn btn-danger btn-sm position-absolute top-0 start-100 translate-middle rounded-circle" onclick="removeImage()">×</button>
+                </div>
+            </div>
+            <div class="input-glass-box">
+                <input type="file" id="file-hidden" hidden onchange="handleImage(this)">
+                <button class="btn btn-link text-muted p-0" onclick="document.getElementById('file-hidden').click()"><i class="fa-solid fa-paperclip fs-5"></i></button>
+                <textarea id="user-input" rows="1" placeholder="Nhập yêu cầu của ông giáo vào đây..."></textarea>
+                <button class="btn btn-primary rounded-circle" style="width:45px; height:45px" onclick="handleSendMessage()">
+                    <i class="fa-solid fa-arrow-up"></i>
+                </button>
             </div>
         </div>
+    </main>
 
-        <div id="modal-create-group" class="noob-modal" style="display:none">
-            <h5 class="fw-bold mb-3">Tạo Nhóm Mới</h5>
-            <input type="text" id="group-name-input" class="form-control-noob" placeholder="Tên nhóm chat">
-            <button class="btn btn-primary w-100" onclick="createGroup()">Khởi tạo ngay</button>
+    <div id="noob-overlay" class="noob-overlay" onclick="closeAllModals(event)">
+        <div id="modal-auth" class="noob-card" style="display:none">
+            <h3 class="fw-bold mb-4">Danh tính Pro</h3>
+            <input type="email" id="f-email" class="modern-input" placeholder="Email của ông giáo">
+            <input type="password" id="f-pass" class="modern-input" placeholder="Mật khẩu">
+            <div class="d-flex justify-content-between align-items-center">
+                <a href="#" class="small text-primary text-decoration-none" onclick="toggleAuthMode()">Chưa có acc? Đăng ký</a>
+                <button class="btn btn-primary px-5 py-3 rounded-pill fw-bold" onclick="submitAuth()">Tiếp tục</button>
+            </div>
         </div>
-
-        <div id="modal-invite" class="noob-modal" style="display:none">
-            <h5 class="fw-bold mb-3">Mời đồng đội</h5>
-            <p class="small text-muted">Nhập email của người dùng Noob AI khác.</p>
-            <input type="email" id="invite-email" class="form-control-noob" placeholder="friend@example.com">
-            <button class="btn btn-primary w-100" onclick="inviteUser()">Gửi lời mời</button>
+        <div id="modal-otp" class="noob-card" style="display:none">
+            <h3 class="fw-bold mb-2">Check Mail</h3>
+            <p class="text-muted small mb-4">Nhập 6 số vừa bay vào hòm thư.</p>
+            <input type="text" id="f-otp" class="modern-input text-center fs-2 fw-bold" placeholder="000000" maxlength="6">
+            <button class="btn btn-primary w-100 py-3 rounded-pill fw-bold" onclick="submitOTP()">Kích hoạt ngay</button>
+        </div>
+        <div id="modal-create-group" class="noob-card" style="display:none">
+            <h3 class="fw-bold mb-4">Tạo nhóm Team</h3>
+            <input type="text" id="f-group-name" class="modern-input" placeholder="Tên nhóm chat">
+            <button class="btn btn-primary w-100 py-3 rounded-pill fw-bold" onclick="createGroup()">Khởi tạo server</button>
         </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
-    
-    <script>
-        const WORKER_URL = 'https://abcsnoobai.abcsnoob.workers.dev'; // THAY URL CỦA ÔNG GIÁO VÀO
-        let currentUser = JSON.parse(localStorage.getItem('noob_user')) || null;
-        let activeGroupId = null;
-        let selectedImg = null;
-        let groups = [];
 
-        // --- CORE UI ---
-        function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
-        
+    <script>
+        const API_BASE = 'https://abcsnoobai.abcsnoob.workers.dev';
+        let currentChatHistory = [];
+        let activeGroupId = null;
+        let activeFolderId = null;
+        let selectedBase64 = null;
+        let authAction = 'login';
+
+        // --- UI CORE ---
         function openModal(id) {
-            document.getElementById('overlay').style.display = 'flex';
-            document.querySelectorAll('.noob-modal').forEach(m => m.style.display = 'none');
+            document.getElementById('noob-overlay').style.display = 'flex';
+            document.querySelectorAll('.noob-card').forEach(c => c.style.display = 'none');
             document.getElementById(id).style.display = 'block';
         }
-
-        function handleOverlayClick(e) { if(e.target.id === 'overlay') document.getElementById('overlay').style.display = 'none'; }
-
-        function showNotify(msg, type='info') {
-            alert(msg); // Thay bằng Toast nếu muốn xịn hơn
+        function closeAllModals(e) { if(!e || e.target.id === 'noob-overlay') document.getElementById('noob-overlay').style.display = 'none'; }
+        
+        function toggleAuthMode() {
+            authAction = (authAction === 'login') ? 'register' : 'login';
+            document.querySelector('#modal-auth h3').innerText = authAction === 'login' ? 'Danh tính Pro' : 'Đăng ký Noob AI';
         }
 
-        // --- AUTH LOGIC ---
-        async function handleAuth(mode) {
-            const email = document.getElementById('auth-email').value;
-            const password = document.getElementById('auth-pass').value;
-            const res = await fetch(WORKER_URL, {
-                method: 'POST',
-                body: JSON.stringify({ action: mode, email, password })
-            });
+        // --- AUTH LOGIC (KHỚP 100% BACKEND) ---
+        async function submitAuth() {
+            const email = document.getElementById('f-email').value;
+            const password = document.getElementById('f-pass').value;
+            const res = await fetch(API_BASE, { method: 'POST', body: JSON.stringify({ action: authAction, email, password })});
             const d = await res.json();
             if(d.success) {
-                localStorage.setItem('noob_token', d.token);
-                localStorage.setItem('noob_user', JSON.stringify({ email, username: email.split('@')[0] }));
-                location.reload();
-            } else showNotify(d.error);
+                if(authAction === 'register') { alert(d.message); openModal('modal-otp'); }
+                else { localStorage.setItem('noob_token', d.token); location.reload(); }
+            } else { alert(d.error); if(d.needs_verify) openModal('modal-otp'); }
         }
 
-        function updateUIAuth() {
-            if(currentUser) {
-                document.getElementById('auth-section').style.display = 'none';
-                document.getElementById('profile-section').style.display = 'block';
-                document.getElementById('user-name').innerText = currentUser.username;
-                document.getElementById('user-email-display').innerText = currentUser.email;
-                document.getElementById('user-avatar').innerText = currentUser.username[0].toUpperCase();
-                loadGroups();
+        async function submitOTP() {
+            const email = document.getElementById('f-email').value;
+            const otp = document.getElementById('f-otp').value;
+            const res = await fetch(API_BASE, { method: 'POST', body: JSON.stringify({ action: 'verify_otp', email, otp })});
+            const d = await res.json();
+            if(d.success) { localStorage.setItem('noob_token', d.token); location.reload(); } else alert(d.error);
+        }
+
+        function handleAuthAction() {
+            if(localStorage.getItem('noob_token')) { if(confirm("Ông giáo muốn đăng xuất?")) { localStorage.clear(); location.reload(); }}
+            else openModal('modal-auth');
+        }
+
+        // --- CHAT LOGIC ---
+        async function handleSendMessage() {
+            const input = document.getElementById('user-input');
+            const text = input.value.trim();
+            if(!text && !selectedBase64) return;
+
+            document.querySelector('.welcome-view')?.remove();
+            renderMessage(text, 'user', selectedBase64);
+            input.value = ''; removeImage();
+
+            const token = localStorage.getItem('noob_token');
+            const email = token ? atob(token) : null;
+
+            let payload = { user_lang: 'auto' };
+            if(activeGroupId) {
+                payload.action = 'send_group_msg';
+                payload.email = email;
+                payload.data = { groupId: activeGroupId, text, senderName: email ? email.split('@')[0] : 'Noob' };
+            } else {
+                currentChatHistory.push({ role: 'user', parts: [{ text }] });
+                payload.messages = currentChatHistory.slice(-10);
+            }
+
+            const res = await fetch(API_BASE, { method: 'POST', body: JSON.stringify(payload) });
+            const d = await res.json();
+            if(d.success) {
+                renderMessage(d.text, 'model');
+                if(!activeGroupId) currentChatHistory.push({ role: 'model', parts: [{ text: d.text }] });
             }
         }
 
-        function logout() { localStorage.clear(); location.reload(); }
+        function renderMessage(text, role, img = null) {
+            const win = document.getElementById('chat-window');
+            const isBot = (role === 'model');
+            const div = document.createElement('div');
+            div.className = `msg-box ${isBot ? 'bot-msg' : 'user-msg'}`;
+            
+            div.innerHTML = `
+                <div class="msg-avatar" style="background:${isBot?'var(--primary)':'var(--secondary)'}">
+                    ${isBot ? 'A' : 'U'}
+                </div>
+                <div class="msg-content-wrapper">
+                    <div class="msg-header">
+                        <span class="msg-name">${isBot ? "ABC'S NOOB AI" : "ME"}</span>
+                    </div>
+                    ${img ? `<img src="${img}" style="max-width:300px; border-radius:15px; margin-bottom:15px; border:1px solid var(--glass-border)">` : ''}
+                    <div class="msg-text">${marked.parse(text)}</div>
+                </div>
+            `;
+            win.appendChild(div);
+            win.scrollTop = win.scrollHeight;
+            Prism.highlightAllUnder(div);
+        }
 
-        // --- GROUP & MESSAGE LOGIC ---
-        async function loadGroups() {
+        // --- GROUP & HISTORY UI ---
+        async function loadData() {
             const token = localStorage.getItem('noob_token');
-            const res = await fetch(WORKER_URL, {
-                method: 'POST',
-                body: JSON.stringify({ action: 'get_my_groups', email: currentUser.email })
-            });
+            if(!token) return;
+            const email = atob(token);
+            document.querySelector('#user-display span').innerText = email.split('@')[0];
+            document.getElementById('auth-text').innerText = "Đăng xuất tài khoản";
+
+            // Load Groups from D1
+            const res = await fetch(API_BASE, { method: 'POST', body: JSON.stringify({ action: 'get_my_groups', email })});
             const d = await res.json();
             if(d.success) {
                 const list = document.getElementById('group-list');
                 list.innerHTML = d.groups.map(g => `
-                    <div class="nav-item" onclick="switchGroup('${g.id}', '${g.name}')">
-                        <i class="fa-solid fa-hashtag"></i> ${g.name}
+                    <div class="chat-item" onclick="switchGroup('${g.id}', '${g.name}')">
+                        <i class="fa-solid fa-hashtag text-primary"></i> ${g.name}
                     </div>
                 `).join('');
             }
         }
 
-        async function createGroup() {
-            const name = document.getElementById('group-name-input').value;
-            const res = await fetch(WORKER_URL, {
-                method: 'POST',
-                body: JSON.stringify({ action: 'create_group', email: currentUser.email, data: { groupName: name }})
-            });
-            if((await res.json()).success) { location.reload(); }
-        }
-
         async function switchGroup(id, name) {
             activeGroupId = id;
-            document.getElementById('active-chat-title').innerText = name;
-            document.getElementById('member-btn').style.display = 'block';
-            document.getElementById('invite-btn').style.display = 'block';
-            document.getElementById('chat-window').innerHTML = '<div class="text-center p-5 opacity-50">Đang tải tin nhắn nhóm...</div>';
-            
-            const res = await fetch(WORKER_URL, {
-                method: 'POST',
-                body: JSON.stringify({ action: 'get_group_msgs', email: currentUser.email, data: { groupId: id }})
-            });
+            document.getElementById('chat-title').innerText = "Group: " + name;
+            document.getElementById('chat-window').innerHTML = '<p class="text-center opacity-50">Đang gank dữ liệu nhóm...</p>';
+            const res = await fetch(API_BASE, { method: 'POST', body: JSON.stringify({ action: 'get_group_msgs', email: atob(localStorage.getItem('noob_token')), data: { groupId: id }})});
             const d = await res.json();
-            const win = document.getElementById('chat-window');
-            win.innerHTML = '';
-            if(d.success) {
-                d.messages.forEach(m => renderMsg(m.text, m.sender_name, m.role, m.created_at));
-            }
+            document.getElementById('chat-window').innerHTML = '';
+            if(d.success) d.messages.forEach(m => renderMessage(m.text, m.role, null));
         }
 
-        function renderMsg(text, author, role, time) {
-            const win = document.getElementById('chat-window');
-            const div = document.createElement('div');
-            div.className = 'msg-row';
-            const isBot = (role === 'model');
-            const avatarColor = isBot ? '#5865F2' : '#fbc531';
-            
-            div.innerHTML = `
-                <div class="msg-avatar" style="background:${avatarColor}; display:flex; align-items:center; justify-content:center; color:white; font-weight:bold">
-                    ${author[0].toUpperCase()}
-                </div>
-                <div class="msg-body">
-                    <div class="msg-info">
-                        <span class="msg-author" style="color:${isBot ? '#00d2ff' : '#fff'}">${author}</span>
-                        <span class="msg-time">${new Date(time).toLocaleTimeString()}</span>
-                    </div>
-                    <div class="msg-content">${marked.parse(text)}</div>
-                </div>
-            `;
-            win.appendChild(div);
-            win.scrollTop = win.scrollHeight;
-            if(window.Prism) Prism.highlightAllUnder(div);
+        async function createGroup() {
+            const name = document.getElementById('f-group-name').value;
+            const email = atob(localStorage.getItem('noob_token'));
+            const res = await fetch(API_BASE, { method: 'POST', body: JSON.stringify({ action: 'create_group', email, data: { groupName: name }})});
+            if((await res.json()).success) location.reload();
         }
 
-        async function sendMessage() {
-            const input = document.getElementById('user-input');
-            const text = input.value.trim();
-            if(!text || !activeGroupId) return;
-
-            renderMsg(text, currentUser.username, 'user', new Date());
-            input.value = '';
-            
-            const res = await fetch(WORKER_URL, {
-                method: 'POST',
-                body: JSON.stringify({ 
-                    action: 'send_group_msg', 
-                    email: currentUser.email, 
-                    data: { groupId: activeGroupId, text, senderName: currentUser.username }
-                })
-            });
-            const d = await res.json();
-            if(d.success) renderMsg(d.text, "Abc's Noob", 'model', new Date());
+        // --- VISION ---
+        function handleImage(input) {
+            const file = input.files[0];
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                selectedBase64 = e.target.result;
+                document.getElementById('img-render').src = selectedBase64;
+                document.getElementById('image-preview-container').style.display = 'block';
+            };
+            reader.readAsDataURL(file);
         }
+        function removeImage() { selectedBase64 = null; document.getElementById('image-preview-container').style.display = 'none'; }
 
-        // --- INITIALIZE ---
-        window.onload = () => {
-            updateUIAuth();
-            
-            // Auto-resize textarea
-            const tx = document.getElementById('user-input');
-            tx.addEventListener('input', function() {
-                this.style.height = 'auto';
-                this.style.height = (this.scrollHeight) + 'px';
-            });
-        }
+        function startNewChat() { location.reload(); }
+        function clearChat() { document.getElementById('chat-window').innerHTML = ''; currentChatHistory = []; }
+
+        window.onload = loadData;
+
+        // Auto-resize textarea
+        const tx = document.getElementById('user-input');
+        tx.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = (this.scrollHeight) + 'px';
+        });
     </script>
 </body>
 </html>
