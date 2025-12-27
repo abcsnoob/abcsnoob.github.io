@@ -10,93 +10,98 @@
     
     <style>
         :root { --accent-color: #0d6efd; }
-        body { transition: background-color 0.5s ease, color 0.5s ease; min-height: 100vh; }
+        body { transition: background-color 0.5s ease; min-height: 100vh; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         .redirect-card { 
-            max-width: 550px; 
-            margin: 60px auto; 
+            max-width: 600px; 
+            margin: 40px auto; 
             border-radius: 24px; 
             border: none; 
             background: #fff; 
+            overflow: hidden;
             transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        .platform-display { font-size: 2.5rem; font-weight: 800; color: var(--accent-color); line-height: 1.2; }
-        .domain-sub { font-size: 1rem; color: #6c757d; font-family: 'Courier New', Courier, monospace; word-break: break-all; }
-
-        /* Hiệu ứng nhấp nháy cho icon cảnh báo */
-        @keyframes pulse-red {
-            0% { transform: scale(1); opacity: 1; }
-            50% { transform: scale(1.1); opacity: 0.7; }
-            100% { transform: scale(1); opacity: 1; }
+        .preview-container {
+            width: 100%;
+            height: 250px;
+            background: #e9ecef;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+            border-bottom: 1px solid #dee2e6;
         }
-        .animate-pulse { animation: pulse-red 1.5s infinite; }
+        .preview-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: none;
+        }
+        .platform-display { font-size: 2.2rem; font-weight: 800; color: var(--accent-color); line-height: 1.2; }
+        .domain-sub { font-size: 0.9rem; color: #6c757d; font-family: monospace; }
 
-        /* Chế độ Lockdown Mode (Nguy hiểm) */
+        /* Lockdown Mode */
         body.is-dangerous { background-color: #4a0404 !important; }
-        .is-dangerous .redirect-card { 
-            background-color: #fff; 
-            border: 5px solid #dc3545; 
-            box-shadow: 0 0 30px rgba(220, 53, 69, 0.5) !important; 
-        }
+        .is-dangerous .redirect-card { border: 5px solid #dc3545; box-shadow: 0 0 40px rgba(220, 53, 69, 0.6) !important; }
         .is-dangerous .platform-display { color: #dc3545; }
-        .is-dangerous .btn-primary { display: none; } /* Chặn nút đi tiếp */
+        .is-dangerous .btn-primary, .is-dangerous #timer-text { display: none !important; }
+        .is-dangerous .preview-container { filter: grayscale(1) sepia(1) hue-rotate(-50deg) saturate(2); }
 
-        /* Loader mặc định */
-        .loader-ring {
-            display: inline-block; width: 60px; height: 60px;
-            border: 5px solid rgba(0,0,0,0.05);
-            border-radius: 50%; border-top-color: var(--accent-color);
-            animation: spin 1s ease-in-out infinite;
-        }
         @keyframes spin { to { transform: rotate(360deg); } }
-
-        .logo { width: 30px; margin-right: 10px; border-radius: 50%; }
+        .loader-ring { width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid var(--accent-color); border-radius: 50%; animation: spin 1s linear infinite; }
+        .animate-pulse { animation: pulse-red 1.5s infinite; }
+        @keyframes pulse-red { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
     </style>
 </head>
 <body class="bg-light">
 
-    <nav class="navbar navbar-dark bg-dark sticky-top shadow-sm">
+    <nav class="navbar navbar-dark bg-dark shadow-sm">
         <div class="container justify-content-center">
             <a class="navbar-brand fw-bold" href="./">
-                <img src="./assets/image/abcsnoob.webp" class="logo" alt="Logo">Abc's Noob
+                <img src="./assets/image/abcsnoob.webp" style="width:30px; border-radius:50%; margin-right:10px;">Abc's Noob
             </a>
         </div>
     </nav>
 
-    <div class="container text-center">
-        <div class="card redirect-card shadow-lg p-4 p-md-5">
-            <div id="status-icon" class="mb-4">
-                <div class="loader-ring"></div>
-            </div>
-            
-            <h2 id="msg-header" class="fw-bold text-dark">Đang kiểm tra bảo mật...</h2>
-            
-            <div id="platform" class="platform-display my-3">...</div>
-            <div id="domain-sub" class="domain-sub mb-4"></div>
-
-            <div id="warning-box" class="alert alert-info py-3 shadow-sm">
-                <i class="fa-solid fa-spinner fa-spin me-2"></i>Đang đối soát danh sách đen...
+    <div class="container">
+        <div class="card redirect-card shadow-lg">
+            <div class="preview-container" id="preview-box">
+                <div id="preview-loading" class="text-center">
+                    <div class="loader-ring mx-auto mb-2"></div>
+                    <small class="text-muted">Đang tải ảnh xem trước...</small>
+                </div>
+                <img id="screenshot" class="preview-img" alt="Website Preview">
             </div>
 
-            <p id="timer-text" class="mt-3">
-                Tự động chuyển tiếp sau <span id="countdown" class="fw-bold text-danger">5</span> giây...
-            </p>
-            
-            <div class="d-grid gap-3 mt-4">
-                <a id="direct-link" href="#" class="btn btn-primary btn-lg shadow fw-bold">Tiếp tục truy cập</a>
-                <a href="javascript:history.back()" class="btn btn-outline-secondary btn-lg">Quay lại an toàn</a>
-            </div>
+            <div class="p-4 p-md-5 text-center pt-0">
+                <div id="status-icon" class="mt-n3 mb-3" style="margin-top: -25px; position: relative; z-index: 10;">
+                    <span class="badge rounded-pill bg-white shadow-sm p-3">
+                        <i class="fa-solid fa-shield-halved text-primary fs-3"></i>
+                    </span>
+                </div>
 
-            <p class="small text-muted mt-4">
-                Phát hiện trang web lừa đảo? <a href="./contact" class="text-decoration-none">Báo cáo ngay</a>
-            </p>
+                <h3 id="msg-header" class="fw-bold text-dark">Kiểm tra an toàn...</h3>
+                <div id="platform" class="platform-display my-2">...</div>
+                <div id="domain-sub" class="domain-sub mb-4"></div>
+
+                <div id="warning-box" class="alert alert-secondary py-2 small">
+                    <i class="fa-solid fa-circle-notch fa-spin me-2"></i>Đang xác minh danh tính...
+                </div>
+
+                <p id="timer-text" class="mt-3">Chuyển hướng sau <span id="countdown" class="fw-bold text-danger">5</span> giây...</p>
+                
+                <div class="d-grid gap-2 mt-4">
+                    <a id="direct-link" href="#" class="btn btn-primary btn-lg fw-bold shadow">Tiếp tục ngay</a>
+                    <a href="javascript:history.back()" class="btn btn-outline-secondary">Quay lại an toàn</a>
+                </div>
+            </div>
         </div>
     </div>
 
     <script>
-        // Link API GitHub của bạn
         const API_URL = "https://raw.githubusercontent.com/abcsnoob/apis-json/refs/heads/main/domain_mapping.json";
 
-        async function startSecurityScan() {
+        async function init() {
             const params = new URLSearchParams(window.location.search);
             let target = params.get('to');
             const platformEl = document.getElementById('platform');
@@ -106,88 +111,91 @@
             const warningBox = document.getElementById('warning-box');
             const msgHeader = document.getElementById('msg-header');
             const statusIcon = document.getElementById('status-icon');
+            const screenshotImg = document.getElementById('screenshot');
 
             if (!target) {
-                msgHeader.innerText = "Lỗi liên kết";
-                platformEl.innerText = "Tham số trống";
-                statusIcon.innerHTML = '<i class="fa-solid fa-circle-exclamation fa-4x text-warning"></i>';
+                platformEl.innerText = "Thiếu liên kết";
                 return;
             }
 
-            // Chuẩn hóa đường dẫn
             if (!target.startsWith('http')) target = 'https://' + target;
             directLink.href = target;
+
+            // 1. Hiển thị screenshot (Sử dụng WordPress mShot API - Free & Fast)
+            screenshotImg.src = `https://s0.wp.com/mshots/v1/${encodeURIComponent(target)}?w=600&h=450`;
+            screenshotImg.onload = () => {
+                document.getElementById('preview-loading').style.display = 'none';
+                screenshotImg.style.display = 'block';
+            };
 
             try {
                 const urlObj = new URL(target);
                 const currentDomain = urlObj.hostname.replace(/^www\./, '').toLowerCase();
                 domainSubEl.innerText = currentDomain;
 
-                // Tải dữ liệu JSON
                 const res = await fetch(API_URL);
                 const mapping = await res.json();
 
                 let foundData = null;
                 let isDangerous = false;
+                let isAka = false;
 
-                // Quét Mapping (bao gồm Key chính và mảng AKA)
                 for (const [key, data] of Object.entries(mapping)) {
                     const akaList = data.aka ? data.aka.map(d => d.toLowerCase()) : [];
-                    if (currentDomain === key.toLowerCase() || akaList.includes(currentDomain)) {
+                    
+                    if (key === "dangerous_sites" && akaList.includes(currentDomain)) {
+                        isDangerous = true;
                         foundData = data;
-                        if (key === "dangerous_sites") isDangerous = true;
+                        break;
+                    }
+                    if (currentDomain === key.toLowerCase()) {
+                        foundData = data;
+                        break;
+                    }
+                    if (akaList.includes(currentDomain)) {
+                        foundData = data;
+                        isAka = true;
                         break;
                     }
                 }
 
+                // 2. Xử lý Logic chuyển hướng
                 if (isDangerous) {
-                    // KÍCH HOẠT LOCKDOWN MODE
                     document.body.classList.add('is-dangerous');
-                    statusIcon.innerHTML = '<i class="fa-solid fa-triangle-exclamation fa-5x text-danger animate-pulse"></i>';
-                    msgHeader.innerText = "CẢNH BÁO NGUY HIỂM!";
-                    msgHeader.classList.add('text-danger');
-                    
+                    statusIcon.innerHTML = '<span class="badge rounded-pill bg-danger shadow-sm p-3 animate-pulse"><i class="fa-solid fa-skull-crossbones text-white fs-2"></i></span>';
+                    msgHeader.innerText = "NGUY HIỂM: ĐÃ CHẶN!";
                     platformEl.innerText = foundData.name;
-                    
-                    warningBox.className = "alert alert-danger shadow-sm py-4";
-                    warningBox.innerHTML = `
-                        <h5 class="fw-bold"><i class="fa-solid fa-skull-crossbones me-2"></i> PHÁT HIỆN RỦI RO CAO</h5>
-                        <p class="mb-0">Trang web này đã bị hệ thống đánh dấu là <b>${foundData.type}</b>. 
-                        Dữ liệu của bạn có thể bị đánh cắp nếu tiếp tục truy cập.</p>
-                    `;
-
-                    document.getElementById('timer-text').innerHTML = "<b class='text-warning'>Vì sự an toàn, quá trình tự động chuyển hướng đã bị chặn.</b>";
+                    warningBox.className = "alert alert-danger py-3 shadow-sm";
+                    warningBox.innerHTML = `<b>Cảnh báo:</b> Đây là trang ${foundData.type}. Tuyệt đối không nhập mật khẩu hay thông tin thẻ.`;
+                    document.getElementById('timer-text').style.display = 'none';
                     directLink.classList.add('disabled');
-                    directLink.innerHTML = '<i class="fa-solid fa-ban me-2"></i>Đã chặn truy cập';
-                } else {
-                    // CHẾ ĐỘ AN TOÀN
-                    statusIcon.innerHTML = '<i class="fa-solid fa-circle-check fa-4x text-success"></i>';
-                    msgHeader.innerText = "Bạn sắp ra ngoài rồi đấy!";
+                } 
+                else if (isAka) {
+                    // Nếu là AKA -> Chuyển hướng ngay (Tối ưu băng thông)
+                    window.location.replace(target);
+                } 
+                else {
+                    statusIcon.innerHTML = '<span class="badge rounded-pill bg-success shadow-sm p-3"><i class="fa-solid fa-check text-white fs-3"></i></span>';
+                    msgHeader.innerText = "Liên kết an toàn";
                     platformEl.innerText = foundData ? foundData.name : currentDomain;
+                    warningBox.className = "alert alert-success py-2";
+                    warningBox.innerHTML = `<i class="fa-solid fa-shield-check me-2"></i>Dữ liệu sạch. Chúc bạn trải nghiệm vui vẻ!`;
                     
-                    warningBox.className = "alert alert-success py-3 shadow-sm";
-                    warningBox.innerHTML = `<i class="fa-solid fa-shield-check me-2"></i>Liên kết này được xác định là an toàn.`;
-                    
-                    // Bắt đầu đếm ngược chuyển hướng
-                    let seconds = 5;
+                    let time = 5;
                     const timer = setInterval(() => {
-                        seconds--;
-                        countdownEl.innerText = seconds;
-                        if (seconds <= 0) {
+                        time--;
+                        countdownEl.innerText = time;
+                        if (time <= 0) {
                             clearInterval(timer);
                             window.location.href = target;
                         }
                     }, 1000);
                 }
-
             } catch (e) {
-                console.error("Fetch Error:", e);
-                platformEl.innerText = "Liên kết ngoài";
-                warningBox.innerHTML = "Không thể kết nối API bảo mật. Vui lòng cẩn trọng.";
+                window.location.href = target;
             }
         }
-
-        window.onload = startSecurityScan;
+        window.onload = init;
     </script>
 </body>
 </html>
