@@ -1,246 +1,250 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-<meta charset="UTF-8" />
-<title>Safe Redirect</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Abc's Noob | Link Scanner</title>
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
 <style>
-    body {
-        font-family: system-ui, sans-serif;
-        background: #0f172a;
-        color: #e5e7eb;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        height: 100vh;
-        margin: 0;
-    }
-    .box {
-        background: #020617;
-        border-radius: 12px;
-        padding: 24px;
-        max-width: 480px;
-        width: 100%;
-        box-shadow: 0 20px 40px rgba(0,0,0,.4);
-    }
-    h1 { margin-top: 0; }
-    .danger { color: #ef4444; }
-    .safe { color: #22c55e; }
-    .countdown {
-        font-size: 22px;
-        font-weight: bold;
-        margin-top: 12px;
-    }
-    button {
-        margin-top: 16px;
-        padding: 10px 16px;
-        border-radius: 8px;
-        border: none;
-        background: #2563eb;
-        color: white;
-        cursor: pointer;
-    }
+:root { --danger:#ff4d4d; --primary:#0d6efd; }
+
+body {
+    background:#f8f9fa;
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+    font-family:"Segoe UI",sans-serif;
+}
+
+.redirect-card {
+    max-width:580px;
+    margin:auto;
+    border-radius:28px;
+    border:none;
+    background:#fff;
+    overflow:hidden;
+    box-shadow:0 15px 35px rgba(0,0,0,.15);
+}
+
+.preview-box {
+    width:100%;
+    height:260px;
+    background:#f1f3f5;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    position:relative;
+}
+
+#screenshot {
+    width:100%;
+    height:100%;
+    object-fit:cover;
+    display:none;
+}
+
+.loader {
+    width:45px;
+    height:45px;
+    border:5px solid #eee;
+    border-top:5px solid var(--primary);
+    border-radius:50%;
+    animation:spin 1s linear infinite;
+}
+
+@keyframes spin { to { transform:rotate(360deg); } }
+
+body.is-dangerous {
+    background:#2b0000;
+}
+
+.is-dangerous .redirect-card {
+    border:5px solid var(--danger);
+    outline:100vh solid rgba(0,0,0,.4);
+}
 </style>
 </head>
 
 <body>
-<div class="box">
-    <h1 id="title">Checking…</h1>
-    <p id="desc"></p>
-    <div id="extra"></div>
+
+<nav class="navbar navbar-dark bg-dark">
+<div class="container justify-content-center">
+<a class="navbar-brand fw-bold" href="./">Abc's Noob</a>
+</div>
+</nav>
+
+<div class="container py-5">
+<div class="card redirect-card">
+
+<div class="preview-box">
+    <div id="loading-preview" class="text-center">
+        <div class="loader mx-auto mb-2"></div>
+        <small class="text-muted fw-bold">ĐANG PHÂN TÍCH LIÊN KẾT...</small>
+    </div>
+    <img id="screenshot" alt="Preview">
+</div>
+
+<div class="card-body text-center p-4 p-md-5">
+    <h4 id="msg-header" class="fw-bold text-secondary mb-2">Đang xử lý…</h4>
+    <div id="platform" class="display-6 fw-bold text-primary mb-1">—</div>
+    <div id="domain-sub" class="text-muted font-monospace mb-4">—</div>
+
+    <div id="warning-box" class="alert alert-secondary">
+        Đang kiểm tra dữ liệu…
+    </div>
+
+    <div id="timer-area" style="display:none">
+        <p class="fw-bold text-success">
+            Chuyển hướng sau <span id="countdown">5</span>s
+        </p>
+        <div class="progress" style="height:10px">
+            <div id="progress-bar" class="progress-bar progress-bar-striped progress-bar-animated bg-success"></div>
+        </div>
+    </div>
+
+    <div class="d-grid gap-2 mt-4">
+        <a id="direct-link" class="btn btn-primary btn-lg disabled">Vui lòng chờ…</a>
+        <a href="javascript:history.back()" class="btn btn-outline-secondary">Quay lại</a>
+    </div>
+</div>
+
+</div>
 </div>
 
 <script>
-const API_MAPPING = "https://raw.githubusercontent.com/abcsnoob/apis-json/refs/heads/main/domain_mapping.json";
+const API_MAPPING =
+"https://raw.githubusercontent.com/abcsnoob/apis-json/refs/heads/main/domain_mapping.json";
 
-/* =========================
-   DOMAIN UTILITIES
-========================= */
-function normalizeDomain(host) {
-    return host
-        .toLowerCase()
-        .replace(/^www\./, "")
-        .replace(/:\d+$/, "");
-}
+/* ===== DOMAIN TOOLS ===== */
+const normalize = d =>
+    d.toLowerCase().replace(/^www\./,"").replace(/:\d+$/,"");
 
-function domainMatch(current, target) {
-    return current === target || current.endsWith("." + target);
-}
+const match = (cur, target) =>
+    cur === target || cur.endsWith("." + target);
 
-/* =========================
-   MAIN
-========================= */
-async function init() {
-    const params = new URLSearchParams(window.location.search);
-    let target = params.get("to");
-    if (!target) return;
+/* ===== PREVIEW ===== */
+function loadPreview(url, el) {
+    el.load.style.display = "block";
+    el.img.style.display = "none";
 
-    if (!target.startsWith("http")) {
-        target = "https://" + target;
-    }
-
-    const urlObj = new URL(target);
-    const currentDomain = normalizeDomain(urlObj.hostname);
-
-    const el = {
-        platform: document.getElementById("platform"),
-        domainSub: document.getElementById("domain-sub"),
-        countdown: document.getElementById("countdown"),
-        progressBar: document.getElementById("progress-bar"),
-        directLink: document.getElementById("direct-link"),
-        warningBox: document.getElementById("warning-box"),
-        msgHeader: document.getElementById("msg-header"),
-        timerArea: document.getElementById("timer-area"),
-        screenshot: document.getElementById("screenshot"),
-        loading: document.getElementById("loading-preview")
-    };
-
-    el.domainSub.innerText = currentDomain;
-
-    try {
-        const res = await fetch(API_MAPPING, { cache: "no-store" });
-        const mapping = await res.json();
-
-        let foundData = null;
-        let foundKey = null;
-        let finalTarget = urlObj.href;
-
-        /* =========================
-           1. DANGEROUS CHECK
-        ========================= */
-        if (mapping.dangerous_sites?.aka) {
-            for (const bad of mapping.dangerous_sites.aka) {
-                const badDomain = normalizeDomain(bad);
-                if (domainMatch(currentDomain, badDomain)) {
-                    foundKey = "dangerous_sites";
-                    foundData = mapping.dangerous_sites;
-                    break;
-                }
-            }
-        }
-
-        if (foundKey === "dangerous_sites") {
-            loadPreview(el, finalTarget);
-            applyLockdown(el, foundData);
-            return;
-        }
-
-        /* =========================
-           2. EXACT DOMAIN + SUBDOMAIN
-        ========================= */
-        for (const [key, data] of Object.entries(mapping)) {
-            if (key === "dangerous_sites") continue;
-
-            const base = normalizeDomain(key);
-
-            if (domainMatch(currentDomain, base)) {
-                foundKey = key;
-                foundData = data;
-                break;
-            }
-
-            /* =========================
-               3. AKA CHECK (STRICT)
-            ========================= */
-            if (data.aka) {
-                for (const aka of data.aka) {
-                    const akaDomain = normalizeDomain(aka);
-                    if (domainMatch(currentDomain, akaDomain)) {
-                        foundKey = key;
-                        foundData = data;
-                        finalTarget = data.url || ("https://" + base);
-                        break;
-                    }
-                }
-            }
-
-            if (foundData) break;
-        }
-
-        loadPreview(el, finalTarget);
-
-        /* =========================
-           4. RESULT UI
-        ========================= */
-        if (foundData) {
-            applySafe(el, foundData.name || foundKey, finalTarget);
-        } else {
-            applySafe(el, currentDomain, finalTarget);
-        }
-
-    } catch (err) {
-        loadPreview(el, target);
-        applySafe(el, currentDomain, target);
-    }
-}
-
-/* =========================
-   PREVIEW
-========================= */
-function loadPreview(el, url) {
-    el.screenshot.src =
+    const img = new Image();
+    img.src =
         "https://api.microlink.io/?url=" +
         encodeURIComponent(url) +
         "&screenshot=true&embed=screenshot.url";
 
-    el.screenshot.onload = () => {
-        el.loading.style.display = "none";
-        el.screenshot.style.display = "block";
+    img.onload = () => {
+        el.img.src = img.src;
+        el.load.style.display = "none";
+        el.img.style.display = "block";
+    };
+
+    img.onerror = () => {
+        el.load.innerHTML =
+            "<i class='fa-solid fa-eye-slash fa-2x text-muted'></i>";
     };
 }
 
-/* =========================
-   UI STATES
-========================= */
-function applyLockdown(el, data) {
-    document.body.classList.add("is-dangerous");
-    el.msgHeader.innerText = "KẾT QUẢ: CỰC KỲ NGUY HIỂM";
-    el.platform.innerText = "ĐÃ CHẶN TRUY CẬP";
-    el.warningBox.className = "alert alert-danger fw-bold animate-pulse";
-    el.warningBox.innerHTML =
-        `<i class="fa-solid fa-triangle-exclamation me-2"></i>` +
-        `Trang này (${data.type}) nằm trong danh sách đen.`;
-    el.directLink.classList.add("d-none");
+/* ===== MAIN ===== */
+async function init() {
+    const p = new URLSearchParams(location.search);
+    let target = p.get("to");
+    if (!target) return;
+    if (!target.startsWith("http")) target = "https://" + target;
+
+    const url = new URL(target);
+    const cur = normalize(url.hostname);
+
+    const el = {
+        msg: document.getElementById("msg-header"),
+        platform: document.getElementById("platform"),
+        domain: document.getElementById("domain-sub"),
+        warn: document.getElementById("warning-box"),
+        timer: document.getElementById("timer-area"),
+        cd: document.getElementById("countdown"),
+        bar: document.getElementById("progress-bar"),
+        link: document.getElementById("direct-link"),
+        load: document.getElementById("loading-preview"),
+        img: document.getElementById("screenshot")
+    };
+
+    el.domain.innerText = cur;
+    loadPreview(target, el);
+
+    const map = await fetch(API_MAPPING).then(r => r.json());
+
+    /* ---- dangerous ---- */
+    if (map.dangerous_sites?.aka) {
+        for (const d of map.dangerous_sites.aka) {
+            if (match(cur, normalize(d))) {
+                document.body.classList.add("is-dangerous");
+                el.msg.innerText = "NGUY HIỂM";
+                el.platform.innerText = "ĐÃ CHẶN";
+                el.warn.className = "alert alert-danger fw-bold";
+                el.warn.innerText = "Trang web nằm trong danh sách đen";
+                el.link.style.display = "none";
+                return;
+            }
+        }
+    }
+
+    /* ---- normal ---- */
+    for (const [key,data] of Object.entries(map)) {
+        if (key === "dangerous_sites") continue;
+
+        if (match(cur, normalize(key))) {
+            el.platform.innerText = data.name;
+            el.warn.className = "alert alert-success";
+            el.warn.innerText = "Trang web an toàn";
+            return redirect(el, target);
+        }
+
+        if (data.aka) {
+            for (const aka of data.aka) {
+                if (match(cur, normalize(aka))) {
+                    el.platform.innerText = data.name;
+                    el.warn.className = "alert alert-info";
+                    el.warn.innerText =
+                        "Link phụ – đang bẻ lái về trang chính";
+                    return redirect(el, "https://" + key);
+                }
+            }
+        }
+    }
+
+    el.platform.innerText = cur;
+    el.warn.className = "alert alert-secondary";
+    el.warn.innerText = "Không có dữ liệu – tiếp tục";
+    redirect(el, target);
 }
 
-function applySafe(el, name, url) {
-    el.msgHeader.innerText = "KẾT QUẢ: AN TOÀN";
-    el.platform.innerText = name;
-    el.warningBox.className = "alert alert-success py-2";
-    el.warningBox.innerHTML =
-        `<i class="fa-solid fa-shield-check me-2"></i>` +
-        `Không phát hiện dấu hiệu độc hại.`;
-    activateRedirect(el, url);
-}
+/* ===== REDIRECT ===== */
+function redirect(el, url) {
+    el.timer.style.display = "block";
+    el.link.href = url;
 
-/* =========================
-   REDIRECT TIMER
-========================= */
-function activateRedirect(el, url) {
-    el.directLink.href = url;
-    el.timerArea.style.display = "block";
+    let t = 5;
+    el.cd.innerText = t;
 
-    let timeLeft = 5;
-    el.countdown.innerText = timeLeft;
+    const i = setInterval(() => {
+        t--;
+        el.cd.innerText = t;
+        el.bar.style.width = ((5 - t) / 5 * 100) + "%";
+        el.link.innerText = `Vui lòng chờ (${t}s)`;
 
-    const timer = setInterval(() => {
-        timeLeft--;
-        el.countdown.innerText = timeLeft;
-        el.progressBar.style.width = ((5 - timeLeft) / 5) * 100 + "%";
-        el.directLink.innerText = `Vui lòng chờ (${timeLeft}s)`;
-
-        if (timeLeft <= 0) {
-            clearInterval(timer);
-            el.directLink.classList.remove("disabled", "btn-primary");
-            el.directLink.classList.add("btn-success");
-            el.directLink.innerText = "Truy cập ngay";
-            window.location.href = url;
+        if (t <= 0) {
+            clearInterval(i);
+            el.link.classList.remove("disabled");
+            el.link.innerText = "Truy cập ngay";
+            location.href = url;
         }
     }, 1000);
 }
 
-window.onload = init;
+window.addEventListener("DOMContentLoaded", init);
 </script>
 
 </body>
