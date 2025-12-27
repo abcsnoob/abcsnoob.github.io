@@ -4,96 +4,120 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Đang chuyển hướng... | Abc's Noob</title>
+    
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous"/>
     <link href="./assets/css/style.css" rel="stylesheet" />
     <link rel="icon" href="assets/image/favicon.ico" type="image/x-icon"/>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
     
     <style>
-        .redirect-card { max-width: 500px; margin: 80px auto; border-radius: 20px; border: none; }
-        .platform-display { font-size: 2rem; font-weight: 800; color: #0d6efd; }
+        body { transition: background-color 0.3s; }
+        .redirect-card { max-width: 500px; margin: 60px auto; border-radius: 20px; border: none; background: #fff; }
+        .platform-display { font-size: 2.2rem; font-weight: 800; color: #0d6efd; min-height: 1.2em; }
         .loader-ring {
-            display: inline-block; width: 50px; height: 50px;
-            border: 5px solid rgba(13, 110, 253, 0.2);
+            display: inline-block; width: 60px; height: 60px;
+            border: 5px solid rgba(13, 110, 253, 0.1);
             border-radius: 50%; border-top-color: #0d6efd;
             animation: spin 1s ease-in-out infinite;
         }
         @keyframes spin { to { transform: rotate(360deg); } }
+        .domain-sub { font-size: 0.9rem; color: #adb5bd; font-family: monospace; }
     </style>
 </head>
 <body class="bg-light">
+
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
         <div class="container">
-            <a id="notranslate" class="navbar-brand" href="./"><img class="logo" src="./assets/image/abcsnoob.webp" style="width:30px; margin-right:10px;">Abc's Noob</a>
+            <a class="navbar-brand" href="./"><img src="./assets/image/abcsnoob.webp" style="width:30px; margin-right:10px;">Abc's Noob</a>
         </div>
     </nav>
 
     <div class="container text-center">
-        <div class="card redirect-card shadow-lg p-5">
+        <div class="card redirect-card shadow-lg p-4 p-md-5">
             <div class="mb-4"><div class="loader-ring"></div></div>
+            
             <h2 class="fw-bold text-dark">Bạn sắp ra ngoài rồi đấy!</h2>
-            <p class="text-muted">Đang chuyển tới:</p>
-            <div id="platform" class="platform-display mb-4">...</div>
+            <p class="text-muted mb-1">Đang chuyển tới:</p>
+            
+            <div id="platform" class="platform-display">Đang tải...</div>
+            <div id="domain-sub" class="domain-sub mb-4"></div>
+
+            <div class="alert alert-info py-2 small">
+                <i class="fa-solid fa-shield-halved me-2"></i>Hãy kiểm tra kỹ URL trước khi nhập thông tin cá nhân.
+            </div>
+
             <p class="mt-3">Tự động chuyển tiếp sau <span id="countdown" class="fw-bold text-danger">5</span> giây...</p>
+            
             <div class="d-grid gap-2 mt-4">
-                <a id="direct-link" href="#" class="btn btn-primary btn-lg">Chuyển hướng ngay</a>
-                <a href="javascript:history.back()" class="btn btn-outline-secondary">Quay lại</a>
+                <a id="direct-link" href="#" class="btn btn-primary btn-lg shadow-sm">Chuyển hướng ngay</a>
+                <a href="javascript:history.back()" class="btn btn-link text-secondary text-decoration-none">Quay lại an toàn</a>
             </div>
         </div>
     </div>
 
     <script>
-        const API_MAPPING = "https://raw.githubusercontent.com/abcsnoob/apis-json/refs/heads/main/domain_mapping.json";
+        const API_URL = "https://raw.githubusercontent.com/abcsnoob/apis-json/refs/heads/main/domain_mapping.json";
 
-        async function handleRedirect() {
-            const urlParams = new URLSearchParams(window.location.search);
-            let targetUrl = urlParams.get('to');
+        async function init() {
+            const params = new URLSearchParams(window.location.search);
+            let target = params.get('to');
             const platformEl = document.getElementById('platform');
+            const domainSubEl = document.getElementById('domain-sub');
             const countdownEl = document.getElementById('countdown');
             const directLink = document.getElementById('direct-link');
 
-            if (!targetUrl) {
-                platformEl.innerText = "Lỗi đường dẫn";
+            if (!target) {
+                platformEl.innerText = "Trống liên kết";
                 return;
             }
 
-            if (!targetUrl.startsWith('http')) targetUrl = 'https://' + targetUrl;
-            directLink.href = targetUrl;
+            // Chuẩn hóa URL
+            if (!target.startsWith('http')) target = 'https://' + target;
+            directLink.href = target;
 
             try {
-                const domain = new URL(targetUrl).hostname.replace('www.', '');
-                const response = await fetch(API_MAPPING);
-                const mapping = await response.json();
+                // Phân tích domain từ URL
+                const urlObj = new URL(target);
+                let currentDomain = urlObj.hostname.replace(/^www\./, '').toLowerCase();
+                domainSubEl.innerText = currentDomain;
 
-                let finalName = domain; // Mặc định hiển thị domain nếu không khớp
-                
-                // LOGIC MỚI: Tìm kiếm trong cấu trúc lồng nhau
-                for (const [mainDomain, info] of Object.entries(mapping)) {
-                    // Kiểm tra nếu là domain gốc HOẶC nằm trong danh sách aka
-                    if (domain === mainDomain || (info.aka && info.aka.includes(domain))) {
-                        finalName = info.name;
+                // Tải Mapping Data
+                const res = await fetch(API_URL);
+                const mapping = await res.json();
+
+                let displayName = currentDomain; // Mặc định nếu không tìm thấy
+
+                // Logic tìm kiếm thông minh
+                for (const [mainDomain, data] of Object.entries(mapping)) {
+                    const akaList = data.aka ? data.aka.map(d => d.toLowerCase()) : [];
+                    
+                    // Kiểm tra nếu trùng khớp main domain hoặc nằm trong danh sách aka
+                    if (currentDomain === mainDomain.toLowerCase() || akaList.includes(currentDomain)) {
+                        displayName = data.name;
                         break;
                     }
                 }
 
-                platformEl.innerText = finalName;
+                platformEl.innerText = displayName;
 
-                let seconds = 5;
+                // Bắt đầu đếm ngược
+                let time = 5;
                 const timer = setInterval(() => {
-                    seconds--;
-                    countdownEl.innerText = seconds;
-                    if (seconds <= 0) {
+                    time--;
+                    countdownEl.innerText = time;
+                    if (time <= 0) {
                         clearInterval(timer);
-                        window.location.href = targetUrl;
+                        window.location.href = target;
                     }
                 }, 1000);
 
-            } catch (error) {
-                platformEl.innerText = new URL(targetUrl).hostname;
+            } catch (e) {
+                console.error(e);
+                platformEl.innerText = "Liên kết ngoài";
             }
         }
 
-        window.onload = handleRedirect;
+        window.onload = init;
     </script>
 </body>
 </html>
