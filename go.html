@@ -52,142 +52,196 @@
 </div>
 
 <script>
-(async () => {
+const API_MAPPING = "https://raw.githubusercontent.com/abcsnoob/apis-json/refs/heads/main/domain_mapping.json";
 
-    /* =====================
-       CONFIG
-    ====================== */
-    const COUNTDOWN_SECONDS = 5;
-    const MAPPING_URL = "https://raw.githubusercontent.com/abcsnoob/apis-json/refs/heads/main/domain_mapping.json";
+/* =========================
+   DOMAIN UTILITIES
+========================= */
+function normalizeDomain(host) {
+    return host
+        .toLowerCase()
+        .replace(/^www\./, "")
+        .replace(/:\d+$/, "");
+}
 
-    /* =====================
-       UTILS
-    ====================== */
-    const qs = new URLSearchParams(location.search);
-    const target = qs.get("to");
+function domainMatch(current, target) {
+    return current === target || current.endsWith("." + target);
+}
 
-    if (!target) {
-        document.getElementById("title").innerText = "❌ Thiếu tham số ?to=";
-        return;
+/* =========================
+   MAIN
+========================= */
+async function init() {
+    const params = new URLSearchParams(window.location.search);
+    let target = params.get("to");
+    if (!target) return;
+
+    if (!target.startsWith("http")) {
+        target = "https://" + target;
     }
 
-    let urlObj;
-    try {
-        urlObj = new URL(
-            target.startsWith("http") ? target : "https://" + target
-        );
-    } catch {
-        document.getElementById("title").innerText = "❌ URL không hợp lệ";
-        return;
-    }
-
-    const normalizeDomain = (host) =>
-        host
-            .toLowerCase()
-            .replace(/^www\./, "")
-            .replace(/:\d+$/, "");
-
+    const urlObj = new URL(target);
     const currentDomain = normalizeDomain(urlObj.hostname);
 
-    /* =====================
-       LOAD JSON
-    ====================== */
-    const res = await fetch(MAPPING_URL);
-    const mapping = await res.json();
+    const el = {
+        platform: document.getElementById("platform"),
+        domainSub: document.getElementById("domain-sub"),
+        countdown: document.getElementById("countdown"),
+        progressBar: document.getElementById("progress-bar"),
+        directLink: document.getElementById("direct-link"),
+        warningBox: document.getElementById("warning-box"),
+        msgHeader: document.getElementById("msg-header"),
+        timerArea: document.getElementById("timer-area"),
+        screenshot: document.getElementById("screenshot"),
+        loading: document.getElementById("loading-preview")
+    };
 
-    let foundData = null;
-    let finalTarget = urlObj.href;
-    let isDangerous = false;
+    el.domainSub.innerText = currentDomain;
 
-    /* =====================
-       CHECK DANGEROUS
-    ====================== */
-    const dangerData = mapping["dangerous_sites"];
+    try {
+        const res = await fetch(API_MAPPING, { cache: "no-store" });
+        const mapping = await res.json();
 
-    if (dangerData?.aka) {
-        const bad = dangerData.aka.some(d => {
-            d = d.toLowerCase();
-            return currentDomain === d || currentDomain.endsWith("." + d);
-        });
+        let foundData = null;
+        let foundKey = null;
+        let finalTarget = urlObj.href;
 
-        if (bad) {
-            isDangerous = true;
-            foundData = dangerData;
+        /* =========================
+           1. DANGEROUS CHECK
+        ========================= */
+        if (mapping.dangerous_sites?.aka) {
+            for (const bad of mapping.dangerous_sites.aka) {
+                const badDomain = normalizeDomain(bad);
+                if (domainMatch(currentDomain, badDomain)) {
+                    foundKey = "dangerous_sites";
+                    foundData = mapping.dangerous_sites;
+                    break;
+                }
+            }
         }
-    }
 
-    /* =====================
-       NORMAL DOMAIN HEALER
-    ====================== */
-    if (!isDangerous) {
+        if (foundKey === "dangerous_sites") {
+            loadPreview(el, finalTarget);
+            applyLockdown(el, foundData);
+            return;
+        }
+
+        /* =========================
+           2. EXACT DOMAIN + SUBDOMAIN
+        ========================= */
         for (const [key, data] of Object.entries(mapping)) {
             if (key === "dangerous_sites") continue;
 
-            const main = normalizeDomain(key);
+            const base = normalizeDomain(key);
 
-            if (currentDomain === main) {
+            if (domainMatch(currentDomain, base)) {
+                foundKey = key;
                 foundData = data;
-                finalTarget = data.url || ("https://" + key);
                 break;
             }
 
-            if (data.aka?.some(a => {
-                a = a.toLowerCase();
-                return currentDomain === a || currentDomain.endsWith("." + a);
-            })) {
-                foundData = data;
-                finalTarget = data.url || ("https://" + key);
-                break;
+            /* =========================
+               3. AKA CHECK (STRICT)
+            ========================= */
+            if (data.aka) {
+                for (const aka of data.aka) {
+                    const akaDomain = normalizeDomain(aka);
+                    if (domainMatch(currentDomain, akaDomain)) {
+                        foundKey = key;
+                        foundData = data;
+                        finalTarget = data.url || ("https://" + base);
+                        break;
+                    }
+                }
             }
+
+            if (foundData) break;
         }
+
+        loadPreview(el, finalTarget);
+
+        /* =========================
+           4. RESULT UI
+        ========================= */
+        if (foundData) {
+            applySafe(el, foundData.name || foundKey, finalTarget);
+        } else {
+            applySafe(el, currentDomain, finalTarget);
+        }
+
+    } catch (err) {
+        loadPreview(el, target);
+        applySafe(el, currentDomain, target);
     }
+}
 
-    /* =====================
-       UI RENDER
-    ====================== */
-    const title = document.getElementById("title");
-    const desc = document.getElementById("desc");
-    const extra = document.getElementById("extra");
+/* =========================
+   PREVIEW
+========================= */
+function loadPreview(el, url) {
+    el.screenshot.src =
+        "https://api.microlink.io/?url=" +
+        encodeURIComponent(url) +
+        "&screenshot=true&embed=screenshot.url";
 
-    if (isDangerous) {
-        title.innerHTML = "🚫 <span class='danger'>Trang web nguy hiểm</span>";
-        desc.innerHTML = `
-            Domain <b>${currentDomain}</b> được đánh dấu là
-            <b>${foundData?.type || "Nguy hiểm"}</b>.
-        `;
-        extra.innerHTML = `
-            <button onclick="history.back()">⬅ Quay lại</button>
-        `;
-        return;
-    }
+    el.screenshot.onload = () => {
+        el.loading.style.display = "none";
+        el.screenshot.style.display = "block";
+    };
+}
 
-    title.innerHTML = "✅ <span class='safe'>Trang web an toàn</span>";
-    desc.innerHTML = `
-        Bạn sẽ được chuyển đến:<br>
-        <b>${finalTarget}</b>
-    `;
+/* =========================
+   UI STATES
+========================= */
+function applyLockdown(el, data) {
+    document.body.classList.add("is-dangerous");
+    el.msgHeader.innerText = "KẾT QUẢ: CỰC KỲ NGUY HIỂM";
+    el.platform.innerText = "ĐÃ CHẶN TRUY CẬP";
+    el.warningBox.className = "alert alert-danger fw-bold animate-pulse";
+    el.warningBox.innerHTML =
+        `<i class="fa-solid fa-triangle-exclamation me-2"></i>` +
+        `Trang này (${data.type}) nằm trong danh sách đen.`;
+    el.directLink.classList.add("d-none");
+}
 
-    let time = COUNTDOWN_SECONDS;
-    const cd = document.createElement("div");
-    cd.className = "countdown";
-    cd.innerText = time;
-    extra.appendChild(cd);
+function applySafe(el, name, url) {
+    el.msgHeader.innerText = "KẾT QUẢ: AN TOÀN";
+    el.platform.innerText = name;
+    el.warningBox.className = "alert alert-success py-2";
+    el.warningBox.innerHTML =
+        `<i class="fa-solid fa-shield-check me-2"></i>` +
+        `Không phát hiện dấu hiệu độc hại.`;
+    activateRedirect(el, url);
+}
 
-    const btn = document.createElement("button");
-    btn.innerText = "Đi ngay";
-    btn.onclick = () => location.href = finalTarget;
-    extra.appendChild(btn);
+/* =========================
+   REDIRECT TIMER
+========================= */
+function activateRedirect(el, url) {
+    el.directLink.href = url;
+    el.timerArea.style.display = "block";
+
+    let timeLeft = 5;
+    el.countdown.innerText = timeLeft;
 
     const timer = setInterval(() => {
-        time--;
-        cd.innerText = time;
-        if (time <= 0) {
+        timeLeft--;
+        el.countdown.innerText = timeLeft;
+        el.progressBar.style.width = ((5 - timeLeft) / 5) * 100 + "%";
+        el.directLink.innerText = `Vui lòng chờ (${timeLeft}s)`;
+
+        if (timeLeft <= 0) {
             clearInterval(timer);
-            location.href = finalTarget;
+            el.directLink.classList.remove("disabled", "btn-primary");
+            el.directLink.classList.add("btn-success");
+            el.directLink.innerText = "Truy cập ngay";
+            window.location.href = url;
         }
     }, 1000);
+}
 
-})();
+window.onload = init;
 </script>
+
 </body>
 </html>
