@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Noob AI Pro | Premium Interface</title>
+    <title>Noob AI Pro | Ultimate Interface</title>
     
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
@@ -16,102 +16,74 @@
             --bg-dark: #0b0e11; --sidebar-bg: #15191e;
             --card-bg: #1e2329; --text-main: #eaecef;
             --border-color: #2b3139; --input-focus: #3a7bd5;
+            --danger: #ff4d4d;
         }
 
-        body { background: var(--bg-dark); color: var(--text-main); font-family: 'Inter', sans-serif; height: 100dvh; overflow: hidden; display: flex; }
+        body { background: var(--bg-dark); color: var(--text-main); font-family: 'Inter', sans-serif; height: 100dvh; overflow: hidden; display: flex; margin: 0; }
 
-        /* Sidebar - Chỉ hiện trên máy tính, mobile dùng menu drawer */
+        /* --- Sidebar & Folder Logic --- */
         #sidebar {
-    width: 280px;
-    background: var(--sidebar-bg);
-    border-right: 1px solid var(--border-color);
-    display: flex;
-    flex-direction: column;
-    transition: transform 0.3s ease, visibility 0.3s; /* Hiệu ứng trượt */
-    z-index: 1001;
-}
+            width: 280px; background: var(--sidebar-bg); border-right: 1px solid var(--border-color);
+            display: flex; flex-direction: column; transition: transform 0.3s ease; z-index: 1001;
+        }
 
-@media (max-width: 768px) {
-    #sidebar {
-        position: fixed;
-        top: 0;
-        left: 0;
-        height: 100%;
-        transform: translateX(-100%); /* Mặc định đẩy ra ngoài màn hình bên trái */
-        visibility: hidden;
-    }
-    /* Khi có class 'active' thì trượt vào */
-    #sidebar.active {
-        transform: translateX(0);
-        visibility: visible;
-        display: flex !important;
-    }
-}
-        .sidebar-header { padding: 20px; border-bottom: 1px solid var(--border-color); }
+        @media (max-width: 768px) {
+            #sidebar { position: fixed; top: 0; left: 0; height: 100%; transform: translateX(-100%); visibility: hidden; }
+            #sidebar.active { transform: translateX(0); visibility: visible; display: flex !important; }
+        }
+
         .history-list { flex: 1; overflow-y: auto; padding: 10px; }
-        .history-item { padding: 12px; border-radius: 8px; margin-bottom: 5px; cursor: pointer; transition: 0.2s; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .history-item:hover { background: var(--card-bg); color: var(--primary); }
+        .history-item { 
+            padding: 10px 12px; border-radius: 8px; margin-bottom: 5px; cursor: pointer; transition: 0.2s; 
+            font-size: 14px; display: flex; justify-content: space-between; align-items: center; border: 1px solid transparent;
+        }
+        .history-item:hover { background: var(--card-bg); border-color: var(--border-color); }
+        .history-item.active { background: rgba(0, 210, 255, 0.1); border-color: var(--primary); color: var(--primary); }
 
-        /* Main Chat Area */
-        #main-chat { flex: 1; display: flex; flex-direction: column; position: relative; }
-        .top-nav { height: 60px; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between; padding: 0 20px; background: rgba(11, 14, 17, 0.8); backdrop-filter: blur(10px); z-index: 100; }
+        /* --- Chat Display --- */
+        #main-chat { flex: 1; display: flex; flex-direction: column; position: relative; background: var(--bg-dark); }
+        .top-nav { height: 60px; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between; padding: 0 20px; background: rgba(11, 14, 17, 0.8); backdrop-filter: blur(10px); z-index: 1000; }
 
-        #chat-window { flex: 1; overflow-y: auto; padding: 30px 10% 120px 10%; scroll-behavior: smooth; }
+        #chat-window { flex: 1; overflow-y: auto; padding: 30px 10% 150px 10%; scroll-behavior: smooth; }
+        .msg-group { margin-bottom: 35px; animation: fadeInUp 0.4s ease; }
+        .msg-content { line-height: 1.8; font-size: 15.5px; word-break: break-word; }
         
-        /* Message Styling */
-        .msg-group { margin-bottom: 30px; opacity: 0; transform: translateY(20px); animation: fadeInUp 0.4s forwards; }
-        .msg-header { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; font-weight: 600; font-size: 13px; color: #848e9c; }
-        .msg-content { line-height: 1.7; font-size: 15.5px; word-break: break-word; }
-        .msg-content blockquote { border-left: 4px solid var(--primary); padding-left: 15px; color: #b7bdc6; }
-        
-        /* Input Zone */
-        .input-container { position: absolute; bottom: 0; left: 0; right: 0; padding: 20px 10%; background: linear-gradient(transparent, var(--bg-dark) 30%); }
-        .input-wrapper { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 16px; padding: 12px 18px; display: flex; align-items: flex-end; gap: 12px; transition: 0.3s; }
-        .input-wrapper:focus-within { border-color: var(--primary); box-shadow: 0 0 15px rgba(0, 210, 255, 0.2); }
-        
-        textarea#user-input { flex: 1; background: transparent; border: none; color: white; outline: none; resize: none; max-height: 200px; padding: 5px 0; font-size: 15px; }
-        
-        /* Utils */
-        .action-btn { background: none; border: none; color: #848e9c; cursor: pointer; transition: 0.2s; padding: 8px; border-radius: 8px; }
-        .action-btn:hover { color: var(--primary); background: rgba(255,255,255,0.05); }
-        .btn-send { background: var(--primary); color: #000; font-weight: bold; border-radius: 10px; padding: 8px 15px; }
-        
-        #image-preview { display: none; padding: 10px; border-top: 1px solid var(--border-color); }
-        .preview-img { width: 60px; height: 60px; object-fit: cover; border-radius: 8px; position: relative; }
+        /* Typing & Code */
+        .typing-cursor::after { content: "▊"; animation: blink 0.8s infinite; color: var(--primary); margin-left: 4px; }
+        pre[class*="language-"] { border-radius: 12px; margin: 15px 0; background: #010409 !important; border: 1px solid #30363d; }
 
-        @keyframes fadeInUp { to { opacity: 1; transform: translateY(0); } }
-        /* Hiệu ứng con trỏ nhấp nháy */
-.typing-cursor::after {
-    content: "|";
-    animation: blink 0.7s infinite;
-    margin-left: 2px;
-    color: var(--primary);
-    font-weight: bold;
-}
+        /* --- Input System --- */
+        .input-area { position: absolute; bottom: 0; left: 0; right: 0; padding: 20px 10%; background: linear-gradient(transparent, var(--bg-dark) 40%); }
+        .input-box { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 18px; padding: 12px 18px; display: flex; align-items: flex-end; gap: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
+        textarea#user-input { flex: 1; background: transparent; border: none; color: white; outline: none; resize: none; max-height: 180px; font-size: 15px; padding: 5px 0; }
 
-@keyframes blink {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0; }
-}
+        /* --- CUSTOM NOOB MODAL SYSTEM --- */
+        .noob-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center; z-index: 9999; backdrop-filter: blur(10px); }
+        .noob-modal { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 24px; width: 90%; max-width: 450px; padding: 35px; box-shadow: 0 25px 60px rgba(0,0,0,0.6); position: relative; }
+        .noob-input { width: 100%; background: #0b0e11; border: 1px solid var(--border-color); color: white; padding: 14px 18px; border-radius: 12px; margin-bottom: 15px; outline: none; transition: 0.3s; }
+        .noob-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(0, 210, 255, 0.1); }
+        
+        .toast-box { position: fixed; top: 20px; right: 20px; background: var(--card-bg); border-left: 4px solid var(--primary); padding: 16px 24px; border-radius: 12px; z-index: 10000; animation: slideIn 0.3s forwards; box-shadow: 0 10px 40px rgba(0,0,0,0.4); }
+
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes blink { 50% { opacity: 0; } }
     </style>
 </head>
 <body>
 
     <aside id="sidebar">
-        <div class="d-flex justify-content-end p-2 d-md-none">
-        <button class="action-btn" onclick="toggleSidebar()"><i class="fa-solid fa-xmark fs-4"></i></button>
-    </div>
-        <div class="sidebar-header">
-            <button class="btn btn-outline-primary w-100 mb-3" onclick="newChat()">
+        <div class="p-4">
+            <h5 class="fw-bold mb-4 text-primary"><i class="fa-solid fa-cube me-2"></i>NOOB AI PRO</h5>
+            <button class="btn btn-primary w-100 py-2 rounded-3 mb-2" onclick="startNewChat()">
                 <i class="fa-solid fa-plus me-2"></i> Đoạn chat mới
             </button>
         </div>
-        <div class="history-list" id="history-container">
-            </div>
-        <div class="p-3 border-top border-secondary">
-            <div id="user-info" class="small text-secondary mb-2">Chưa đăng nhập</div>
-            <button class="action-btn w-100 text-start" onclick="authUI()">
-                <i class="fa-solid fa-right-to-bracket me-2"></i> <span id="auth-text">Đăng nhập</span>
+        <div class="history-list" id="history-container"></div>
+        <div class="mt-auto p-4 border-top border-secondary">
+            <div id="account-status" class="small text-secondary mb-3">Chế độ Khách</div>
+            <button class="btn btn-dark w-100 text-start py-2" onclick="handleAccountAction()">
+                <i class="fa-solid fa-user-gear me-2"></i> <span id="account-btn-text">Tài khoản</span>
             </button>
         </div>
     </aside>
@@ -119,823 +91,392 @@
     <main id="main-chat">
         <nav class="top-nav">
             <div class="d-flex align-items-center gap-3">
-                <i class="fa-solid fa-bars action-btn d-md-none" onclick="toggleSidebar()"></i>
-                <span class="fw-bold fs-5">Noob AI <span class="badge bg-primary ms-1" style="font-size: 10px;">PRO</span></span>
+                <i class="fa-solid fa-bars action-btn d-md-none" style="cursor:pointer" onclick="document.getElementById('sidebar').classList.toggle('active')"></i>
+                <div id="chat-title" class="fw-semibold text-truncate" style="max-width: 200px;">Cuộc trò chuyện mới</div>
             </div>
             <div class="d-flex gap-2">
-                <button class="action-btn" onclick="groupUI()" title="Nhóm"><i class="fa-solid fa-users-rectangle"></i></button>
-                <button class="action-btn" onclick="shareUI()" title="Chia sẻ"><i class="fa-solid fa-share-nodes"></i></button>
-                <button class="action-btn" onclick="clearChat()" title="Xóa"><i class="fa-solid fa-trash"></i></button>
+                <button class="btn btn-sm btn-dark rounded-circle" onclick="shareCurrentChat()"><i class="fa-solid fa-share"></i></button>
+                <button class="btn btn-sm btn-dark rounded-circle" onclick="deleteCurrentFolder()"><i class="fa-solid fa-trash-can text-danger"></i></button>
             </div>
         </nav>
 
         <section id="chat-window"></section>
 
-        <div class="input-container">
-            <div id="image-preview" class="mb-2">
-                <div class="preview-img">
-                    <img id="p-img" src="" style="width:100%; height:100%; border-radius:8px;">
-                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" onclick="cancelImg()" style="cursor:pointer">×</span>
+        <div class="input-area">
+            <div id="image-preview" class="mb-3" style="display:none;">
+                <div class="position-relative d-inline-block">
+                    <img id="p-img" src="" style="width:70px; height:70px; border-radius:12px; object-fit:cover; border: 2px solid var(--primary);">
+                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-circle bg-danger" onclick="clearImage()" style="cursor:pointer; padding: 5px 8px;">×</span>
                 </div>
             </div>
-            <div class="input-wrapper">
-                <input type="file" id="file-in" hidden accept="image/*" onchange="handleFile(this)">
-                <button class="action-btn" onclick="document.getElementById('file-in').click()"><i class="fa-solid fa-paperclip"></i></button>
-                <textarea id="user-input" rows="1" placeholder="Nhập câu hỏi tại đây... (Shift + Enter để xuống dòng)"></textarea>
-                <button class="btn-send" onclick="send()"><i class="fa-solid fa-paper-plane"></i></button>
+            <div class="input-box">
+                <input type="file" id="file-upload" hidden accept="image/*" onchange="processFile(this)">
+                <button class="btn btn-dark rounded-3" onclick="document.getElementById('file-upload').click()"><i class="fa-solid fa-image"></i></button>
+                <textarea id="user-input" rows="1" placeholder="Hỏi Noob AI về code, Minecraft hoặc Bitcoin..."></textarea>
+                <button class="btn btn-primary px-4 rounded-3 fw-bold" id="send-btn" onclick="handleSend()">Gửi</button>
             </div>
-            <p class="text-center text-secondary mt-2" style="font-size: 11px;">Noob AI có thể mắc sai lầm. Hãy kiểm tra lại các thông tin quan trọng.</p>
         </div>
     </main>
 
+    <div id="noob-overlay" class="noob-overlay" onclick="closeAllModals(event)">
+        <div id="modal-auth" class="noob-modal" style="display:none;">
+            <h4 class="fw-bold mb-4" id="auth-header">Chào ông giáo!</h4>
+            <input type="email" id="f-email" class="noob-input" placeholder="Email">
+            <input type="password" id="f-pass" class="noob-input" placeholder="Mật khẩu">
+            <div class="d-flex justify-content-between align-items-center mt-3">
+                <span class="small text-primary" style="cursor:pointer" onclick="toggleAuthMode()" id="auth-switch">Cần tạo acc mới?</span>
+                <button class="btn btn-primary px-4" onclick="doAuth()">Tiếp tục</button>
+            </div>
+        </div>
+
+        <div id="modal-otp" class="noob-modal" style="display:none;">
+            <h4 class="fw-bold">Xác nhận danh tính</h4>
+            <p class="text-secondary small">Nhập mã OTP 6 số vừa bay vào Mail.</p>
+            <input type="text" id="f-otp" class="noob-input text-center fw-bold fs-3" maxlength="6" placeholder="000000">
+            <button class="btn btn-primary w-100 py-3 mt-2 fw-bold" onclick="doVerify()">Kích hoạt ngay</button>
+        </div>
+
+        <div id="modal-share" class="noob-modal" style="display:none;">
+            <h4 class="fw-bold">Chia sẻ Chat</h4>
+            <p class="text-secondary small">Ai có link này cũng có thể xem lịch sử chat.</p>
+            <input type="text" id="share-url" class="noob-input" readonly>
+            <button class="btn btn-primary w-100" onclick="copyShareLink()">Sao chép liên kết</button>
+        </div>
+    </div>
+
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+
 <script>
-/** * NOOB AI PRO - CORE JAVASCRIPT SYSTEM
- * Version: 2.0 (Premium)
- * Features: Auth, D1 Database, AI Vision, OTP Verification, Group Chat
+/**
+ * NOOB AI PRO - ULTIMATE LOGIC 2025
+ * Hoàn toàn tương thích với Cloudflare Worker D1 Backend
  */
 
 const WORKER_URL = 'https://abcsnoobai.abcsnoob.workers.dev';
-let token = localStorage.getItem('token');
-let chatHistory = JSON.parse(localStorage.getItem('abc_chat_pro')) || [];
+let chatHistory = [];
+let allChats = JSON.parse(localStorage.getItem('noob_folders')) || [];
+let currentFolderId = null;
 let selectedImageData = null;
 let isTyping = false;
-let user_lang = localStorage.getItem('user_lang') || 'auto';
-let allChats = JSON.parse(localStorage.getItem('all_chats_list')) || [];
-let currentChatId = null;
-let skipTyping = false; 
+let authMode = 'login';
+let abortController = null;
 
-// 1. CẤU HÌNH MARKED (Hiển thị Markdown & Code Highlight)
-marked.setOptions({
-    highlight: function(code, lang) {
-        if (Prism.languages[lang]) {
-            return Prism.highlight(code, Prism.languages[lang], lang);
-        }
-        return code;
-    },
-    breaks: true,
-    gfm: true
-});
-async function typeEffect(element, text) {
-    let i = 0;
-    let currentText = "";
-    skipTyping = false; 
-    element.classList.add('typing-cursor');
-    
-    return new Promise((resolve) => {
-        function typing() {
-            if (skipTyping) { // Nhấn ESC sẽ nhả hết text
-                element.innerHTML = marked.parse(text);
-                element.classList.remove('typing-cursor');
-                resolve(); return;
-            }
-            if (i < text.length) {
-                currentText += text.charAt(i);
-                element.innerHTML = marked.parse(currentText); // Vừa đánh máy vừa Markdown
-                i++;
-                setTimeout(typing, 10);
-            } else {
-                element.classList.remove('typing-cursor');
-                resolve();
-            }
-        }
-        typing();
-    });
-}
-    // 1. Lưu chat hiện tại vào danh sách folder
-function saveCurrentChat() {
-    if (chatHistory.length === 0) return;
-
-    if (!currentChatId) {
-        // Nếu là chat mới, tạo ID và lấy tên từ tin nhắn đầu của User
-        currentChatId = Date.now().toString();
-        const firstMsg = chatHistory.find(m => m.role === 'user')?.parts[0]?.text || "Cuộc trò chuyện mới";
-        const chatName = firstMsg.length > 30 ? firstMsg.substring(0, 30) + "..." : firstMsg;
-        
-        allChats.unshift({
-            id: currentChatId,
-            name: chatName,
-            history: chatHistory
-        });
-    } else {
-        // Cập nhật history cho folder hiện tại
-        const index = allChats.findIndex(c => c.id === currentChatId);
-        if (index !== -1) allChats[index].history = JSON.parse(JSON.stringify(chatHistory));
-    }
-
-    localStorage.setItem('all_chats_list', JSON.stringify(allChats));
-    renderHistorySidebar();
+// --- UTILS ---
+function showNotify(msg, type = 'info') {
+    const b = document.createElement('div');
+    b.className = 'toast-box';
+    if(type === 'error') b.style.borderLeftColor = 'var(--danger)';
+    b.innerText = msg;
+    document.body.appendChild(b);
+    setTimeout(() => b.remove(), 3500);
 }
 
-// 2. Tải nội dung một cuộc chat khi click sidebar
-async function loadChat(id) {
-    const chat = allChats.find(c => c.id === id);
-    if (!chat) return;
-
-    currentChatId = id;
-    chatHistory = JSON.parse(JSON.stringify(chat.history));
-    
-    const win = document.getElementById('chat-window');
-    win.innerHTML = '';
-    
-    // Hiển thị lại toàn bộ nội dung với Markdown (không đánh máy lại)
-    for (const m of chatHistory) {
-        const txt = m.parts.find(p => p.text)?.text;
-        // Tham số 'true' để báo đây là history, hiện ngay lập tức
-        await createMsgUI(txt, m.role, null, true); 
+function closeAllModals(e) {
+    if(!e || e.target.id === 'noob-overlay') {
+        document.getElementById('noob-overlay').style.display = 'none';
+        document.querySelectorAll('.noob-modal').forEach(m => m.style.display = 'none');
     }
 }
 
-// 3. Xóa một folder chat
-async function deleteChat(id, event) {
-    event.stopPropagation(); // Ngăn không cho loadChat chạy khi bấm xóa
-    const result = await Swal.fire({
-        title: "Xóa đoạn chat?",
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonText: "Xóa",
-        confirmButtonColor: '#d33'
-    });
-    
-    if (result.isConfirmed) {
-        allChats = allChats.filter(c => c.id !== id);
-        if (currentChatId === id) newChat();
-        localStorage.setItem('all_chats_list', JSON.stringify(allChats));
-        renderHistorySidebar();
-    }
-}
-// Hàm dịch trung tâm
-async function gt(text) {
-    if (!text || user_lang === 'vi' || text.length < 2 || text.includes('Noob AI')) return text;
-    try {
-        const res = await fetch(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=vi&tl=${user_lang}&dt=t&q=${encodeURIComponent(text)}`);
-        const data = await res.json();
-        return data[0][0][0];
-    } catch (e) { return text; }
-}
-
-// Hàm hiện/ẩn thông báo đang dịch
-function showToast(show) {
-    let toast = document.getElementById('trans-toast');
-    if (!toast) {
-        toast = document.createElement('div');
-        toast.id = 'trans-toast';
-        toast.style = "position:fixed;bottom:100px;right:20px;background:rgba(0,0,0,0.8);color:#00d2ff;padding:6px 15px;border-radius:20px;font-size:12px;z-index:10001;display:none;border:1px solid #00d2ff;";
-        toast.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i>Translating...';
-        document.body.appendChild(toast);
-    }
-    toast.style.display = show ? 'block' : 'none';
-}
-function toggleSidebar() {
-    const sidebar = document.getElementById('sidebar');
-    if (!sidebar) return;
-
-    if (window.innerWidth <= 768) {
-        const isActive = sidebar.classList.contains('active');
-        
-        if (isActive) {
-            // ĐANG MỞ -> ĐÓNG LẠI
-            sidebar.classList.remove('active');
-            removeOverlay();
-        } else {
-            // ĐANG ĐÓNG -> MỞ RA
-            sidebar.classList.add('active');
-            createOverlay();
-        }
-    } else {
-        // Trên Desktop: Ẩn/Hiện bình thường
-        sidebar.classList.toggle('d-none');
-    }
-}
-const observer = new MutationObserver(async (mutations) => {
-    if (user_lang === 'vi') return;
-    for (let m of mutations) {
-        for (let node of m.addedNodes) {
-            // Nếu phát hiện hộp thoại mới (Swal hoặc Modal)
-            if (node.nodeType === 1 && (node.classList.contains('swal2-container') || node.tagName === 'DIV')) {
-                const items = node.querySelectorAll('.swal2-title, .swal2-html-container, .swal2-confirm, .swal2-cancel, .swal2-deny, input, button');
-                if (items.length > 0) {
-                    showToast(true);
-                    await Promise.all(Array.from(items).map(async (el) => {
-                        if (el.placeholder) el.placeholder = await gt(el.placeholder);
-                        if (el.innerText && !el.querySelector('*')) el.innerText = await gt(el.innerText);
-                    }));
-                    showToast(false);
-                }
-            }
-        }
-    }
-});
-observer.observe(document.body, { childList: true, subtree: true });
-function createOverlay() {
-    if (document.getElementById('sidebar-overlay')) return;
-    const overlay = document.createElement('div');
-    overlay.id = 'sidebar-overlay';
-    // Style trực tiếp để đảm bảo luôn nằm dưới Sidebar (1000) và trên Chat (999)
-    overlay.style = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000; cursor:pointer;";
-    
-    // Bấm vào overlay cũng phải đóng sidebar và xóa chính nó
-    overlay.onclick = toggleSidebar; 
-    document.body.appendChild(overlay);
-}
-
-function removeOverlay() {
-    const overlay = document.getElementById('sidebar-overlay');
-    if (overlay) {
-        overlay.remove();
-    }
-}
-
-// 2. XỬ LÝ ẢNH (VISION)
-function handleFile(input) {
-    const file = input.files[0];
-    if (!file) return;
-    
-    // Kiểm tra dung lượng (giới hạn 4MB cho Gemini)
-    if (file.size > 4 * 1024 * 1024) {
-        Swal.fire('Lỗi', 'Ảnh quá lớn (tối đa 4MB)', 'error');
-        return;
-    }
-
-    const reader = new FileReader();
-    reader.onload = (e) => {
-        selectedImageData = e.target.result;
-        document.getElementById('image-preview').style.display = 'block';
-        document.getElementById('p-img').src = selectedImageData;
-    };
-    reader.readAsDataURL(file);
-}
-
-function cancelImg() {
-    selectedImageData = null;
-    document.getElementById('image-preview').style.display = 'none';
-    document.getElementById('file-in').value = '';
-}
-
-// 3. RENDER TIN NHẮN LÊN GIAO DIỆN
-async function createMsgUI(text, role, image = null, isHistory = false) {
-    const win = document.getElementById('chat-window');
-    const div = document.createElement('div');
-    div.className = 'msg-group notranslate mb-4';
-    
-    const isUser = (role === 'user');
-    const color = isUser ? 'var(--primary)' : '#00ff88';
-
-    div.innerHTML = `
-        <div class="msg-header" style="color:${color}; font-weight:bold;">
-            <i class="fa-solid ${isUser ? 'fa-user' : 'fa-robot'}"></i> ${isUser ? 'YOU' : "ABC'S NOOB"}
-        </div>
-        ${image ? `<img src="${image}" class="img-fluid rounded mb-2" style="max-width:200px;">` : ''}
-        <div class="msg-content"></div>
-    `;
-    
-    win.appendChild(div);
-    const contentDiv = div.querySelector('.msg-content');
-
-    if (isHistory || isUser) {
-        contentDiv.innerHTML = marked.parse(text || "");
-        if (window.Prism) Prism.highlightAllUnder(contentDiv);
-    } else {
-        await typeEffect(contentDiv, text || "");
-    }
-    win.scrollTo({ top: win.scrollHeight, behavior: 'smooth' });
-}
-
-// 4. LOGIC GỬI TIN NHẮN & GỌI AI
-// 4. LOGIC GỬI TIN NHẮN & GỌI AI (Bản đã fix lỗi Vision)
-async function send() {
-    const input = document.getElementById('user-input');
-    const text = input.value.trim();
-    
-    // Kiểm tra nếu không có cả text lẫn ảnh thì không gửi
-    if ((!text && !selectedImageData) || isTyping) return;
-
-    const currentImg = selectedImageData;
-    
-    // Hiển thị tin nhắn của người dùng lên UI ngay lập tức
-    createMsgUI(text, 'user', currentImg);
-    
-    // --- BẮT ĐẦU LOGIC ĐÓNG GÓI DỮ LIỆU ---
-    let userParts = [];
-    
-    // 1. Thêm phần văn bản
-    userParts.push({ text: text || "Hãy phân tích hình ảnh này cho tôi." });
-    
-    // 2. Nếu có ảnh, thêm phần inline_data (Multimodal)
-    if (currentImg) {
-        try {
-            const base64Content = currentImg.split(',')[1]; // Bỏ phần tiền tố data:image/...
-            const mimeType = currentImg.split(';')[0].split(':')[1]; // Lấy image/png hoặc image/jpeg
-            
-            userParts.push({
-                inline_data: {
-                    mime_type: mimeType,
-                    data: base64Content
-                }
-            });
-        } catch (e) {
-            console.error("Lỗi xử lý Base64 ảnh:", e);
-        }
-    }
-
-    // Đẩy vào lịch sử chat
-    chatHistory.push({ role: "user", parts: userParts });
-    // --- KẾT THÚC LOGIC ĐÓNG GÓI ---
-
-    // Reset input và preview
-    input.value = ''; 
-    input.style.height = 'auto';
-    if (window.cancelImg) cancelImg(); 
-    isTyping = true;
-
-    // Hiển thị trạng thái đang suy nghĩ
-    const chatWindow = document.getElementById('chat-window');
-    const loadingDiv = document.createElement('div');
-    const loadingId = 'loading-' + Date.now();
-    loadingDiv.id = loadingId;
-    loadingDiv.className = 'msg-group notranslate mb-4';
-    
-    const loadingText = await gt("Noob AI đang suy nghĩ...");
-    loadingDiv.innerHTML = `<div class="msg-header" style="color:#00ff88"><i class="fa-solid fa-circle-notch fa-spin"></i> ${loadingText}</div>`;
-    
-    chatWindow.appendChild(loadingDiv);
-    chatWindow.scrollTo({ top: chatWindow.scrollHeight, behavior: 'smooth' });
-
-    try {
-        const response = await fetch(WORKER_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-                action: 'chat_ai', 
-                // Gửi 12 câu gần nhất để AI giữ được ngữ cảnh (context)
-                messages: chatHistory.slice(-12),
-                user_lang: user_lang 
-            })
-        });
-
-        const data = await response.json();
-        
-        // Xóa dòng loading
-        const loaderEl = document.getElementById(loadingId);
-        if (loaderEl) loaderEl.remove();
-
-        if (data.success) {
-            // Hiển thị câu trả lời của AI với hiệu ứng đánh máy
-            await createMsgUI(data.text, 'model', null, false); 
-            chatHistory.push({ role: "model", parts: [{ text: data.text }] });
-            saveToLocal(); // Lưu vào localStorage
-        } else {
-            throw new Error(data.error || "API Error");
-        }
-    } catch (error) {
-        const loaderEl = document.getElementById(loadingId);
-        if (loaderEl) {
-            const errorText = await gt("Lỗi");
-            loaderEl.innerHTML = `<div class="text-danger fw-bold"><i class="fa-solid fa-triangle-exclamation"></i> ${errorText}: ${error.message}</div>`;
-        }
-        console.error("Chat Error:", error);
-    } finally {
-        isTyping = false;
-    }
-}
-
-// 5. HỆ THỐNG XÁC THỰC (SỬA LỖI SWAL)
-async function authUI() {
-    // 1. Kiểm tra trạng thái đăng nhập
-    if (token) {
-        const result = await Swal.fire({
-            title: await gt('Tài khoản'),
-            text: `${await gt('Bạn đang đăng nhập với')}: ${atob(token)}`,
-            icon: 'info',
-            showCancelButton: true,
-            confirmButtonText: await gt('Đăng xuất'),
-            cancelButtonText: await gt('Đóng'),
-            confirmButtonColor: '#d33'
-        });
-        if (result.isConfirmed) {
-            localStorage.removeItem('token');
+// --- AUTH LOGIC ---
+function handleAccountAction() {
+    if(localStorage.getItem('noob_token')) {
+        if(confirm("Ông giáo muốn đăng xuất à? Mọi data local vẫn giữ nguyên nhé.")) {
+            localStorage.removeItem('noob_token');
             location.reload();
         }
-        return;
+    } else {
+        document.getElementById('noob-overlay').style.display = 'flex';
+        document.getElementById('modal-auth').style.display = 'block';
     }
+}
 
-    // 2. Giao diện Form
-    const { value: form, isConfirmed, isDenied } = await Swal.fire({
-        title: await gt('Đăng nhập / Đăng ký'),
-        html: `
-            <input id="swal-email" class="swal2-input" placeholder="${await gt('Email')}">
-            <input id="swal-pass" type="password" class="swal2-input" placeholder="${await gt('Mật khẩu')}">
-        `,
-        showDenyButton: true,
-        confirmButtonText: await gt('Đăng nhập'),
-        denyButtonText: await gt('Tạo tài khoản mới'),
-        preConfirm: () => {
-            const email = document.getElementById('swal-email').value;
-            const password = document.getElementById('swal-pass').value;
-            if (!email || !password) return Swal.showValidationMessage('Vui lòng nhập đủ thông tin');
-            return { email, password };
-        }
-    });
+function toggleAuthMode() {
+    authMode = (authMode === 'login') ? 'register' : 'login';
+    document.getElementById('auth-header').innerText = authMode === 'login' ? 'Chào ông giáo!' : 'Gia nhập Team Noob';
+    document.getElementById('auth-switch').innerText = authMode === 'login' ? 'Cần tạo acc mới?' : 'Đã có acc rồi?';
+}
 
-    let action = isConfirmed ? 'login' : (isDenied ? 'register' : null);
-    if (!action) return;
-
-    Swal.showLoading();
+async function doAuth() {
+    const email = document.getElementById('f-email').value;
+    const password = document.getElementById('f-pass').value;
+    if(!email || !password) return showNotify("Điền đủ info đi ông giáo!", "error");
 
     try {
-        const res = await fetch(WORKER_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ action, email: form.email, password: form.password })
-        });
-        const data = await res.json();
-
-        if (data.success) {
-            if (action === 'register') {
-                // Tắt loading và hiện thông báo "ông giáo"
-                await Swal.fire({
-                    title: await gt('Thành công'),
-                    text: data.message, // "Check OTP trong email đi ông giáo!"
-                    icon: 'success',
-                    timer: 2500,
-                    timerProgressBar: true,
-                    confirmButtonText: 'Nhập OTP'
-                });
-                
-                // TỰ ĐỘNG TẮT UI TRƯỚC VÀ HIỆN OTP
-                verifyOTPUI(form.email);
+        const r = await fetch(WORKER_URL, { method: 'POST', body: JSON.stringify({ action: authMode, email, password })});
+        const d = await r.json();
+        if(d.success) {
+            if(authMode === 'register') {
+                document.getElementById('modal-auth').style.display = 'none';
+                document.getElementById('modal-otp').style.display = 'block';
+                showNotify(d.message);
             } else {
-                localStorage.setItem('token', data.token);
+                localStorage.setItem('noob_token', d.token);
                 location.reload();
             }
-        } else {
-            // Trường hợp lỗi (Ví dụ: Email đã tồn tại)
-            Swal.fire({
-                title: await gt('Thất bại'),
-                text: await gt(data.error || 'Lỗi không xác định'),
-                icon: 'error'
-            });
-        }
-    } catch (e) {
-        Swal.fire('Lỗi', 'Không thể kết nối Server', 'error');
-    }
+        } else showNotify(d.error, "error");
+    } catch(e) { showNotify("Server gank rồi, thử lại sau!", "error"); }
 }
 
-async function verifyOTPUI(email) {
-    // Mọi UI cũ sẽ tự động đóng khi gọi Swal.fire mới
-    const { value: otp } = await Swal.fire({
-        title: await gt('Xác minh OTP'),
-        text: `${await gt('Nhập mã 6 số đã gửi tới')} ${email}`,
-        input: 'text',
-        inputAttributes: { maxlength: 6, autofocus: 'true', style: 'text-align: center; letter-spacing: 5px; font-size: 24px;' },
-        showCancelButton: true,
-        confirmButtonText: await gt('Xác nhận'),
-        allowOutsideClick: false
-    });
-
-    if (!otp) return;
-
-    Swal.showLoading();
-    try {
-        const res = await fetch(WORKER_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ action: 'verify_otp', email, otp })
-        });
-        const data = await res.json();
-
-        if (data.success) {
-            localStorage.setItem('token', data.token);
-            await Swal.fire({
-                title: await gt('Tuyệt vời!'),
-                text: await gt('Tài khoản đã được kích hoạt thành công.'),
-                icon: 'success',
-                timer: 1500,
-                showConfirmButton: false
-            });
-            location.reload();
-        } else {
-            // Nếu sai mã, hiện lỗi và cho phép nhập lại ngay lập tức
-            await Swal.fire('Sai mã OTP', data.error || 'Vui lòng kiểm tra lại email', 'error');
-            verifyOTPUI(email);
-        }
-    } catch (e) {
-        Swal.fire('Lỗi', 'Kết nối thất bại', 'error');
-    }
+async function doVerify() {
+    const email = document.getElementById('f-email').value;
+    const otp = document.getElementById('f-otp').value;
+    const r = await fetch(WORKER_URL, { method: 'POST', body: JSON.stringify({ action: 'verify_otp', email, otp })});
+    const d = await r.json();
+    if(d.success) {
+        localStorage.setItem('noob_token', d.token);
+        location.reload();
+    } else showNotify(d.error, "error");
 }
 
-async function verifyOTPUI(email) {
-    // Mọi UI cũ sẽ tự động đóng khi gọi Swal.fire mới
-    const { value: otp } = await Swal.fire({
-        title: await gt('Xác minh OTP'),
-        text: `${await gt('Nhập mã 6 số đã gửi tới')} ${email}`,
-        input: 'text',
-        inputAttributes: { maxlength: 6, autofocus: 'true', style: 'text-align: center; letter-spacing: 5px; font-size: 24px;' },
-        showCancelButton: true,
-        confirmButtonText: await gt('Xác nhận'),
-        allowOutsideClick: false
-    });
+// --- CORE CHAT ENGINE ---
+async function handleSend() {
+    const input = document.getElementById('user-input');
+    const text = input.value.trim();
+    if((!text && !selectedImageData) || isTyping) return;
 
-    if (!otp) return;
+    if(!currentFolderId) createNewFolder(text || "Tin nhắn ảnh");
 
-    Swal.showLoading();
-    try {
-        const res = await fetch(WORKER_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ action: 'verify_otp', email, otp })
-        });
-        const data = await res.json();
-
-        if (data.success) {
-            localStorage.setItem('token', data.token);
-            await Swal.fire({
-                title: await gt('Tuyệt vời!'),
-                text: await gt('Tài khoản đã được kích hoạt thành công.'),
-                icon: 'success',
-                timer: 1500,
-                showConfirmButton: false
-            });
-            location.reload();
-        } else {
-            // Nếu sai mã, hiện lỗi và cho phép nhập lại ngay lập tức
-            await Swal.fire('Sai mã OTP', data.error || 'Vui lòng kiểm tra lại email', 'error');
-            verifyOTPUI(email);
-        }
-    } catch (e) {
-        Swal.fire('Lỗi', 'Kết nối thất bại', 'error');
-    }
-}
-
-// 6. CHIA SẺ & NHÓM (D1)
-async function shareUI() {
-    if (!token) return authUI();
-    Swal.showLoading();
+    renderMessage(text, 'user', selectedImageData);
     
+    let parts = [{ text: text || "Phân tích nội dung ảnh này giúp tôi." }];
+    if(selectedImageData) {
+        parts.push({ inline_data: { mime_type: "image/jpeg", data: selectedImageData.split(',')[1] }});
+    }
+    chatHistory.push({ role: 'user', parts });
+
+    input.value = ''; input.style.height = 'auto';
+    const tempImg = selectedImageData;
+    clearImage();
+    isTyping = true;
+
     try {
         const res = await fetch(WORKER_URL, {
             method: 'POST',
-            body: JSON.stringify({ action: 'share', token, data: chatHistory })
+            body: JSON.stringify({ messages: chatHistory.slice(-12), user_lang: 'auto' })
         });
-        const d = await res.json();
+        const data = await res.json();
+        if(data.success) {
+            await renderMessage(data.text, 'model');
+            chatHistory.push({ role: 'model', parts: [{ text: data.text }] });
+            saveCurrentFolder();
+        } else {
+            renderMessage("Lỗi rồi ông giáo: " + data.error, 'model');
+        }
+    } catch(e) { 
+        showNotify("Mất kết nối server!", "error");
+    } finally { isTyping = false; }
+}
+
+async function renderMessage(text, role, img = null, skipAnimation = false) {
+    const win = document.getElementById('chat-window');
+    const div = document.createElement('div');
+    div.className = 'msg-group';
+    const isBot = (role === 'model');
+    
+    div.innerHTML = `
+        <div class="small fw-bold mb-2" style="color:${isBot ? '#00ff88' : 'var(--primary)'}">
+            <i class="fa-solid ${isBot ? 'fa-robot' : 'fa-circle-user'} me-2"></i>${isBot ? "ABC'S NOOB" : "BẠN"}
+        </div>
+        ${img ? `<img src="${img}" class="img-fluid rounded-4 mb-3" style="max-height:300px; border:1px solid var(--border-color)">` : ''}
+        <div class="msg-content"></div>
+    `;
+    win.appendChild(div);
+    const target = div.querySelector('.msg-content');
+
+    if(!isBot || skipAnimation) {
+        target.innerHTML = marked.parse(text || "");
+        if(window.Prism) Prism.highlightAllUnder(target);
+    } else {
+        await runTypewriter(target, text);
+    }
+    win.scrollTop = win.scrollHeight;
+}
+
+function runTypewriter(el, text) {
+    return new Promise(resolve => {
+        el.classList.add('typing-cursor');
+        let i = 0; let currentText = "";
+        const timer = setInterval(() => {
+            if(i < text.length) {
+                currentText += text[i++];
+                el.innerHTML = marked.parse(currentText);
+                document.getElementById('chat-window').scrollTop = document.getElementById('chat-window').scrollHeight;
+            } else {
+                clearInterval(timer);
+                el.classList.remove('typing-cursor');
+                if(window.Prism) Prism.highlightAllUnder(el);
+                resolve();
+            }
+        }, 12);
         
-        if (d.shareId) {
-            navigator.clipboard.writeText(d.shareId);
-            Swal.fire(
-                await gt('Đã tạo liên kết'), 
-                `${await gt('Mã ID')}: ${d.shareId}\n(${await gt('Đã chép vào bộ nhớ tạm')})`, 
-                'success'
-            );
-        }
-    } catch (e) {
-        Swal.fire('Error', await gt('Lỗi kết nối'), 'error');
+        // Ngắt bằng phím Esc
+        window.onkeydown = (e) => {
+            if(e.key === 'Escape') {
+                clearInterval(timer);
+                el.innerHTML = marked.parse(text);
+                el.classList.remove('typing-cursor');
+                resolve();
+            }
+        };
+    });
+}
+
+// --- FOLDER & STORAGE ---
+function createNewFolder(name) {
+    currentFolderId = Date.now().toString();
+    const newFolder = { id: currentFolderId, name: name.substring(0, 30), history: [] };
+    allChats.unshift(newFolder);
+    updateFolderUI();
+    document.getElementById('chat-title').innerText = newFolder.name;
+}
+
+function saveCurrentFolder() {
+    const idx = allChats.findIndex(f => f.id === currentFolderId);
+    if(idx !== -1) {
+        allChats[idx].history = chatHistory;
+        localStorage.setItem('noob_folders', JSON.stringify(allChats));
+        updateFolderUI();
     }
 }
 
-async function groupUI() {
-    if (!token) return authUI();
-    const { value: mode } = await Swal.fire({
-        title: await gt('Nhóm Chat D1'),
-        showDenyButton: true,
-        confirmButtonText: await gt('Vào nhóm'),
-        denyButtonText: await gt('Tạo nhóm mới')
+function loadFolder(id) {
+    const folder = allChats.find(f => f.id === id);
+    if(!folder) return;
+    currentFolderId = id;
+    chatHistory = folder.history;
+    document.getElementById('chat-window').innerHTML = '';
+    document.getElementById('chat-title').innerText = folder.name;
+    chatHistory.forEach(m => {
+        const content = m.parts.find(p => p.text)?.text;
+        renderMessage(content, m.role, null, true);
     });
-    if (mode === undefined) return;
-
-    const { value: val } = await Swal.fire({
-        title: mode ? await gt('Nhập mã nhóm') : await gt('Tên nhóm của bạn'),
-        input: 'text'
-    });
-    if (!val) return;
-
-    const res = await fetch(WORKER_URL, {
-        method: 'POST',
-        body: JSON.stringify({ 
-            action: mode ? 'join_group' : 'create_group', 
-            token, 
-            [mode ? 'groupId' : 'groupName']: val 
-        })
-    });
-    const d = await res.json();
-    if (d.success) {
-        Swal.fire('Xong!', d.groupId ? `Mã nhóm của bạn: ${d.groupId}` : `Bạn đã vào nhóm: ${d.message}`, 'success');
-    }
+    updateFolderUI();
+    if(window.innerWidth < 768) document.getElementById('sidebar').classList.remove('active');
 }
 
-// 7. QUẢN LÝ LỊCH SỬ LOCAL
-function saveToLocal() {
-    localStorage.setItem('abc_chat_pro', JSON.stringify(chatHistory.slice(-30)));
-    renderHistorySidebar();
-}
-
-function renderHistorySidebar() {
+function updateFolderUI() {
     const container = document.getElementById('history-container');
-    if (!container) return;
     container.innerHTML = '';
-    
-    // Chỉ lấy tin nhắn người dùng để làm tiêu đề
-    const titles = chatHistory.filter(m => m.role === 'user').reverse();
-    titles.forEach(msg => {
+    allChats.forEach(f => {
         const item = document.createElement('div');
-        item.className = 'history-item';
-        const text = msg.parts.find(p => p.text)?.text || "Tin nhắn ảnh";
-        item.innerHTML = `<i class="fa-regular fa-message me-2"></i> ${text.substring(0, 25)}...`;
+        item.className = `history-item ${f.id === currentFolderId ? 'active' : ''}`;
+        item.innerHTML = `
+            <div class="text-truncate" onclick="loadFolder('${f.id}')" style="flex:1">
+                <i class="fa-regular fa-message me-2"></i> ${f.name}
+            </div>
+            <i class="fa-solid fa-xmark ms-2 opacity-50" onclick="deleteFolder('${f.id}', event)" style="cursor:pointer"></i>
+        `;
         container.appendChild(item);
     });
 }
 
-async function clearChat() {
-    const result = await Swal.fire({
-        title: await gt("Xóa lịch sử?"),
-        text: await gt("Hành động này sẽ xóa toàn bộ tin nhắn hiện tại."),
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonText: await gt("Xóa sạch"),
-        cancelButtonText: await gt("Hủy bỏ"),
-        confirmButtonColor: '#d33'
-    });
-    
-    if (result.isConfirmed) {
-        chatHistory = [];
-        localStorage.removeItem('abc_chat_pro');
-        document.getElementById('chat-window').innerHTML = '';
-        renderHistorySidebar();
-    }
+function deleteFolder(id, e) {
+    if(e) e.stopPropagation();
+    allChats = allChats.filter(f => f.id !== id);
+    localStorage.setItem('noob_folders', JSON.stringify(allChats));
+    if(currentFolderId === id) startNewChat();
+    updateFolderUI();
 }
 
-// 8. KHỞI TẠO HỆ THỐNG KHI LOAD TRANG
-// Sử dụng DOMContentLoaded thay vì window.onload để tránh ghi đè
-window.addEventListener('DOMContentLoaded', async () => {
-    // 1. Khởi tạo ngôn ngữ
-    if (!localStorage.getItem('user_lang') || localStorage.getItem('user_lang') === 'auto') {
-        const browserLang = navigator.language.split('-')[0];
-        localStorage.setItem('user_lang', browserLang);
-    }
-    const user_lang = localStorage.getItem('user_lang');
-
-    // 2. Khởi tạo Sidebar và Auth UI
-    renderHistorySidebar();
-    initAuthUI(user_lang);
-
-    // 3. Render tin nhắn cũ (phiên hiện tại)
-    const win = document.getElementById('chat-window');
-    if (win && chatHistory?.length > 0) {
-        win.innerHTML = '';
-        for (const m of chatHistory) {
-            const txt = m.parts.find(p => p.text)?.text;
-            await createMsgUI(txt, m.role, null, true); 
-        }
-    }
-
-    // 4. Dịch UI nếu cần (Tránh dịch nếu là tiếng Việt)
-    if (user_lang !== 'vi') {
-        await translateUI(user_lang); 
-    }
-
-    // 5. Đăng ký sự kiện phím tắt toàn cục
-    window.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') skipTyping = true;
-    });
-
-    console.log("Hệ thống đã sẵn sàng! #FreeAbcsnoobhelper");
-});
-
-// Tách hàm Auth để code sạch hơn
-function initAuthUI(lang) {
-    const token = localStorage.getItem('token');
-    if (!token) return;
-
-    try {
-        // Giả sử token là email mã hóa hoặc JWT đơn giản
-        const email = atob(token.split('.')[0]); 
-        const userInfo = document.getElementById('user-info');
-        if (userInfo) userInfo.innerText = email;
-
-        const authBtnText = document.getElementById('auth-text');
-        if (authBtnText) {
-            authBtnText.innerText = (lang === 'vi') ? 'Đăng xuất' : 'Logout';
-        }
-    } catch (e) {
-        localStorage.removeItem('token');
-    }
-}
-
-async function translateUI(lang) {
-    const elements = Array.from(document.querySelectorAll('button, span, div.small, textarea, .fw-bold'))
-        .filter(el => {
-            // Loại bỏ các vùng không cần dịch
-            if (el.closest('#chat-window') || el.classList.contains('fa-solid') || el.classList.contains('fa-regular')) return false;
-            let text = (el.innerText || el.placeholder || "").trim();
-            return text.length > 1 && !text.includes('Noob AI');
-        });
-
-    if (elements.length === 0) return;
-
-    // Gộp tất cả text thành một chuỗi lớn cách nhau bởi ký tự đặc biệt để dịch 1 lần
-    const textToTranslate = elements.map(el => (el.innerText || el.placeholder).trim()).join('\n---\n');
-
-    try {
-        const res = await fetch(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=vi&tl=${lang}&dt=t&q=${encodeURIComponent(textToTranslate)}`);
-        const data = await res.json();
-        
-        // Google API đôi khi trả về mảng các dòng
-        const translatedLines = data[0].map(item => item[0]).join('').split('\n---\n');
-
-        elements.forEach((el, index) => {
-            const translated = translatedLines[index]?.trim();
-            if (!translated) return;
-
-            if (el.placeholder) {
-                el.placeholder = translated;
-            } else {
-                const icon = el.querySelector('i');
-                if (icon) {
-                    el.innerHTML = '';
-                    el.appendChild(icon);
-                    el.appendChild(document.createTextNode(' ' + translated));
-                } else {
-                    el.innerText = translated;
-                }
-            }
-        });
-    } catch (e) {
-        console.error("Lỗi dịch UI:", e);
-    }
-}
-// Hàm bắt đầu một cuộc trò chuyện mới hoàn toàn
-function newChat() {
-    // 1. Lưu lại cuộc trò chuyện hiện tại vào danh sách nếu có nội dung
-    if (chatHistory.length > 0) {
-        saveCurrentChat();
-    }
-
-    // 2. Reset các biến trạng thái
+function startNewChat() {
+    currentFolderId = null;
     chatHistory = [];
-    currentChatId = null;
+    document.getElementById('chat-window').innerHTML = `
+        <div class="text-center mt-5 opacity-50">
+            <i class="fa-solid fa-wand-magic-sparkles fs-1 mb-3"></i>
+            <h5>Hôm nay build gì đây ông giáo?</h5>
+            <p class="small">Sẵn sàng hỗ trợ Code, Minecraft System hoặc Bitcoin logic.</p>
+        </div>
+    `;
+    document.getElementById('chat-title').innerText = "Cuộc trò chuyện mới";
+    updateFolderUI();
+}
+
+// --- VISION HANDLING ---
+function processFile(input) {
+    const file = input.files[0];
+    if(!file) return;
+    if(file.size > 4 * 1024 * 1024) return showNotify("Ảnh nặng quá (max 4MB)!", "error");
+    
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        selectedImageData = e.target.result;
+        document.getElementById('p-img').src = selectedImageData;
+        document.getElementById('image-preview').style.display = 'block';
+    };
+    reader.readAsDataURL(file);
+}
+
+function clearImage() {
     selectedImageData = null;
-    isTyping = false;
-
-    // 3. Xóa trắng màn hình chat và preview ảnh
-    const win = document.getElementById('chat-window');
-    if (win) win.innerHTML = '';
-    
-    const preview = document.getElementById('image-preview');
-    if (preview) preview.style.display = 'none';
-
-    // 4. Xóa dữ liệu phiên tạm thời trong LocalStorage (không xóa all_chats_list)
-    localStorage.removeItem('abc_chat_pro');
-
-    // 5. Cập nhật lại giao diện sidebar
-    renderHistorySidebar();
-
-    // 6. Thông báo cho người dùng (tùy chọn)
-    console.log("Đã bắt đầu phiên hội thoại mới.");
+    document.getElementById('image-preview').style.display = 'none';
+    document.getElementById('file-upload').value = '';
 }
 
-// Cập nhật lại hàm renderHistorySidebar để hỗ trợ tải lại chat cũ
-function renderHistorySidebar() {
-    const container = document.getElementById('history-container');
-    if (!container) return;
-    container.innerHTML = '';
-    
-    // Nếu có danh sách các cuộc hội thoại đã lưu (allChats)
-    if (allChats && allChats.length > 0) {
-        allChats.forEach(chat => {
-            const item = document.createElement('div');
-            item.className = 'history-item d-flex justify-content-between align-items-center';
-            
-            // Nội dung tiêu đề
-            const content = document.createElement('div');
-            content.style.overflow = 'hidden';
-            content.style.textOverflow = 'ellipsis';
-            content.innerHTML = `<i class="fa-regular fa-message me-2"></i> ${chat.name}`;
-            content.onclick = () => loadChat(chat.id);
-            
-            // Nút xóa nhanh
-            const delBtn = document.createElement('i');
-            delBtn.className = 'fa-solid fa-trash-can ms-2 text-secondary';
-            delBtn.style.fontSize = '12px';
-            delBtn.onclick = (e) => deleteChat(chat.id, e);
+// --- SHARE FEATURE ---
+async function shareCurrentChat() {
+    if(!chatHistory.length) return showNotify("Chat rỗng thì share gì ông giáo?", "error");
+    try {
+        const res = await fetch(WORKER_URL, {
+            method: 'POST',
+            body: JSON.stringify({ action: 'share', data: chatHistory })
+        });
+        const d = await res.json();
+        if(d.success) {
+            const url = `${window.location.origin}${window.location.pathname}?share=${d.shareId}`;
+            document.getElementById('share-url').value = url;
+            document.getElementById('noob-overlay').style.display = 'flex';
+            document.getElementById('modal-share').style.display = 'block';
+        }
+    } catch(e) { showNotify("Lỗi tạo link share!", "error"); }
+}
 
-            item.appendChild(content);
-            item.appendChild(delBtn);
-            container.appendChild(item);
-        });
-    } else {
-        // Nếu không có allChats, hiển thị tin nhắn từ chatHistory hiện tại như cũ
-        const titles = chatHistory.filter(m => m.role === 'user').reverse();
-        titles.forEach(msg => {
-            const item = document.createElement('div');
-            item.className = 'history-item';
-            const text = msg.parts.find(p => p.text)?.text || "Tin nhắn ảnh";
-            item.innerHTML = `<i class="fa-regular fa-message me-2"></i> ${text.substring(0, 25)}...`;
-            container.appendChild(item);
-        });
+function copyShareLink() {
+    const input = document.getElementById('share-url');
+    input.select();
+    document.execCommand('copy');
+    showNotify("Đã copy vào bộ nhớ đệm!");
+    closeAllModals();
+}
+
+// --- INITIALIZE ---
+window.onload = async () => {
+    // Xử lý Share ID nếu có trên URL
+    const params = new URLSearchParams(window.location.search);
+    const shareId = params.get('share');
+    if(shareId) {
+        showNotify("Đang tải cuộc trò chuyện được chia sẻ...");
+        const res = await fetch(WORKER_URL, { method: 'POST', body: JSON.stringify({ action: 'get_share', shareId })});
+        const d = await res.json();
+        if(d.success) {
+            chatHistory = d.data;
+            chatHistory.forEach(m => renderMessage(m.parts.find(p => p.text)?.text, m.role, null, true));
+            document.getElementById('chat-title').innerText = "Shared Chat Viewer";
+            return;
+        }
     }
-}
-    </script>
+
+    if(allChats.length > 0) {
+        loadFolder(allChats[0].id);
+    } else {
+        startNewChat();
+    }
+    
+    const token = localStorage.getItem('noob_token');
+    if(token) {
+        document.getElementById('account-status').innerText = "Member: Pro Noob";
+        document.getElementById('account-btn-text').innerText = "Đăng xuất";
+    }
+};
+
+// Auto-resize textarea
+document.getElementById('user-input').addEventListener('input', function() {
+    this.style.height = 'auto';
+    this.style.height = (this.scrollHeight) + 'px';
+});
+</script>
 </body>
 </html>
