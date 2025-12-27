@@ -29,6 +29,9 @@
         #timer-area { display: none; }
         .animate-pulse { animation: pulse 1.5s infinite; }
         @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+        
+        /* Chặn tương tác khi đang đếm ngược */
+        .btn.disabled { pointer-events: none; opacity: 0.7; }
     </style>
 </head>
 <body class="bg-light">
@@ -36,7 +39,7 @@
     <nav class="navbar navbar-dark bg-dark shadow">
         <div class="container justify-content-center">
             <a class="navbar-brand fw-bold" href="./">
-                <img src="./assets/image/abcsnoob.webp" style="width:30px; border-radius:50%; margin-right:10px;">Abc's Noob
+                <img src="./assets/image/abcsnoob.webp" style="width:30px; border-radius:50%; margin-right:10px;" alt="Logo">Abc's Noob
             </a>
         </div>
     </nav>
@@ -57,7 +60,7 @@
                 <div id="domain-sub" class="text-muted small mb-4 font-monospace">...</div>
 
                 <div id="warning-box" class="alert alert-secondary py-3 mb-4">
-                    <i class="fa-solid fa-database fa-beat me-2"></i>Đang đối soát danh sách đen từ GitHub...
+                    <i class="fa-solid fa-database fa-beat me-2"></i>Đang đối soát danh sách đen...
                 </div>
 
                 <div id="timer-area" class="mb-4">
@@ -68,7 +71,7 @@
                 </div>
                 
                 <div class="d-grid gap-2">
-                    <a id="direct-link" href="#" class="btn btn-primary btn-lg shadow fw-bold disabled">Đang xác minh...</a>
+                    <a id="direct-link" href="#" class="btn btn-primary btn-lg shadow fw-bold disabled">Vui lòng chờ...</a>
                     <a href="javascript:history.back()" class="btn btn-outline-secondary">Hủy bỏ & Quay lại</a>
                 </div>
             </div>
@@ -109,16 +112,15 @@
                 let foundData = null;
                 let isDangerous = false;
                 let isAkaHeal = false;
-                let parentDomain = "";
 
-                // 1. KIỂM TRA NHÀ CÁI (DANGEROUS) TRƯỚC
+                // 1. KIỂM TRA NGUY HIỂM (BANNED LIST)
                 const dangerData = mapping["dangerous_sites"];
                 if (dangerData && dangerData.aka.map(d => d.toLowerCase()).includes(currentDomain)) {
                     isDangerous = true;
                     foundData = dangerData;
                 }
 
-                // 2. KIỂM TRA AKA HEALER (NẾU KHÔNG DANGEROUS)
+                // 2. KIỂM TRA AKA (BẺ LÁI VỀ CHA)
                 if (!isDangerous) {
                     for (const [key, data] of Object.entries(mapping)) {
                         if (key === "dangerous_sites") continue;
@@ -126,9 +128,9 @@
                         
                         if (akaList.includes(currentDomain)) {
                             isAkaHeal = true;
-                            parentDomain = key;
                             foundData = data;
-                            finalTarget = "https://" + key;
+                            // NẾU LÀ AKA -> BAY THẲNG VỀ URL CHA
+                            finalTarget = data.url || ("https://" + key);
                             break;
                         }
                         if (currentDomain === key.toLowerCase()) {
@@ -138,21 +140,22 @@
                     }
                 }
 
-                // 3. TẢI ẢNH PREVIEW THEO ĐỊA CHỈ CUỐI
+                // 3. LOAD ẢNH PREVIEW (Dựa trên URL cuối cùng)
                 el.screenshot.src = `https://api.microlink.io/?url=${encodeURIComponent(finalTarget)}&screenshot=true&embed=screenshot.url`;
                 el.screenshot.onload = () => { el.loading.style.display = 'none'; el.screenshot.style.display = 'block'; };
 
-                // 4. HIỂN THỊ GIAO DIỆN KẾT QUẢ
+                // 4. KÍCH HOẠT GIAO DIỆN KẾT QUẢ
                 if (isDangerous) {
                     applyLockdown(el, foundData);
                 } else if (isAkaHeal) {
-                    applyHealer(el, foundData, parentDomain, finalTarget);
+                    applyHealer(el, foundData, currentDomain, finalTarget);
                 } else {
                     applySafe(el, foundData ? foundData.name : currentDomain, finalTarget);
                 }
 
             } catch (e) {
-                window.location.href = target;
+                // Nếu lỗi API, vẫn ép chờ 5s với link gốc để đảm bảo an toàn
+                applySafe(el, currentDomain, target);
             }
         }
 
@@ -163,14 +166,15 @@
             el.warningBox.className = "alert alert-danger fw-bold animate-pulse";
             el.warningBox.innerHTML = `<i class="fa-solid fa-triangle-exclamation me-2"></i>Trang này (${data.type}) đã bị liệt vào danh sách đen.`;
             el.loading.innerHTML = "<i class='fa-solid fa-skull-crossbones fa-4x text-danger'></i>";
+            el.directLink.classList.add('d-none');
         }
 
-        function applyHealer(el, data, parent, url) {
+        function applyHealer(el, data, oldDomain, parentUrl) {
             el.msgHeader.innerText = "SỬA LỖI LIÊN KẾT";
             el.platform.innerText = data.name;
             el.warningBox.className = "alert alert-info py-3";
-            el.warningBox.innerHTML = `<i class="fa-solid fa-wrench me-2"></i>Link <b>${el.domainSub.innerText}</b> lỗi. Đang bẻ lái về <b>${parent}</b>...`;
-            activateRedirect(el, url);
+            el.warningBox.innerHTML = `<i class="fa-solid fa-wrench me-2"></i>Link <b>${oldDomain}</b> bị lỗi. Đang bẻ lái về trang chủ...`;
+            activateRedirect(el, parentUrl);
         }
 
         function applySafe(el, name, url) {
@@ -183,16 +187,28 @@
 
         function activateRedirect(el, url) {
             el.directLink.href = url;
-            el.directLink.classList.remove('disabled');
-            el.directLink.innerText = "Truy cập ngay";
             el.timerArea.style.display = 'block';
             
-            let time = 5;
+            let timeLeft = 5;
+            el.countdown.innerText = timeLeft;
+
             const t = setInterval(() => {
-                time--;
-                el.countdown.innerText = time;
-                el.progressBar.style.width = ((5-time)/5*100) + "%";
-                if (time <= 0) { clearInterval(t); window.location.href = url; }
+                timeLeft--;
+                if (timeLeft >= 0) {
+                    el.countdown.innerText = timeLeft;
+                    el.progressBar.style.width = ((5 - timeLeft) / 5 * 100) + "%";
+                    el.directLink.innerText = `Vui lòng chờ (${timeLeft}s)`;
+                }
+
+                if (timeLeft <= 0) {
+                    clearInterval(t);
+                    el.directLink.classList.remove('disabled', 'btn-primary');
+                    el.directLink.classList.add('btn-success');
+                    el.directLink.innerText = "Truy cập ngay";
+                    
+                    // Tự động chuyển hướng sau khi hết 5s
+                    window.location.href = url;
+                }
             }, 1000);
         }
 
