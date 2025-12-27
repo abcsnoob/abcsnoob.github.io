@@ -3,54 +3,59 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Đang chuyển hướng... | Abc's Noob</title>
-    
+    <title>Kiểm tra liên kết | Abc's Noob</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous"/>
     <link href="./assets/css/style.css" rel="stylesheet" />
     <link rel="icon" href="assets/image/favicon.ico" type="image/x-icon"/>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
     
     <style>
-        body { transition: background-color 0.3s; }
-        .redirect-card { max-width: 500px; margin: 60px auto; border-radius: 20px; border: none; background: #fff; }
-        .platform-display { font-size: 2.2rem; font-weight: 800; color: #0d6efd; min-height: 1.2em; }
+        :root { --accent-color: #0d6efd; }
+        body { transition: all 0.5s ease; }
+        .redirect-card { max-width: 550px; margin: 60px auto; border-radius: 24px; border: none; background: #fff; transition: transform 0.3s; }
+        .platform-display { font-size: 2.5rem; font-weight: 800; color: var(--accent-color); line-height: 1.2; }
+        
+        /* Cảnh báo nguy hiểm */
+        body.is-dangerous { background-color: #721c24 !important; }
+        .is-dangerous .redirect-card { border: 4px solid #dc3545; }
+        .is-dangerous .platform-display { color: #dc3545; }
+        .is-dangerous #direct-link { display: none; } /* Chặn nút đi tiếp nếu nguy hiểm */
+        
         .loader-ring {
             display: inline-block; width: 60px; height: 60px;
-            border: 5px solid rgba(13, 110, 253, 0.1);
-            border-radius: 50%; border-top-color: #0d6efd;
+            border: 5px solid rgba(0,0,0,0.05);
+            border-radius: 50%; border-top-color: var(--accent-color);
             animation: spin 1s ease-in-out infinite;
         }
         @keyframes spin { to { transform: rotate(360deg); } }
-        .domain-sub { font-size: 0.9rem; color: #adb5bd; font-family: monospace; }
+        .domain-sub { font-size: 1rem; color: #6c757d; font-family: 'Courier New', Courier, monospace; }
     </style>
 </head>
 <body class="bg-light">
 
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
-        <div class="container">
+    <nav class="navbar navbar-dark bg-dark">
+        <div class="container justify-content-center">
             <a class="navbar-brand" href="./"><img src="./assets/image/abcsnoob.webp" style="width:30px; margin-right:10px;">Abc's Noob</a>
         </div>
     </nav>
 
     <div class="container text-center">
-        <div class="card redirect-card shadow-lg p-4 p-md-5">
-            <div class="mb-4"><div class="loader-ring"></div></div>
+        <div class="card redirect-card shadow-lg p-5">
+            <div id="status-icon" class="mb-4"><div class="loader-ring"></div></div>
             
-            <h2 class="fw-bold text-dark">Bạn sắp ra ngoài rồi đấy!</h2>
-            <p class="text-muted mb-1">Đang chuyển tới:</p>
-            
-            <div id="platform" class="platform-display">Đang tải...</div>
+            <h2 id="msg-header" class="fw-bold text-dark">Đang kiểm tra liên kết...</h2>
+            <div id="platform" class="platform-display my-3">...</div>
             <div id="domain-sub" class="domain-sub mb-4"></div>
 
-            <div class="alert alert-info py-2 small">
-                <i class="fa-solid fa-shield-halved me-2"></i>Hãy kiểm tra kỹ URL trước khi nhập thông tin cá nhân.
+            <div id="warning-box" class="alert alert-info py-3">
+                <i class="fa-solid fa-circle-info me-2"></i>Đang đối soát dữ liệu bảo mật...
             </div>
 
-            <p class="mt-3">Tự động chuyển tiếp sau <span id="countdown" class="fw-bold text-danger">5</span> giây...</p>
+            <p id="timer-text" class="mt-3">Tự động chuyển tiếp sau <span id="countdown" class="fw-bold text-danger">5</span> giây...</p>
             
-            <div class="d-grid gap-2 mt-4">
-                <a id="direct-link" href="#" class="btn btn-primary btn-lg shadow-sm">Chuyển hướng ngay</a>
-                <a href="javascript:history.back()" class="btn btn-link text-secondary text-decoration-none">Quay lại an toàn</a>
+            <div class="d-grid gap-3 mt-4">
+                <a id="direct-link" href="#" class="btn btn-primary btn-lg shadow">Tiếp tục truy cập</a>
+                <a href="javascript:history.back()" class="btn btn-outline-secondary">Quay lại trang trước</a>
             </div>
         </div>
     </div>
@@ -65,58 +70,68 @@
             const domainSubEl = document.getElementById('domain-sub');
             const countdownEl = document.getElementById('countdown');
             const directLink = document.getElementById('direct-link');
+            const warningBox = document.getElementById('warning-box');
+            const msgHeader = document.getElementById('msg-header');
 
             if (!target) {
-                platformEl.innerText = "Trống liên kết";
+                platformEl.innerText = "Lỗi: Link trống";
                 return;
             }
 
-            // Chuẩn hóa URL
             if (!target.startsWith('http')) target = 'https://' + target;
             directLink.href = target;
 
             try {
-                // Phân tích domain từ URL
                 const urlObj = new URL(target);
-                let currentDomain = urlObj.hostname.replace(/^www\./, '').toLowerCase();
+                const currentDomain = urlObj.hostname.replace(/^www\./, '').toLowerCase();
                 domainSubEl.innerText = currentDomain;
 
-                // Tải Mapping Data
                 const res = await fetch(API_URL);
                 const mapping = await res.json();
 
-                let displayName = currentDomain; // Mặc định nếu không tìm thấy
+                let foundData = null;
+                let isDangerous = false;
 
-                // Logic tìm kiếm thông minh
-                for (const [mainDomain, data] of Object.entries(mapping)) {
+                // Kiểm tra Mapping
+                for (const [key, data] of Object.entries(mapping)) {
                     const akaList = data.aka ? data.aka.map(d => d.toLowerCase()) : [];
-                    
-                    // Kiểm tra nếu trùng khớp main domain hoặc nằm trong danh sách aka
-                    if (currentDomain === mainDomain.toLowerCase() || akaList.includes(currentDomain)) {
-                        displayName = data.name;
+                    if (currentDomain === key.toLowerCase() || akaList.includes(currentDomain)) {
+                        foundData = data;
+                        if (key === "dangerous_sites") isDangerous = true;
                         break;
                     }
                 }
 
-                platformEl.innerText = displayName;
-
-                // Bắt đầu đếm ngược
-                let time = 5;
-                const timer = setInterval(() => {
-                    time--;
-                    countdownEl.innerText = time;
-                    if (time <= 0) {
-                        clearInterval(timer);
-                        window.location.href = target;
-                    }
-                }, 1000);
+                if (isDangerous) {
+                    // Giao diện cảnh báo đỏ
+                    document.body.classList.add('is-dangerous');
+                    msgHeader.innerText = "CẢNH BÁO NGUY HIỂM!";
+                    platformEl.innerText = foundData.name;
+                    warningBox.className = "alert alert-danger py-3";
+                    warningBox.innerHTML = `<i class="fa-solid fa-triangle-exclamation me-2"></i>Trang web này nằm trong danh sách đen (Lừa đảo/Cá cược). Hệ thống đã chặn tự động chuyển hướng.`;
+                    document.getElementById('timer-text').style.display = 'none';
+                    document.getElementById('status-icon').innerHTML = '<i class="fa-solid fa-circle-xmark fa-4x text-danger"></i>';
+                } else {
+                    // Giao diện bình thường
+                    msgHeader.innerText = "Bạn sắp ra ngoài rồi đấy!";
+                    platformEl.innerText = foundData ? foundData.name : currentDomain;
+                    warningBox.innerHTML = `<i class="fa-solid fa-shield-check text-success me-2"></i>Liên kết đã được kiểm tra an toàn.`;
+                    
+                    let time = 5;
+                    const timer = setInterval(() => {
+                        time--;
+                        countdownEl.innerText = time;
+                        if (time <= 0) {
+                            clearInterval(timer);
+                            window.location.href = target;
+                        }
+                    }, 1000);
+                }
 
             } catch (e) {
-                console.error(e);
                 platformEl.innerText = "Liên kết ngoài";
             }
         }
-
         window.onload = init;
     </script>
 </body>
