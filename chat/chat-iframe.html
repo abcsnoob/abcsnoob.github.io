@@ -141,7 +141,7 @@
 </head>
 <body>
 
-    <aside id="sidebar">
+ <aside id="sidebar">
         <div class="brand-section">
             <div class="logo-box"><i class="fa-solid fa-cube text-white fs-3"></i></div>
             <h4 class="fw-800 m-0">ABC'S NOOB <span class="text-primary">AI</span></h4>
@@ -159,6 +159,20 @@
             <div id="group-list">
                 <p class="small text-muted px-3 opacity-50">Đăng nhập để xem nhóm...</p>
             </div>
+
+            <div class="nav-label">Cài đặt</div>
+            <div class="chat-item" onclick="changeLanguage()">
+                <i class="fa-solid fa-language text-warning"></i> <span>Ngôn ngữ</span>
+            </div>
+            <div class="chat-item" onclick="alert('HD: Chat với AI về Code/MC/BTC. Upload ảnh để AI phân tích. Tạo nhóm để chat chung!')">
+                <i class="fa-solid fa-circle-info text-info"></i> <span>Cách dùng</span>
+            </div>
+            <div class="chat-item" onclick="loadData()">
+                <i class="fa-solid fa-sync text-success"></i> <span>Đồng bộ</span>
+            </div>
+            <div class="chat-item text-danger" onclick="deleteAccount()">
+                <i class="fa-solid fa-user-slash"></i> <span>Xóa tài khoản</span>
+            </div>
         </div>
 
         <div class="p-4 border-top border-secondary border-opacity-10 mt-auto">
@@ -166,10 +180,10 @@
                 <div class="avatar-sm rounded-circle bg-gradient p-1" style="background:linear-gradient(var(--primary), var(--secondary)); width:38px;height:38px"></div>
                 <div>
                     <span class="d-block small fw-bold" id="user-name">Guest Mode</span>
-                    <span class="d-block text-muted" style="font-size:10px">Online</span>
+                    <span class="d-block text-muted" id="user-status" style="font-size:10px">Online</span>
                 </div>
             </div>
-            <button class="btn btn-outline-light w-100 rounded-3 py-2 border-0 bg-white bg-opacity-5" onclick="handleAuthAction()">
+            <button class="btn btn-outline-light w-100 rounded-3 py-2 border-0 bg-white bg-opacity-5" id="auth-btn" onclick="handleAuthAction()">
                 <i class="fa-solid fa-right-to-bracket me-2"></i> <span id="auth-text">Đăng nhập ngay</span>
             </button>
         </div>
@@ -482,6 +496,32 @@
                     currentChatHistory = [];
                     localStorage.removeItem('noob_chat_history');
                 }
+            }
+        }
+
+        async function deleteAccount() {
+            const token = localStorage.getItem('noob_token');
+            if(!token) return alert("Phải đăng nhập mới xóa được chứ ông giáo!");
+            
+            if(confirm("XÓA THẬT À? Toàn bộ dữ liệu nhóm và tin nhắn sẽ 'bay màu' vĩnh viễn đó!")) {
+                const email = atob(token);
+                const res = await fetch(API_BASE, {
+                    method: 'POST',
+                    body: JSON.stringify({ action: 'delete_account', email })
+                });
+                const d = await res.json();
+                if(d.success) {
+                    localStorage.clear();
+                    location.reload();
+                } else alert(d.error);
+            }
+        }
+
+        function changeLanguage() {
+            const lang = prompt("Nhập ngôn ngữ (vi, en, jp, kr):", localStorage.getItem('noob_lang') || 'vi');
+            if(lang) {
+                localStorage.setItem('noob_lang', lang);
+                alert("Đã đổi sang: " + lang.toUpperCase());
             }
         }
 
