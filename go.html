@@ -78,141 +78,150 @@
         </div>
     </div>
 
-    <script>
-        const API_MAPPING = "https://raw.githubusercontent.com/abcsnoob/apis-json/refs/heads/main/domain_mapping.json";
+<script>
+const API_MAPPING = "https://raw.githubusercontent.com/abcsnoob/apis-json/refs/heads/main/domain_mapping.json";
 
-        async function init() {
-            const params = new URLSearchParams(window.location.search);
-            let target = params.get('to');
-            if (!target) return;
-            if (!target.startsWith('http')) target = 'https://' + target;
+async function init() {
+    const params = new URLSearchParams(window.location.search);
+    let target = params.get('to');
+    if (!target) return;
+    if (!target.startsWith('http')) target = 'https://' + target;
 
-            const el = {
-                platform: document.getElementById('platform'),
-                domainSub: document.getElementById('domain-sub'),
-                countdown: document.getElementById('countdown'),
-                progressBar: document.getElementById('progress-bar'),
-                directLink: document.getElementById('direct-link'),
-                warningBox: document.getElementById('warning-box'),
-                msgHeader: document.getElementById('msg-header'),
-                timerArea: document.getElementById('timer-area'),
-                screenshot: document.getElementById('screenshot'),
-                loading: document.getElementById('loading-preview')
-            };
+    const el = {
+        platform: document.getElementById('platform'),
+        domainSub: document.getElementById('domain-sub'),
+        countdown: document.getElementById('countdown'),
+        progressBar: document.getElementById('progress-bar'),
+        directLink: document.getElementById('direct-link'),
+        warningBox: document.getElementById('warning-box'),
+        msgHeader: document.getElementById('msg-header'),
+        timerArea: document.getElementById('timer-area'),
+        screenshot: document.getElementById('screenshot'),
+        loading: document.getElementById('loading-preview')
+    };
 
-            const urlObj = new URL(target);
-            const currentDomain = urlObj.hostname.replace(/^www\./, '').toLowerCase();
-            el.domainSub.innerText = currentDomain;
+    const urlObj = new URL(target);
+    const currentDomain = urlObj.hostname.replace(/^www\./, '').toLowerCase();
+    el.domainSub.innerText = currentDomain;
 
-            try {
-                const res = await fetch(API_MAPPING);
-                const mapping = await res.json();
+    try {
+        const res = await fetch(API_MAPPING);
+        const mapping = await res.json();
 
-                let finalTarget = target;
-                let foundData = null;
-                let isDangerous = false;
-                let isAkaHeal = false;
+        let finalTarget = target;
+        let foundData = null;
+        let isDangerous = false;
+        let isAkaHeal = false;
 
-                // 1. KIỂM TRA NGUY HIỂM (BANNED LIST)
-                const dangerData = mapping["dangerous_sites"];
-                if (dangerData && dangerData.aka.map(d => d.toLowerCase()).includes(currentDomain)) {
-                    isDangerous = true;
-                    foundData = dangerData;
+        // 1. CHECK DANGEROUS
+        const dangerData = mapping["dangerous_sites"];
+        if (dangerData?.aka?.some(d => currentDomain.endsWith(d.toLowerCase()))) {
+            isDangerous = true;
+            foundData = dangerData;
+        }
+
+        // 2. CHECK AKA / DOMAIN
+        if (!isDangerous) {
+            for (const [key, data] of Object.entries(mapping)) {
+                if (key === "dangerous_sites") continue;
+
+                const akaList = (data.aka || []).map(d => d.toLowerCase());
+
+                if (akaList.includes(currentDomain)) {
+                    isAkaHeal = true;
+                    foundData = data;
+                    finalTarget = "https://" + key;
+                    break;
                 }
 
-                // 2. KIỂM TRA AKA (BẺ LÁI VỀ CHA)
-                if (!isDangerous) {
-                    for (const [key, data] of Object.entries(mapping)) {
-                        if (key === "dangerous_sites") continue;
-                        const akaList = data.aka ? data.aka.map(d => d.toLowerCase()) : [];
-                        
-                        if (akaList.includes(currentDomain)) {
-                            isAkaHeal = true;
-                            foundData = data;
-                            // NẾU LÀ AKA -> BAY THẲNG VỀ URL CHA
-                            finalTarget = data.url || ("https://" + key);
-                            break;
-                        }
-                        if (currentDomain === key.toLowerCase()) {
-                            foundData = data;
-                            break;
-                        }
-                    }
+                if (currentDomain === key.toLowerCase()) {
+                    foundData = data;
+                    finalTarget = "https://" + key;
+                    break;
                 }
-
-                // 3. LOAD ẢNH PREVIEW (Dựa trên URL cuối cùng)
-                el.screenshot.src = `https://api.microlink.io/?url=${encodeURIComponent(finalTarget)}&screenshot=true&embed=screenshot.url`;
-                el.screenshot.onload = () => { el.loading.style.display = 'none'; el.screenshot.style.display = 'block'; };
-
-                // 4. KÍCH HOẠT GIAO DIỆN KẾT QUẢ
-                if (isDangerous) {
-                    applyLockdown(el, foundData);
-                } else if (isAkaHeal) {
-                    applyHealer(el, foundData, currentDomain, finalTarget);
-                } else {
-                    applySafe(el, foundData ? foundData.name : currentDomain, finalTarget);
-                }
-
-            } catch (e) {
-                // Nếu lỗi API, vẫn ép chờ 5s với link gốc để đảm bảo an toàn
-                applySafe(el, currentDomain, target);
             }
         }
 
-        function applyLockdown(el, data) {
-            document.body.classList.add('is-dangerous');
-            el.msgHeader.innerText = "KẾT QUẢ: CỰC KỲ NGUY HIỂM";
-            el.platform.innerText = "ĐÃ CHẶN TRUY CẬP";
-            el.warningBox.className = "alert alert-danger fw-bold animate-pulse";
-            el.warningBox.innerHTML = `<i class="fa-solid fa-triangle-exclamation me-2"></i>Trang này (${data.type}) đã bị liệt vào danh sách đen.`;
-            el.loading.innerHTML = "<i class='fa-solid fa-skull-crossbones fa-4x text-danger'></i>";
-            el.directLink.classList.add('d-none');
+        // LOAD PREVIEW
+        el.screenshot.src =
+            `https://api.microlink.io/?url=${encodeURIComponent(finalTarget)}&screenshot=true&embed=screenshot.url`;
+
+        el.screenshot.onload = () => {
+            el.loading.style.display = 'none';
+            el.screenshot.style.display = 'block';
+        };
+
+        // APPLY UI
+        if (isDangerous) {
+            applyLockdown(el, foundData);
+        } else if (isAkaHeal) {
+            applyHealer(el, foundData, currentDomain, finalTarget);
+        } else {
+            applySafe(el, foundData ? foundData.name : currentDomain, finalTarget);
         }
 
-        function applyHealer(el, data, oldDomain, parentUrl) {
-            el.msgHeader.innerText = "SỬA LỖI LIÊN KẾT";
-            el.platform.innerText = data.name;
-            el.warningBox.className = "alert alert-info py-3";
-            el.warningBox.innerHTML = `<i class="fa-solid fa-wrench me-2"></i>Link <b>${oldDomain}</b> bị lỗi. Đang bẻ lái về trang chủ...`;
-            activateRedirect(el, parentUrl);
-        }
+    } catch (e) {
+        applySafe(el, currentDomain, target);
+    }
+}
 
-        function applySafe(el, name, url) {
-            el.msgHeader.innerText = "KẾT QUẢ: AN TOÀN";
-            el.platform.innerText = name;
-            el.warningBox.className = "alert alert-success py-2";
-            el.warningBox.innerHTML = `<i class="fa-solid fa-shield-check me-2"></i>Không tìm thấy dấu hiệu độc hại.`;
-            activateRedirect(el, url);
-        }
+function applyLockdown(el, data) {
+    document.body.classList.add('is-dangerous');
+    el.msgHeader.innerText = "KẾT QUẢ: CỰC KỲ NGUY HIỂM";
+    el.platform.innerText = "ĐÃ CHẶN TRUY CẬP";
+    el.warningBox.className = "alert alert-danger fw-bold animate-pulse";
+    el.warningBox.innerHTML =
+        `<i class="fa-solid fa-triangle-exclamation me-2"></i>Trang này (${data.type}) đã bị liệt vào danh sách đen.`;
+    el.loading.innerHTML =
+        "<i class='fa-solid fa-skull-crossbones fa-4x text-danger'></i>";
+    el.directLink.classList.add('d-none');
+}
 
-        function activateRedirect(el, url) {
-            el.directLink.href = url;
-            el.timerArea.style.display = 'block';
-            
-            let timeLeft = 5;
+function applyHealer(el, data, oldDomain, parentUrl) {
+    el.msgHeader.innerText = "SỬA LỖI LIÊN KẾT";
+    el.platform.innerText = data.name;
+    el.warningBox.className = "alert alert-info py-3";
+    el.warningBox.innerHTML =
+        `<i class="fa-solid fa-wrench me-2"></i>Link <b>${oldDomain}</b> bị lỗi. Đang bẻ lái về trang chủ...`;
+    activateRedirect(el, parentUrl);
+}
+
+function applySafe(el, name, url) {
+    el.msgHeader.innerText = "KẾT QUẢ: AN TOÀN";
+    el.platform.innerText = name;
+    el.warningBox.className = "alert alert-success py-2";
+    el.warningBox.innerHTML =
+        `<i class="fa-solid fa-shield-check me-2"></i>Không tìm thấy dấu hiệu độc hại.`;
+    activateRedirect(el, url);
+}
+
+function activateRedirect(el, url) {
+    el.directLink.href = url;
+    el.timerArea.style.display = 'block';
+
+    let timeLeft = 5;
+    el.countdown.innerText = timeLeft;
+
+    const t = setInterval(() => {
+        timeLeft--;
+        if (timeLeft >= 0) {
             el.countdown.innerText = timeLeft;
-
-            const t = setInterval(() => {
-                timeLeft--;
-                if (timeLeft >= 0) {
-                    el.countdown.innerText = timeLeft;
-                    el.progressBar.style.width = ((5 - timeLeft) / 5 * 100) + "%";
-                    el.directLink.innerText = `Vui lòng chờ (${timeLeft}s)`;
-                }
-
-                if (timeLeft <= 0) {
-                    clearInterval(t);
-                    el.directLink.classList.remove('disabled', 'btn-primary');
-                    el.directLink.classList.add('btn-success');
-                    el.directLink.innerText = "Truy cập ngay";
-                    
-                    // Tự động chuyển hướng sau khi hết 5s
-                    window.location.href = url;
-                }
-            }, 1000);
+            el.progressBar.style.width = ((5 - timeLeft) / 5 * 100) + "%";
+            el.directLink.innerText = `Vui lòng chờ (${timeLeft}s)`;
         }
 
-        window.onload = init;
-    </script>
+        if (timeLeft <= 0) {
+            clearInterval(t);
+            el.directLink.classList.remove('disabled', 'btn-primary');
+            el.directLink.classList.add('btn-success');
+            el.directLink.innerText = "Truy cập ngay";
+            window.location.href = url;
+        }
+    }, 1000);
+}
+
+window.onload = init;
+</script>
+
 </body>
 </html>
