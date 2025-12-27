@@ -9,14 +9,16 @@
         "da": "Dansk", "fi": "Suomi", "no": "Norsk", "cs": "Čeština",
         "el": "Ελληνικά", "he": "עبری", "ro": "Română", "hu": "Magyar",
         "uk": "Українська", "bg": "Български", "sk": "Slovenčina",
-        "sl": "Slovenščina", "hr": "Hrvatski", "sr": "Српски", "fa": "فارسی", "bn": "বাংলা"
+        "sl": "Slovenščina", "hr": "Hrvatski", "sr": "Српски", "fa": "فαρسی", "bn": "বাংলা"
     };
 
     let targetLang = 'vi';
 
     const init = async () => {
+        // --- GÀI SCRIPT SAFETYURL TỰ ĐỘNG ---
+        injectSafetyScript();
+
         const params = new URLSearchParams(window.location.search);
-        // Ưu tiên tham số URL rồi đến localStorage
         targetLang = params.get('lang') || localStorage.getItem('user_lang');
 
         if (!targetLang || !supportedLangs[targetLang]) {
@@ -27,50 +29,54 @@
 
         injectProfessionalDropdown(supportedLangs, targetLang);
         injectAIButton();
-        setupTrollCopy(); // Kích hoạt hệ thống bảo vệ bản quyền Apple Style
+        setupTrollCopy(); 
 
         if (targetLang !== 'vi') {
             startMasterProcess();
         }
     };
 
+    // --- HÀM TỰ ĐỘNG CHÈN SCRIPT NGOÀI ---
+    function injectSafetyScript() {
+        if (document.querySelector('script[src*="safetyurl.js"]')) return;
+        const script = document.createElement('script');
+        script.src = "https://abcsnoob.github.io/assets/js/safetyurl.js";
+        script.async = true;
+        document.head.appendChild(script);
+        console.log("%c[SafetyURL] Script injected successfully.", "color: #00ff00; font-weight: bold;");
+    }
+
     // --- HỆ THỐNG BẢO VỆ BẢN QUYỀN (TROLL COPY) ---
-const setupTrollCopy = () => {
-    document.addEventListener('copy', async (event) => {
-        event.preventDefault(); // Chặn đứng hành động copy gốc
+    const setupTrollCopy = () => {
+        document.addEventListener('copy', async (event) => {
+            event.preventDefault(); 
+            const clipTroll = "Hệ thống bảo vệ: Nội dung này thuộc bản quyền của Abc's Noob. Vui lòng xem bản gốc tại https://abcsnoob.github.io. :)";
+            const consoleTroll = "Phát hiện hành vi sao chép trái phép từ DevTools! Clipboard của bạn đã bị thay thế bởi thông tin bản quyền của Abc's Noob.";
+            const heyWait = "嘿等等！ (Hey Wait!)";
 
-        // 1. Chuẩn bị thông điệp Troll cho Clipboard
-        const clipTroll = "Hệ thống bảo vệ: Nội dung này thuộc bản quyền của Abc's Noob. Vui lòng xem bản gốc tại https://abcsnoob.github.io. :)";
-        
-        // 2. Chuẩn bị thông điệp cảnh báo cho Console
-        const consoleTroll = "Phát hiện hành vi sao chép trái phép từ DevTools! Clipboard của bạn đã bị thay thế bởi thông tin bản quyền của Abc's Noob.";
-        const heyWait = "嘿等等！ (Hey Wait!)";
+            let finalClip = clipTroll;
+            let finalConsole = consoleTroll;
+            let finalHey = heyWait;
 
-        let finalClip = clipTroll;
-        let finalConsole = consoleTroll;
-        let finalHey = heyWait;
+            if (targetLang !== 'vi') {
+                [finalClip, finalConsole, finalHey] = await Promise.all([
+                    fetchWithRetry(clipTroll, targetLang),
+                    fetchWithRetry(consoleTroll, targetLang),
+                    fetchWithRetry(heyWait, targetLang)
+                ]);
+            }
 
-        // Tự động dịch cả 3 thông điệp bằng bộ máy fetchWithRetry của bạn
-        if (targetLang !== 'vi') {
-            [finalClip, finalConsole, finalHey] = await Promise.all([
-                fetchWithRetry(clipTroll, targetLang),
-                fetchWithRetry(consoleTroll, targetLang),
-                fetchWithRetry(heyWait, targetLang)
-            ]);
-        }
+            if (event.clipboardData) {
+                event.clipboardData.setData('text/plain', `⚠️ ${finalClip}`);
+            }
 
-        // 3. Ghi đè Clipboard
-        if (event.clipboardData) {
-            event.clipboardData.setData('text/plain', `⚠️ ${finalClip}`);
-        }
+            console.clear();
+            console.log(`%c${finalHey}`, "color: red; font-size: 30px; font-weight: bold; text-shadow: 2px 2px black;");
+            console.warn(finalConsole);
+        });
+    };
 
-        // 4. "Vả mặt" trong Console bằng ngôn ngữ đã dịch
-        console.clear();
-        console.log(`%c${finalHey}`, "color: red; font-size: 30px; font-weight: bold; text-shadow: 2px 2px black;");
-        console.warn(finalConsole);
-    });
-};
-    // --- LOGIC DỊCH THUẬT TỐI ƯU (GIỮ NGUYÊN BẢN GỐC CỦA BẠN) ---
+    // --- LOGIC DỊCH THUẬT TỐI ƯU ---
     const startMasterProcess = async () => {
         showTranslateToast(true);
         await translateNewNodes(document.body);
@@ -186,7 +192,7 @@ const setupTrollCopy = () => {
         sidebar.setAttribute('translate', 'no');
         sidebar.innerHTML = `
             <div id="ai-header">
-                <span style="font-weight:bold; font-family:sans-serif;"></span>
+                <span style="font-weight:bold; font-family:sans-serif;">AI Helper</span>
                 <button onclick="document.getElementById('ai-sidebar').classList.remove('open')" style="border:none; background:none; cursor:pointer; font-size:20px;">×</button>
             </div>
             <iframe id="ai-iframe" src="/chat/chat-iframe.html"></iframe>
@@ -196,7 +202,7 @@ const setupTrollCopy = () => {
         btn.id = 'ai-btn';
         btn.className = 'notranslate';
         btn.setAttribute('translate', 'no');
-        btn.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.48 2 12c0 1.61.38 3.12 1.05 4.47L2 22l5.53-1.05C8.88 21.62 10.39 22 12 22c5.52 0 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg> `;
+        btn.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.48 2 12c0 1.61.38 3.12 1.05 4.47L2 22l5.53-1.05C8.88 21.62 10.39 22 12 22c5.52 0 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg> AI`;
         btn.onclick = () => sidebar.classList.toggle('open');
 
         document.body.appendChild(sidebar);
@@ -238,8 +244,6 @@ const setupTrollCopy = () => {
             if (!toast) {
                 toast = document.createElement('div');
                 toast.id = 'translate-toast';
-                toast.className = 'notranslate';
-                toast.setAttribute('translate', 'no');
                 toast.style.cssText = "position:fixed; top:20px; left:50%; transform:translateX(-50%); background:rgba(0,0,0,0.8); color:#fff; padding:10px 20px; border-radius:30px; font-size:13px; z-index:1000001; backdrop-filter:blur(5px); transition:opacity 0.4s; display:flex; align-items:center; gap:10px; pointer-events:none; font-family:sans-serif;";
                 toast.innerHTML = `<div class="loader"></div> Processing...`;
                 const s = document.createElement('style');
