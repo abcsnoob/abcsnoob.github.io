@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Noob AI Pro | Ultimate Interface</title>
+    <title>Abc's Noob AI | Pro Dashboard</title>
     
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
@@ -12,471 +12,374 @@
 
     <style>
         :root {
-            --primary: #00d2ff; --primary-deep: #3a7bd5;
-            --bg-dark: #0b0e11; --sidebar-bg: #15191e;
-            --card-bg: #1e2329; --text-main: #eaecef;
-            --border-color: #2b3139; --input-focus: #3a7bd5;
-            --danger: #ff4d4d;
+            --primary: #5865F2; --primary-hover: #4752C4;
+            --bg-darker: #1e1f22; --bg-main: #2b2d31;
+            --bg-sidebar: #2b2d31; --bg-msg: #313338;
+            --text-normal: #dbdee1; --text-muted: #949ba4;
+            --border: rgba(255,255,255,0.05);
         }
 
-        body { background: var(--bg-dark); color: var(--text-main); font-family: 'Inter', sans-serif; height: 100dvh; overflow: hidden; display: flex; margin: 0; }
+        /* Scrollbar tinh tế kiểu Dev */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #1a1a1a; border-radius: 10px; }
 
-        /* --- Sidebar & Folder Logic --- */
+        body { 
+            background: var(--bg-darker); color: var(--text-normal); 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            height: 100dvh; overflow: hidden; display: flex; margin: 0; 
+        }
+
+        /* --- SIDEBAR SYSTEM --- */
         #sidebar {
-            width: 280px; background: var(--sidebar-bg); border-right: 1px solid var(--border-color);
-            display: flex; flex-direction: column; transition: transform 0.3s ease; z-index: 1001;
+            width: 300px; background: var(--bg-sidebar); border-right: 1px solid var(--border);
+            display: flex; flex-direction: column; transition: 0.3s; z-index: 1001;
         }
 
+        .server-header {
+            height: 60px; padding: 0 16px; display: flex; align-items: center;
+            border-bottom: 1px solid var(--border); font-weight: 800; font-size: 1.1rem;
+            box-shadow: 0 1px 0 rgba(0,0,0,0.1); color: #fff;
+        }
+
+        .section-label {
+            padding: 20px 16px 8px; font-size: 12px; font-weight: 700;
+            color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+
+        .nav-list { flex: 1; overflow-y: auto; padding: 0 8px; }
+        .nav-item {
+            padding: 8px 12px; border-radius: 4px; margin-bottom: 2px;
+            cursor: pointer; transition: 0.1s; display: flex; align-items: center;
+            color: var(--text-muted); font-size: 15px; position: relative;
+        }
+        .nav-item:hover { background: #35373c; color: #dbdee1; }
+        .nav-item.active { background: #3f4147; color: #fff; }
+        .nav-item i { width: 24px; font-size: 18px; margin-right: 12px; opacity: 0.7; }
+
+        .user-panel {
+            background: #232428; padding: 10px 16px; display: flex; 
+            align-items: center; gap: 12px; border-top: 1px solid var(--border);
+        }
+        .avatar {
+            width: 38px; height: 38px; border-radius: 50%; background: var(--primary);
+            display: flex; align-items: center; justify-content: center; font-weight: bold;
+        }
+
+        /* --- MAIN CHAT AREA --- */
+        #main-container { flex: 1; display: flex; flex-direction: column; background: var(--bg-main); }
+        
+        .chat-header {
+            height: 60px; padding: 0 20px; display: flex; align-items: center;
+            justify-content: space-between; border-bottom: 1px solid var(--border);
+            background: var(--bg-main);
+        }
+
+        #chat-window {
+            flex: 1; overflow-y: auto; padding: 20px 0; display: flex; flex-direction: column;
+        }
+
+        .msg-row {
+            padding: 10px 20px; display: flex; gap: 16px; transition: 0.1s;
+        }
+        .msg-row:hover { background: rgba(0,0,0,0.05); }
+        .msg-avatar { width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0; }
+        .msg-body { flex: 1; }
+        .msg-info { display: flex; align-items: baseline; gap: 8px; margin-bottom: 4px; }
+        .msg-author { font-weight: 600; color: #fff; }
+        .msg-time { font-size: 12px; color: var(--text-muted); }
+        .msg-content { line-height: 1.5; font-size: 15px; white-space: pre-wrap; }
+
+        /* --- INPUT AREA --- */
+        .input-wrapper { padding: 0 20px 24px; position: relative; }
+        .input-box {
+            background: #383a40; border-radius: 8px; padding: 10px 16px;
+            display: flex; align-items: flex-end; gap: 15px;
+        }
+        #user-input {
+            flex: 1; background: transparent; border: none; color: #dbdee1;
+            outline: none; resize: none; max-height: 400px; padding: 5px 0;
+        }
+
+        /* --- MODAL & OVERLAY --- */
+        .noob-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.8);
+            display: none; align-items: center; justify-content: center; z-index: 2000;
+            backdrop-filter: blur(5px);
+        }
+        .noob-modal {
+            background: var(--bg-main); width: 90%; max-width: 440px;
+            border-radius: 8px; padding: 24px; box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+        }
+        .form-control-noob {
+            background: #1e1f22; border: 1px solid transparent; color: #fff;
+            padding: 10px; border-radius: 4px; width: 100%; margin-bottom: 15px;
+        }
+        .form-control-noob:focus { border-color: var(--primary); outline: none; }
+
+        /* Mobile Fix */
         @media (max-width: 768px) {
-            #sidebar { position: fixed; top: 0; left: 0; height: 100%; transform: translateX(-100%); visibility: hidden; }
-            #sidebar.active { transform: translateX(0); visibility: visible; display: flex !important; }
+            #sidebar { position: fixed; left: -300px; height: 100%; width: 280px; }
+            #sidebar.open { left: 0; }
         }
-
-        .history-list { flex: 1; overflow-y: auto; padding: 10px; }
-        .history-item { 
-            padding: 10px 12px; border-radius: 8px; margin-bottom: 5px; cursor: pointer; transition: 0.2s; 
-            font-size: 14px; display: flex; justify-content: space-between; align-items: center; border: 1px solid transparent;
-        }
-        .history-item:hover { background: var(--card-bg); border-color: var(--border-color); }
-        .history-item.active { background: rgba(0, 210, 255, 0.1); border-color: var(--primary); color: var(--primary); }
-
-        /* --- Chat Display --- */
-        #main-chat { flex: 1; display: flex; flex-direction: column; position: relative; background: var(--bg-dark); }
-        .top-nav { height: 60px; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between; padding: 0 20px; background: rgba(11, 14, 17, 0.8); backdrop-filter: blur(10px); z-index: 1000; }
-
-        #chat-window { flex: 1; overflow-y: auto; padding: 30px 10% 150px 10%; scroll-behavior: smooth; }
-        .msg-group { margin-bottom: 35px; animation: fadeInUp 0.4s ease; }
-        .msg-content { line-height: 1.8; font-size: 15.5px; word-break: break-word; }
-        
-        /* Typing & Code */
-        .typing-cursor::after { content: "▊"; animation: blink 0.8s infinite; color: var(--primary); margin-left: 4px; }
-        pre[class*="language-"] { border-radius: 12px; margin: 15px 0; background: #010409 !important; border: 1px solid #30363d; }
-
-        /* --- Input System --- */
-        .input-area { position: absolute; bottom: 0; left: 0; right: 0; padding: 20px 10%; background: linear-gradient(transparent, var(--bg-dark) 40%); }
-        .input-box { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 18px; padding: 12px 18px; display: flex; align-items: flex-end; gap: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
-        textarea#user-input { flex: 1; background: transparent; border: none; color: white; outline: none; resize: none; max-height: 180px; font-size: 15px; padding: 5px 0; }
-
-        /* --- CUSTOM NOOB MODAL SYSTEM --- */
-        .noob-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center; z-index: 9999; backdrop-filter: blur(10px); }
-        .noob-modal { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 24px; width: 90%; max-width: 450px; padding: 35px; box-shadow: 0 25px 60px rgba(0,0,0,0.6); position: relative; }
-        .noob-input { width: 100%; background: #0b0e11; border: 1px solid var(--border-color); color: white; padding: 14px 18px; border-radius: 12px; margin-bottom: 15px; outline: none; transition: 0.3s; }
-        .noob-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(0, 210, 255, 0.1); }
-        
-        .toast-box { position: fixed; top: 20px; right: 20px; background: var(--card-bg); border-left: 4px solid var(--primary); padding: 16px 24px; border-radius: 12px; z-index: 10000; animation: slideIn 0.3s forwards; box-shadow: 0 10px 40px rgba(0,0,0,0.4); }
-
-        @keyframes fadeInUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-        @keyframes blink { 50% { opacity: 0; } }
     </style>
 </head>
 <body>
 
     <aside id="sidebar">
-        <div class="p-4">
-            <h5 class="fw-bold mb-4 text-primary"><i class="fa-solid fa-cube me-2"></i>NOOB AI PRO</h5>
-            <button class="btn btn-primary w-100 py-2 rounded-3 mb-2" onclick="startNewChat()">
-                <i class="fa-solid fa-plus me-2"></i> Đoạn chat mới
-            </button>
+        <div class="server-header">
+            <i class="fa-solid fa-code-branch me-2 text-primary"></i> NOOB DEV CENTER
         </div>
-        <div class="history-list" id="history-container"></div>
-        <div class="mt-auto p-4 border-top border-secondary">
-            <div id="account-status" class="small text-secondary mb-3">Chế độ Khách</div>
-            <button class="btn btn-dark w-100 text-start py-2" onclick="handleAccountAction()">
-                <i class="fa-solid fa-user-gear me-2"></i> <span id="account-btn-text">Tài khoản</span>
-            </button>
+
+        <div class="nav-list">
+            <div class="section-label">Tin nhắn riêng</div>
+            <div id="personal-chats"></div>
+
+            <div class="section-label">
+                Nhóm của ông giáo
+                <i class="fa-solid fa-plus-circle ms-auto" style="cursor:pointer" onclick="openModal('modal-create-group')"></i>
+            </div>
+            <div id="group-list"></div>
+        </div>
+
+        <div class="user-panel">
+            <div class="avatar" id="user-avatar">?</div>
+            <div class="flex-grow-1 overflow-hidden">
+                <div class="fw-bold text-white text-truncate" id="user-name">Guest Noob</div>
+                <div class="small text-muted" id="user-email-display">Đăng nhập để lưu data</div>
+            </div>
+            <i class="fa-solid fa-gear text-muted" style="cursor:pointer" onclick="openModal('modal-profile')"></i>
         </div>
     </aside>
 
-    <main id="main-chat">
-        <nav class="top-nav">
-            <div class="d-flex align-items-center gap-3">
-                <i class="fa-solid fa-bars action-btn d-md-none" style="cursor:pointer" onclick="document.getElementById('sidebar').classList.toggle('active')"></i>
-                <div id="chat-title" class="fw-semibold text-truncate" style="max-width: 200px;">Cuộc trò chuyện mới</div>
+    <div id="main-container">
+        <nav class="chat-header">
+            <div class="d-flex align-items-center">
+                <i class="fa-solid fa-bars d-md-none me-3" onclick="toggleSidebar()"></i>
+                <span class="text-muted fs-4 me-2">#</span>
+                <span class="fw-bold" id="active-chat-title">Chào mừng ông giáo</span>
             </div>
-            <div class="d-flex gap-2">
-                <button class="btn btn-sm btn-dark rounded-circle" onclick="shareCurrentChat()"><i class="fa-solid fa-share"></i></button>
-                <button class="btn btn-sm btn-dark rounded-circle" onclick="deleteCurrentFolder()"><i class="fa-solid fa-trash-can text-danger"></i></button>
+            <div class="d-flex gap-3">
+                <i class="fa-solid fa-users text-muted" style="cursor:pointer" onclick="showGroupMembers()" id="member-btn" style="display:none"></i>
+                <i class="fa-solid fa-user-plus text-muted" style="cursor:pointer" onclick="openModal('modal-invite')" id="invite-btn" style="display:none"></i>
+                <i class="fa-solid fa-trash-can text-muted" onclick="clearCurrentChat()"></i>
             </div>
         </nav>
 
-        <section id="chat-window"></section>
-
-        <div class="input-area">
-            <div id="image-preview" class="mb-3" style="display:none;">
-                <div class="position-relative d-inline-block">
-                    <img id="p-img" src="" style="width:70px; height:70px; border-radius:12px; object-fit:cover; border: 2px solid var(--primary);">
-                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-circle bg-danger" onclick="clearImage()" style="cursor:pointer; padding: 5px 8px;">×</span>
-                </div>
+        <main id="chat-window">
+            <div class="text-center p-5 opacity-25">
+                <i class="fa-solid fa-comments fa-4x mb-3"></i>
+                <h4>Chưa có hội thoại nào</h4>
+                <p>Chọn một nhóm hoặc tạo tin nhắn mới để bắt đầu gank code.</p>
             </div>
+        </main>
+
+        <div class="input-wrapper">
             <div class="input-box">
-                <input type="file" id="file-upload" hidden accept="image/*" onchange="processFile(this)">
-                <button class="btn btn-dark rounded-3" onclick="document.getElementById('file-upload').click()"><i class="fa-solid fa-image"></i></button>
-                <textarea id="user-input" rows="1" placeholder="Hỏi Noob AI về code, Minecraft hoặc Bitcoin..."></textarea>
-                <button class="btn btn-primary px-4 rounded-3 fw-bold" id="send-btn" onclick="handleSend()">Gửi</button>
+                <button class="btn p-0 text-muted" onclick="document.getElementById('img-upload').click()">
+                    <i class="fa-solid fa-circle-plus fs-5"></i>
+                </button>
+                <input type="file" id="img-upload" hidden accept="image/*" onchange="previewImage(this)">
+                <textarea id="user-input" rows="1" placeholder="Gửi tin nhắn..."></textarea>
+                <button class="btn btn-link text-primary p-0" onclick="sendMessage()">
+                    <i class="fa-solid fa-paper-plane fs-5"></i>
+                </button>
             </div>
-        </div>
-    </main>
-
-    <div id="noob-overlay" class="noob-overlay" onclick="closeAllModals(event)">
-        <div id="modal-auth" class="noob-modal" style="display:none;">
-            <h4 class="fw-bold mb-4" id="auth-header">Chào ông giáo!</h4>
-            <input type="email" id="f-email" class="noob-input" placeholder="Email">
-            <input type="password" id="f-pass" class="noob-input" placeholder="Mật khẩu">
-            <div class="d-flex justify-content-between align-items-center mt-3">
-                <span class="small text-primary" style="cursor:pointer" onclick="toggleAuthMode()" id="auth-switch">Cần tạo acc mới?</span>
-                <button class="btn btn-primary px-4" onclick="doAuth()">Tiếp tục</button>
+            <div id="p-preview-container" class="mt-2" style="display:none">
+                 <img id="p-preview" style="height:60px; border-radius:8px; border:1px solid var(--primary)">
             </div>
-        </div>
-
-        <div id="modal-otp" class="noob-modal" style="display:none;">
-            <h4 class="fw-bold">Xác nhận danh tính</h4>
-            <p class="text-secondary small">Nhập mã OTP 6 số vừa bay vào Mail.</p>
-            <input type="text" id="f-otp" class="noob-input text-center fw-bold fs-3" maxlength="6" placeholder="000000">
-            <button class="btn btn-primary w-100 py-3 mt-2 fw-bold" onclick="doVerify()">Kích hoạt ngay</button>
-        </div>
-
-        <div id="modal-share" class="noob-modal" style="display:none;">
-            <h4 class="fw-bold">Chia sẻ Chat</h4>
-            <p class="text-secondary small">Ai có link này cũng có thể xem lịch sử chat.</p>
-            <input type="text" id="share-url" class="noob-input" readonly>
-            <button class="btn btn-primary w-100" onclick="copyShareLink()">Sao chép liên kết</button>
         </div>
     </div>
 
-<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
-
-<script>
-/**
- * NOOB AI PRO - ULTIMATE LOGIC 2025
- * Hoàn toàn tương thích với Cloudflare Worker D1 Backend
- */
-
-const WORKER_URL = 'https://abcsnoobai.abcsnoob.workers.dev';
-let chatHistory = [];
-let allChats = JSON.parse(localStorage.getItem('noob_folders')) || [];
-let currentFolderId = null;
-let selectedImageData = null;
-let isTyping = false;
-let authMode = 'login';
-let abortController = null;
-
-// --- UTILS ---
-function showNotify(msg, type = 'info') {
-    const b = document.createElement('div');
-    b.className = 'toast-box';
-    if(type === 'error') b.style.borderLeftColor = 'var(--danger)';
-    b.innerText = msg;
-    document.body.appendChild(b);
-    setTimeout(() => b.remove(), 3500);
-}
-
-function closeAllModals(e) {
-    if(!e || e.target.id === 'noob-overlay') {
-        document.getElementById('noob-overlay').style.display = 'none';
-        document.querySelectorAll('.noob-modal').forEach(m => m.style.display = 'none');
-    }
-}
-
-// --- AUTH LOGIC ---
-function handleAccountAction() {
-    if(localStorage.getItem('noob_token')) {
-        if(confirm("Ông giáo muốn đăng xuất à? Mọi data local vẫn giữ nguyên nhé.")) {
-            localStorage.removeItem('noob_token');
-            location.reload();
-        }
-    } else {
-        document.getElementById('noob-overlay').style.display = 'flex';
-        document.getElementById('modal-auth').style.display = 'block';
-    }
-}
-
-function toggleAuthMode() {
-    authMode = (authMode === 'login') ? 'register' : 'login';
-    document.getElementById('auth-header').innerText = authMode === 'login' ? 'Chào ông giáo!' : 'Gia nhập Team Noob';
-    document.getElementById('auth-switch').innerText = authMode === 'login' ? 'Cần tạo acc mới?' : 'Đã có acc rồi?';
-}
-
-async function doAuth() {
-    const email = document.getElementById('f-email').value;
-    const password = document.getElementById('f-pass').value;
-    if(!email || !password) return showNotify("Điền đủ info đi ông giáo!", "error");
-
-    try {
-        const r = await fetch(WORKER_URL, { method: 'POST', body: JSON.stringify({ action: authMode, email, password })});
-        const d = await r.json();
-        if(d.success) {
-            if(authMode === 'register') {
-                document.getElementById('modal-auth').style.display = 'none';
-                document.getElementById('modal-otp').style.display = 'block';
-                showNotify(d.message);
-            } else {
-                localStorage.setItem('noob_token', d.token);
-                location.reload();
-            }
-        } else showNotify(d.error, "error");
-    } catch(e) { showNotify("Server gank rồi, thử lại sau!", "error"); }
-}
-
-async function doVerify() {
-    const email = document.getElementById('f-email').value;
-    const otp = document.getElementById('f-otp').value;
-    const r = await fetch(WORKER_URL, { method: 'POST', body: JSON.stringify({ action: 'verify_otp', email, otp })});
-    const d = await r.json();
-    if(d.success) {
-        localStorage.setItem('noob_token', d.token);
-        location.reload();
-    } else showNotify(d.error, "error");
-}
-
-// --- CORE CHAT ENGINE ---
-async function handleSend() {
-    const input = document.getElementById('user-input');
-    const text = input.value.trim();
-    if((!text && !selectedImageData) || isTyping) return;
-
-    if(!currentFolderId) createNewFolder(text || "Tin nhắn ảnh");
-
-    renderMessage(text, 'user', selectedImageData);
-    
-    let parts = [{ text: text || "Phân tích nội dung ảnh này giúp tôi." }];
-    if(selectedImageData) {
-        parts.push({ inline_data: { mime_type: "image/jpeg", data: selectedImageData.split(',')[1] }});
-    }
-    chatHistory.push({ role: 'user', parts });
-
-    input.value = ''; input.style.height = 'auto';
-    const tempImg = selectedImageData;
-    clearImage();
-    isTyping = true;
-
-    try {
-        const res = await fetch(WORKER_URL, {
-            method: 'POST',
-            body: JSON.stringify({ messages: chatHistory.slice(-12), user_lang: 'auto' })
-        });
-        const data = await res.json();
-        if(data.success) {
-            await renderMessage(data.text, 'model');
-            chatHistory.push({ role: 'model', parts: [{ text: data.text }] });
-            saveCurrentFolder();
-        } else {
-            renderMessage("Lỗi rồi ông giáo: " + data.error, 'model');
-        }
-    } catch(e) { 
-        showNotify("Mất kết nối server!", "error");
-    } finally { isTyping = false; }
-}
-
-async function renderMessage(text, role, img = null, skipAnimation = false) {
-    const win = document.getElementById('chat-window');
-    const div = document.createElement('div');
-    div.className = 'msg-group';
-    const isBot = (role === 'model');
-    
-    div.innerHTML = `
-        <div class="small fw-bold mb-2" style="color:${isBot ? '#00ff88' : 'var(--primary)'}">
-            <i class="fa-solid ${isBot ? 'fa-robot' : 'fa-circle-user'} me-2"></i>${isBot ? "ABC'S NOOB" : "BẠN"}
-        </div>
-        ${img ? `<img src="${img}" class="img-fluid rounded-4 mb-3" style="max-height:300px; border:1px solid var(--border-color)">` : ''}
-        <div class="msg-content"></div>
-    `;
-    win.appendChild(div);
-    const target = div.querySelector('.msg-content');
-
-    if(!isBot || skipAnimation) {
-        target.innerHTML = marked.parse(text || "");
-        if(window.Prism) Prism.highlightAllUnder(target);
-    } else {
-        await runTypewriter(target, text);
-    }
-    win.scrollTop = win.scrollHeight;
-}
-
-function runTypewriter(el, text) {
-    return new Promise(resolve => {
-        el.classList.add('typing-cursor');
-        let i = 0; let currentText = "";
-        const timer = setInterval(() => {
-            if(i < text.length) {
-                currentText += text[i++];
-                el.innerHTML = marked.parse(currentText);
-                document.getElementById('chat-window').scrollTop = document.getElementById('chat-window').scrollHeight;
-            } else {
-                clearInterval(timer);
-                el.classList.remove('typing-cursor');
-                if(window.Prism) Prism.highlightAllUnder(el);
-                resolve();
-            }
-        }, 12);
-        
-        // Ngắt bằng phím Esc
-        window.onkeydown = (e) => {
-            if(e.key === 'Escape') {
-                clearInterval(timer);
-                el.innerHTML = marked.parse(text);
-                el.classList.remove('typing-cursor');
-                resolve();
-            }
-        };
-    });
-}
-
-// --- FOLDER & STORAGE ---
-function createNewFolder(name) {
-    currentFolderId = Date.now().toString();
-    const newFolder = { id: currentFolderId, name: name.substring(0, 30), history: [] };
-    allChats.unshift(newFolder);
-    updateFolderUI();
-    document.getElementById('chat-title').innerText = newFolder.name;
-}
-
-function saveCurrentFolder() {
-    const idx = allChats.findIndex(f => f.id === currentFolderId);
-    if(idx !== -1) {
-        allChats[idx].history = chatHistory;
-        localStorage.setItem('noob_folders', JSON.stringify(allChats));
-        updateFolderUI();
-    }
-}
-
-function loadFolder(id) {
-    const folder = allChats.find(f => f.id === id);
-    if(!folder) return;
-    currentFolderId = id;
-    chatHistory = folder.history;
-    document.getElementById('chat-window').innerHTML = '';
-    document.getElementById('chat-title').innerText = folder.name;
-    chatHistory.forEach(m => {
-        const content = m.parts.find(p => p.text)?.text;
-        renderMessage(content, m.role, null, true);
-    });
-    updateFolderUI();
-    if(window.innerWidth < 768) document.getElementById('sidebar').classList.remove('active');
-}
-
-function updateFolderUI() {
-    const container = document.getElementById('history-container');
-    container.innerHTML = '';
-    allChats.forEach(f => {
-        const item = document.createElement('div');
-        item.className = `history-item ${f.id === currentFolderId ? 'active' : ''}`;
-        item.innerHTML = `
-            <div class="text-truncate" onclick="loadFolder('${f.id}')" style="flex:1">
-                <i class="fa-regular fa-message me-2"></i> ${f.name}
+    <div class="noob-overlay" id="overlay" onclick="handleOverlayClick(event)">
+        <div id="modal-profile" class="noob-modal" style="display:none">
+            <h5 class="fw-bold mb-3">Hồ sơ Pro</h5>
+            <div id="auth-section">
+                <input type="email" id="auth-email" class="form-control-noob" placeholder="Email">
+                <input type="password" id="auth-pass" class="form-control-noob" placeholder="Mật khẩu">
+                <div class="d-flex gap-2">
+                    <button class="btn btn-primary flex-grow-1" onclick="handleAuth('login')">Đăng nhập</button>
+                    <button class="btn btn-outline-light flex-grow-1" onclick="handleAuth('register')">Đăng ký</button>
+                </div>
             </div>
-            <i class="fa-solid fa-xmark ms-2 opacity-50" onclick="deleteFolder('${f.id}', event)" style="cursor:pointer"></i>
-        `;
-        container.appendChild(item);
-    });
-}
-
-function deleteFolder(id, e) {
-    if(e) e.stopPropagation();
-    allChats = allChats.filter(f => f.id !== id);
-    localStorage.setItem('noob_folders', JSON.stringify(allChats));
-    if(currentFolderId === id) startNewChat();
-    updateFolderUI();
-}
-
-function startNewChat() {
-    currentFolderId = null;
-    chatHistory = [];
-    document.getElementById('chat-window').innerHTML = `
-        <div class="text-center mt-5 opacity-50">
-            <i class="fa-solid fa-wand-magic-sparkles fs-1 mb-3"></i>
-            <h5>Hôm nay build gì đây ông giáo?</h5>
-            <p class="small">Sẵn sàng hỗ trợ Code, Minecraft System hoặc Bitcoin logic.</p>
+            <div id="profile-section" style="display:none">
+                <label class="small text-muted mb-2">Username hiển thị</label>
+                <input type="text" id="new-username" class="form-control-noob">
+                <button class="btn btn-primary w-100" onclick="updateUsername()">Lưu thay đổi</button>
+                <button class="btn btn-danger w-100 mt-2" onclick="logout()">Đăng xuất</button>
+            </div>
         </div>
-    `;
-    document.getElementById('chat-title').innerText = "Cuộc trò chuyện mới";
-    updateFolderUI();
-}
 
-// --- VISION HANDLING ---
-function processFile(input) {
-    const file = input.files[0];
-    if(!file) return;
-    if(file.size > 4 * 1024 * 1024) return showNotify("Ảnh nặng quá (max 4MB)!", "error");
+        <div id="modal-create-group" class="noob-modal" style="display:none">
+            <h5 class="fw-bold mb-3">Tạo Nhóm Mới</h5>
+            <input type="text" id="group-name-input" class="form-control-noob" placeholder="Tên nhóm chat">
+            <button class="btn btn-primary w-100" onclick="createGroup()">Khởi tạo ngay</button>
+        </div>
+
+        <div id="modal-invite" class="noob-modal" style="display:none">
+            <h5 class="fw-bold mb-3">Mời đồng đội</h5>
+            <p class="small text-muted">Nhập email của người dùng Noob AI khác.</p>
+            <input type="email" id="invite-email" class="form-control-noob" placeholder="friend@example.com">
+            <button class="btn btn-primary w-100" onclick="inviteUser()">Gửi lời mời</button>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
     
-    const reader = new FileReader();
-    reader.onload = (e) => {
-        selectedImageData = e.target.result;
-        document.getElementById('p-img').src = selectedImageData;
-        document.getElementById('image-preview').style.display = 'block';
-    };
-    reader.readAsDataURL(file);
-}
+    <script>
+        const WORKER_URL = 'https://abcsnoobai.abcsnoob.workers.dev'; // THAY URL CỦA ÔNG GIÁO VÀO
+        let currentUser = JSON.parse(localStorage.getItem('noob_user')) || null;
+        let activeGroupId = null;
+        let selectedImg = null;
+        let groups = [];
 
-function clearImage() {
-    selectedImageData = null;
-    document.getElementById('image-preview').style.display = 'none';
-    document.getElementById('file-upload').value = '';
-}
-
-// --- SHARE FEATURE ---
-async function shareCurrentChat() {
-    if(!chatHistory.length) return showNotify("Chat rỗng thì share gì ông giáo?", "error");
-    try {
-        const res = await fetch(WORKER_URL, {
-            method: 'POST',
-            body: JSON.stringify({ action: 'share', data: chatHistory })
-        });
-        const d = await res.json();
-        if(d.success) {
-            const url = `${window.location.origin}${window.location.pathname}?share=${d.shareId}`;
-            document.getElementById('share-url').value = url;
-            document.getElementById('noob-overlay').style.display = 'flex';
-            document.getElementById('modal-share').style.display = 'block';
+        // --- CORE UI ---
+        function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
+        
+        function openModal(id) {
+            document.getElementById('overlay').style.display = 'flex';
+            document.querySelectorAll('.noob-modal').forEach(m => m.style.display = 'none');
+            document.getElementById(id).style.display = 'block';
         }
-    } catch(e) { showNotify("Lỗi tạo link share!", "error"); }
-}
 
-function copyShareLink() {
-    const input = document.getElementById('share-url');
-    input.select();
-    document.execCommand('copy');
-    showNotify("Đã copy vào bộ nhớ đệm!");
-    closeAllModals();
-}
+        function handleOverlayClick(e) { if(e.target.id === 'overlay') document.getElementById('overlay').style.display = 'none'; }
 
-// --- INITIALIZE ---
-window.onload = async () => {
-    // Xử lý Share ID nếu có trên URL
-    const params = new URLSearchParams(window.location.search);
-    const shareId = params.get('share');
-    if(shareId) {
-        showNotify("Đang tải cuộc trò chuyện được chia sẻ...");
-        const res = await fetch(WORKER_URL, { method: 'POST', body: JSON.stringify({ action: 'get_share', shareId })});
-        const d = await res.json();
-        if(d.success) {
-            chatHistory = d.data;
-            chatHistory.forEach(m => renderMessage(m.parts.find(p => p.text)?.text, m.role, null, true));
-            document.getElementById('chat-title').innerText = "Shared Chat Viewer";
-            return;
+        function showNotify(msg, type='info') {
+            alert(msg); // Thay bằng Toast nếu muốn xịn hơn
         }
-    }
 
-    if(allChats.length > 0) {
-        loadFolder(allChats[0].id);
-    } else {
-        startNewChat();
-    }
-    
-    const token = localStorage.getItem('noob_token');
-    if(token) {
-        document.getElementById('account-status').innerText = "Member: Pro Noob";
-        document.getElementById('account-btn-text').innerText = "Đăng xuất";
-    }
-};
+        // --- AUTH LOGIC ---
+        async function handleAuth(mode) {
+            const email = document.getElementById('auth-email').value;
+            const password = document.getElementById('auth-pass').value;
+            const res = await fetch(WORKER_URL, {
+                method: 'POST',
+                body: JSON.stringify({ action: mode, email, password })
+            });
+            const d = await res.json();
+            if(d.success) {
+                localStorage.setItem('noob_token', d.token);
+                localStorage.setItem('noob_user', JSON.stringify({ email, username: email.split('@')[0] }));
+                location.reload();
+            } else showNotify(d.error);
+        }
 
-// Auto-resize textarea
-document.getElementById('user-input').addEventListener('input', function() {
-    this.style.height = 'auto';
-    this.style.height = (this.scrollHeight) + 'px';
-});
-</script>
+        function updateUIAuth() {
+            if(currentUser) {
+                document.getElementById('auth-section').style.display = 'none';
+                document.getElementById('profile-section').style.display = 'block';
+                document.getElementById('user-name').innerText = currentUser.username;
+                document.getElementById('user-email-display').innerText = currentUser.email;
+                document.getElementById('user-avatar').innerText = currentUser.username[0].toUpperCase();
+                loadGroups();
+            }
+        }
+
+        function logout() { localStorage.clear(); location.reload(); }
+
+        // --- GROUP & MESSAGE LOGIC ---
+        async function loadGroups() {
+            const token = localStorage.getItem('noob_token');
+            const res = await fetch(WORKER_URL, {
+                method: 'POST',
+                body: JSON.stringify({ action: 'get_my_groups', email: currentUser.email })
+            });
+            const d = await res.json();
+            if(d.success) {
+                const list = document.getElementById('group-list');
+                list.innerHTML = d.groups.map(g => `
+                    <div class="nav-item" onclick="switchGroup('${g.id}', '${g.name}')">
+                        <i class="fa-solid fa-hashtag"></i> ${g.name}
+                    </div>
+                `).join('');
+            }
+        }
+
+        async function createGroup() {
+            const name = document.getElementById('group-name-input').value;
+            const res = await fetch(WORKER_URL, {
+                method: 'POST',
+                body: JSON.stringify({ action: 'create_group', email: currentUser.email, data: { groupName: name }})
+            });
+            if((await res.json()).success) { location.reload(); }
+        }
+
+        async function switchGroup(id, name) {
+            activeGroupId = id;
+            document.getElementById('active-chat-title').innerText = name;
+            document.getElementById('member-btn').style.display = 'block';
+            document.getElementById('invite-btn').style.display = 'block';
+            document.getElementById('chat-window').innerHTML = '<div class="text-center p-5 opacity-50">Đang tải tin nhắn nhóm...</div>';
+            
+            const res = await fetch(WORKER_URL, {
+                method: 'POST',
+                body: JSON.stringify({ action: 'get_group_msgs', email: currentUser.email, data: { groupId: id }})
+            });
+            const d = await res.json();
+            const win = document.getElementById('chat-window');
+            win.innerHTML = '';
+            if(d.success) {
+                d.messages.forEach(m => renderMsg(m.text, m.sender_name, m.role, m.created_at));
+            }
+        }
+
+        function renderMsg(text, author, role, time) {
+            const win = document.getElementById('chat-window');
+            const div = document.createElement('div');
+            div.className = 'msg-row';
+            const isBot = (role === 'model');
+            const avatarColor = isBot ? '#5865F2' : '#fbc531';
+            
+            div.innerHTML = `
+                <div class="msg-avatar" style="background:${avatarColor}; display:flex; align-items:center; justify-content:center; color:white; font-weight:bold">
+                    ${author[0].toUpperCase()}
+                </div>
+                <div class="msg-body">
+                    <div class="msg-info">
+                        <span class="msg-author" style="color:${isBot ? '#00d2ff' : '#fff'}">${author}</span>
+                        <span class="msg-time">${new Date(time).toLocaleTimeString()}</span>
+                    </div>
+                    <div class="msg-content">${marked.parse(text)}</div>
+                </div>
+            `;
+            win.appendChild(div);
+            win.scrollTop = win.scrollHeight;
+            if(window.Prism) Prism.highlightAllUnder(div);
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('user-input');
+            const text = input.value.trim();
+            if(!text || !activeGroupId) return;
+
+            renderMsg(text, currentUser.username, 'user', new Date());
+            input.value = '';
+            
+            const res = await fetch(WORKER_URL, {
+                method: 'POST',
+                body: JSON.stringify({ 
+                    action: 'send_group_msg', 
+                    email: currentUser.email, 
+                    data: { groupId: activeGroupId, text, senderName: currentUser.username }
+                })
+            });
+            const d = await res.json();
+            if(d.success) renderMsg(d.text, "Abc's Noob", 'model', new Date());
+        }
+
+        // --- INITIALIZE ---
+        window.onload = () => {
+            updateUIAuth();
+            
+            // Auto-resize textarea
+            const tx = document.getElementById('user-input');
+            tx.addEventListener('input', function() {
+                this.style.height = 'auto';
+                this.style.height = (this.scrollHeight) + 'px';
+            });
+        }
+    </script>
 </body>
 </html>
