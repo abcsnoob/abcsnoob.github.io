@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tải về Abc's Noob AI - Đa nền tảng</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body { background: #0f172a; color: white; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .card:hover { transform: translateY(-5px); transition: 0.3s; border-color: #38bdf8; }
+        .btn-dl { background: linear-gradient(90deg, #38bdf8 0%, #3b82f6 100%); }
+    </style>
+</head>
+<body class="flex flex-col min-h-screen items-center justify-center p-6">
+
+    <div class="text-center mb-10">
+        <h1 class="text-5xl font-extrabold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-emerald-400">
+            Abc's Noob AI
+        </h1>
+        <p class="text-slate-400 text-lg">Trợ lý AI siêu cấp vailon - Tải một lần, chạy mọi nơi</p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 w-full max-w-6xl">
+        
+        <div class="card bg-slate-800 p-6 rounded-2xl border border-slate-700 text-center">
+            <i class="fab fa-windows text-4xl text-blue-400 mb-4"></i>
+            <h3 class="text-xl font-bold mb-2">Windows</h3>
+            <p class="text-sm text-slate-400 mb-6 font-mono">.exe (10MB+)</p>
+            <a href="./dl/abcsnoobai-windows.exe" class="btn-dl block py-3 px-4 rounded-xl font-bold hover:opacity-90 transition">Tải về ngay</a>
+        </div>
+
+        <div class="card bg-slate-800 p-6 rounded-2xl border border-slate-700 text-center">
+            <i class="fab fa-apple text-4xl text-slate-200 mb-4"></i>
+            <h3 class="text-xl font-bold mb-2">MacOS</h3>
+            <p class="text-sm text-slate-400 mb-6 font-mono">.zip (Folder .app)</p>
+            <a href="./dl/abcsnoobai-macos.zip" class="btn-dl block py-3 px-4 rounded-xl font-bold hover:opacity-90 transition">Tải bản Mac</a>
+        </div>
+
+        <div class="card bg-slate-800 p-6 rounded-2xl border border-slate-700 text-center">
+            <i class="fab fa-linux text-4xl text-orange-400 mb-4"></i>
+            <h3 class="text-xl font-bold mb-2">Linux</h3>
+            <p class="text-sm text-slate-400 mb-6 font-mono">.tar.gz (Giữ chmod +x)</p>
+            <a href="./dl/abcsnoobai-linux.tar.gz" class="btn-dl block py-3 px-4 rounded-xl font-bold hover:opacity-90 transition">Tải bản Linux</a>
+        </div>
+
+        <div class="card bg-slate-800 p-6 rounded-2xl border border-slate-700 text-center">
+            <i class="fab fa-android text-4xl text-emerald-400 mb-4"></i>
+            <h3 class="text-xl font-bold mb-2">Android</h3>
+            <p class="text-sm text-slate-400 mb-6 font-mono">.apk (Mobile)</p>
+            <a href="./dl/abcsnoobai-android.apk" class="btn-dl block py-3 px-4 rounded-xl font-bold hover:opacity-90 transition">Tải APK</a>
+        </div>
+
+    </div>
+
+    <div class="mt-12 p-4 bg-slate-900/50 rounded-lg border border-slate-800 text-slate-500 text-sm">
+        <p>💡 Lưu ý: Với Linux, hãy dùng lệnh <code class="text-blue-400">tar -xzvf</code> để giải nén giữ quyền thực thi.</p>
+    </div>
+
+</body>
+</html>
