@@ -3,54 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kiểm tra liên kết | Abc's Noob</title>
+    <title>Bảo mật liên kết | Abc's Noob</title>
     
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous"/>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
     
     <style>
-        :root { --accent-color: #0d6efd; }
-        body { transition: background-color 0.5s ease; min-height: 100vh; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        :root { --primary: #0d6efd; --danger: #dc3545; }
+        body { transition: background-color 0.4s ease; min-height: 100vh; display: flex; flex-direction: column; }
         .redirect-card { 
-            max-width: 600px; 
-            margin: 40px auto; 
-            border-radius: 24px; 
-            border: none; 
-            background: #fff; 
-            overflow: hidden;
-            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            max-width: 580px; margin: auto; border-radius: 28px; border: none; 
+            background: #fff; overflow: hidden; box-shadow: 0 15px 35px rgba(0,0,0,0.1);
         }
-        .preview-container {
-            width: 100%;
-            height: 250px;
-            background: #e9ecef;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-            overflow: hidden;
-            border-bottom: 1px solid #dee2e6;
+        .preview-box {
+            width: 100%; height: 280px; background: #f8f9fa;
+            display: flex; align-items: center; justify-content: center; position: relative;
         }
-        .preview-img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            display: none;
-        }
-        .platform-display { font-size: 2.2rem; font-weight: 800; color: var(--accent-color); line-height: 1.2; }
-        .domain-sub { font-size: 0.9rem; color: #6c757d; font-family: monospace; }
+        #screenshot { width: 100%; height: 100%; object-fit: cover; display: none; }
+        
+        /* Lockdown UI */
+        body.is-dangerous { background-color: #2c0000 !important; }
+        .is-dangerous .redirect-card { border: 4px solid var(--danger); box-shadow: 0 0 50px rgba(220, 53, 69, 0.4) !important; }
+        .is-dangerous .preview-box { filter: sepia(1) hue-rotate(-50deg); }
 
-        /* Lockdown Mode */
-        body.is-dangerous { background-color: #4a0404 !important; }
-        .is-dangerous .redirect-card { border: 5px solid #dc3545; box-shadow: 0 0 40px rgba(220, 53, 69, 0.6) !important; }
-        .is-dangerous .platform-display { color: #dc3545; }
-        .is-dangerous .btn-primary, .is-dangerous #timer-text { display: none !important; }
-        .is-dangerous .preview-container { filter: grayscale(1) sepia(1) hue-rotate(-50deg) saturate(2); }
-
+        .loader { width: 45px; height: 45px; border: 5px solid #eee; border-top: 5px solid var(--primary); border-radius: 50%; animation: spin 1s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
-        .loader-ring { width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid var(--accent-color); border-radius: 50%; animation: spin 1s linear infinite; }
-        .animate-pulse { animation: pulse-red 1.5s infinite; }
-        @keyframes pulse-red { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
+        @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+        .animate-pulse { animation: pulse 1.5s infinite; }
     </style>
 </head>
 <body class="bg-light">
@@ -63,77 +42,76 @@
         </div>
     </nav>
 
-    <div class="container">
-        <div class="card redirect-card shadow-lg">
-            <div class="preview-container" id="preview-box">
-                <div id="preview-loading" class="text-center">
-                    <div class="loader-ring mx-auto mb-2"></div>
-                    <small class="text-muted">Đang tải ảnh xem trước...</small>
+    <div class="container py-5">
+        <div class="card redirect-card">
+            <div class="preview-box" id="preview-container">
+                <div id="loading-spinner">
+                    <div class="loader mx-auto mb-2"></div>
+                    <small class="text-muted">Đang quét giao diện...</small>
                 </div>
-                <img id="screenshot" class="preview-img" alt="Website Preview">
+                <img id="screenshot" alt="Website Preview">
             </div>
 
-            <div class="p-4 p-md-5 text-center pt-0">
-                <div id="status-icon" class="mt-n3 mb-3" style="margin-top: -25px; position: relative; z-index: 10;">
-                    <span class="badge rounded-pill bg-white shadow-sm p-3">
-                        <i class="fa-solid fa-shield-halved text-primary fs-3"></i>
-                    </span>
+            <div class="card-body p-4 p-md-5 text-center">
+                <h3 id="msg-header" class="fw-bold mb-2">Đang xác minh...</h3>
+                <div id="platform" class="display-6 fw-bold text-primary mb-1">...</div>
+                <div id="domain-sub" class="text-muted small mb-4 font-monospace"></div>
+
+                <div id="warning-box" class="alert alert-light border py-3">
+                    <i class="fa-solid fa-shield-halved me-2"></i>Chờ trong giây lát để hệ thống kiểm tra an toàn.
                 </div>
 
-                <h3 id="msg-header" class="fw-bold text-dark">Kiểm tra an toàn...</h3>
-                <div id="platform" class="platform-display my-2">...</div>
-                <div id="domain-sub" class="domain-sub mb-4"></div>
-
-                <div id="warning-box" class="alert alert-secondary py-2 small">
-                    <i class="fa-solid fa-circle-notch fa-spin me-2"></i>Đang xác minh danh tính...
+                <div id="timer-area">
+                    <p class="mb-0">Tự động chuyển tiếp sau <span id="countdown" class="fw-bold text-danger">5</span> giây</p>
+                    <div class="progress mt-2" style="height: 6px;">
+                        <div id="progress-bar" class="progress-bar progress-bar-striped progress-bar-animated" style="width: 0%"></div>
+                    </div>
                 </div>
-
-                <p id="timer-text" class="mt-3">Chuyển hướng sau <span id="countdown" class="fw-bold text-danger">5</span> giây...</p>
                 
                 <div class="d-grid gap-2 mt-4">
-                    <a id="direct-link" href="#" class="btn btn-primary btn-lg fw-bold shadow">Tiếp tục ngay</a>
-                    <a href="javascript:history.back()" class="btn btn-outline-secondary">Quay lại an toàn</a>
+                    <a id="direct-link" href="#" class="btn btn-primary btn-lg shadow fw-bold">Truy cập ngay</a>
+                    <a href="javascript:history.back()" class="btn btn-link text-secondary">Quay lại an toàn</a>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-        const API_URL = "https://raw.githubusercontent.com/abcsnoob/apis-json/refs/heads/main/domain_mapping.json";
+        const API_MAPPING = "https://raw.githubusercontent.com/abcsnoob/apis-json/refs/heads/main/domain_mapping.json";
 
         async function init() {
             const params = new URLSearchParams(window.location.search);
             let target = params.get('to');
-            const platformEl = document.getElementById('platform');
-            const domainSubEl = document.getElementById('domain-sub');
-            const countdownEl = document.getElementById('countdown');
-            const directLink = document.getElementById('direct-link');
-            const warningBox = document.getElementById('warning-box');
-            const msgHeader = document.getElementById('msg-header');
-            const statusIcon = document.getElementById('status-icon');
-            const screenshotImg = document.getElementById('screenshot');
-
-            if (!target) {
-                platformEl.innerText = "Thiếu liên kết";
-                return;
-            }
-
+            if (!target) return;
             if (!target.startsWith('http')) target = 'https://' + target;
-            directLink.href = target;
 
-            // 1. Hiển thị screenshot (Sử dụng WordPress mShot API - Free & Fast)
-            screenshotImg.src = `https://s0.wp.com/mshots/v1/${encodeURIComponent(target)}?w=600&h=450`;
-            screenshotImg.onload = () => {
-                document.getElementById('preview-loading').style.display = 'none';
-                screenshotImg.style.display = 'block';
+            const elements = {
+                platform: document.getElementById('platform'),
+                domainSub: document.getElementById('domain-sub'),
+                countdown: document.getElementById('countdown'),
+                progressBar: document.getElementById('progress-bar'),
+                directLink: document.getElementById('direct-link'),
+                warningBox: document.getElementById('warning-box'),
+                msgHeader: document.getElementById('msg-header'),
+                screenshot: document.getElementById('screenshot'),
+                loading: document.getElementById('loading-spinner')
+            };
+
+            elements.directLink.href = target;
+
+            // Dùng Microlink để chụp ảnh (Nhanh và mượt hơn)
+            elements.screenshot.src = `https://api.microlink.io/?url=${encodeURIComponent(target)}&screenshot=true&embed=screenshot.url`;
+            elements.screenshot.onload = () => {
+                elements.loading.style.display = 'none';
+                elements.screenshot.style.display = 'block';
             };
 
             try {
                 const urlObj = new URL(target);
                 const currentDomain = urlObj.hostname.replace(/^www\./, '').toLowerCase();
-                domainSubEl.innerText = currentDomain;
+                elements.domainSub.innerText = currentDomain;
 
-                const res = await fetch(API_URL);
+                const res = await fetch(API_MAPPING);
                 const mapping = await res.json();
 
                 let foundData = null;
@@ -143,50 +121,42 @@
                 for (const [key, data] of Object.entries(mapping)) {
                     const akaList = data.aka ? data.aka.map(d => d.toLowerCase()) : [];
                     
-                    if (key === "dangerous_sites" && akaList.includes(currentDomain)) {
-                        isDangerous = true;
-                        foundData = data;
-                        break;
+                    // Ưu tiên check AKA trước để chuyển hướng ngay (Bonus yêu cầu)
+                    if (akaList.includes(currentDomain)) {
+                        window.location.replace(target);
+                        return; // Thoát hàm ngay lập tức
                     }
+
                     if (currentDomain === key.toLowerCase()) {
                         foundData = data;
-                        break;
-                    }
-                    if (akaList.includes(currentDomain)) {
-                        foundData = data;
-                        isAka = true;
+                        if (key === "dangerous_sites") isDangerous = true;
                         break;
                     }
                 }
 
-                // 2. Xử lý Logic chuyển hướng
+                // Xử lý Giao diện
                 if (isDangerous) {
                     document.body.classList.add('is-dangerous');
-                    statusIcon.innerHTML = '<span class="badge rounded-pill bg-danger shadow-sm p-3 animate-pulse"><i class="fa-solid fa-skull-crossbones text-white fs-2"></i></span>';
-                    msgHeader.innerText = "NGUY HIỂM: ĐÃ CHẶN!";
-                    platformEl.innerText = foundData.name;
-                    warningBox.className = "alert alert-danger py-3 shadow-sm";
-                    warningBox.innerHTML = `<b>Cảnh báo:</b> Đây là trang ${foundData.type}. Tuyệt đối không nhập mật khẩu hay thông tin thẻ.`;
-                    document.getElementById('timer-text').style.display = 'none';
-                    directLink.classList.add('disabled');
-                } 
-                else if (isAka) {
-                    // Nếu là AKA -> Chuyển hướng ngay (Tối ưu băng thông)
-                    window.location.replace(target);
-                } 
-                else {
-                    statusIcon.innerHTML = '<span class="badge rounded-pill bg-success shadow-sm p-3"><i class="fa-solid fa-check text-white fs-3"></i></span>';
-                    msgHeader.innerText = "Liên kết an toàn";
-                    platformEl.innerText = foundData ? foundData.name : currentDomain;
-                    warningBox.className = "alert alert-success py-2";
-                    warningBox.innerHTML = `<i class="fa-solid fa-shield-check me-2"></i>Dữ liệu sạch. Chúc bạn trải nghiệm vui vẻ!`;
+                    elements.msgHeader.innerText = "CẢNH BÁO NGUY HIỂM!";
+                    elements.msgHeader.classList.add('text-danger');
+                    elements.platform.innerText = "Trang web độc hại";
+                    elements.platform.classList.replace('text-primary', 'text-danger');
+                    elements.warningBox.className = "alert alert-danger shadow-sm animate-pulse";
+                    elements.warningBox.innerHTML = `<b>Phát hiện:</b> ${foundData.type}. Hệ thống đã chặn truy cập tự động để bảo vệ bạn.`;
+                    document.getElementById('timer-area').style.display = 'none';
+                    elements.directLink.classList.add('disabled');
+                } else {
+                    elements.msgHeader.innerText = "Bạn đang rời khỏi website";
+                    elements.platform.innerText = foundData ? foundData.name : currentDomain;
+                    elements.warningBox.innerHTML = `<i class="fa-solid fa-check-circle text-success me-2"></i>Liên kết này an toàn để truy cập.`;
                     
-                    let time = 5;
-                    const timer = setInterval(() => {
-                        time--;
-                        countdownEl.innerText = time;
-                        if (time <= 0) {
-                            clearInterval(timer);
+                    let timeLeft = 5;
+                    const interval = setInterval(() => {
+                        timeLeft--;
+                        elements.countdown.innerText = timeLeft;
+                        elements.progressBar.style.width = ((5 - timeLeft) / 5 * 100) + "%";
+                        if (timeLeft <= 0) {
+                            clearInterval(interval);
                             window.location.href = target;
                         }
                     }, 1000);
