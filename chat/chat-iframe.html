@@ -403,9 +403,10 @@ function renderMessage(msg) {
     div.className = `msg-box ${isBot ? 'bot-msg' : 'user-msg'}`;
 
     div.innerHTML = `
-        <div class="msg-avatar" style="background:${isBot?'var(--primary)':'var(--secondary)'}">
-            ${isBot ? 'A' : 'U'}
-        </div>
+<div class="msg-avatar" style="background:${isBot?'var(--primary)':'var(--secondary)'}">
+    ${isBot ? '<img src="https://abcsnoob.github.io/assets/image/abcsnoob.webp" style="width:100%; height:100%; border-radius:14px; object-fit:cover">' : 'U'}
+</div>
+
         <div class="msg-content-wrapper">
             <div class="msg-header">
                 <span>${isBot ? "ABC'S NOOB AI" : "ME"}</span>
