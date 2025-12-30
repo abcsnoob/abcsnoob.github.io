@@ -11,6 +11,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap" rel="stylesheet">
 
     <style>
+        /* --- CSS giữ nguyên --- */
         :root {
             --primary: #00d2ff;
             --secondary: #9d50bb;
@@ -32,268 +33,316 @@
             margin: 0;
         }
 
-        /* --- Sidebar UI --- */
-        #sidebar {
-            width: var(--sidebar-width);
-            background: rgba(10, 12, 17, 0.85);
-            backdrop-filter: blur(25px);
-            border-right: 1px solid var(--glass-border);
-            display: flex;
-            flex-direction: column;
-            transition: all 0.4s ease;
-            z-index: 1001;
-        }
-
+        /* Sidebar, chat, input, modals... giữ nguyên */
+        #sidebar { width: var(--sidebar-width); background: rgba(10, 12, 17, 0.85); backdrop-filter: blur(25px); border-right: 1px solid var(--glass-border); display: flex; flex-direction: column; transition: all 0.4s ease; z-index: 1001; }
         .brand-section { padding: 40px 24px 20px; }
-        .logo-box { 
-            width: 50px; height: 50px; 
-            background: linear-gradient(135deg, var(--primary), var(--secondary)); 
-            border-radius: 14px; display: flex; align-items: center; justify-content: center; 
-            box-shadow: 0 0 25px rgba(0, 210, 255, 0.4); margin-bottom: 20px;
-        }
-
+        .logo-box { width: 50px; height: 50px; background: linear-gradient(135deg, var(--primary), var(--secondary)); border-radius: 14px; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 25px rgba(0, 210, 255, 0.4); margin-bottom: 20px; }
         .nav-container { flex: 1; overflow-y: auto; padding: 10px 16px; }
-        .nav-label { 
-            font-size: 11px; font-weight: 800; color: var(--text-muted); 
-            text-transform: uppercase; letter-spacing: 2px; margin: 25px 0 12px 10px; 
-        }
-
-        .chat-item { 
-            padding: 14px 18px; border-radius: 16px; margin-bottom: 8px; 
-            cursor: pointer; transition: 0.3s; display: flex; align-items: center; gap: 14px; 
-            border: 1px solid transparent; color: #ced4da; 
-        }
+        .nav-label { font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 2px; margin: 25px 0 12px 10px; }
+        .chat-item { padding: 14px 18px; border-radius: 16px; margin-bottom: 8px; cursor: pointer; transition: 0.3s; display: flex; align-items: center; gap: 14px; border: 1px solid transparent; color: #ced4da; }
         .chat-item:hover { background: var(--glass); color: #fff; border-color: var(--glass-border); }
-        .chat-item.active { 
-            background: linear-gradient(90deg, rgba(0, 210, 255, 0.15), transparent); 
-            border-color: rgba(0, 210, 255, 0.3); color: var(--primary); 
-        }
-
-        /* --- Main Chat UI --- */
+        .chat-item.active { background: linear-gradient(90deg, rgba(0, 210, 255, 0.15), transparent); border-color: rgba(0, 210, 255, 0.3); color: var(--primary); }
         #main-content { flex: 1; display: flex; flex-direction: column; position: relative; background: transparent; }
-        .header-bar { 
-            height: 80px; padding: 0 35px; border-bottom: 1px solid var(--glass-border); 
-            display: flex; align-items: center; justify-content: space-between;
-            background: rgba(5, 7, 10, 0.4); backdrop-filter: blur(15px);
-        }
-
+        .header-bar { height: 80px; padding: 0 35px; border-bottom: 1px solid var(--glass-border); display: flex; align-items: center; justify-content: space-between; background: rgba(5, 7, 10, 0.4); backdrop-filter: blur(15px); }
         #chat-window { flex: 1; overflow-y: auto; padding: 40px 18%; scroll-behavior: smooth; }
-        
         .msg-box { margin-bottom: 45px; display: flex; gap: 22px; animation: slideUp 0.6s cubic-bezier(0.2, 0.8, 0.2, 1); }
-        .msg-avatar { 
-            width: 44px; height: 44px; border-radius: 14px; flex-shrink: 0; 
-            display: flex; align-items: center; justify-content: center; font-weight: 800; 
-            border: 1px solid var(--glass-border); font-size: 18px;
-        }
+        .msg-avatar { width: 44px; height: 44px; border-radius: 14px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-weight: 800; border: 1px solid var(--glass-border); font-size: 18px; }
         .msg-content-wrapper { flex: 1; max-width: 100%; }
         .msg-header { margin-bottom: 8px; font-size: 13px; font-weight: 700; opacity: 0.6; display: flex; justify-content: space-between; }
-        .msg-text { 
-            font-size: 16px; line-height: 1.8; color: #e5e7eb; background: var(--glass); 
-            padding: 18px 24px; border-radius: 0 22px 22px 22px; border: 1px solid var(--glass-border); 
-        }
+        .msg-text { font-size: 16px; line-height: 1.8; color: #e5e7eb; background: var(--glass); padding: 18px 24px; border-radius: 0 22px 22px 22px; border: 1px solid var(--glass-border); }
         .user-msg { flex-direction: row-reverse; }
-        .user-msg .msg-text { 
-            background: rgba(0, 210, 255, 0.08); border-color: rgba(0, 210, 255, 0.2); 
-            border-radius: 22px 0 22px 22px;
-        }
-
-        /* --- Input Area --- */
+        .user-msg .msg-text { background: rgba(0, 210, 255, 0.08); border-color: rgba(0, 210, 255, 0.2); border-radius: 22px 0 22px 22px; }
         .input-floating-area { padding: 20px 18% 45px; background: linear-gradient(to top, var(--bg-dark) 70%, transparent); }
-        .input-glass-box { 
-            background: rgba(255, 255, 255, 0.04); border: 1px solid var(--glass-border); 
-            border-radius: 28px; padding: 14px 24px; display: flex; align-items: flex-end; gap: 18px; 
-            box-shadow: 0 25px 60px rgba(0,0,0,0.5); backdrop-filter: blur(20px);
-        }
-        textarea#user-input { 
-            flex: 1; background: transparent; border: none; color: #fff; outline: none; 
-            resize: none; min-height: 28px; max-height: 250px; font-size: 16px; padding: 6px 0; 
-        }
-
-        /* --- Image Preview --- */
-        #image-preview-container { 
-            display: none; padding: 15px; background: var(--glass); 
-            border-radius: 20px; border: 1px solid var(--glass-border); width: fit-content;
-        }
-
-        /* --- Modals --- */
-        .noob-overlay { 
-            position: fixed; inset: 0; background: rgba(0,0,0,0.9); 
-            display: none; align-items: center; justify-content: center; z-index: 9999; backdrop-filter: blur(20px); 
-        }
-        .noob-card { 
-            background: #0f1218; border: 1px solid var(--glass-border); 
-            border-radius: 35px; width: 95%; max-width: 460px; padding: 45px; 
-            box-shadow: 0 30px 100px rgba(0,0,0,0.8);
-        }
-        .modern-input { 
-            width: 100%; background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); 
-            color: #fff; padding: 18px 22px; border-radius: 18px; margin-bottom: 22px; outline: none; transition: 0.3s;
-        }
+        .input-glass-box { background: rgba(255, 255, 255, 0.04); border: 1px solid var(--glass-border); border-radius: 28px; padding: 14px 24px; display: flex; align-items: flex-end; gap: 18px; box-shadow: 0 25px 60px rgba(0,0,0,0.5); backdrop-filter: blur(20px); }
+        textarea#user-input { flex: 1; background: transparent; border: none; color: #fff; outline: none; resize: none; min-height: 28px; max-height: 250px; font-size: 16px; padding: 6px 0; }
+        #image-preview-container { display: none; padding: 15px; background: var(--glass); border-radius: 20px; border: 1px solid var(--glass-border); width: fit-content; }
+        .noob-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.9); display: none; align-items: center; justify-content: center; z-index: 9999; backdrop-filter: blur(20px); }
+        .noob-card { background: #0f1218; border: 1px solid var(--glass-border); border-radius: 35px; width: 95%; max-width: 460px; padding: 45px; box-shadow: 0 30px 100px rgba(0,0,0,0.8); }
+        .modern-input { width: 100%; background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); color: #fff; padding: 18px 22px; border-radius: 18px; margin-bottom: 22px; outline: none; transition: 0.3s; }
         .modern-input:focus { border-color: var(--primary); background: rgba(255,255,255,0.06); }
-
-        /* --- Welcome Screen --- */
         .welcome-view { animation: fadeIn 1s ease; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
-
         pre[class*="language-"] { border-radius: 15px !important; margin: 20px 0 !important; border: 1px solid var(--glass-border) !important; }
+
     </style>
 </head>
+<!-- Thêm trước </body> -->
+<div id="drop-overlay" style="
+    display:none; 
+    position:fixed; inset:0; 
+    background:rgba(0,0,0,0.7); 
+    color:#fff; 
+    font-size:24px; 
+    align-items:center; 
+    justify-content:center; 
+    z-index:9999;
+">
+    Thả file vào đây để upload
+</div>
+
+
+<script>
+const overlay = document.getElementById('drop-overlay');
+
+window.addEventListener('dragover', e => {
+    e.preventDefault();
+    // Chỉ bật overlay khi đang kéo file
+    if(e.dataTransfer.items && e.dataTransfer.items.length > 0) {
+        overlay.style.display = 'flex';
+    }
+});
+
+window.addEventListener('dragleave', e => {
+    e.preventDefault();
+    // Ẩn overlay nếu rời ra ngoài viewport
+    if(e.clientX === 0 && e.clientY === 0) overlay.style.display = 'none';
+});
+
+window.addEventListener('drop', e => {
+    e.preventDefault();
+    overlay.style.display = 'none';
+    if(!e.dataTransfer.files.length) return;
+
+    const file = e.dataTransfer.files[0];
+    const reader = new FileReader();
+
+    if(file.name.endsWith('.abcsaihistory')) {
+        if(confirm(`Tệp "${file.name}" sẽ ghi đè chat hiện tại. Tiếp tục?`)) {
+            reader.onload = (ev) => {
+                try {
+                    const data = JSON.parse(ev.target.result);
+                    if(data.history) {
+                        currentChatHistory = data.history;
+                        localStorage.setItem('noob_chat_history', JSON.stringify(currentChatHistory));
+                        switchToCurrentChat();
+                        alert('Đã nạp lịch sử chat!');
+                    } else alert('File không hợp lệ!');
+                } catch(err) { alert('Lỗi đọc file!'); }
+            };
+            reader.readAsText(file);
+        }
+    } else if(file.type.startsWith('image/')) {
+        reader.onload = (ev) => {
+            selectedBase64 = ev.target.result;
+            document.getElementById('img-render').src = selectedBase64;
+            document.getElementById('image-preview-container').style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+    } else {
+        alert('Chỉ chấp nhận file .abcsaihistory hoặc hình ảnh!');
+    }
+});
+
+// Ẩn overlay khi kéo xong mà không thả file
+window.addEventListener('dragend', () => overlay.style.display = 'none');
+
+</script>
+
 <body>
-
  <aside id="sidebar">
-        <div class="brand-section">
-            <div class="logo-box"><i class="fa-solid fa-cube text-white fs-3"></i></div>
-            <h4 class="fw-800 m-0">ABC'S NOOB <span class="text-primary">AI</span></h4>
-            <p class="small text-muted m-0">Survival & Code Master</p>
-        </div>
-        
-        <div class="px-4 mb-3">
-            <button class="btn btn-primary w-100 py-3 rounded-4 fw-bold shadow-lg" onclick="startNewChat()">
-                <i class="fa-solid fa-plus-circle me-2"></i> Trò chuyện mới
-            </button>
-        </div>
-<div class="nav-label">Hội thoại hiện tại</div>
-<div id="current-chat-item">
-    <div class="chat-item active" onclick="switchToCurrentChat()">
-        <i class="fa-solid fa-comments text-primary"></i>
-        <span>Chat hiện tại</span>
+    <div class="brand-section">
+        <div class="logo-box"><i class="fa-solid fa-cube text-white fs-3"></i></div>
+        <h4 class="fw-800 m-0">ABC'S NOOB <span class="text-primary">AI</span></h4>
+        <p class="small text-muted m-0">Survival & Code Master</p>
     </div>
-</div>
+    
+    <div class="px-4 mb-3">
+        <button class="btn btn-primary w-100 py-3 rounded-4 fw-bold shadow-lg" onclick="startNewChat()">
+            <i class="fa-solid fa-plus-circle me-2"></i> Trò chuyện mới
+        </button>
+    </div>
 
-<div class="nav-label">Hội thoại cũ</div>
-<div id="archived-list">
-    <p class="small text-muted px-3 opacity-50">Không có hội thoại cũ...</p>
-</div>
-
-
-
-
-        <div class="nav-container">
-            <div class="nav-label">Team & Groups</div>
-            <div id="group-list">
-                <p class="small text-muted px-3 opacity-50">Đăng nhập để xem nhóm...</p>
-            </div>
-
-            <div class="nav-label">Cài đặt</div>
-            <div class="chat-item" onclick="changeLanguage()">
-                <i class="fa-solid fa-language text-warning"></i> <span>Ngôn ngữ</span>
-            </div>
-            <div class="chat-item" onclick="alert('HD: Chat với AI về Code/MC/BTC. Upload ảnh để AI phân tích. Tạo nhóm để chat chung!')">
-                <i class="fa-solid fa-circle-info text-info"></i> <span>Cách dùng</span>
-            </div>
-            <div class="chat-item" onclick="loadData()">
-                <i class="fa-solid fa-sync text-success"></i> <span>Đồng bộ</span>
-            </div>
-            <div class="chat-item text-danger" onclick="deleteAccount()">
-                <i class="fa-solid fa-user-slash"></i> <span>Xóa tài khoản</span>
-            </div>
-        </div>
-
-        <div class="p-4 border-top border-secondary border-opacity-10 mt-auto">
-            <div id="user-display" class="d-flex align-items-center gap-3 mb-4">
-                <div class="avatar-sm rounded-circle bg-gradient p-1" style="background:linear-gradient(var(--primary), var(--secondary)); width:38px;height:38px"></div>
-                <div>
-                    <span class="d-block small fw-bold" id="user-name">Guest Mode</span>
-                    <span class="d-block text-muted" id="user-status" style="font-size:10px">Online</span>
-                </div>
-            </div>
-            <button class="btn btn-outline-light w-100 rounded-3 py-2 border-0 bg-white bg-opacity-5" id="auth-btn" onclick="handleAuthAction()">
-                <i class="fa-solid fa-right-to-bracket me-2"></i> <span id="auth-text">Đăng nhập ngay</span>
-            </button>
-        </div>
-    </aside>
-
-    <main id="main-content">
-        <nav class="header-bar">
-            <div>
-                <h5 class="m-0 fw-800" id="chat-title">Hệ thống Trợ lý</h5>
-                <span class="text-success small"><i class="fa-solid fa-circle me-1" style="font-size:8px"></i> Latency: 12ms</span>
-            </div>
-            <div class="d-flex gap-3 align-items-center">
-                <button class="btn btn-dark rounded-pill px-3 btn-sm" onclick="openModal('modal-create-group')">
-                    <i class="fa-solid fa-users-plus me-1"></i> Tạo nhóm
-                </button>
-                <div class="vr opacity-20 mx-2"></div>
-                <button class="btn btn-danger btn-sm rounded-pill px-3" onclick="clearChat()">Xóa Chat</button>
-            </div>
-            <button class="btn btn-outline-light btn-sm" onclick="exportChat()">
-    <i class="fa-solid fa-share-nodes me-1"></i> Chia sẻ
-</button>
-
-        </nav>
-
-        <section id="chat-window">
-            <div class="text-center py-5 mt-5 welcome-view">
-                <div class="logo-box mx-auto mb-4" style="width:80px; height:80px"><i class="fa-solid fa-ghost fs-1 text-white"></i></div>
-                <h1 class="display-5 fw-800 mb-3">Chào ông giáo!</h1>
-                <p class="text-muted fs-5 mx-auto" style="max-width:500px">Tôi là Abc's Noob — PvP Bedwars thì dở nhưng fix bug thì bao "cháy". Nhập gì đó để bắt đầu!</p>
-            </div>
-        </section>
-
-        <div class="input-floating-area">
-            <div id="image-preview-container" class="mb-3">
-                <div class="position-relative d-inline-block">
-                    <img id="img-render" style="height:100px; border-radius:18px; border:2px solid var(--primary); object-fit: cover;">
-                    <button class="btn btn-danger btn-sm position-absolute top-0 start-100 translate-middle rounded-circle shadow" onclick="removeImage()">×</button>
-                </div>
-            </div>
-            
-            <div class="input-glass-box">
-                <input type="file" id="file-hidden" hidden accept="image/*" onchange="handleImage(this)">
-                <button class="btn btn-link text-muted p-0" onclick="document.getElementById('file-hidden').click()" title="Tải ảnh lên">
-                    <i class="fa-solid fa-image fs-4"></i>
-                </button>
-                <textarea id="user-input" rows="1" placeholder="Hỏi tôi về Code, Minecraft hoặc Bitcoin..."></textarea>
-                <button class="btn btn-primary rounded-circle shadow-lg" style="width:50px; height:50px" onclick="handleSendMessage()">
-                    <i class="fa-solid fa-paper-plane"></i>
-                </button>
-            </div>
-        </div>
-    </main>
-
-    <div id="noob-overlay" class="noob-overlay" onclick="closeAllModals(event)">
-        <div id="modal-auth" class="noob-card" style="display:none">
-            <h2 class="fw-800 mb-2">Danh tính Pro</h2>
-            <p class="text-muted mb-4 small">Đăng nhập để đồng bộ nhóm và lịch sử.</p>
-            <input type="email" id="f-email" class="modern-input" placeholder="Email của ông giáo">
-            <input type="password" id="f-pass" class="modern-input" placeholder="Mật khẩu">
-            <button class="btn btn-primary w-100 py-3 rounded-4 fw-bold fs-5 mb-3" onclick="submitAuth()">Xác nhận</button>
-            <div class="text-center">
-                <a href="#" class="text-primary small text-decoration-none" onclick="toggleAuthMode()">Chưa có acc? Đăng ký ngay</a>
-            </div>
-        </div>
-
-        <div id="modal-otp" class="noob-card" style="display:none">
-            <h2 class="fw-800 mb-2">Nhập mã OTP</h2>
-            <p class="text-muted mb-4 small">Kiểm tra email để lấy mã gank hệ thống.</p>
-            <input type="text" id="f-otp" class="modern-input" placeholder="Mã 6 số" maxlength="6">
-            <button class="btn btn-success w-100 py-3 rounded-4 fw-bold fs-5" onclick="submitOTP()">Kích hoạt</button>
-        </div>
-
-        <div id="modal-create-group" class="noob-card" style="display:none">
-            <h2 class="fw-800 mb-2">Tạo Server Chat</h2>
-            <p class="text-muted mb-4 small">Tạo không gian riêng cho Team của ông giáo.</p>
-            <input type="text" id="f-group-name" class="modern-input" placeholder="Tên nhóm (VD: Dev Survival)">
-            <button class="btn btn-primary w-100 py-3 rounded-4 fw-bold fs-5" onclick="createGroup()">Tạo ngay</button>
+    <div class="nav-label">Hội thoại hiện tại</div>
+    <div id="current-chat-item">
+        <div class="chat-item active" onclick="switchToCurrentChat()">
+            <i class="fa-solid fa-comments text-primary"></i>
+            <span>Chat hiện tại</span>
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
+    <div class="nav-label">Hội thoại cũ</div>
+    <div id="archived-list">
+        <p class="small text-muted px-3 opacity-50">Không có hội thoại cũ...</p>
+    </div>
 
-    <script>
-        const API_BASE = 'https://abcsnoobai.abcsnoob.workers.dev';
+    <div class="nav-container">
+        <div class="nav-label">Cài đặt</div>
+        <div class="chat-item" onclick="changeLanguage()">
+            <i class="fa-solid fa-language text-warning"></i> <span>Ngôn ngữ</span>
+        </div>
+<div class="chat-item btn-chat-use">
+    <i class="fa-solid fa-circle-info text-info"></i> <span>Cách dùng</span>
+</div>
+
+        <div class="chat-item" onclick="loadData()">
+            <i class="fa-solid fa-sync text-success"></i> <span>Đồng bộ</span>
+        </div>
+    </div>
+ </aside>
+
+ <main id="main-content">
+    <nav class="header-bar">
+        <div>
+            <h5 class="m-0 fw-800" id="chat-title">Hệ thống Trợ lý</h5>
+            <span class="text-success small"><i class="fa-solid fa-circle me-1" style="font-size:8px"></i> Latency: 12ms</span>
+        </div>
+        <div class="d-flex gap-3 align-items-center">
+            <button class="btn btn-danger btn-sm rounded-pill px-3" onclick="clearChat()">Xóa Chat</button>
+        </div>
+        <button class="btn btn-outline-light btn-sm" onclick="exportChat()">
+            <i class="fa-solid fa-share-nodes me-1"></i> Chia sẻ
+        </button>
+    </nav>
+
+    <section id="chat-window">
+        <div class="text-center py-5 mt-5 welcome-view">
+            <div class="logo-box mx-auto mb-4" style="width:80px; height:80px"><i class="fa-solid fa-ghost fs-1 text-white"></i></div>
+            <h1 class="display-5 fw-800 mb-3">Chào ông giáo!</h1>
+            <p class="text-muted fs-5 mx-auto" style="max-width:500px">Tôi là Abc's Noob — PvP Bedwars thì dở nhưng fix bug thì bao "cháy". Nhập gì đó để bắt đầu!</p>
+        </div>
+    </section>
+
+    <div class="input-floating-area">
+        <div id="image-preview-container" class="mb-3">
+            <div class="position-relative d-inline-block">
+                <img id="img-render" style="height:100px; border-radius:18px; border:2px solid var(--primary); object-fit: cover;">
+                <button class="btn btn-danger btn-sm position-absolute top-0 start-100 translate-middle rounded-circle shadow" onclick="removeImage()">×</button>
+            </div>
+        </div>
         
-        // --- CORE STATE ---
-        // Restore history từ LocalStorage
-        let currentChatHistory = JSON.parse(localStorage.getItem('noob_chat_history')) || [];
-        let activeGroupId = null;
-        let selectedBase64 = null;
-        let authAction = 'login';
+        <div class="input-glass-box">
+            <input type="file" id="file-hidden" hidden accept="image/*" onchange="handleImage(this)">
+            <button class="btn btn-link text-muted p-0" onclick="document.getElementById('file-hidden').click()" title="Tải ảnh lên">
+                <i class="fa-solid fa-image fs-4"></i>
+            </button>
+            <textarea id="user-input" rows="1" placeholder="Hỏi tôi về Code, Minecraft hoặc Bitcoin..."></textarea>
+            <button class="btn btn-primary rounded-circle shadow-lg" style="width:50px; height:50px" onclick="handleSendMessage()">
+                <i class="fa-solid fa-paper-plane"></i>
+            </button>
+        </div>
+    </div>
+ </main>
+<!-- Overlay Tutorial -->
+<div id="tutorial-overlay" class="noob-overlay">
+    <div class="noob-card text-white">
+        <h3 class="mb-4">Hướng dẫn sử dụng</h3>
+        <ul class="list-group list-group-flush mb-3">
+            <li class="list-group-item bg-transparent border-0 p-2">🟢 <b>Trò chuyện mới:</b> Tạo hội thoại mới và lưu cũ.</li>
+            <li class="list-group-item bg-transparent border-0 p-2">🟢 <b>Hội thoại hiện tại:</b> Xem chat hiện tại.</li>
+            <li class="list-group-item bg-transparent border-0 p-2">🟢 <b>Hội thoại cũ:</b> Mở chat đã lưu.</li>
+            <li class="list-group-item bg-transparent border-0 p-2">🟢 <b>Upload ảnh:</b> Nhấn vào icon ảnh hoặc kéo thả.</li>
+            <li class="list-group-item bg-transparent border-0 p-2">🟢 <b>Export chat:</b> Xuất toàn bộ chat ra file .abcsaihistory.</li>
+            <li class="list-group-item bg-transparent border-0 p-2">🟢 <b>Ngôn ngữ:</b> Chọn ngôn ngữ AI.</li>
+            <li class="list-group-item bg-transparent border-0 p-2">🟢 <b>Drag & Drop:</b> Kéo thả file .abcsaihistory hoặc hình ảnh.</li>
+        </ul>
+        <button class="btn btn-primary w-100" onclick="closeTutorial()">Đóng</button>
+    </div>
+</div>
 
-        function loadArchivedChats() {
+
+ <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+ <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+ <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
+
+ <script>
+    const API_BASE = 'https://abcsnoobai.abcsnoob.workers.dev';
+    let currentChatHistory = JSON.parse(localStorage.getItem('noob_chat_history')) || [];
+    let activeGroupId = null;
+    let selectedBase64 = null;
+function openTutorial() {
+    document.getElementById('tutorial-overlay').style.display = 'flex';
+}
+
+function closeTutorial() {
+    document.getElementById('tutorial-overlay').style.display = 'none';
+}
+
+// Gắn lại nút Cách dùng
+document.querySelector('.btn-chat-use')?.addEventListener('click', openTutorial);
+
+    function loadArchivedChats() {
+        const archivedChats = JSON.parse(localStorage.getItem('noob_archived_chats') || '[]');
+        const list = document.getElementById('archived-list');
+        if(!archivedChats.length) {
+            list.innerHTML = '<p class="small text-muted px-3 opacity-50">Không có hội thoại cũ...</p>';
+            return;
+        }
+        list.innerHTML = archivedChats.map(s => `
+            <div class="chat-item" onclick="openArchived(${s.id})" id="archived-${s.id}">
+                <i class="fa-solid fa-clock text-secondary"></i>
+                <span class="text-truncate">Hội thoại ${new Date(s.timestamp).toLocaleString()}</span>
+            </div>
+        `).join('');
+    }
+
+function exportChat() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const sessionId = urlParams.get('id');
+
+    let historyToExport = currentChatHistory;
+
+    if(sessionId) {
+        const archivedChats = JSON.parse(localStorage.getItem('noob_archived_chats') || '[]');
+        const session = archivedChats.find(s => s.id == sessionId);
+        if(!session) return alert("Không tìm thấy lịch sử chat!");
+        historyToExport = session.history;
+    }
+
+    if(!historyToExport.length) return alert("Chưa có tin nhắn gì để chia sẻ!");
+
+    const data = { timestamp: new Date().toISOString(), history: historyToExport };
+    const blob = new Blob([JSON.stringify(data, null, 2)], {type: "application/json"});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${sessionId || 'current'}.abcsaihistory`;
+    a.click();
+    URL.revokeObjectURL(url);
+}
+
+function switchToCurrentChat() {
+    document.querySelectorAll('#archived-list .chat-item, #current-chat-item .chat-item').forEach(i => i.classList.remove('active'));
+    document.querySelector('#current-chat-item .chat-item').classList.add('active');
+
+    document.getElementById('chat-title').innerText = "Hội thoại hiện tại";
+
+    const win = document.getElementById('chat-window');
+    win.innerHTML = ''; // reset
+
+    currentChatHistory.forEach(msg => renderMessage(msg));
+
+    // Xóa param ?id
+    const url = new URL(window.location);
+    url.searchParams.delete('id');
+    window.history.replaceState({}, '', url);
+}
+
+function openArchived(sessionId) {
+    const archivedChats = JSON.parse(localStorage.getItem('noob_archived_chats') || '[]');
+    const session = archivedChats.find(s => s.id === sessionId);
+    if(!session) return;
+
+    // Highlight
+    document.querySelectorAll('#archived-list .chat-item, #current-chat-item .chat-item')
+        .forEach(i => i.classList.remove('active'));
+    document.getElementById(`archived-${sessionId}`)?.classList.add('active');
+
+    // Load messages
+    const win = document.getElementById('chat-window');
+    win.innerHTML = '';
+    session.history.forEach(msg => renderMessage(msg));
+
+    document.getElementById('chat-title').innerText = `Hội thoại cũ: ${new Date(session.timestamp).toLocaleString()}`;
+
+    // Cập nhật URL
+    const url = new URL(window.location);
+    url.searchParams.set('id', sessionId);
+    window.history.replaceState({}, '', url);
+}
+
+
+function loadArchivedChats() {
     const archivedChats = JSON.parse(localStorage.getItem('noob_archived_chats') || '[]');
     const list = document.getElementById('archived-list');
 
@@ -310,238 +359,37 @@
     `).join('');
 }
 
-function exportChat() {
-    if(!currentChatHistory.length) return alert("Chưa có tin nhắn gì để chia sẻ!");
-    
-    const data = {
-        timestamp: new Date().toISOString(),
-        history: currentChatHistory
-    };
-
-    const blob = new Blob([JSON.stringify(data, null, 2)], {type: "application/json"});
-    const url = URL.createObjectURL(blob);
-
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `.abcsaihistory`;
-    a.click();
-    URL.revokeObjectURL(url);
-}
 
 
-function exportChat() {
-    if(!currentChatHistory.length) return alert("Chưa có tin nhắn gì để chia sẻ!");
-    
-    const data = {
-        timestamp: new Date().toISOString(),
-        history: currentChatHistory
-    };
+    async function handleSendMessage() {
+        const input = document.getElementById('user-input');
+        const text = input.value.trim();
+        if(!text && !selectedBase64) return;
+        document.querySelector('.welcome-view')?.remove();
 
-    const blob = new Blob([JSON.stringify(data, null, 2)], {type: "application/json"});
-    const url = URL.createObjectURL(blob);
+        const msgObj = { role: 'user', parts: [{ text: text || '', ...(selectedBase64 ? { inlineData: selectedBase64 } : {}) }] };
+        currentChatHistory.push(msgObj);
+        localStorage.setItem('noob_chat_history', JSON.stringify(currentChatHistory));
+        renderMessage(msgObj);
 
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `.abcsaihistory`;
-    a.click();
-    URL.revokeObjectURL(url);
-}
+        const tempImg = selectedBase64;
+        input.value = '';
+        removeImage();
+        input.style.height = 'auto';
 
+        let payload = { user_lang: 'auto', messages: currentChatHistory.slice(-10) };
+        if(activeGroupId) { payload.action = 'send_group_msg'; payload.data = { groupId: activeGroupId, text, senderName: 'Noob', inlineData: tempImg }; }
 
-const chatWindow = document.getElementById('main-content');
-
-chatWindow.addEventListener('dragover', e => {
-    e.preventDefault();
-    chatWindow.style.background = 'rgba(0,210,255,0.05)';
-});
-
-chatWindow.addEventListener('dragleave', e => {
-    chatWindow.style.background = '';
-});
-
-chatWindow.addEventListener('drop', e => {
-    e.preventDefault();
-    chatWindow.style.background = '';
-    
-    const file = e.dataTransfer.files[0];
-    if(!file) return;
-
-    if(!file.name.endsWith('.abcsaihistory')) {
-        alert("File không hợp lệ! Chỉ nhận .abcsaihistory");
-        return;
-    }
-
-    if(currentChatHistory.length > 0 && !confirm("Chat hiện tại sẽ bị ghi đè nếu load file. Tiếp tục chứ?")) {
-        return;
-    }
-
-    const reader = new FileReader();
-    reader.onload = e => {
         try {
-            const data = JSON.parse(e.target.result);
-            if(!data.history) throw new Error("Không tìm thấy lịch sử chat");
-
-            // Replace current chat
-            currentChatHistory = data.history;
-            localStorage.setItem('noob_chat_history', JSON.stringify(currentChatHistory));
-
-            // Clear chat window và render lại
-            const win = document.getElementById('chat-window');
-            win.innerHTML = '';
-            currentChatHistory.forEach(m => renderMessage(m.parts[0].text, m.role));
-
-            alert("Đã load lịch sử từ file! 🚀");
-        } catch(err) {
-            alert("File lỗi hoặc không hợp lệ!");
-            console.error(err);
-        }
-    };
-    reader.readAsText(file);
-});
-
-
-
-
-function openArchived(sessionId) {
-    const archivedChats = JSON.parse(localStorage.getItem('noob_archived_chats') || '[]');
-    const session = archivedChats.find(s => s.id === sessionId);
-    if(!session) return;
-
-    // Highlight
-    document.querySelectorAll('#archived-list .chat-item, #current-chat-item .chat-item').forEach(i => i.classList.remove('active'));
-    document.getElementById(`archived-${sessionId}`).classList.add('active');
-
-    // Load messages
-    const win = document.getElementById('chat-window');
-    win.innerHTML = '';
-    session.history.forEach(msg => renderMessage(msg.parts[0].text, msg.role));
-
-    document.getElementById('chat-title').innerText = `Hội thoại cũ: ${new Date(session.timestamp).toLocaleString()}`;
-}
-
-        function switchToCurrentChat() {
-    document.querySelectorAll('#archived-list .chat-item, #current-chat-item .chat-item').forEach(i => i.classList.remove('active'));
-    document.querySelector('#current-chat-item .chat-item').classList.add('active');
-
-    document.getElementById('chat-title').innerText = "Hội thoại hiện tại";
-
-    const win = document.getElementById('chat-window');
-    win.innerHTML = '';
-    currentChatHistory.forEach(msg => renderMessage(msg.parts[0].text, msg.role));
-}
-
-
-        // --- UI LOGIC ---
-        function openModal(id) {
-            document.getElementById('noob-overlay').style.display = 'flex';
-            document.querySelectorAll('.noob-card').forEach(c => c.style.display = 'none');
-            document.getElementById(id).style.display = 'block';
-        }
-
-        function closeAllModals(e) {
-            if(!e || e.target.id === 'noob-overlay') document.getElementById('noob-overlay').style.display = 'none';
-        }
-
-        function toggleAuthMode() {
-            authAction = (authAction === 'login') ? 'register' : 'login';
-            document.querySelector('#modal-auth h2').innerText = authAction === 'login' ? 'Danh tính Pro' : 'Đăng ký Noob';
-        }
-
-        // --- AUTH & DATA SYNC ---
-        async function loadData() {
-            const token = localStorage.getItem('noob_token');
-            
-            // 1. Render lịch sử cũ từ LocalStorage (Personal Chat)
-            if (currentChatHistory.length > 0 && !activeGroupId) {
-                document.querySelector('.welcome-view')?.remove();
-                currentChatHistory.forEach(m => renderMessage(m.parts[0].text, m.role));
-            }
-
-            if(!token) return;
-            
-            const email = atob(token);
-            document.getElementById('user-name').innerText = email.split('@')[0].toUpperCase();
-            document.getElementById('auth-text').innerText = "Đăng xuất";
-
-            // 2. Fetch danh sách Group
-            try {
-                const res = await fetch(API_BASE, { 
-                    method: 'POST', 
-                    body: JSON.stringify({ action: 'get_my_groups', email })
-                });
-                const d = await res.json();
-                if(d.success && d.groups.length > 0) {
-                    const list = document.getElementById('group-list');
-                    list.innerHTML = d.groups.map(g => `
-                        <div class="chat-item" onclick="switchGroup('${g.id}', '${g.name}')" id="g-${g.id}">
-                            <i class="fa-solid fa-hashtag text-primary"></i> 
-                            <span class="text-truncate">${g.name}</span>
-                        </div>
-                    `).join('');
-                }
-            } catch (e) { console.error("Sync Error:", e); }
-        }
-
-        // --- CHAT ACTIONS ---
-async function handleSendMessage() {
-    const input = document.getElementById('user-input');
-    const text = input.value.trim();
-    if(!text && !selectedBase64) return;
-
-    document.querySelector('.welcome-view')?.remove();
-
-    // --- Push vào history ---
-    const msgObj = {
-        role: 'user',
-        parts: [{ text: text || '', ...(selectedBase64 ? { inlineData: selectedBase64 } : {}) }]
-    };
-    currentChatHistory.push(msgObj);
-    localStorage.setItem('noob_chat_history', JSON.stringify(currentChatHistory));
-
-    // --- UI ---
-    renderMessage(msgObj);
-
-    const tempImg = selectedBase64;
-    input.value = '';
-    removeImage();
-    input.style.height = 'auto';
-
-    const token = localStorage.getItem('noob_token');
-    const email = token ? atob(token) : null;
-
-    let payload = { user_lang: 'auto', email, messages: currentChatHistory.slice(-10) };
-
-    if(activeGroupId) {
-        payload.action = 'send_group_msg';
-        payload.data = { 
-            groupId: activeGroupId, 
-            text: text, 
-            senderName: email ? email.split('@')[0] : 'Noob',
-            inlineData: tempImg
-        };
+            const res = await fetch(API_BASE, { method: 'POST', body: JSON.stringify(payload) });
+            const d = await res.json();
+            if(d.success) {
+                const botMsg = { role: 'model', parts: [{ text: d.text || '', ...(d.inlineData ? { inlineData: d.inlineData } : {}) }] };
+                renderMessage(botMsg);
+                if(!activeGroupId){ currentChatHistory.push(botMsg); localStorage.setItem('noob_chat_history', JSON.stringify(currentChatHistory)); }
+            } else renderMessage({ role: 'model', parts: [{ text: "Lỗi: " + (d.error || "Satoshi = 0") }] });
+        } catch(e) { renderMessage({ role: 'model', parts: [{ text: "Backend tạch rồi ông giáo ơi!" }] }); }
     }
-
-    try {
-        const res = await fetch(API_BASE, { method: 'POST', body: JSON.stringify(payload) });
-        const d = await res.json();
-        if(d.success) {
-            const botMsg = {
-                role: 'model',
-                parts: [{ text: d.text || '', ...(d.inlineData ? { inlineData: d.inlineData } : {}) }]
-            };
-            renderMessage(botMsg);
-            if(!activeGroupId){
-                currentChatHistory.push(botMsg);
-                localStorage.setItem('noob_chat_history', JSON.stringify(currentChatHistory));
-            }
-        } else {
-            renderMessage({ role: 'model', parts: [{ text: "Lỗi: " + (d.error || "Satoshi = 0") }] });
-        }
-    } catch(e) {
-        renderMessage({ role: 'model', parts: [{ text: "Backend tạch rồi ông giáo ơi!" }] });
-    }
-}
-
 
 function renderMessage(msg) {
     const textPart = msg.parts?.[0] || {};
@@ -574,160 +422,70 @@ function renderMessage(msg) {
 }
 
 
-        // --- GROUP LOGIC ---
-        async function switchGroup(id, name) {
-            activeGroupId = id;
-            document.querySelectorAll('.chat-item').forEach(i => i.classList.remove('active'));
-            document.getElementById(`g-${id}`)?.classList.add('active');
-            document.getElementById('chat-title').innerText = "Group: " + name;
-            
-            const win = document.getElementById('chat-window');
-            win.innerHTML = '<div class="text-center opacity-50 py-5"><i class="fa-solid fa-spinner fa-spin me-2"></i>Đang tải tin nhắn nhóm...</div>';
-            
-            const email = atob(localStorage.getItem('noob_token'));
-            try {
-                const res = await fetch(API_BASE, { 
-                    method: 'POST', 
-                    body: JSON.stringify({ action: 'get_group_msgs', email, data: { groupId: id }})
-                });
-                const d = await res.json();
-                win.innerHTML = '';
-                if(d.success && d.messages) {
-                    d.messages.forEach(m => renderMessage(m.text, m.role));
-                }
-            } catch (e) { win.innerHTML = 'Lỗi tải nhóm!'; }
+    function handleImage(input) {
+        const file = input.files[0];
+        if(!file) return;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            selectedBase64 = e.target.result;
+            document.getElementById('img-render').src = selectedBase64;
+            document.getElementById('image-preview-container').style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+    }
+
+    function removeImage() { 
+        selectedBase64 = null; 
+        document.getElementById('image-preview-container').style.display = 'none'; 
+        document.getElementById('file-hidden').value = '';
+    }
+
+    function startNewChat() {
+        if(!currentChatHistory.length) return;
+        const archivedChats = JSON.parse(localStorage.getItem('noob_archived_chats') || '[]');
+        archivedChats.push({ id: Date.now(), timestamp: new Date().toISOString(), history: currentChatHistory });
+        localStorage.setItem('noob_archived_chats', JSON.stringify(archivedChats));
+        currentChatHistory = [];
+        localStorage.removeItem('noob_chat_history');
+        loadArchivedChats();
+        switchToCurrentChat();
+    }
+
+    function clearChat() {
+        if(confirm("Xóa toàn bộ tin nhắn trên màn hình?")) {
+            document.getElementById('chat-window').innerHTML = '';
+            if(!activeGroupId) { currentChatHistory = []; localStorage.removeItem('noob_chat_history'); }
         }
+    }
 
-        async function createGroup() {
-            const name = document.getElementById('f-group-name').value;
-            const token = localStorage.getItem('noob_token');
-            if(!token) return alert("Phải log-in mới tạo server được!");
-            
-            const email = atob(token);
-            const res = await fetch(API_BASE, { 
-                method: 'POST', 
-                body: JSON.stringify({ action: 'create_group', email, data: { groupName: name }})
-            });
-            if((await res.json()).success) location.reload();
-        }
+    function changeLanguage() {
+        const lang = prompt("Nhập ngôn ngữ (vi, en, jp, kr):", localStorage.getItem('noob_lang') || 'vi');
+        if(lang) { localStorage.setItem('noob_lang', lang); alert("Đã đổi sang: " + lang.toUpperCase()); }
+    }
 
-        // --- AUTH ACTIONS ---
-        async function submitAuth() {
-            const email = document.getElementById('f-email').value;
-            const password = document.getElementById('f-pass').value;
-            const res = await fetch(API_BASE, { method: 'POST', body: JSON.stringify({ action: authAction, email, password })});
-            const d = await res.json();
-            if(d.success) {
-                if(authAction === 'register') openModal('modal-otp');
-                else { localStorage.setItem('noob_token', d.token); location.reload(); }
-            } else alert(d.error);
-        }
+function loadData() {
+    // Ẩn welcome view nếu còn
+    document.querySelector('.welcome-view')?.remove();
 
-        async function submitOTP() {
-            const email = document.getElementById('f-email').value;
-            const otp = document.getElementById('f-otp').value;
-            const res = await fetch(API_BASE, { method: 'POST', body: JSON.stringify({ action: 'verify_otp', email, otp })});
-            const d = await res.json();
-            if(d.success) { localStorage.setItem('noob_token', d.token); location.reload(); } else alert(d.error);
-        }
+    // Load lịch sử chat hiện tại
+    if(currentChatHistory.length > 0){
+        const win = document.getElementById('chat-window');
+        win.innerHTML = ''; // reset chat window
+        currentChatHistory.forEach(msg => renderMessage(msg)); // gửi toàn bộ object msg
+    }
 
-        function handleAuthAction() {
-            if(localStorage.getItem('noob_token')) {
-                if(confirm("Ông giáo muốn Logout?")) { localStorage.clear(); location.reload(); }
-            } else openModal('modal-auth');
-        }
-
-        // --- VISION ---
-function handleImage(input) {
-    const file = input.files[0];
-    if(!file) return;
-    const reader = new FileReader();
-    reader.onload = (e) => {
-        selectedBase64 = e.target.result;
-        document.getElementById('img-render').src = selectedBase64;
-        document.getElementById('image-preview-container').style.display = 'block';
-    };
-    reader.readAsDataURL(file);
-}
-
-function removeImage() { 
-    selectedBase64 = null; 
-    document.getElementById('image-preview-container').style.display = 'none'; 
-    document.getElementById('file-hidden').value = '';
-}
-
-function startNewChat() {
-    if(!currentChatHistory.length) return;
-
-    const archivedChats = JSON.parse(localStorage.getItem('noob_archived_chats') || '[]');
-    archivedChats.push({
-        id: Date.now(),
-        timestamp: new Date().toISOString(),
-        history: currentChatHistory
-    });
-
-    localStorage.setItem('noob_archived_chats', JSON.stringify(archivedChats));
-    currentChatHistory = [];
-    localStorage.removeItem('noob_chat_history');
-
-    loadArchivedChats(); // Refresh sidebar
-    switchToCurrentChat(); // Bắt đầu chat mới
+    loadArchivedChats(); // Load danh sách chat cũ
 }
 
 
 
-        function clearChat() {
-            if(confirm("Xóa toàn bộ tin nhắn trên màn hình?")) {
-                document.getElementById('chat-window').innerHTML = '';
-                if(!activeGroupId) {
-                    currentChatHistory = [];
-                    localStorage.removeItem('noob_chat_history');
-                }
-            }
-        }
+    window.onload = loadData;
 
-        async function deleteAccount() {
-            const token = localStorage.getItem('noob_token');
-            if(!token) return alert("Phải đăng nhập mới xóa được chứ ông giáo!");
-            
-            if(confirm("XÓA THẬT À? Toàn bộ dữ liệu nhóm và tin nhắn sẽ 'bay màu' vĩnh viễn đó!")) {
-                const email = atob(token);
-                const res = await fetch(API_BASE, {
-                    method: 'POST',
-                    body: JSON.stringify({ action: 'delete_account', email })
-                });
-                const d = await res.json();
-                if(d.success) {
-                    localStorage.clear();
-                    location.reload();
-                } else alert(d.error);
-            }
-        }
-
-        function changeLanguage() {
-            const lang = prompt("Nhập ngôn ngữ (vi, en, jp, kr):", localStorage.getItem('noob_lang') || 'vi');
-            if(lang) {
-                localStorage.setItem('noob_lang', lang);
-                alert("Đã đổi sang: " + lang.toUpperCase());
-            }
-        }
-
-        // --- INITIALIZE ---
-        window.onload = loadData;
-
-        const tx = document.getElementById('user-input');
-        tx.addEventListener('input', function() {
-            this.style.height = 'auto';
-            this.style.height = (this.scrollHeight) + 'px';
-        });
-        
-        // Enter to send
-        tx.addEventListener('keydown', (e) => {
-            if(e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                handleSendMessage();
-            }
-        });
-    </script>
+    const tx = document.getElementById('user-input');
+    tx.addEventListener('input', function() { this.style.height = 'auto'; this.style.height = (this.scrollHeight) + 'px'; });
+    tx.addEventListener('keydown', (e) => { if(e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSendMessage(); } });
+    loadData();
+    switchToCurrentChat();
+ </script>
 </body>
 </html>
