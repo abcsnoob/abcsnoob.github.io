@@ -153,6 +153,21 @@
                 <i class="fa-solid fa-plus-circle me-2"></i> Trò chuyện mới
             </button>
         </div>
+<div class="nav-label">Hội thoại hiện tại</div>
+<div id="current-chat-item">
+    <div class="chat-item active" onclick="switchToCurrentChat()">
+        <i class="fa-solid fa-comments text-primary"></i>
+        <span>Chat hiện tại</span>
+    </div>
+</div>
+
+<div class="nav-label">Hội thoại cũ</div>
+<div id="archived-list">
+    <p class="small text-muted px-3 opacity-50">Không có hội thoại cũ...</p>
+</div>
+
+
+
 
         <div class="nav-container">
             <div class="nav-label">Team & Groups</div>
@@ -202,6 +217,10 @@
                 <div class="vr opacity-20 mx-2"></div>
                 <button class="btn btn-danger btn-sm rounded-pill px-3" onclick="clearChat()">Xóa Chat</button>
             </div>
+            <button class="btn btn-outline-light btn-sm" onclick="exportChat()">
+    <i class="fa-solid fa-share-nodes me-1"></i> Chia sẻ
+</button>
+
         </nav>
 
         <section id="chat-window">
@@ -274,6 +293,144 @@
         let selectedBase64 = null;
         let authAction = 'login';
 
+        function loadArchivedChats() {
+    const archivedChats = JSON.parse(localStorage.getItem('noob_archived_chats') || '[]');
+    const list = document.getElementById('archived-list');
+
+    if(!archivedChats.length) {
+        list.innerHTML = '<p class="small text-muted px-3 opacity-50">Không có hội thoại cũ...</p>';
+        return;
+    }
+
+    list.innerHTML = archivedChats.map(s => `
+        <div class="chat-item" onclick="openArchived(${s.id})" id="archived-${s.id}">
+            <i class="fa-solid fa-clock text-secondary"></i>
+            <span class="text-truncate">Hội thoại ${new Date(s.timestamp).toLocaleString()}</span>
+        </div>
+    `).join('');
+}
+
+function exportChat() {
+    if(!currentChatHistory.length) return alert("Chưa có tin nhắn gì để chia sẻ!");
+    
+    const data = {
+        timestamp: new Date().toISOString(),
+        history: currentChatHistory
+    };
+
+    const blob = new Blob([JSON.stringify(data, null, 2)], {type: "application/json"});
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `.abcsaihistory`;
+    a.click();
+    URL.revokeObjectURL(url);
+}
+
+
+function exportChat() {
+    if(!currentChatHistory.length) return alert("Chưa có tin nhắn gì để chia sẻ!");
+    
+    const data = {
+        timestamp: new Date().toISOString(),
+        history: currentChatHistory
+    };
+
+    const blob = new Blob([JSON.stringify(data, null, 2)], {type: "application/json"});
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `.abcsaihistory`;
+    a.click();
+    URL.revokeObjectURL(url);
+}
+
+
+const chatWindow = document.getElementById('main-content');
+
+chatWindow.addEventListener('dragover', e => {
+    e.preventDefault();
+    chatWindow.style.background = 'rgba(0,210,255,0.05)';
+});
+
+chatWindow.addEventListener('dragleave', e => {
+    chatWindow.style.background = '';
+});
+
+chatWindow.addEventListener('drop', e => {
+    e.preventDefault();
+    chatWindow.style.background = '';
+    
+    const file = e.dataTransfer.files[0];
+    if(!file) return;
+
+    if(!file.name.endsWith('.abcsaihistory')) {
+        alert("File không hợp lệ! Chỉ nhận .abcsaihistory");
+        return;
+    }
+
+    if(currentChatHistory.length > 0 && !confirm("Chat hiện tại sẽ bị ghi đè nếu load file. Tiếp tục chứ?")) {
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = e => {
+        try {
+            const data = JSON.parse(e.target.result);
+            if(!data.history) throw new Error("Không tìm thấy lịch sử chat");
+
+            // Replace current chat
+            currentChatHistory = data.history;
+            localStorage.setItem('noob_chat_history', JSON.stringify(currentChatHistory));
+
+            // Clear chat window và render lại
+            const win = document.getElementById('chat-window');
+            win.innerHTML = '';
+            currentChatHistory.forEach(m => renderMessage(m.parts[0].text, m.role));
+
+            alert("Đã load lịch sử từ file! 🚀");
+        } catch(err) {
+            alert("File lỗi hoặc không hợp lệ!");
+            console.error(err);
+        }
+    };
+    reader.readAsText(file);
+});
+
+
+
+
+function openArchived(sessionId) {
+    const archivedChats = JSON.parse(localStorage.getItem('noob_archived_chats') || '[]');
+    const session = archivedChats.find(s => s.id === sessionId);
+    if(!session) return;
+
+    // Highlight
+    document.querySelectorAll('#archived-list .chat-item, #current-chat-item .chat-item').forEach(i => i.classList.remove('active'));
+    document.getElementById(`archived-${sessionId}`).classList.add('active');
+
+    // Load messages
+    const win = document.getElementById('chat-window');
+    win.innerHTML = '';
+    session.history.forEach(msg => renderMessage(msg.parts[0].text, msg.role));
+
+    document.getElementById('chat-title').innerText = `Hội thoại cũ: ${new Date(session.timestamp).toLocaleString()}`;
+}
+
+        function switchToCurrentChat() {
+    document.querySelectorAll('#archived-list .chat-item, #current-chat-item .chat-item').forEach(i => i.classList.remove('active'));
+    document.querySelector('#current-chat-item .chat-item').classList.add('active');
+
+    document.getElementById('chat-title').innerText = "Hội thoại hiện tại";
+
+    const win = document.getElementById('chat-window');
+    win.innerHTML = '';
+    currentChatHistory.forEach(msg => renderMessage(msg.parts[0].text, msg.role));
+}
+
+
         // --- UI LOGIC ---
         function openModal(id) {
             document.getElementById('noob-overlay').style.display = 'flex';
@@ -326,80 +483,96 @@
         }
 
         // --- CHAT ACTIONS ---
-        async function handleSendMessage() {
-            const input = document.getElementById('user-input');
-            const text = input.value.trim();
-            if(!text && !selectedBase64) return;
+async function handleSendMessage() {
+    const input = document.getElementById('user-input');
+    const text = input.value.trim();
+    if(!text && !selectedBase64) return;
 
-            document.querySelector('.welcome-view')?.remove();
-            
-            // UI Update
-            renderMessage(text, 'user', selectedBase64);
-            const tempImg = selectedBase64;
-            input.value = '';
-            removeImage();
-            input.style.height = 'auto';
+    document.querySelector('.welcome-view')?.remove();
 
-            const token = localStorage.getItem('noob_token');
-            const email = token ? atob(token) : null;
+    // --- Push vào history ---
+    const msgObj = {
+        role: 'user',
+        parts: [{ text: text || '', ...(selectedBase64 ? { inlineData: selectedBase64 } : {}) }]
+    };
+    currentChatHistory.push(msgObj);
+    localStorage.setItem('noob_chat_history', JSON.stringify(currentChatHistory));
 
-            let payload = { user_lang: 'auto', email: email };
+    // --- UI ---
+    renderMessage(msgObj);
 
-            if(activeGroupId) {
-                // Logic Group Chat
-                payload.action = 'send_group_msg';
-                payload.data = { 
-                    groupId: activeGroupId, 
-                    text: text, 
-                    senderName: email ? email.split('@')[0] : 'Noob' 
-                };
-            } else {
-                // Logic Personal Chat - Save to LocalStorage
-                currentChatHistory.push({ role: 'user', parts: [{ text }] });
+    const tempImg = selectedBase64;
+    input.value = '';
+    removeImage();
+    input.style.height = 'auto';
+
+    const token = localStorage.getItem('noob_token');
+    const email = token ? atob(token) : null;
+
+    let payload = { user_lang: 'auto', email, messages: currentChatHistory.slice(-10) };
+
+    if(activeGroupId) {
+        payload.action = 'send_group_msg';
+        payload.data = { 
+            groupId: activeGroupId, 
+            text: text, 
+            senderName: email ? email.split('@')[0] : 'Noob',
+            inlineData: tempImg
+        };
+    }
+
+    try {
+        const res = await fetch(API_BASE, { method: 'POST', body: JSON.stringify(payload) });
+        const d = await res.json();
+        if(d.success) {
+            const botMsg = {
+                role: 'model',
+                parts: [{ text: d.text || '', ...(d.inlineData ? { inlineData: d.inlineData } : {}) }]
+            };
+            renderMessage(botMsg);
+            if(!activeGroupId){
+                currentChatHistory.push(botMsg);
                 localStorage.setItem('noob_chat_history', JSON.stringify(currentChatHistory));
-                payload.messages = currentChatHistory.slice(-10); // Gửi 10 câu gần nhất
             }
-
-            try {
-                const res = await fetch(API_BASE, { method: 'POST', body: JSON.stringify(payload) });
-                const d = await res.json();
-                if(d.success) {
-                    renderMessage(d.text, 'model');
-                    if(!activeGroupId) {
-                        currentChatHistory.push({ role: 'model', parts: [{ text: d.text }] });
-                        localStorage.setItem('noob_chat_history', JSON.stringify(currentChatHistory));
-                    }
-                } else {
-                    renderMessage("Lỗi rồi: " + (d.error || "Hết năng lượng (Satoshi = 0)"), 'model');
-                }
-            } catch (e) {
-                renderMessage("Backend tạch rồi ông giáo ơi!", 'model');
-            }
+        } else {
+            renderMessage({ role: 'model', parts: [{ text: "Lỗi: " + (d.error || "Satoshi = 0") }] });
         }
+    } catch(e) {
+        renderMessage({ role: 'model', parts: [{ text: "Backend tạch rồi ông giáo ơi!" }] });
+    }
+}
 
-        function renderMessage(text, role, img = null) {
-            const win = document.getElementById('chat-window');
-            const isBot = (role === 'model' || role === 'assistant');
-            const div = document.createElement('div');
-            div.className = `msg-box ${isBot ? 'bot-msg' : 'user-msg'}`;
-            
-            div.innerHTML = `
-                <div class="msg-avatar" style="background:${isBot?'var(--primary)':'var(--secondary)'}">
-                    ${isBot ? 'A' : 'U'}
-                </div>
-                <div class="msg-content-wrapper">
-                    <div class="msg-header">
-                        <span>${isBot ? "ABC'S NOOB AI" : "ME"}</span>
-                        <span>${new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
-                    </div>
-                    ${img ? `<img src="${img}" class="mb-3" style="max-width:280px; border-radius:15px; border:1px solid var(--glass-border)">` : ''}
-                    <div class="msg-text">${marked.parse(text)}</div>
-                </div>
-            `;
-            win.appendChild(div);
-            win.scrollTop = win.scrollHeight;
-            Prism.highlightAllUnder(div);
-        }
+
+function renderMessage(msg) {
+    const textPart = msg.parts?.[0] || {};
+    let text = textPart.text || '';
+    let img = textPart.inlineData || null;
+
+    const win = document.getElementById('chat-window');
+    const isBot = msg.role === 'model' || msg.role === 'assistant';
+
+    const div = document.createElement('div');
+    div.className = `msg-box ${isBot ? 'bot-msg' : 'user-msg'}`;
+
+    div.innerHTML = `
+        <div class="msg-avatar" style="background:${isBot?'var(--primary)':'var(--secondary)'}">
+            ${isBot ? 'A' : 'U'}
+        </div>
+        <div class="msg-content-wrapper">
+            <div class="msg-header">
+                <span>${isBot ? "ABC'S NOOB AI" : "ME"}</span>
+                <span>${new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}</span>
+            </div>
+            ${img ? `<img src="${img}" class="mb-3" style="max-width:280px; border-radius:15px; border:1px solid var(--glass-border)">` : ''}
+            <div class="msg-text">${marked.parse(text)}</div>
+        </div>
+    `;
+
+    win.appendChild(div);
+    win.scrollTop = win.scrollHeight;
+    Prism.highlightAllUnder(div);
+}
+
 
         // --- GROUP LOGIC ---
         async function switchGroup(id, name) {
@@ -465,29 +638,43 @@
         }
 
         // --- VISION ---
-        function handleImage(input) {
-            const file = input.files[0];
-            if(!file) return;
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                selectedBase64 = e.target.result;
-                document.getElementById('img-render').src = selectedBase64;
-                document.getElementById('image-preview-container').style.display = 'block';
-            };
-            reader.readAsDataURL(file);
-        }
-        function removeImage() { 
-            selectedBase64 = null; 
-            document.getElementById('image-preview-container').style.display = 'none'; 
-            document.getElementById('file-hidden').value = '';
-        }
+function handleImage(input) {
+    const file = input.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        selectedBase64 = e.target.result;
+        document.getElementById('img-render').src = selectedBase64;
+        document.getElementById('image-preview-container').style.display = 'block';
+    };
+    reader.readAsDataURL(file);
+}
 
-        function startNewChat() {
-            if(confirm("Lưu trữ lịch sử hiện tại và tạo hội thoại mới?")) {
-                localStorage.removeItem('noob_chat_history');
-                location.reload();
-            }
-        }
+function removeImage() { 
+    selectedBase64 = null; 
+    document.getElementById('image-preview-container').style.display = 'none'; 
+    document.getElementById('file-hidden').value = '';
+}
+
+function startNewChat() {
+    if(!currentChatHistory.length) return;
+
+    const archivedChats = JSON.parse(localStorage.getItem('noob_archived_chats') || '[]');
+    archivedChats.push({
+        id: Date.now(),
+        timestamp: new Date().toISOString(),
+        history: currentChatHistory
+    });
+
+    localStorage.setItem('noob_archived_chats', JSON.stringify(archivedChats));
+    currentChatHistory = [];
+    localStorage.removeItem('noob_chat_history');
+
+    loadArchivedChats(); // Refresh sidebar
+    switchToCurrentChat(); // Bắt đầu chat mới
+}
+
+
 
         function clearChat() {
             if(confirm("Xóa toàn bộ tin nhắn trên màn hình?")) {
