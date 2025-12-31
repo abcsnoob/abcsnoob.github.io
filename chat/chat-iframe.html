@@ -638,12 +638,14 @@ function renderMessage(msg, isNew = false, onComplete = null) {
         if (p.inlineData) imgSrc = typeof p.inlineData === 'string' ? p.inlineData : `data:${p.inlineData.mime_type};base64,${p.inlineData.data}`;
     });
 
-    // Kiểm tra nếu có dữ liệu search thì hiện dòng trạng thái
+    // --- LOGIC HIỆN CHỮ "ĐANG TÌM TRÊN WEB" ---
     let searchingStatus = "";
+    // Chỉ hiện nếu là phản hồi mới của Bot và có chứa metadata search từ Worker
     if (isBot && msg.searchMetadata) {
-        searchingStatus = `<div class="searching-text mb-2" style="color: var(--primary); font-size: 13px; font-weight: 600;">
-            <i class="fa-solid fa-globe fa-spin me-2"></i>Đang tìm trên web...
-        </div>`;
+        searchingStatus = `
+            <div class="searching-status mb-2" style="color: var(--primary); font-size: 13px; font-weight: 600; font-style: italic;">
+                <i class="fa-solid fa-magnifying-glass fa-beat-fade me-2"></i>Đang tìm trên web...
+            </div>`;
     }
 
     const div = document.createElement('div');
@@ -657,7 +659,7 @@ function renderMessage(msg, isNew = false, onComplete = null) {
                 <span class="fw-bold">${isBot ? "ABC'S NOOB AI" : "ME"}</span>
                 <span class="msg-time">${msg.time || ''}</span>
             </div>
-            ${imgSrc ? `<div class="msg-img-wrapper"><img src="${imgSrc}"></div>` : ''}
+            ${imgSrc ? `<div class="msg-img-wrapper"><img src="${imgSrc}" onclick="window.open(this.src)"></div>` : ''}
             <div class="msg-text">
                 ${searchingStatus}
                 <div class="text-body-content"></div>
@@ -668,7 +670,6 @@ function renderMessage(msg, isNew = false, onComplete = null) {
     const textElem = div.querySelector('.text-body-content');
     
     if (isBot && isNew && text) {
-        // Nếu có chữ "Đang tìm trên web", ta có thể cho nó hiện một chút rồi mới gõ chữ
         typeWriter(textElem, text, onComplete);
     } else {
         textElem.innerHTML = marked.parse(text || "");
