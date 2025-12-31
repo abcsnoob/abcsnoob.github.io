@@ -32,24 +32,24 @@ body { background: #0f172a; color: white; font-family: 'Segoe UI', Tahoma, Genev
 
 <script>
 const platforms = [
-  { name: 'Windows', icon: 'fab fa-windows', file: 'windows', ext: '.zip', info: 'Windows 8/10/11' },
-  { name: 'MacOS', icon: 'fab fa-apple', file: 'macos', ext: '.zip', info: 'Darwin / Intel & M1-3' },
-  { name: 'Linux', icon: 'fab fa-linux', file: 'linux', ext: '.tar.gz', info: 'Debian Compatible' },
-  { name: 'Android', icon: 'fab fa-android', file: 'android', ext: '.apk', info: 'Android 5.1 - 15' }
+  { name: 'Windows', icon: 'fab fa-windows', key: 'windows', ext: '.zip', info: 'Windows 8/10/11' },
+  { name: 'MacOS', icon: 'fab fa-apple', key: 'macos', ext: '.zip', info: 'Darwin / Intel & M1-3' },
+  { name: 'Linux', icon: 'fab fa-linux', key: 'linux', ext: '.tar.gz', info: 'Debian Compatible' },
+  { name: 'Android', icon: 'fab fa-android', key: 'android', ext: '.apk', info: 'Android 5.1 - 15' }
 ];
 
-const jsonUrl = 'https://raw.githubusercontent.com/abcsnoob/abcsnoobytb/refs/heads/main/aiapp-release.json'; // JSON chứa latest và versions array
+const jsonUrl = 'https://raw.githubusercontent.com/abcsnoob/abcsnoobytb/refs/heads/main/aiapp-release.json'; // file JSON của bạn
 
-let versionData = null; // lưu dữ liệu JSON
+let versionData = null;
 
-// Render thẻ download theo version
-function renderDownloads(version) {
+// Render thẻ download dựa trên object version
+function renderDownloads(versionObj) {
   const container = document.getElementById('download-cards');
   container.innerHTML = '';
-  const base = versionData.base_url;
 
   platforms.forEach(p => {
-    const url = `${base}${version}/abcsnoob-${p.file}${p.ext}`;
+    const url = versionObj.downloads[p.key];
+    if(!url) return; // nếu không có URL, bỏ qua
     const card = document.createElement('div');
     card.className = 'card bg-slate-800 p-6 rounded-2xl border border-slate-700 text-center';
     card.innerHTML = `
@@ -65,14 +65,13 @@ function renderDownloads(version) {
   });
 }
 
-// Load JSON và khởi tạo
+// Load JSON
 fetch(jsonUrl)
   .then(res => res.json())
   .then(data => {
     versionData = data;
     const select = document.getElementById('version-select');
 
-    // Nếu có array versions, hiển thị hết
     if(data.versions && data.versions.length > 0){
       data.versions.forEach(v => {
         const opt = document.createElement('option');
@@ -80,14 +79,18 @@ fetch(jsonUrl)
         opt.textContent = v.version;
         select.appendChild(opt);
       });
-      select.value = data.latest;
-      renderDownloads(data.latest);
 
-      // Thay đổi phiên bản khi chọn dropdown
-      select.addEventListener('change', e => renderDownloads(e.target.value));
+      // Render lần đầu là latest (mặc định chọn version đầu tiên)
+      const initialVersion = data.versions[0];
+      select.value = initialVersion.version;
+      renderDownloads(initialVersion);
+
+      // Khi đổi version
+      select.addEventListener('change', e => {
+        const selected = data.versions.find(v => v.version === e.target.value);
+        if(selected) renderDownloads(selected);
+      });
     } else {
-      // Nếu chỉ có latest, render luôn
-      renderDownloads(data.latest);
       select.style.display = 'none';
     }
   })
