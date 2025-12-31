@@ -494,29 +494,31 @@ window.addEventListener('paste', e => {
         }
     }
 });
-     function updateProviderUI(providerName) {
-    const sendBtn = document.querySelector('.input-glass-box button:last-child');
+function updateProviderUI(displayName) {
+    const sendBtn = document.querySelector('.input-glass-box .position-relative button');
     const modelBadge = document.getElementById('model-badge');
-    if (!sendBtn || !providerName) return;
+    if (!sendBtn || !displayName) return;
 
-    // Cập nhật text cho Tooltip
-    modelBadge.innerText = `Engine: ${providerName}`;
+    // Hiển thị tên đã mapping lên Tooltip
+    modelBadge.innerText = `Engine: ${displayName}`;
 
-    // Xóa sạch các class màu cũ
+    // Xóa sạch class cũ
     sendBtn.classList.remove('btn-gemini-active', 'btn-gemma-27', 'btn-gemma-12', 'btn-gemma-4', 'btn-gemma-2', 'btn-gemma-1');
 
-    const name = providerName.toLowerCase();
+    const name = displayName.toLowerCase();
+    
+    // Mapping màu dựa trên từ khóa trong displayName
     if (name.includes("gemini")) {
         sendBtn.classList.add('btn-gemini-active');
-    } else if (name.includes("gemma-3-27b")) {
+    } else if (name.includes("27b")) {
         sendBtn.classList.add('btn-gemma-27');
-    } else if (name.includes("gemma-3-12b")) {
+    } else if (name.includes("12b")) {
         sendBtn.classList.add('btn-gemma-12');
-    } else if (name.includes("gemma-3-4b")) {
+    } else if (name.includes("4b")) {
         sendBtn.classList.add('btn-gemma-4');
-    } else if (name.includes("gemma-3-2b")) {
+    } else if (name.includes("2b")) {
         sendBtn.classList.add('btn-gemma-2');
-    } else if (name.includes("gemma-3-1b")) {
+    } else if (name.includes("1b")) {
         sendBtn.classList.add('btn-gemma-1');
     }
 }
