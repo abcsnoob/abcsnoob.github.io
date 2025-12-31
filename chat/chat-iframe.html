@@ -398,6 +398,13 @@ async function compressImage(base64Str) {
         };
     });
 }
+function removeImage() {
+    selectedBase64 = null;
+    const container = document.getElementById('image-preview-container');
+    const img = document.getElementById('img-render');
+    if(container) container.style.display = 'none';
+    if(img) img.src = '';
+}
 
 // Cập nhật lại xử lý file/paste để có nén ảnh
 async function processFile(file) {
