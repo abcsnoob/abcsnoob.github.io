@@ -190,6 +190,52 @@
     cursor: pointer;
 }
 
+        /* Animation cho Gradient Gemini */
+@keyframes geminiGradient {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+.btn-gemini-active {
+    background: linear-gradient(135deg, #4285F4, #34A853, #EA4335) !important;
+    background-size: 200% 200% !important;
+    animation: geminiGradient 3s ease infinite !important;
+    border: none !important;
+}
+
+/* Các class màu cho Gemma 3 */
+.btn-gemma-27 { background-color: #2196F3 !important; border: none !important; }
+.btn-gemma-12 { background-color: #F44336 !important; border: none !important; }
+.btn-gemma-4  { background-color: #9C27B0 !important; border: none !important; }
+.btn-gemma-2  { background-color: #FF9800 !important; border: none !important; }
+.btn-gemma-1  { background-color: #D32F2F !important; border: none !important; }
+.provider-tooltip {
+    position: absolute;
+    bottom: 120%;
+    right: 0;
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(10px);
+    color: #fff;
+    padding: 6px 14px;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 700;
+    white-space: nowrap;
+    border: 1px solid var(--glass-border);
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transform: translateY(10px);
+    z-index: 100;
+    pointer-events: none;
+}
+
+.input-glass-box:hover .provider-tooltip {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
     </style>
 </head>
 <!-- Thêm trước </body> -->
@@ -340,16 +386,21 @@ window.addEventListener('dragend', () => overlay.style.display = 'none');
             </div>
         </div>
         
-        <div class="input-glass-box">
-            <input type="file" id="file-hidden" hidden accept="image/*" onchange="handleImage(this)">
-            <button class="btn btn-link text-muted p-0" onclick="document.getElementById('file-hidden').click()" title="Tải ảnh lên">
-                <i class="fa-solid fa-image fs-4"></i>
-            </button>
-            <textarea id="user-input" rows="1" placeholder="Hỏi tôi về Code, Minecraft hoặc Bitcoin..."></textarea>
-            <button class="btn btn-primary rounded-circle shadow-lg" style="width:50px; height:50px" onclick="handleSendMessage()">
-                <i class="fa-solid fa-paper-plane"></i>
-            </button>
-        </div>
+<div class="input-glass-box">
+    <input type="file" id="file-hidden" hidden accept="image/*" onchange="handleImage(this)">
+    <button class="btn btn-link text-muted p-0" onclick="document.getElementById('file-hidden').click()" title="Tải ảnh lên">
+        <i class="fa-solid fa-image fs-4"></i>
+    </button>
+    <textarea id="user-input" rows="1" placeholder="Hỏi tôi về Code, Minecraft hoặc Bitcoin..."></textarea>
+    
+    <div class="position-relative">
+        <span id="model-badge" class="provider-tooltip">Model: Gemini 2.0 Flash</span>
+        
+        <button class="btn btn-primary rounded-circle shadow-lg" style="width:50px; height:50px" onclick="handleSendMessage()">
+            <i class="fa-solid fa-paper-plane"></i>
+        </button>
+    </div>
+</div>
     </div>
  </main>
 <!-- Overlay Tutorial -->
@@ -443,6 +494,32 @@ window.addEventListener('paste', e => {
         }
     }
 });
+     function updateProviderUI(providerName) {
+    const sendBtn = document.querySelector('.input-glass-box button:last-child');
+    const modelBadge = document.getElementById('model-badge');
+    if (!sendBtn || !providerName) return;
+
+    // Cập nhật text cho Tooltip
+    modelBadge.innerText = `Engine: ${providerName}`;
+
+    // Xóa sạch các class màu cũ
+    sendBtn.classList.remove('btn-gemini-active', 'btn-gemma-27', 'btn-gemma-12', 'btn-gemma-4', 'btn-gemma-2', 'btn-gemma-1');
+
+    const name = providerName.toLowerCase();
+    if (name.includes("gemini")) {
+        sendBtn.classList.add('btn-gemini-active');
+    } else if (name.includes("gemma-3-27b")) {
+        sendBtn.classList.add('btn-gemma-27');
+    } else if (name.includes("gemma-3-12b")) {
+        sendBtn.classList.add('btn-gemma-12');
+    } else if (name.includes("gemma-3-4b")) {
+        sendBtn.classList.add('btn-gemma-4');
+    } else if (name.includes("gemma-3-2b")) {
+        sendBtn.classList.add('btn-gemma-2');
+    } else if (name.includes("gemma-3-1b")) {
+        sendBtn.classList.add('btn-gemma-1');
+    }
+}
 function typeWriter(element, text, onComplete) {
     let i = 0;
     element.innerHTML = "";
@@ -572,16 +649,22 @@ function loadArchivedChats() {
 
 async function handleSendMessage() {
     const input = document.getElementById('user-input');
-    const sendBtn = document.querySelector('.input-glass-box button:last-child');
+    // Lấy đúng nút gửi nằm trong div position-relative mới
+    const sendBtn = document.querySelector('.input-glass-box .position-relative button');
     const text = input.value.trim();
+    
+    // Nếu không có text và cũng không có ảnh thì nghỉ, khỏi gửi
     if (!text && !selectedBase64) return;
 
+    // Hiệu ứng Loading
     const originalIcon = '<i class="fa-solid fa-paper-plane"></i>';
     sendBtn.innerHTML = '<i class="fa-solid fa-circle-notch loading-spin"></i>';
     sendBtn.disabled = true;
 
     const timestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     const aiParts = [];
+    
+    // Đóng gói dữ liệu gửi đi
     if (text) aiParts.push({ text });
     if (selectedBase64) {
         aiParts.push({ 
@@ -592,10 +675,12 @@ async function handleSendMessage() {
         });
     }
 
+    // Render tin nhắn của User lên màn hình trước
     const msgObj = { role: 'user', parts: aiParts, time: timestamp };
     currentChatHistory.push(msgObj);
     renderMessage(msgObj, false);
 
+    // Reset input và ảnh preview ngay sau khi gửi
     input.value = '';
     removeImage();
     input.style.height = 'auto';
@@ -604,25 +689,53 @@ async function handleSendMessage() {
         const res = await fetch(API_BASE, { 
             method: 'POST', 
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ messages: currentChatHistory.slice(-10) }) 
+            body: JSON.stringify({ 
+                messages: currentChatHistory.slice(-10), // Gửi 10 câu gần nhất để giữ context
+                user_lang: localStorage.getItem('noob_lang') || 'vi'
+            }) 
         });
+        
         const d = await res.json();
+        
         if (d.success) {
+            // 1. CẬP NHẬT UI (Màu nút và Tooltip) dựa trên Provider trả về
+            if (d.provider) {
+                updateProviderUI(d.provider);
+            }
+
+            // 2. Tạo object tin nhắn của Bot
             const botMsg = { 
                 role: 'model', 
                 parts: [{ text: d.text || '' }],
-                time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                searchMetadata: d.searchMetadata, // Metadata để hiện trạng thái "Đang tìm trên web"
+                provider: d.provider // Lưu lại vết model
             };
-            // CHỈ TRẢ LẠI NÚT KHI GÕ XONG
+
+            // 3. Render tin nhắn Bot với hiệu ứng gõ chữ (Typewriter)
             renderMessage(botMsg, true, () => {
+                // Sau khi gõ xong thì trả lại icon nút gửi
                 sendBtn.innerHTML = originalIcon;
                 sendBtn.disabled = false;
                 input.focus();
             });
+            
+            // 4. Lưu vào LocalStorage để không mất chat khi F5
             currentChatHistory.push(botMsg);
             localStorage.setItem('noob_chat_history', JSON.stringify(currentChatHistory));
+        } else {
+            throw new Error(d.error || "Server gank team thất bại");
         }
     } catch (e) {
+        console.error("Lỗi kết nối:", e);
+        // Nếu lỗi thì hiện thông báo "bao cát" đặc trưng
+        const errorMsg = {
+            role: 'model',
+            parts: [{ text: "Haizz, ping cao quá tôi bị gank rồi! Check lại API Key hoặc kết nối mạng xem sao ông giáo ơi... #FreeAbcsnoobhelper" }],
+            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        };
+        renderMessage(errorMsg, false);
+        
         sendBtn.innerHTML = originalIcon;
         sendBtn.disabled = false;
     }
