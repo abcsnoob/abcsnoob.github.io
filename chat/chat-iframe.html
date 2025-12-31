@@ -248,6 +248,38 @@
     visibility: visible;
     transform: translateY(0);
 }
+/* Dropdown Lịch sử */
+.history-dropdown-btn {
+    width: 100%;
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    transition: 0.3s;
+}
+
+.history-dropdown-btn:hover {
+    color: #fff;
+}
+
+.history-content {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease-out;
+    background: rgba(0, 0, 0, 0.2);
+}
+
+.history-content.show {
+    max-height: 400px; /* Độ cao tối đa khi xổ ra */
+    overflow-y: auto;
+}
     </style>
 </head>
 <!-- Thêm trước </body> -->
@@ -330,43 +362,41 @@ window.addEventListener('dragend', () => overlay.style.display = 'none');
         <p class="small text-muted m-0">Survival & Code Master</p>
     </div>
     
-    <div class="px-4 mb-3">
-        <button class="btn btn-primary w-100 py-3 rounded-4 fw-bold shadow-lg" onclick="startNewChat()">
+    <div class="px-3 mb-4">
+        <button class="btn btn-primary w-100 py-2.5 rounded-3 fw-bold shadow-lg" onclick="startNewChat()">
             <i class="fa-solid fa-plus-circle me-2"></i> Trò chuyện mới
         </button>
     </div>
 
-    <div class="nav-label">Hội thoại hiện tại</div>
-    <div id="current-chat-item">
-        <div class="chat-item active" onclick="switchToCurrentChat()">
-            <i class="fa-solid fa-comments text-primary"></i>
-            <span>Chat hiện tại</span>
-        </div>
-    </div>
-
-    <div class="nav-label">Hội thoại cũ</div>
-    <div id="archived-list">
-        <p class="small text-muted px-3 opacity-50">Không có hội thoại cũ...</p>
-    </div>
-
     <div class="nav-container">
-        <div class="nav-label">Cài đặt</div>
+        <div id="current-chat-item">
+            <div class="chat-item active" onclick="switchToCurrentChat()">
+                <i class="fa-solid fa-message"></i>
+                <span>Đang trả lời</span>
+            </div>
+        </div>
+
+        <div class="history-section">
+            <button class="history-dropdown-btn" onclick="toggleHistory()">
+                <span><i class="fa-solid fa-clock-rotate-left me-2"></i>Lịch sử hội thoại</span>
+                <i class="fa-solid fa-chevron-down slide-icon" id="history-chevron"></i>
+            </button>
+            <div id="archived-list" class="history-content">
+                </div>
+        </div>
+
+        <div class="nav-label mt-4 px-4" style="font-size: 11px; color: var(--text-muted); font-weight: 800; text-transform: uppercase;">Hệ thống</div>
         <div class="chat-item" onclick="changeLanguage()">
             <i class="fa-solid fa-language text-warning"></i> <span>Ngôn ngữ</span>
         </div>
-<div class="chat-item btn-chat-use">
-    <i class="fa-solid fa-circle-info text-info"></i> <span>Cách dùng</span>
-</div>
-
+        <div class="chat-item btn-chat-use">
+            <i class="fa-solid fa-circle-info text-info"></i> <span>Cách dùng</span>
+        </div>
         <div class="chat-item" onclick="loadData()">
             <i class="fa-solid fa-sync text-success"></i> <span>Đồng bộ</span>
         </div>
-        <div class="chat-item" onclick="location.reload()">
-    <i class="fa-solid fa-rotate text-danger"></i> <span>Reload App</span>
-</div>
-
     </div>
- </aside>
+</aside>
 
  <main id="main-content">
     <nav class="header-bar">
@@ -460,6 +490,19 @@ async function compressImage(base64Str) {
             resolve(canvas.toDataURL('image/jpeg', 0.6)); // Nén 40% chất lượng
         };
     });
+}
+
+function toggleHistory() {
+    const content = document.getElementById('archived-list');
+    const chevron = document.getElementById('history-chevron');
+    
+    content.classList.toggle('show');
+    
+    if (content.classList.contains('show')) {
+        chevron.style.transform = 'rotate(180deg)';
+    } else {
+        chevron.style.transform = 'rotate(0deg)';
+    }
 }
 function removeImage() {
     selectedBase64 = null;
