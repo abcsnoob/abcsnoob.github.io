@@ -313,37 +313,45 @@ function injectAIButton() {
 
 
 (function() {
-    // 1. CSS cho văn bản siêu đẹp
+    // 1. Thêm CSS cho văn bản siêu đẹp và hiệu ứng
     const style = document.createElement('style');
     style.innerHTML = `
         @keyframes glow {
-            0% { text-shadow: 0 0 10px #fff, 0 0 20px #fff, 0 0 30px #e60073; }
-            50% { text-shadow: 0 0 20px #fff, 0 0 30px #ff4da6, 0 0 40px #ff4da6; }
-            100% { text-shadow: 0 0 10px #fff, 0 0 20px #fff, 0 0 30px #e60073; }
+            0% { text-shadow: 0 0 10px #fff, 0 0 20px #ff0000; }
+            50% { text-shadow: 0 0 20px #fff, 0 0 40px #ffcc00; }
+            100% { text-shadow: 0 0 10px #fff, 0 0 20px #ff0000; }
         }
-        .luxury-text {
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            background: linear-gradient(to bottom, #fff 20%, #ffeb3b 40%, #ff9800 70%, #f44336 100%);
+        .luxury-text-active {
+            font-family: 'Arial Black', sans-serif;
+            background: linear-gradient(to bottom, #fff, #ffd700, #ff4500);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            filter: drop-shadow(2px 4px 6px rgba(0,0,0,0.5));
-            animation: glow 2s infinite alternate;
+            animation: glow 1.5s infinite alternate;
             font-weight: 900;
             text-transform: uppercase;
+            text-align: center;
         }
     `;
     document.head.appendChild(style);
 
-    // 2. Tạo thanh đếm ngược ở đầu trang
-    const countdownBar = document.createElement('div');
-    Object.assign(countdownBar.style, {
-        position: 'fixed', top: '0', left: '0', width: '100%',
-        background: 'rgba(0,0,0,0.9)', color: '#ffd700',
-        textAlign: 'center', padding: '15px 0', fontSize: '20px',
-        zIndex: '1000000', borderBottom: '2px solid #ffd700',
-        boxShadow: '0 4px 15px rgba(0,0,0,0.5)'
+    // 2. Tạo thanh đếm ngược (Đẩy nội dung trang xuống)
+    const countdownWrapper = document.createElement('div');
+    countdownWrapper.id = 'new-year-wrapper';
+    Object.assign(countdownWrapper.style, {
+        width: '100%',
+        backgroundColor: '#1a1a1a',
+        borderBottom: '3px solid #ffd700',
+        padding: '15px 0',
+        display: 'block' // Đảm bảo chiếm diện tích để đẩy navbar xuống
     });
-    document.body.prepend(countdownBar);
+
+    const countdownContent = document.createElement('div');
+    countdownContent.className = 'luxury-text-active';
+    countdownContent.style.fontSize = '24px';
+    countdownWrapper.appendChild(countdownContent);
+
+    // Chèn vào vị trí tuyệt đối đầu tiên của body
+    document.body.prepend(countdownWrapper);
 
     function updateCountdown() {
         const now = new Date();
@@ -351,38 +359,36 @@ function injectAIButton() {
         const diff = target - now;
 
         if (diff <= 0) {
-            countdownBar.remove();
-            overwriteAndHide();
+            countdownWrapper.remove();
+            executeNewYearOverload();
             return;
         }
 
-        const parts = {
-            "ngày": Math.floor(diff / 86400000),
-            "giờ": Math.floor((diff / 3600000) % 24),
-            "phút": Math.floor((diff / 60000) % 60),
-            "giây": Math.floor((diff / 1000) % 60)
-        };
+        const d = Math.floor(diff / 86400000);
+        const h = Math.floor((diff / 3600000) % 24);
+        const m = Math.floor((diff / 60000) % 60);
+        const s = Math.floor((diff / 1000) % 60);
 
-        countdownBar.innerHTML = `NĂM MỚI SAU: <span style="color:#fff">${parts["ngày"]}d ${parts["giờ"]}h ${parts["phút"]}m ${parts["giây"]}s</span>`;
+        countdownContent.innerText = `🧧 CHỈ CÒN: ${d}N ${h}H ${m}P ${s}S LÀ ĐẾN NĂM MỚI 🧧`;
         setTimeout(updateCountdown, 1000);
     }
 
-    function overwriteAndHide() {
+    function executeNewYearOverload() {
+        // Ghi đè toàn bộ trang
         document.body.innerHTML = '';
         document.body.style.cssText = `
-            background: radial-gradient(circle, #2c3e50, #000);
-            height: 100vh; margin: 0; display: flex;
-            align-items: center; justify-content: center;
+            background: #000; height: 100vh; margin: 0;
+            display: flex; align-items: center; justify-content: center;
             overflow: hidden; transition: opacity 2s ease;
         `;
 
-        const title = document.createElement('h1');
-        title.className = 'luxury-text';
-        title.style.fontSize = '8vw';
-        title.innerText = "HAPPY NEW YEAR";
-        document.body.appendChild(title);
+        const finalMsg = document.createElement('h1');
+        finalMsg.className = 'luxury-text-active';
+        finalMsg.style.fontSize = '10vw';
+        finalMsg.innerText = "HAPPY NEW YEAR 2026";
+        document.body.appendChild(finalMsg);
 
-        // Sau 1 phút tự động ẩn toàn bộ
+        // Sau 1 phút tự động ẩn
         setTimeout(() => {
             document.body.style.opacity = '0';
             setTimeout(() => { document.body.innerHTML = ''; }, 2000);
