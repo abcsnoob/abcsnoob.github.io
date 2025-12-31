@@ -176,6 +176,20 @@
     flex: 1;
     min-width: 0; 
 }
+        .msg-img-wrapper {
+    max-width: 100%;       /* không vượt quá khung chat */
+    display: inline-block;
+}
+
+.msg-img-wrapper img {
+    width: 100%;           /* ảnh co lại vừa khung */
+    height: auto;          /* giữ tỉ lệ */
+    max-height: 400px;     /* tránh quá cao */
+    border-radius: 15px;
+    border: 2px solid rgba(255,77,77,0.3);
+    cursor: pointer;
+}
+
     </style>
 </head>
 <!-- Thêm trước </body> -->
@@ -628,10 +642,13 @@ function renderMessage(msg, isNew = false, onComplete = null) {
                 <span class="fw-bold">${isBot ? "ABC'S NOOB AI" : "ME"}</span>
                 <span class="msg-time">${msg.time || ''}</span>
             </div>
-            ${imgSrc ? `
-                <span class="warning-label">⚠️ ẢNH TO QUÁ - Đã nén cứu server!</span>
-                <img src="${imgSrc}" onclick="window.open(this.src)">
-            ` : ''}
+${imgSrc ? `
+  <span class="warning-label">⚠️ ẢNH TO QUÁ - Đã nén cứu server!</span>
+  <div class="msg-img-wrapper">
+    <img src="${imgSrc}" onclick="window.open(this.src)">
+  </div>
+` : ''}
+
             <div class="msg-text"></div>
         </div>`;
 
