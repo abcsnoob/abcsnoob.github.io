@@ -20,6 +20,10 @@ body { background: #0f172a; color: white; font-family: 'Segoe UI', Tahoma, Genev
         Abc's Noob AI
     </h1>
     <p class="text-slate-400 text-lg">Trợ lý AI siêu cấp - Tải một lần, chạy mọi nơi</p>
+    <div class="mt-4">
+        <label for="version-select" class="text-slate-300 mr-2 font-semibold">Chọn phiên bản:</label>
+        <select id="version-select" class="bg-slate-700 text-white rounded px-3 py-1"></select>
+    </div>
 </div>
 
 <div id="download-cards" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 w-full max-w-6xl mb-12">
@@ -31,34 +35,61 @@ const platforms = [
   { name: 'Windows', icon: 'fab fa-windows', file: 'windows', ext: '.zip', info: 'Windows 8/10/11' },
   { name: 'MacOS', icon: 'fab fa-apple', file: 'macos', ext: '.zip', info: 'Darwin / Intel & M1-3' },
   { name: 'Linux', icon: 'fab fa-linux', file: 'linux', ext: '.tar.gz', info: 'Debian Compatible' },
-  { name: 'Android', icon: 'fab fa-android', file: 'android', ext: '.apk', info: 'Android 5.1 - 15. Có lỗi khởi động' }
+  { name: 'Android', icon: 'fab fa-android', file: 'android', ext: '.apk', info: 'Android 5.1 - 15' }
 ];
 
-// URL JSON version
-const jsonUrl = 'https://raw.githubusercontent.com/abcsnoob/abcsnoobytb/refs/heads/main/aiapp-release.json'; // đặt file JSON của bạn ở cùng thư mục hoặc URL
+const jsonUrl = 'https://raw.githubusercontent.com/abcsnoob/abcsnoobytb/refs/heads/main/aiapp-release.json'; // JSON chứa latest và versions array
 
+let versionData = null; // lưu dữ liệu JSON
+
+// Render thẻ download theo version
+function renderDownloads(version) {
+  const container = document.getElementById('download-cards');
+  container.innerHTML = '';
+  const base = versionData.base_url;
+
+  platforms.forEach(p => {
+    const url = `${base}${version}/abcsnoob-${p.file}${p.ext}`;
+    const card = document.createElement('div');
+    card.className = 'card bg-slate-800 p-6 rounded-2xl border border-slate-700 text-center';
+    card.innerHTML = `
+      <i class="${p.icon} text-4xl text-blue-400 mb-4"></i>
+      <h3 class="text-xl font-bold mb-1">${p.name}</h3>
+      <p class="text-xs text-slate-300 mb-2 uppercase tracking-wider">${p.info}</p>
+      <p class="text-sm text-slate-400 mb-6 font-mono">${p.ext} (tải về)</p>
+      <a href="${url}" class="btn-dl block py-3 px-4 rounded-xl font-bold hover:opacity-90 transition">
+        Tải bản ${p.name}
+      </a>
+    `;
+    container.appendChild(card);
+  });
+}
+
+// Load JSON và khởi tạo
 fetch(jsonUrl)
   .then(res => res.json())
   .then(data => {
-    const version = data.latest;
-    const base = data.base_url;
-    const container = document.getElementById('download-cards');
+    versionData = data;
+    const select = document.getElementById('version-select');
 
-    platforms.forEach(p => {
-      const url = `${base}${version}/abcsnoob-${p.file}${p.ext}`;
-      const card = document.createElement('div');
-      card.className = 'card bg-slate-800 p-6 rounded-2xl border border-slate-700 text-center';
-      card.innerHTML = `
-        <i class="${p.icon} text-4xl text-blue-400 mb-4"></i>
-        <h3 class="text-xl font-bold mb-1">${p.name}</h3>
-        <p class="text-xs text-slate-300 mb-2 uppercase tracking-wider">${p.info}</p>
-        <p class="text-sm text-slate-400 mb-6 font-mono">${p.ext} (tải về)</p>
-        <a href="${url}" class="btn-dl block py-3 px-4 rounded-xl font-bold hover:opacity-90 transition">
-          Tải bản ${p.name}
-        </a>
-      `;
-      container.appendChild(card);
-    });
+    // Nếu có array versions, hiển thị hết
+    if(data.versions && data.versions.length > 0){
+      data.versions.forEach(v => {
+        const opt = document.createElement('option');
+        opt.value = v.version;
+        opt.textContent = v.version;
+        select.appendChild(opt);
+      });
+      select.value = data.latest;
+      renderDownloads(data.latest);
+
+      // Thay đổi phiên bản khi chọn dropdown
+      select.addEventListener('change', e => renderDownloads(e.target.value));
+    } else {
+      // Nếu chỉ có latest, render luôn
+      renderDownloads(data.latest);
+      select.style.display = 'none';
+    }
   })
   .catch(err => {
     console.error('Không thể load JSON:', err);
