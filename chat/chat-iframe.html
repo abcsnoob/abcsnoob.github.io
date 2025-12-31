@@ -75,21 +75,33 @@
         .msg-avatar { width: 44px; height: 44px; border-radius: 14px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-weight: 800; border: 1px solid var(--glass-border); font-size: 18px; }
         .msg-content-wrapper { flex: 1; max-width: 100%; }
         .msg-header { margin-bottom: 8px; font-size: 13px; font-weight: 700; opacity: 0.6; display: flex; justify-content: space-between; }
-       .msg-text {
+.msg-text {
     font-size: 16px;
-    line-height: 1.8;
+    line-height: 1.6;
     color: #e5e7eb;
     background: var(--glass);
-    padding: 18px 24px;
+    padding: 14px 20px;
     border-radius: 0 22px 22px 22px;
     border: 1px solid var(--glass-border);
+    
+    /* FIX LỖI KHOẢNG TRẮNG DƯ */
+    white-space: normal !important; 
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    word-break: break-word;
+    max-width: 100%;
+}
 
-    /* --- CÁC DÒNG QUAN TRỌNG ĐỂ CHỐNG TRÀN --- */
-    max-width: 100%;           /* Không bao giờ vượt quá chiều rộng cha */
-    word-wrap: break-word;     /* Xuống dòng khi từ quá dài */
-    overflow-wrap: break-word; /* Hỗ trợ các trình duyệt hiện đại */
-    word-break: break-word;    /* Ưu tiên ngắt từ để không tràn */
-    white-space: pre-wrap;     /* Giữ khoảng cách khi gõ nhưng vẫn xuống dòng */
+/* Ép Markdown (marked.js) hiển thị xuống dòng đúng cách mà không bị dư */
+.msg-text p { margin-bottom: 12px; }
+.msg-text p:last-child { margin-bottom: 0; }
+
+/* Chỉ giữ pre-wrap cho khối code để không mất định dạng code */
+.msg-text pre {
+    white-space: pre !important;
+    overflow-x: auto;
+    background: rgba(0,0,0,0.3) !important;
+    padding: 15px !important;
 }
         .user-msg { flex-direction: row-reverse; }
         .user-msg .msg-text { background: rgba(0, 210, 255, 0.08); border-color: rgba(0, 210, 255, 0.2); border-radius: 22px 0 22px 22px; }
