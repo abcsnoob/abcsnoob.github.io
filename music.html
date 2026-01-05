@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Expert Audio Analyzer - ARG Decoder PRO</title>
+    <style>
+        body { background: #0a0a0a; color: #00ff41; font-family: 'Courier New', monospace; overflow: hidden; margin: 0; }
+        #container { display: flex; flex-direction: column; height: 100vh; padding: 10px; box-sizing: border-box; }
+        canvas { width: 100%; background: #000; border: 1px solid #333; display: block; }
+        .controls { background: #1a1a1a; padding: 10px 15px; display: flex; flex-wrap: wrap; gap: 15px; align-items: center; font-size: 12px; border-bottom: 2px solid #00ff41; }
+        input[type="file"] { color: #00ff41; width: 200px; }
+        .stat-box { border-left: 2px solid #00ff41; padding-left: 10px; display: flex; align-items: center; gap: 5px; }
+        button { background: #00ff41; color: #000; border: none; padding: 5px 15px; cursor: pointer; font-weight: bold; }
+        button:hover { background: #00cc33; }
+        #freqCanvas { flex-grow: 1; }
+        #specCanvas { height: 250px; margin-top: 5px; cursor: crosshair; }
+        #timeCanvas { height: 100px; margin-top: 5px; }
+        label { font-weight: bold; color: #aaa; }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <div class="controls">
+            <div>
+                <label>SOURCE:</label>
+                <input type="file" id="audioFile" accept="audio/*">
+            </div>
+            <div class="stat-box">
+                <label>FFT:</label>
+                <select id="fftControl">
+                    <option value="1024">1024</option>
+                    <option value="2048">2048</option>
+                    <option value="4096">4096</option>
+                    <option value="8192">8192</option>
+                    <option value="16384" selected>16384 (ARG Mode)</option>
+                    <option value="32768">32768 (Ultra Deep)(Không khuyến khích)</option>
+                </select>
+            </div>
+            <div class="stat-box">
+                <label>SMOOTHING:</label> 
+                <input type="range" id="smoothControl" min="0" max="0.95" step="0.05" value="0.0"> </div>
+            <div class="stat-box">
+                <label>SPEC ZOOM:</label> 
+                <input type="range" id="specZoom" min="1" max="8" step="0.1" value="1">
+            </div>
+            <div class="stat-box">
+                <label>SHOW SPEC:</label>
+                <input type="checkbox" id="showSpec" checked>
+            </div>
+            <button id="playBtn">PLAY/PAUSE</button>
+        </div>
+        
+        <canvas id="freqCanvas"></canvas>
+        <canvas id="specCanvas"></canvas>
+        <canvas id="timeCanvas"></canvas>
+    </div>
+
+<script>
+const audioFile = document.getElementById('audioFile');
+const fftControl = document.getElementById('fftControl');
+const smoothControl = document.getElementById('smoothControl');
+const specZoom = document.getElementById('specZoom');
+const showSpec = document.getElementById('showSpec');
+const playBtn = document.getElementById('playBtn');
+
+const fCanvas = document.getElementById('freqCanvas');
+const sCanvas = document.getElementById('specCanvas');
+const tCanvas = document.getElementById('timeCanvas');
+const fCtx = fCanvas.getContext('2d');
+const sCtx = sCanvas.getContext('2d');
+const tCtx = tCanvas.getContext('2d');
+
+// Canvas phụ để xử lý cuộn Spectrogram mượt mà
+const offscreenCanvas = document.createElement('canvas');
+const offCtx = offscreenCanvas.getContext('2d');
+
+let audioCtx, analyser, source, dataArray, bufferLength;
+let isPlaying = false;
+let audioTag = new Audio();
+audioTag.crossOrigin = "anonymous";
+
+function initAudio() {
+    if (audioCtx) return;
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    analyser = audioCtx.createAnalyser();
+    updateAnalyserSettings();
+    
+    source = audioCtx.createMediaElementSource(audioTag);
+    source.connect(analyser);
+    analyser.connect(audioCtx.destination);
+    
+    bufferLength = analyser.frequencyBinCount;
+    dataArray = new Uint8Array(bufferLength);
+}
+
+function updateAnalyserSettings() {
+    if (analyser) {
+        analyser.fftSize = parseInt(fftControl.value);
+        analyser.smoothingTimeConstant = parseFloat(smoothControl.value);
+        bufferLength = analyser.frequencyBinCount;
+        dataArray = new Uint8Array(bufferLength);
+    }
+}
+
+audioFile.onchange = function() {
+    const file = this.files[0];
+    if (file) {
+        audioTag.src = URL.createObjectURL(file);
+        if (!audioCtx) initAudio();
+    }
+};
+
+playBtn.onclick = () => {
+    if (!audioCtx) initAudio();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    
+    if (isPlaying) {
+        audioTag.pause();
+        isPlaying = false;
+    } else {
+        audioTag.play();
+        isPlaying = true;
+        requestAnimationFrame(draw);
+    }
+};
+
+fftControl.onchange = updateAnalyserSettings;
+smoothControl.onchange = updateAnalyserSettings;
+
+function draw() {
+    if (!isPlaying) return;
+    requestAnimationFrame(draw);
+
+    // Resize canvases
+    [fCanvas, sCanvas, tCanvas].forEach(c => {
+        if (c.width !== c.clientWidth || c.height !== c.clientHeight) {
+            c.width = c.clientWidth;
+            c.height = c.clientHeight;
+        }
+    });
+
+    analyser.getByteFrequencyData(dataArray);
+
+    // 1. VẼ FREQUENCY DOMAIN (BARS)
+    fCtx.fillStyle = '#000';
+    fCtx.fillRect(0, 0, fCanvas.width, fCanvas.height);
+    const barWidth = (fCanvas.width / bufferLength) * 2;
+    let x = 0;
+    for (let i = 0; i < bufferLength; i++) {
+        const barHeight = (dataArray[i] / 255) * fCanvas.height;
+        fCtx.fillStyle = `rgb(${dataArray[i]+50}, ${i/bufferLength*255}, 50)`;
+        fCtx.fillRect(x, fCanvas.height - barHeight, barWidth, barHeight);
+        x += barWidth;
+    }
+
+    // 2. VẼ SPECTROGRAM (Cuộn từ phải sang trái)
+    if (showSpec.checked) {
+        sCanvas.style.display = 'block';
+        if (offscreenCanvas.width !== sCanvas.width || offscreenCanvas.height !== sCanvas.height) {
+            offscreenCanvas.width = sCanvas.width;
+            offscreenCanvas.height = sCanvas.height;
+            offCtx.fillStyle = '#000';
+            offCtx.fillRect(0,0, offscreenCanvas.width, offscreenCanvas.height);
+        }
+
+        // Trượt hình ảnh cũ sang trái
+        offCtx.drawImage(offscreenCanvas, -2, 0);
+
+        const zoom = parseFloat(specZoom.value);
+        const step = sCanvas.height / (bufferLength / zoom);
+        
+        for (let i = 0; i < bufferLength / zoom; i++) {
+            const val = dataArray[i];
+            // Bảng màu Heatmap: Đen -> Tím -> Đỏ -> Vàng -> Trắng
+            offCtx.fillStyle = `rgb(${val > 100 ? val : val/2}, ${val > 180 ? val : 0}, ${val < 100 ? val*2 : 0})`;
+            if (val > 200) offCtx.fillStyle = '#fff'; // Điểm cực đại hiện màu trắng để soi chữ
+            
+            offCtx.fillRect(offscreenCanvas.width - 2, sCanvas.height - (i * step), 2, step);
+        }
+        sCtx.drawImage(offscreenCanvas, 0, 0);
+    } else {
+        sCanvas.style.display = 'none';
+    }
+
+    // 3. VẼ TIME DOMAIN (OSCILLOSCOPE)
+    analyser.getByteTimeDomainData(dataArray);
+    tCtx.fillStyle = 'rgba(0, 5, 0, 0.2)';
+    tCtx.fillRect(0, 0, tCanvas.width, tCanvas.height);
+    tCtx.lineWidth = 2;
+    tCtx.strokeStyle = '#00ff41';
+    tCtx.beginPath();
+    const sliceWidth = tCanvas.width / bufferLength;
+    let tx = 0;
+    for (let i = 0; i < bufferLength; i++) {
+        const v = dataArray[i] / 128.0;
+        const ty = v * tCanvas.height / 2;
+        i === 0 ? tCtx.moveTo(tx, ty) : tCtx.lineTo(tx, ty);
+        tx += sliceWidth;
+    }
+    tCtx.lineTo(tCanvas.width, tCanvas.height / 2);
+    tCtx.stroke();
+}
+</script>
+</body>
+</html>
