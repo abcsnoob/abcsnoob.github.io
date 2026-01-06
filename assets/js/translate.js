@@ -40,26 +40,6 @@
     };
 
     // --- 2. LOGIC SAFETY URL (CHÈN TIỀN TỐ CHO LINK NGOÀI) ---
-    function wrapExternalLinks() {
-        const links = document.querySelectorAll('a[href]');
-        links.forEach(link => {
-            const href = link.getAttribute('href');
-            if (!href || href.startsWith('#') || href.startsWith('javascript:') || href.startsWith('mailto:')) return;
-
-            try {
-                const targetUrl = new URL(link.href, window.location.origin);
-                if (
-                    (targetUrl.protocol === "http:" || targetUrl.protocol === "https:") &&
-                    targetUrl.hostname !== CURRENT_DOMAIN &&
-                    !href.startsWith(REDIRECT_PREFIX)
-                ) {
-                    link.href = REDIRECT_PREFIX + encodeURIComponent(link.href);
-                    link.target = "_blank";
-                    link.rel = "noopener noreferrer";
-                }
-            } catch (e) {}
-        });
-    }
 
     // --- 3. LOGIC DỊCH THUẬT & QUAN SÁT THAY ĐỔI (OBSERVER) ---
     const startMasterProcess = async () => {
