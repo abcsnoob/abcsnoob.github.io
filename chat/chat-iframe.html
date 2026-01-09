@@ -617,6 +617,7 @@ window.addEventListener('dragend', () => overlay.style.display = 'none');
   let currentChatHistory = []; // Khởi tạo rỗng trước
     let activeGroupId = null;
     let selectedBase64 = null;
+    let isTyping = false; // Biến này cực kỳ quan trọng để kiểm soát trạng thái AI đang gõ
 
     // Hàm nén ảnh để AI xử lý nhanh hơn
 async function compressImage(base64Str) {
@@ -638,6 +639,14 @@ async function compressImage(base64Str) {
 }
 const CHANGELOG_DATA = [
 
+    {
+        version: "v2.2.1-hotfix",
+        date: "09/01/2026",
+        title: "Sửa lỗi logic",
+        items: [
+            "Fix lại nút gửi chết tiệt đếch hoạt động."
+        ]
+    },
     {
         version: "v2.2.0",
         date: "09/01/2026",
@@ -735,32 +744,11 @@ window.addEventListener('paste', e => {
         }
     }
 });
-function updateProviderUI(displayName) {
-    const sendBtn = document.querySelector('.input-glass-box .position-relative button');
-    const modelBadge = document.getElementById('model-badge');
-    if (!sendBtn || !displayName) return;
-
-    // Hiển thị tên đã mapping lên Tooltip
-    modelBadge.innerText = `Engine: ${displayName}`;
-
-    // Xóa sạch class cũ
-    sendBtn.classList.remove('btn-gemini-active', 'btn-gemma-27', 'btn-gemma-12', 'btn-gemma-4', 'btn-gemma-2', 'btn-gemma-1');
-
-    const name = displayName.toLowerCase();
-    
-    // Mapping màu dựa trên từ khóa trong displayName
-    if (name.includes("gemini")) {
-        sendBtn.classList.add('btn-gemini-active');
-    } else if (name.includes("27b")) {
-        sendBtn.classList.add('btn-gemma-27');
-    } else if (name.includes("12b")) {
-        sendBtn.classList.add('btn-gemma-12');
-    } else if (name.includes("4b")) {
-        sendBtn.classList.add('btn-gemma-4');
-    } else if (name.includes("2b")) {
-        sendBtn.classList.add('btn-gemma-2');
-    } else if (name.includes("1b")) {
-        sendBtn.classList.add('btn-gemma-1');
+function updateProviderUI(providerName) {
+    const badge = document.getElementById('model-badge');
+    if (badge) {
+        badge.innerText = providerName.toUpperCase();
+        badge.style.color = "#00d4ff";
     }
 }
 function typeWriter(element, text, onComplete) {
@@ -950,43 +938,48 @@ async function openArchived(sessionId) {
 
 
 async function handleSendMessage() {
+    // 1. CHẶN GỬI KHI ĐANG BẬN: Tránh spam làm sập luồng
+    if (isTyping) return;
+
     const input = document.getElementById('user-input');
-    const sendBtn = document.querySelector('.input-glass-box .position-relative button');
-    const topLoader = document.getElementById('top-loader-container'); // Tìm cái div vừa thêm ở bước 1
+    const sendBtn = document.getElementById('send-btn'); // Ưu tiên dùng ID cho chuẩn
+    const topLoader = document.getElementById('top-loader-container');
     const text = input.value.trim();
     
     // Nếu không có text và cũng không có ảnh thì nghỉ
     if (!text && !selectedBase64) return;
 
-    // --- HIỆU ỨNG LOADING KIỂU MICROSOFT ---
-    const originalIcon = '<i class="fa-solid fa-paper-plane"></i>';
-    topLoader.style.display = 'block'; // Hiện thanh chạy ở đầu trang
-    sendBtn.disabled = true;
-    sendBtn.style.opacity = '0.6'; // Làm mờ nút gửi một chút để báo hiệu đang bận
+    // --- BẬT HIỆU ỨNG LOADING ---
+    isTyping = true; 
+    if (topLoader) topLoader.style.display = 'block'; 
+    if (sendBtn) {
+        sendBtn.disabled = true;
+        sendBtn.style.opacity = '0.5';
+    }
 
     const timestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    const aiParts = [];
+    const userParts = [];
     
-    // Đóng gói dữ liệu gửi đi
-    if (text) aiParts.push({ text });
+    // Đóng gói dữ liệu gửi đi (Sửa mimeType cho đúng chuẩn Gemini)
+    if (text) userParts.push({ text });
     if (selectedBase64) {
-        aiParts.push({ 
+        userParts.push({ 
             inlineData: { 
-                mime_type: "image/jpeg", 
+                mimeType: "image/jpeg", // Sửa từ mime_type -> mimeType
                 data: selectedBase64.split(',')[1] 
             } 
         });
     }
 
     // Render tin nhắn của User lên màn hình
-    const msgObj = { role: 'user', parts: aiParts, time: timestamp };
+    const msgObj = { role: 'user', parts: userParts, time: timestamp };
     currentChatHistory.push(msgObj);
     renderMessage(msgObj, false);
 
-    // Reset input và ảnh preview ngay sau khi gửi
+    // Reset input và ảnh preview ngay sau khi gửi để tạo cảm giác mượt
     input.value = '';
-    removeImage();
     input.style.height = 'auto';
+    if (typeof removeImage === 'function') removeImage();
 
     try {
         const res = await fetch(API_BASE, { 
@@ -998,10 +991,12 @@ async function handleSendMessage() {
             }) 
         });
         
+        if (!res.ok) throw new Error(`Server báo lỗi ${res.status}`);
         const d = await res.json();
         
         if (d.success) {
-            if (d.provider) {
+            // Cập nhật Badge Model nếu có hàm hỗ trợ
+            if (d.provider && typeof updateProviderUI === 'function') {
                 updateProviderUI(d.provider);
             }
 
@@ -1013,20 +1008,22 @@ async function handleSendMessage() {
                 provider: d.provider 
             };
 
-            // Render tin nhắn Bot
+            // Render tin nhắn Bot với hiệu ứng gõ chữ
             renderMessage(botMsg, true, () => {
-                // KHI GÕ CHỮ XONG: Ẩn loader đầu trang và khôi phục nút
-                topLoader.style.display = 'none';
-                sendBtn.disabled = false;
-                sendBtn.style.opacity = '1';
+                // KHI GÕ CHỮ XONG: Mở khóa hoàn toàn
+                isTyping = false;
+                if (topLoader) topLoader.style.display = 'none';
+                if (sendBtn) {
+                    sendBtn.disabled = false;
+                    sendBtn.style.opacity = '1';
+                }
                 input.focus();
             });
             
             currentChatHistory.push(botMsg);
-            // Thay vì JSON.stringify, bác quăng thẳng mảng vào luôn
-await localforage.setItem('noob_chat_history', currentChatHistory);
+            await localforage.setItem('noob_chat_history', currentChatHistory);
         } else {
-            throw new Error(d.error || "Server gank team thất bại");
+            throw new Error(d.error || "AI bị gank bất ngờ");
         }
     } catch (e) {
         console.error("Lỗi kết nối:", e);
@@ -1037,10 +1034,13 @@ await localforage.setItem('noob_chat_history', currentChatHistory);
         };
         renderMessage(errorMsg, false);
         
-        // KHI LỖI: Dọn dẹp hiệu ứng
-        topLoader.style.display = 'none';
-        sendBtn.disabled = false;
-        sendBtn.style.opacity = '1';
+        // GIẢI PHÓNG KHI LỖI: Tránh bị kẹt vĩnh viễn
+        isTyping = false;
+        if (topLoader) topLoader.style.display = 'none';
+        if (sendBtn) {
+            sendBtn.disabled = false;
+            sendBtn.style.opacity = '1';
+        }
     }
 }
 
