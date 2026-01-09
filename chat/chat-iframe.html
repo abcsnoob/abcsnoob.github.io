@@ -11,6 +11,47 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap" rel="stylesheet">
 
     <style>
+        #top-loader-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px; /* Thanh mảnh kiểu hiện đại */
+            background: rgba(0, 0, 0, 0.2);
+            z-index: 10000;
+            display: none; /* Ẩn mặc định */
+        }
+.loader {
+  width: 100%;
+  height: 4.8px;
+  display: inline-block;
+  position: relative;
+  background: rgba(255, 255, 255, 0.15);
+  overflow: hidden;
+}
+.loader::after {
+  content: '';
+  width: 192px;
+  height: 4.8px;
+  background: #FFF;
+  position: absolute;
+  top: 0;
+  left: 0;
+  box-sizing: border-box;
+  animation: animloader 2s linear infinite;
+}
+
+@keyframes animloader {
+  0% {
+    left: 0;
+    transform: translateX(-100%);
+  }
+  100% {
+    left: 100%;
+    transform: translateX(0%);
+  }
+}
+    
         /* --- CSS giữ nguyên --- */
         :root {
             --primary: #00d2ff;
@@ -150,11 +191,6 @@
 .chat-item:hover {
     transform: translateX(5px);
     background: rgba(255, 255, 255, 0.05);
-}
-
-@keyframes spin { 100% { transform: rotate(360deg); } }
-.loading-spin {
-    animation: spin 1s linear infinite;
 }
 
 /* Bo góc ảnh trong chat nhìn hiện đại hơn */
@@ -353,7 +389,6 @@ window.addEventListener('drop', e => {
 window.addEventListener('dragend', () => overlay.style.display = 'none');
 
 </script>
-
 <body>
  <aside id="sidebar">
     <div class="brand-section">
@@ -361,13 +396,11 @@ window.addEventListener('dragend', () => overlay.style.display = 'none');
         <h4 class="fw-800 m-0">ABC'S NOOB <span class="text-primary">AI</span></h4>
         <p class="small text-muted m-0">Survival & Code Master</p>
     </div>
-    
     <div class="px-3 mb-4">
         <button class="btn btn-primary w-100 py-2.5 rounded-3 fw-bold shadow-lg" onclick="startNewChat()">
             <i class="fa-solid fa-plus-circle me-2"></i> Trò chuyện mới
         </button>
     </div>
-
     <div class="nav-container">
         <div id="current-chat-item">
             <div class="chat-item active" onclick="switchToCurrentChat()">
@@ -397,8 +430,10 @@ window.addEventListener('dragend', () => overlay.style.display = 'none');
         </div>
     </div>
 </aside>
-
  <main id="main-content">
+    <div id="top-loader-container">
+        <span class="loader"></span>
+    </div>
     <nav class="header-bar">
         <div>
             <h5 class="m-0 fw-800" id="chat-title">Hệ thống Trợ lý</h5>
@@ -601,29 +636,45 @@ function typeWriter(element, text, onComplete) {
 function closeTutorial() {
     document.getElementById('tutorial-overlay').style.display = 'none';
 }
+const topLoader = document.getElementById('top-loader-container');
 
+// Hàm tạo hiệu ứng chờ 3 giây
+function startLoading() {
+    return new Promise(resolve => {
+        if(topLoader) topLoader.style.display = 'block';
+        
+        setTimeout(() => {
+            if(topLoader) topLoader.style.display = 'none';
+            resolve(); // Trả về kết quả sau 3 giây để chạy tiếp code phía sau
+        }, 3000);
+    });
+}
 // Gắn lại nút Cách dùng
 document.querySelector('.btn-chat-use')?.addEventListener('click', openTutorial);
 
-    function loadArchivedChats() {
-        const archivedChats = JSON.parse(localStorage.getItem('noob_archived_chats') || '[]');
-        const list = document.getElementById('archived-list');
-        if(!archivedChats.length) {
-            list.innerHTML = '<p class="small text-muted px-3 opacity-50">Không có hội thoại cũ...</p>';
-            return;
-        }
-        list.innerHTML = archivedChats.map(s => `
-            <div class="chat-item" onclick="openArchived(${s.id})" id="archived-${s.id}">
-                <i class="fa-solid fa-clock text-secondary"></i>
-                <span class="text-truncate">Hội thoại ${new Date(s.timestamp).toLocaleString()}</span>
-            </div>
-        `).join('');
-    }
+async function loadArchivedChats() {
+    await startLoading(); // Đợi 3s xong mới chạy tiếp bên dưới
 
-function exportChat() {
+    const archivedChats = JSON.parse(localStorage.getItem('noob_archived_chats') || '[]');
+    const list = document.getElementById('archived-list');
+    
+    if(!archivedChats.length) {
+        list.innerHTML = '<p class="small text-muted px-3 opacity-50">Không có hội thoại cũ...</p>';
+        return;
+    }
+    list.innerHTML = archivedChats.map(s => `
+        <div class="chat-item" onclick="openArchived(${s.id})" id="archived-${s.id}">
+            <i class="fa-solid fa-clock text-secondary"></i>
+            <span class="text-truncate">Hội thoại ${new Date(s.timestamp).toLocaleString()}</span>
+        </div>
+    `).join('');
+}
+
+async function exportChat() {
+    await startLoading();
+
     const urlParams = new URLSearchParams(window.location.search);
     const sessionId = urlParams.get('id');
-
     let historyToExport = currentChatHistory;
 
     if(sessionId) {
@@ -662,61 +713,63 @@ function switchToCurrentChat() {
     window.history.replaceState({}, '', url);
 }
 
-function openArchived(sessionId) {
+async function openArchived(sessionId) {
+    await startLoading();
+
     const archivedChats = JSON.parse(localStorage.getItem('noob_archived_chats') || '[]');
     const session = archivedChats.find(s => s.id === sessionId);
     if(!session) return;
 
-    // Highlight
-    document.querySelectorAll('#archived-list .chat-item, #current-chat-item .chat-item')
-        .forEach(i => i.classList.remove('active'));
+    document.querySelectorAll('#archived-list .chat-item, #current-chat-item .chat-item').forEach(i => i.classList.remove('active'));
     document.getElementById(`archived-${sessionId}`)?.classList.add('active');
 
-    // Load messages
     const win = document.getElementById('chat-window');
     win.innerHTML = '';
     session.history.forEach(msg => renderMessage(msg));
 
     document.getElementById('chat-title').innerText = `Hội thoại cũ: ${new Date(session.timestamp).toLocaleString()}`;
 
-    // Cập nhật URL
     const url = new URL(window.location);
     url.searchParams.set('id', sessionId);
     window.history.replaceState({}, '', url);
 }
 
 
-function loadArchivedChats() {
+async function openArchived(sessionId) {
+    await startLoading();
+
     const archivedChats = JSON.parse(localStorage.getItem('noob_archived_chats') || '[]');
-    const list = document.getElementById('archived-list');
+    const session = archivedChats.find(s => s.id === sessionId);
+    if(!session) return;
 
-    if(!archivedChats.length) {
-        list.innerHTML = '<p class="small text-muted px-3 opacity-50">Không có hội thoại cũ...</p>';
-        return;
-    }
+    document.querySelectorAll('#archived-list .chat-item, #current-chat-item .chat-item').forEach(i => i.classList.remove('active'));
+    document.getElementById(`archived-${sessionId}`)?.classList.add('active');
 
-    list.innerHTML = archivedChats.map(s => `
-        <div class="chat-item" onclick="openArchived(${s.id})" id="archived-${s.id}">
-            <i class="fa-solid fa-clock text-secondary"></i>
-            <span class="text-truncate">Hội thoại ${new Date(s.timestamp).toLocaleString()}</span>
-        </div>
-    `).join('');
+    const win = document.getElementById('chat-window');
+    win.innerHTML = '';
+    session.history.forEach(msg => renderMessage(msg));
+
+    document.getElementById('chat-title').innerText = `Hội thoại cũ: ${new Date(session.timestamp).toLocaleString()}`;
+
+    const url = new URL(window.location);
+    url.searchParams.set('id', sessionId);
+    window.history.replaceState({}, '', url);
 }
-
 
 async function handleSendMessage() {
     const input = document.getElementById('user-input');
-    // Lấy đúng nút gửi nằm trong div position-relative mới
     const sendBtn = document.querySelector('.input-glass-box .position-relative button');
+    const topLoader = document.getElementById('top-loader-container'); // Tìm cái div vừa thêm ở bước 1
     const text = input.value.trim();
     
-    // Nếu không có text và cũng không có ảnh thì nghỉ, khỏi gửi
+    // Nếu không có text và cũng không có ảnh thì nghỉ
     if (!text && !selectedBase64) return;
 
-    // Hiệu ứng Loading
+    // --- HIỆU ỨNG LOADING KIỂU MICROSOFT ---
     const originalIcon = '<i class="fa-solid fa-paper-plane"></i>';
-    sendBtn.innerHTML = '<i class="fa-solid fa-circle-notch loading-spin"></i>';
+    topLoader.style.display = 'block'; // Hiện thanh chạy ở đầu trang
     sendBtn.disabled = true;
+    sendBtn.style.opacity = '0.6'; // Làm mờ nút gửi một chút để báo hiệu đang bận
 
     const timestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     const aiParts = [];
@@ -732,7 +785,7 @@ async function handleSendMessage() {
         });
     }
 
-    // Render tin nhắn của User lên màn hình trước
+    // Render tin nhắn của User lên màn hình
     const msgObj = { role: 'user', parts: aiParts, time: timestamp };
     currentChatHistory.push(msgObj);
     renderMessage(msgObj, false);
@@ -747,7 +800,7 @@ async function handleSendMessage() {
             method: 'POST', 
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ 
-                messages: currentChatHistory.slice(-10), // Gửi 10 câu gần nhất để giữ context
+                messages: currentChatHistory.slice(-10),
                 user_lang: localStorage.getItem('noob_lang') || 'vi'
             }) 
         });
@@ -755,29 +808,27 @@ async function handleSendMessage() {
         const d = await res.json();
         
         if (d.success) {
-            // 1. CẬP NHẬT UI (Màu nút và Tooltip) dựa trên Provider trả về
             if (d.provider) {
                 updateProviderUI(d.provider);
             }
 
-            // 2. Tạo object tin nhắn của Bot
             const botMsg = { 
                 role: 'model', 
                 parts: [{ text: d.text || '' }],
                 time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-                searchMetadata: d.searchMetadata, // Metadata để hiện trạng thái "Đang tìm trên web"
-                provider: d.provider // Lưu lại vết model
+                searchMetadata: d.searchMetadata,
+                provider: d.provider 
             };
 
-            // 3. Render tin nhắn Bot với hiệu ứng gõ chữ (Typewriter)
+            // Render tin nhắn Bot
             renderMessage(botMsg, true, () => {
-                // Sau khi gõ xong thì trả lại icon nút gửi
-                sendBtn.innerHTML = originalIcon;
+                // KHI GÕ CHỮ XONG: Ẩn loader đầu trang và khôi phục nút
+                topLoader.style.display = 'none';
                 sendBtn.disabled = false;
+                sendBtn.style.opacity = '1';
                 input.focus();
             });
             
-            // 4. Lưu vào LocalStorage để không mất chat khi F5
             currentChatHistory.push(botMsg);
             localStorage.setItem('noob_chat_history', JSON.stringify(currentChatHistory));
         } else {
@@ -785,16 +836,17 @@ async function handleSendMessage() {
         }
     } catch (e) {
         console.error("Lỗi kết nối:", e);
-        // Nếu lỗi thì hiện thông báo "bao cát" đặc trưng
         const errorMsg = {
             role: 'model',
-            parts: [{ text: "Haizz, ping cao quá tôi bị gank rồi! Check lại API Key hoặc kết nối mạng xem sao ông giáo ơi... #FreeAbcsnoobhelper" }],
+            parts: [{ text: "Haizz, ping cao quá tôi bị gank rồi! Check lại mạng xem sao ông giáo ơi..." }],
             time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
         };
         renderMessage(errorMsg, false);
         
-        sendBtn.innerHTML = originalIcon;
+        // KHI LỖI: Dọn dẹp hiệu ứng
+        topLoader.style.display = 'none';
         sendBtn.disabled = false;
+        sendBtn.style.opacity = '1';
     }
 }
 
