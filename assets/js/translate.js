@@ -33,7 +33,6 @@
         setupTrollCopy(); 
         
         // Quét link ngay lập tức
-        wrapExternalLinks();
 
         // Kích hoạt bộ máy quan sát (Observer)
         startMasterProcess();
