@@ -860,325 +860,323 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
 
   <script>
-/* =========================================================
-   CONFIG + STATE
-========================================================= */
-const API_BASE = 'https://abcsnoobai.abcsnoob.workers.dev';
+/**
+ * ABC'S NOOB AI - CORE APPLICATION
+ * Refactored Version 2026
+ */
 
-let currentChatHistory = [];
-let currentChatId = null;
-let selectedBase64 = null;
-
-const $ = (id) => document.getElementById(id);
-
-/* =========================================================
-   IMAGE COMPRESS
-========================================================= */
-async function compressImage(base64Str) {
-  return new Promise((resolve) => {
-    const img = new Image();
-    img.src = base64Str;
-
-    img.onload = () => {
-      const canvas = document.createElement('canvas');
-      const MAX_SIZE = 1280;
-
-      let width = img.width;
-      let height = img.height;
-
-      if (width > height && width > MAX_SIZE) {
-        height *= MAX_SIZE / width;
-        width = MAX_SIZE;
-      } else if (height > MAX_SIZE) {
-        width *= MAX_SIZE / height;
-        height = MAX_SIZE;
-      }
-
-      canvas.width = width;
-      canvas.height = height;
-
-      const ctx = canvas.getContext('2d');
-      ctx.drawImage(img, 0, 0, width, height);
-
-      resolve(canvas.toDataURL('image/jpeg', 0.6));
-    };
-  });
-}
-
-/* =========================================================
-   IMAGE INPUT / PASTE
-========================================================= */
-async function handleImageFile(file) {
-  if (!file || !file.type.startsWith('image/')) return;
-
-  const reader = new FileReader();
-  reader.onload = async (e) => {
-    selectedBase64 = await compressImage(e.target.result);
-    $('img-render').src = selectedBase64;
-    $('image-preview-container').style.display = 'block';
-  };
-  reader.readAsDataURL(file);
-}
-
-window.addEventListener('paste', e => {
-  const items = e.clipboardData?.items || [];
-  for (let i = 0; i < items.length; i++) {
-    if (items[i].type.includes('image')) {
-      handleImageFile(items[i].getAsFile());
-      break;
+// 1. Cấu hình hệ thống
+const CONFIG = {
+    API_BASE: 'https://abcsnoobai.abcsnoob.workers.dev',
+    MAX_HISTORY: 10,
+    STORAGE_KEYS: {
+        CURRENT: 'noob_chat_history',
+        ARCHIVED: 'noob_archived_chats',
+        LANG: 'noob_lang'
     }
-  }
-});
+};
 
-function handleImage(input) {
-  const file = input.files[0];
-  if (file) handleImageFile(file);
+// 2. Module quản lý bộ nhớ (Storage)
+const StorageManager = {
+    async saveCurrentChat(history) {
+        await localforage.setItem(CONFIG.STORAGE_KEYS.CURRENT, history);
+    },
+    async getCurrentChat() {
+        return await localforage.getItem(CONFIG.STORAGE_KEYS.CURRENT) || [];
+    },
+    getArchived() {
+        return JSON.parse(localStorage.getItem(CONFIG.STORAGE_KEYS.ARCHIVED) || '[]');
+    },
+    saveArchived(archived) {
+        localStorage.setItem(CONFIG.STORAGE_KEYS.ARCHIVED, JSON.stringify(archived));
+    }
+};
+
+// 3. Module giao diện (UI)
+const UIManager = {
+    elements: {
+        chatWindow: document.getElementById('chat-window'),
+        userInput: document.getElementById('user-input'),
+        loader: document.getElementById('top-loader-container'),
+        imgPreview: document.getElementById('image-preview-container'),
+        imgRender: document.getElementById('img-render'),
+        modelBadge: document.getElementById('model-badge'),
+        archivedList: document.getElementById('archived-list'),
+        chatTitle: document.getElementById('chat-title')
+    },
+
+    toggleLoader(show = true) {
+        this.elements.loader.style.display = show ? 'block' : 'none';
+    },
+
+    scrollToBottom() {
+        this.elements.chatWindow.scrollTop = this.elements.chatWindow.scrollHeight;
+    },
+
+    updateModelBadge(displayName) {
+        if (!displayName) return;
+        this.elements.modelBadge.innerText = `Engine: ${displayName}`;
+        const sendBtn = document.querySelector('.input-glass-box button[onclick="handleSendMessage()"]');
+        if (!sendBtn) return;
+
+        sendBtn.className = 'btn btn-primary rounded-circle shadow-lg'; // Reset
+        const name = displayName.toLowerCase();
+        if (name.includes("gemini")) sendBtn.classList.add('btn-gemini-active');
+        else if (name.includes("27b")) sendBtn.classList.add('btn-gemma-27');
+        else if (name.includes("12b")) sendBtn.classList.add('btn-gemma-12');
+    }
+};
+
+// 4. Module lõi Chat
+const ChatApp = {
+    history: [],
+    selectedBase64: null,
+    isProcessing: false,
+
+    async init() {
+        this.history = await StorageManager.getCurrentChat();
+        this.renderHistory();
+        this.setupEventListeners();
+        loadArchivedChats(); // Tải sidebar
+    },
+
+    setupEventListeners() {
+        const input = UIManager.elements.userInput;
+        input.addEventListener('input', () => {
+            input.style.height = 'auto';
+            input.style.height = input.scrollHeight + 'px';
+        });
+
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                this.handleSend();
+            }
+        });
+
+        // Paste image hỗ trợ
+        window.addEventListener('paste', e => {
+            const item = e.clipboardData.items[0];
+            if (item?.type.includes('image')) this.handleImageFile(item.getAsFile());
+        });
+    },
+
+    async handleImageFile(file) {
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+            this.selectedBase64 = await this.compressImage(e.target.result);
+            UIManager.elements.imgRender.src = this.selectedBase64;
+            UIManager.elements.imgPreview.style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+    },
+
+    compressImage(base64Str) {
+        return new Promise((resolve) => {
+            const img = new Image();
+            img.src = base64Str;
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                const MAX_SIZE = 1280;
+                let { width, height } = img;
+                if (width > height && width > MAX_SIZE) { height *= MAX_SIZE / width; width = MAX_SIZE; }
+                else if (height > MAX_SIZE) { width *= MAX_SIZE / height; height = MAX_SIZE; }
+                canvas.width = width; canvas.height = height;
+                canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+                resolve(canvas.toDataURL('image/jpeg', 0.6));
+            };
+        });
+    },
+
+    async handleSend() {
+        const text = UIManager.elements.userInput.value.trim();
+        if ((!text && !this.selectedBase64) || this.isProcessing) return;
+
+        this.isProcessing = true;
+        UIManager.toggleLoader(true);
+
+        const parts = [];
+        if (text) parts.push({ text });
+        if (this.selectedBase64) {
+            parts.push({ inlineData: { mime_type: "image/jpeg", data: this.selectedBase64.split(',')[1] } });
+        }
+
+        const userMsg = { 
+            role: 'user', 
+            parts, 
+            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) 
+        };
+
+        this.history.push(userMsg);
+        renderMessage(userMsg);
+        
+        // Clear inputs
+        UIManager.elements.userInput.value = '';
+        UIManager.elements.userInput.style.height = 'auto';
+        removeImage();
+
+        try {
+            const res = await fetch(CONFIG.API_BASE, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    messages: this.history.slice(-CONFIG.MAX_HISTORY),
+                    user_lang: localStorage.getItem(CONFIG.STORAGE_KEYS.LANG) || 'vi'
+                })
+            });
+
+            const data = await res.json();
+            if (data.success) {
+                UIManager.updateModelBadge(data.provider);
+                const botMsg = {
+                    role: 'model',
+                    parts: [{ text: data.text }],
+                    time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                    searchMetadata: data.searchMetadata,
+                    provider: data.provider
+                };
+                
+                this.history.push(botMsg);
+                renderMessage(botMsg, true, () => {
+                    this.isProcessing = false;
+                    UIManager.toggleLoader(false);
+                    StorageManager.saveCurrentChat(this.history);
+                });
+            }
+        } catch (err) {
+            this.isProcessing = false;
+            UIManager.toggleLoader(false);
+            console.error("API Error:", err);
+        }
+    },
+
+    renderHistory() {
+        UIManager.elements.chatWindow.innerHTML = '';
+        if (this.history.length > 0) {
+            document.querySelector('.welcome-view')?.remove();
+            this.history.forEach(msg => renderMessage(msg));
+        }
+    }
+};
+
+// 5. Các hàm bổ trợ (Global Helpers)
+function renderMessage(msg, isNew = false, onComplete = null) {
+    const isBot = msg.role === 'model' || msg.role === 'assistant';
+    let text = "", imgSrc = null;
+
+    msg.parts.forEach(p => {
+        if (p.text) text = p.text;
+        if (p.inlineData) imgSrc = typeof p.inlineData === 'string' ? p.inlineData : `data:${p.inlineData.mime_type};base64,${p.inlineData.data}`;
+    });
+
+    const msgId = `msg-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`;
+    const div = document.createElement('div');
+    div.className = `msg-box ${isBot ? 'bot-msg' : 'user-msg'}`;
+    div.id = msgId;
+
+    div.innerHTML = `
+        <div class="msg-avatar" style="background:${isBot ? 'var(--primary)' : 'var(--secondary)'}">
+            ${isBot ? '<img src="https://abcsnoob.github.io/assets/image/abcsnoob.webp" style="width:100%; height:100%; border-radius:14px; object-fit:cover">' : 'U'}
+        </div>
+        <div class="msg-content-wrapper">
+            <div class="msg-header">
+                <span class="fw-bold">${isBot ? "ABC'S NOOB AI" : "ME"}</span>
+                <span class="msg-time">${msg.time || ''}</span>
+            </div>
+            ${imgSrc ? `<div class="msg-img-wrapper"><img src="${imgSrc}" onclick="window.open(this.src)"></div>` : ''}
+            <div class="msg-text">
+                ${isBot && msg.searchMetadata ? `<div class="searching-status mb-2" style="color:var(--primary); font-size:13px; font-style:italic;"><i class="fa-solid fa-magnifying-glass fa-beat-fade me-2"></i>Đang tìm trên web...</div>` : ''}
+                <div class="text-body-content"></div>
+                <div class="msg-actions">
+                    <button class="action-btn" onclick="copyText(this, \`${encodeURIComponent(text)}\`)"><i class="fa-regular fa-copy me-1"></i> Copy</button>
+                    <button class="action-btn" onclick="toggleFocusMode('${msgId}')"><i class="fa-solid fa-expand me-1"></i> Focus</button>
+                </div>
+            </div>
+        </div>`;
+
+    UIManager.elements.chatWindow.appendChild(div);
+    const body = div.querySelector('.text-body-content');
+
+    if (isBot && isNew && text) {
+        let i = 0;
+        body.style.whiteSpace = "pre-wrap";
+        const interval = setInterval(() => {
+            if (i < text.length) {
+                body.textContent += text.charAt(i++);
+                UIManager.scrollToBottom();
+            } else {
+                clearInterval(interval);
+                body.style.whiteSpace = "normal";
+                body.innerHTML = marked.parse(text);
+                Prism.highlightAllUnder(div);
+                if (onComplete) onComplete();
+            }
+        }, 5);
+    } else {
+        body.innerHTML = marked.parse(text || "");
+        Prism.highlightAllUnder(div);
+        if (onComplete) onComplete();
+    }
+    UIManager.scrollToBottom();
 }
 
 function removeImage() {
-  selectedBase64 = null;
-  $('image-preview-container').style.display = 'none';
-  $('img-render').src = '';
+    ChatApp.selectedBase64 = null;
+    UIManager.elements.imgPreview.style.display = 'none';
+    UIManager.elements.imgRender.src = '';
 }
 
-/* =========================================================
-   TYPEWRITER
-========================================================= */
-function typeWriter(element, text, onComplete) {
-  let i = 0;
-  element.innerHTML = '';
-  element.style.whiteSpace = 'pre-wrap';
-
-  function typing() {
-    if (i < text.length) {
-      element.textContent += text.charAt(i++);
-      $('chat-window').scrollTop = $('chat-window').scrollHeight;
-      setTimeout(typing, 2);
-    } else {
-      element.style.whiteSpace = 'normal';
-      element.innerHTML = marked.parse(text);
-      Prism.highlightAllUnder(element.parentElement);
-      onComplete?.();
-    }
-  }
-  typing();
-}
-
-/* =========================================================
-   PROVIDER UI
-========================================================= */
-function updateProviderUI(displayName) {
-  const sendBtn = document.querySelector('.input-glass-box button');
-  const modelBadge = $('model-badge');
-  if (!sendBtn || !displayName) return;
-
-  modelBadge.innerText = `Engine: ${displayName}`;
-  sendBtn.className = sendBtn.className.replace(/btn-\S+/g, '');
-
-  const name = displayName.toLowerCase();
-  if (name.includes('gemini')) sendBtn.classList.add('btn-gemini-active');
-  else if (name.includes('27b')) sendBtn.classList.add('btn-gemma-27');
-  else if (name.includes('12b')) sendBtn.classList.add('btn-gemma-12');
-  else if (name.includes('4b')) sendBtn.classList.add('btn-gemma-4');
-  else if (name.includes('2b')) sendBtn.classList.add('btn-gemma-2');
-  else if (name.includes('1b')) sendBtn.classList.add('btn-gemma-1');
-}
-
-/* =========================================================
-   RENDER MESSAGE
-========================================================= */
-function renderMessage(msg, isNew = false, onComplete = null) {
-  const win = $('chat-window');
-  const isBot = msg.role === 'model';
-
-  let text = '';
-  let imgSrc = null;
-
-  msg.parts.forEach(p => {
-    if (p.text) text = p.text;
-    if (p.inlineData) {
-      imgSrc = `data:${p.inlineData.mime_type};base64,${p.inlineData.data}`;
-    }
-  });
-
-  let searchingStatus = '';
-  if (isBot && msg.searchMetadata) {
-    searchingStatus = `
-      <div class="searching-status">
-        <i class="fa-solid fa-magnifying-glass fa-beat-fade"></i>
-        Đang tìm trên web...
-      </div>`;
-  }
-
-  const msgId = 'msg-' + Date.now() + Math.random().toString(36).slice(2, 6);
-
-  const div = document.createElement('div');
-  div.className = `msg-box ${isBot ? 'bot-msg' : 'user-msg'}`;
-  div.id = msgId;
-
-  div.innerHTML = `
-    <div class="msg-avatar">${isBot ? 'AI' : 'ME'}</div>
-    <div class="msg-content-wrapper">
-      <div class="msg-header">
-        <b>${isBot ? "ABC'S NOOB AI" : "ME"}</b>
-        <span>${msg.time || ''}</span>
-      </div>
-      ${imgSrc ? `<img src="${imgSrc}" onclick="window.open(this.src)">` : ''}
-      <div class="msg-text">
-        ${searchingStatus}
-        <div class="text-body-content"></div>
-        <div class="msg-actions">
-          <button onclick="copyText(this, '${encodeURIComponent(text)}')">Copy</button>
-          <button onclick="toggleFocusMode('${msgId}')">Focus</button>
-        </div>
-      </div>
-    </div>
-  `;
-
-  win.appendChild(div);
-  const textEl = div.querySelector('.text-body-content');
-
-  if (isBot && isNew) {
-    typeWriter(textEl, text, onComplete);
-  } else {
-    textEl.innerHTML = marked.parse(text || '');
-    Prism.highlightAllUnder(div);
-    onComplete?.();
-  }
-
-  win.scrollTop = win.scrollHeight;
-}
-
-/* =========================================================
-   SEND MESSAGE (SINGLE SOURCE OF TRUTH)
-========================================================= */
-async function handleSendMessage() {
-  const input = $('user-input');
-  const sendBtn = document.querySelector('.input-glass-box button');
-  const loader = $('top-loader-container');
-  const text = input.value.trim();
-
-  if (!text && !selectedBase64) return;
-
-  if (!currentChatId) {
-    currentChatId = Date.now();
-    const url = new URL(location);
-    url.searchParams.set('id', currentChatId);
-    history.replaceState({}, '', url);
-  }
-
-  loader.style.display = 'block';
-  sendBtn.disabled = true;
-
-  const userMsg = {
-    role: 'user',
-    time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-    parts: []
-  };
-
-  if (text) userMsg.parts.push({ text });
-  if (selectedBase64) {
-    userMsg.parts.push({
-      inlineData: {
-        mime_type: 'image/jpeg',
-        data: selectedBase64.split(',')[1]
-      }
-    });
-  }
-
-  currentChatHistory.push(userMsg);
-  renderMessage(userMsg);
-
-  input.value = '';
-  removeImage();
-
-  try {
-    const res = await fetch(API_BASE, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        messages: currentChatHistory.slice(-10),
-        user_lang: localStorage.getItem('noob_lang') || 'vi'
-      })
-    });
-
-    const d = await res.json();
-    if (d.provider) updateProviderUI(d.provider);
-
-    const botMsg = {
-      role: 'model',
-      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      parts: [{ text: d.text || '' }],
-      searchMetadata: d.searchMetadata,
-      provider: d.provider
-    };
-
-    renderMessage(botMsg, true, async () => {
-      loader.style.display = 'none';
-      sendBtn.disabled = false;
-      await saveToArchive(currentChatId, currentChatHistory);
-    });
-
-    currentChatHistory.push(botMsg);
-
-  } catch (e) {
-    console.error(e);
-    loader.style.display = 'none';
-    sendBtn.disabled = false;
-  }
-}
-
-/* =========================================================
-   ARCHIVE / SIDEBAR / UTILS
-========================================================= */
-async function saveToArchive(id, history) {
-  let list = JSON.parse(localStorage.getItem('noob_archived_chats') || '[]');
-  const idx = list.findIndex(s => s.id === id);
-
-  if (idx !== -1) list[idx].history = history;
-  else list.unshift({ id, history, timestamp: new Date().toISOString() });
-
-  localStorage.setItem('noob_archived_chats', JSON.stringify(list));
-  await localforage.setItem('noob_chat_history', history);
-}
-
-/* =========================================================
-   COPY / FOCUS
-========================================================= */
 function copyText(btn, encoded) {
-  const text = decodeURIComponent(encoded);
-  navigator.clipboard.writeText(text);
+    navigator.clipboard.writeText(decodeURIComponent(encoded)).then(() => {
+        const icon = btn.innerHTML;
+        btn.innerHTML = '✅ Done!';
+        setTimeout(() => btn.innerHTML = icon, 2000);
+    });
 }
 
-function toggleFocusMode(msgId) {
-  const original = document.getElementById(msgId);
-  if (!original) return;
-
-  const overlay = document.createElement('div');
-  overlay.className = 'focus-mode';
-
-  const close = document.createElement('button');
-  close.innerText = '✕';
-  close.onclick = () => overlay.remove();
-
-  overlay.appendChild(close);
-  overlay.appendChild(original.cloneNode(true));
-  document.body.appendChild(overlay);
+function toggleFocusMode(id) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const overlay = document.createElement('div');
+    overlay.className = 'focus-mode';
+    overlay.innerHTML = `<button class="btn btn-danger btn-close-focus" onclick="this.parentElement.remove()"><i class="fa-solid fa-xmark"></i></button>`;
+    const clone = el.cloneNode(true);
+    clone.querySelector('.msg-actions').remove();
+    overlay.appendChild(clone);
+    document.body.appendChild(overlay);
+    Prism.highlightAllUnder(clone);
 }
 
-/* =========================================================
-   INIT
-========================================================= */
-document.addEventListener('DOMContentLoaded', () => {
-  const input = $('user-input');
-  input.addEventListener('keydown', e => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSendMessage();
-    }
-  });
-});
+// Khởi chạy khi DOM sẵn sàng
+document.addEventListener('DOMContentLoaded', () => ChatApp.init());
 
+/** * Các hàm UI Sidebar giữ nguyên logic cũ nhưng bọc lại gọn hơn 
+ */
+async function loadArchivedChats() {
+    const archived = StorageManager.getArchived();
+    const list = UIManager.elements.archivedList;
+    if (!list) return;
+
+    list.innerHTML = archived.length ? archived.map(s => `
+        <div class="chat-item" onclick="openArchived(${s.id})" id="archived-${s.id}">
+            <i class="fa-solid fa-clock text-secondary"></i>
+            <span class="text-truncate">Hội thoại ${new Date(s.id).toLocaleString('vi-VN')}</span>
+        </div>
+    `).join('') : '<p class="small text-muted px-3 py-2 opacity-50">Trống...</p>';
+}
+
+async function startNewChat() {
+    if (!ChatApp.history.length) return;
+    const archived = StorageManager.getArchived();
+    archived.unshift({ id: Date.now(), timestamp: new Date().toISOString(), history: [...ChatApp.history] });
+    StorageManager.saveArchived(archived);
+    
+    ChatApp.history = [];
+    await StorageManager.saveCurrentChat([]);
+    ChatApp.renderHistory();
+    loadArchivedChats();
+}
   </script>
 </body>
 
