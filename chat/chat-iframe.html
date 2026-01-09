@@ -11,6 +11,60 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap" rel="stylesheet">
 
     <style>
+        /* Nút tiện ích cho tin nhắn */
+.msg-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 8px;
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.msg-box:hover .msg-actions {
+    opacity: 1;
+}
+
+.action-btn {
+    background: var(--glass);
+    border: 1px solid var(--glass-border);
+    color: var(--text-muted);
+    padding: 4px 12px;
+    border-radius: 8px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.action-btn:hover {
+    background: var(--primary);
+    color: #fff;
+    border-color: var(--primary);
+}
+
+/* Chế độ Focus 100% */
+.focus-mode {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: var(--bg-dark);
+    z-index: 9999;
+    padding: 10% 20%;
+    overflow-y: auto;
+}
+
+.focus-mode .msg-box {
+    max-width: 1000px;
+    margin: 0 auto 50px;
+}
+
+.btn-close-focus {
+    position: fixed;
+    top: 20px;
+    right: 40px;
+    z-index: 10000;
+}
         #top-loader-container {
             position: fixed;
             top: 0;
@@ -860,9 +914,7 @@ function renderMessage(msg, isNew = false, onComplete = null) {
         if (p.inlineData) imgSrc = typeof p.inlineData === 'string' ? p.inlineData : `data:${p.inlineData.mime_type};base64,${p.inlineData.data}`;
     });
 
-    // --- LOGIC HIỆN CHỮ "ĐANG TÌM TRÊN WEB" ---
-    let searchingStatus = "";
-    // Chỉ hiện nếu là phản hồi mới của Bot và có chứa metadata search từ Worker
+let searchingStatus = "";
     if (isBot && msg.searchMetadata) {
         searchingStatus = `
             <div class="searching-status mb-2" style="color: var(--primary); font-size: 13px; font-weight: 600; font-style: italic;">
@@ -872,6 +924,10 @@ function renderMessage(msg, isNew = false, onComplete = null) {
 
     const div = document.createElement('div');
     div.className = `msg-box ${isBot ? 'bot-msg' : 'user-msg'}`;
+    // Gán ID để dễ truy vấn cho chế độ Focus
+    const msgId = 'msg-' + Date.now() + Math.random().toString(36).substr(2, 5);
+    div.id = msgId;
+
     div.innerHTML = `
         <div class="msg-avatar" style="background:${isBot ? 'var(--primary)' : 'var(--secondary)'}">
             ${isBot ? '<img src="https://abcsnoob.github.io/assets/image/abcsnoob.webp" style="width:100%; height:100%; border-radius:14px; object-fit:cover">' : 'U'}
@@ -885,6 +941,14 @@ function renderMessage(msg, isNew = false, onComplete = null) {
             <div class="msg-text">
                 ${searchingStatus}
                 <div class="text-body-content"></div>
+                <div class="msg-actions">
+                    <button class="action-btn" onclick="copyText(this, \`${encodeURIComponent(text)}\`)">
+                        <i class="fa-regular fa-copy me-1"></i> Copy
+                    </button>
+                    <button class="action-btn" onclick="toggleFocusMode('${msgId}')">
+                        <i class="fa-solid fa-expand me-1"></i> Focus
+                    </button>
+                </div>
             </div>
         </div>`;
 
@@ -901,6 +965,48 @@ function renderMessage(msg, isNew = false, onComplete = null) {
     win.scrollTop = win.scrollHeight;
 }
 
+// Hàm Copy văn bản
+function copyText(btn, encodedText) {
+    const text = decodeURIComponent(encodedText);
+    navigator.clipboard.writeText(text).then(() => {
+        const originalHTML = btn.innerHTML;
+        btn.innerHTML = '<i class="fa-solid fa-check me-1"></i> Đã xong!';
+        btn.classList.add('btn-success');
+        setTimeout(() => {
+            btn.innerHTML = originalHTML;
+            btn.classList.remove('btn-success');
+        }, 2000);
+    });
+}
+
+// Hàm bật/tắt chế độ Focus 100%
+function toggleFocusMode(msgId) {
+    const originalMsg = document.getElementById(msgId);
+    if (!originalMsg) return;
+
+    // Tạo overlay
+    const overlay = document.createElement('div');
+    overlay.className = 'focus-mode';
+    overlay.id = 'focus-overlay';
+    
+    // Nút đóng
+    const closeBtn = document.createElement('button');
+    closeBtn.className = 'btn btn-danger rounded-circle btn-close-focus';
+    closeBtn.innerHTML = '<i class="fa-solid fa-xmark"></i>';
+    closeBtn.onclick = () => overlay.remove();
+
+    // Copy nội dung tin nhắn vào overlay
+    const clone = originalMsg.cloneNode(true);
+    // Xóa nút focus trong bản clone để tránh lặp
+    clone.querySelector('button[onclick^="toggleFocusMode"]').remove();
+    
+    overlay.appendChild(closeBtn);
+    overlay.appendChild(clone);
+    document.body.appendChild(overlay);
+
+    // Re-highlight code trong bản clone
+    Prism.highlightAllUnder(clone);
+}
 async function handleImage(input) {
     const file = input.files[0];
     if(!file) return;
