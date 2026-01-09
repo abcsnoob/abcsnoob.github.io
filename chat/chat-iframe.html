@@ -598,8 +598,7 @@ const CHANGELOG_DATA = [
         items: [
             "Chuyển đổi từ localStorage sang localForage (IndexedDB).",
             "Tối ưu hóa ghi dữ liệu bất đồng bộ cho hiệu năng cao.",
-            "Hỗ trợ lưu trực tiếp Object/Array không cần stringify.",
-            "Tiện thể thêm trang changelog này."
+            "Hỗ trợ lưu trực tiếp Object/Array không cần stringify."
         ]
     }
 ];
@@ -749,21 +748,26 @@ function startLoading() {
 document.querySelector('.btn-chat-use')?.addEventListener('click', openTutorial);
 
 async function loadArchivedChats() {
-    await startLoading(); // Đợi 3s xong mới chạy tiếp bên dưới
-
+    await startLoading();
     const archivedChats = JSON.parse(localStorage.getItem('noob_archived_chats') || '[]');
     const list = document.getElementById('archived-list');
     
-    if(!archivedChats.length) {
-        list.innerHTML = '<p class="small text-muted px-3 opacity-50">Không có hội thoại cũ...</p>';
+    if (!list) return;
+
+    if (archivedChats.length === 0) {
+        list.innerHTML = '<p class="small text-muted px-3 py-2 opacity-50">Không có hội thoại cũ...</p>';
         return;
     }
+
+    // Vẽ giao diện ngay lập tức từ localStorage
     list.innerHTML = archivedChats.map(s => `
         <div class="chat-item" onclick="openArchived(${s.id})" id="archived-${s.id}">
             <i class="fa-solid fa-clock text-secondary"></i>
-            <span class="text-truncate">Hội thoại ${new Date(s.timestamp).toLocaleString()}</span>
+            <span class="text-truncate">Hội thoại ${new Date(s.id).toLocaleString('vi-VN')}</span>
         </div>
     `).join('');
+    
+    console.log("Đã tải lịch sử:", archivedChats.length, "mục"); // Kiểm tra tại F12 console
 }
 
 async function exportChat() {
@@ -1062,17 +1066,32 @@ async function handleImage(input) {
     reader.readAsDataURL(file);
 }
 
-async function startNewChat() {
-    if(!currentChatHistory.length) return;
-    const archivedChats = await localforage.getItem('noob_archived_chats') || [];
-    archivedChats.push({ id: Date.now(), timestamp: new Date().toISOString(), history: currentChatHistory });
+function startNewChat() {
+    if (currentChatHistory.length === 0) return;
+
+    let archivedChats = JSON.parse(localStorage.getItem('noob_archived_chats') || '[]');
     
-    await localforage.setItem('noob_archived_chats', archivedChats);
+    // Đưa hội thoại hiện tại vào danh sách lưu trữ
+    const newEntry = {
+        id: Date.now(),
+        timestamp: new Date().toISOString(),
+        history: [...currentChatHistory]
+    };
+    
+    archivedChats.unshift(newEntry); // Đưa lên đầu danh sách
+    localStorage.setItem('noob_archived_chats', JSON.stringify(archivedChats));
+    
+    // Reset trạng thái hiện tại
     currentChatHistory = [];
-    await localforage.removeItem('noob_chat_history');
-    
-    loadArchivedChats();
+    localStorage.removeItem('noob_chat_history');
+
+    // Cập nhật giao diện
+    loadArchivedChats(); 
     switchToCurrentChat();
+    
+    // Mở phần lịch sử để người dùng thấy mục mới xuất hiện
+    const content = document.getElementById('archived-list');
+    if (content) content.classList.add('show');
 }
 
     function changeLanguage() {
@@ -1094,13 +1113,43 @@ async function loadData() {
     loadArchivedChats();
 }
 
-    window.onload = loadData;
+// Chỉ giữ lại một khối khởi tạo duy nhất này ở cuối thẻ <script>
+document.addEventListener('DOMContentLoaded', () => {
+    // 1. Tải danh sách lịch sử vào sidebar ngay lập tức
+    loadArchivedChats(); 
 
+    // 2. Thiết lập cho ô nhập liệu
     const tx = document.getElementById('user-input');
-    tx.addEventListener('input', function() { this.style.height = 'auto'; this.style.height = (this.scrollHeight) + 'px'; });
-    tx.addEventListener('keydown', (e) => { if(e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSendMessage(); } });
-    loadData();
+    if (tx) {
+        tx.addEventListener('input', function() { 
+            this.style.height = 'auto'; 
+            this.style.height = (this.scrollHeight) + 'px'; 
+        });
+        tx.addEventListener('keydown', (e) => { 
+            if(e.key === 'Enter' && !e.shiftKey) { 
+                e.preventDefault(); 
+                handleSendMessage(); 
+            } 
+        });
+    }
+
+    // 3. Khôi phục hội thoại đang dở dang (nếu có)
+    const savedChat = localStorage.getItem('noob_chat_history');
+    if (savedChat) {
+        currentChatHistory = JSON.parse(savedChat);
+        if (currentChatHistory.length > 0) {
+            const welcome = document.querySelector('.welcome-view');
+            if (welcome) welcome.style.display = 'none';
+            
+            const win = document.getElementById('chat-window');
+            win.innerHTML = '';
+            currentChatHistory.forEach(msg => renderMessage(msg, false));
+        }
+    }
+    
+    // 4. Luôn đảm bảo menu hiện tại được highlight
     switchToCurrentChat();
+});
  </script>
 </body>
 </html>
