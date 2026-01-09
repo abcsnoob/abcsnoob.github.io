@@ -622,7 +622,7 @@ function typeWriter(element, text, onComplete) {
             element.textContent += text.charAt(i);
             i++;
             document.getElementById('chat-window').scrollTop = document.getElementById('chat-window').scrollHeight;
-            setTimeout(typing, 10); 
+            setTimeout(typing, 2); 
         } else {
             element.style.whiteSpace = "normal";
             element.innerHTML = marked.parse(text); 
