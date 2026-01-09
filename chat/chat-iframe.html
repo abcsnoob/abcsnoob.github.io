@@ -861,8 +861,8 @@
 
   <script>
 /**
- * ABC'S NOOB AI - CORE APPLICATION
- * Refactored Version 2026
+ * ABC'S NOOB AI - CORE APPLICATION (ULTIMATE REFACTORED)
+ * Tính năng: Gửi Language Request, Google Translate GUI, Tối ưu hóa Context.
  */
 
 // 1. Cấu hình hệ thống
@@ -876,13 +876,34 @@ const CONFIG = {
     }
 };
 
-// 2. Module quản lý bộ nhớ (Storage)
+// 2. Google Translate GUI Initialization
+// Tự động thêm script Google Translate vào head
+(function initGoogleTranslate() {
+    const script = document.createElement('script');
+    script.src = "//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit";
+    document.head.appendChild(script);
+    
+    window.googleTranslateElementInit = function() {
+        new google.translate.TranslateElement({
+            pageLanguage: 'vi',
+            includedLanguages: 'en,vi,zh-CN,ja,ko',
+            layout: google.translate.TranslateElement.InlineLayout.SIMPLE,
+            autoDisplay: false
+        }, 'google_translate_element');
+    };
+})();
+
+// 3. Module Quản lý Bộ nhớ
 const StorageManager = {
     async saveCurrentChat(history) {
         await localforage.setItem(CONFIG.STORAGE_KEYS.CURRENT, history);
+        localStorage.setItem(CONFIG.STORAGE_KEYS.CURRENT, JSON.stringify(history));
     },
     async getCurrentChat() {
-        return await localforage.getItem(CONFIG.STORAGE_KEYS.CURRENT) || [];
+        const data = await localforage.getItem(CONFIG.STORAGE_KEYS.CURRENT);
+        if (data) return data;
+        const fallback = localStorage.getItem(CONFIG.STORAGE_KEYS.CURRENT);
+        return fallback ? JSON.parse(fallback) : [];
     },
     getArchived() {
         return JSON.parse(localStorage.getItem(CONFIG.STORAGE_KEYS.ARCHIVED) || '[]');
@@ -892,7 +913,7 @@ const StorageManager = {
     }
 };
 
-// 3. Module giao diện (UI)
+// 4. Module Giao diện (UI)
 const UIManager = {
     elements: {
         chatWindow: document.getElementById('chat-window'),
@@ -902,11 +923,10 @@ const UIManager = {
         imgRender: document.getElementById('img-render'),
         modelBadge: document.getElementById('model-badge'),
         archivedList: document.getElementById('archived-list'),
-        chatTitle: document.getElementById('chat-title')
     },
 
     toggleLoader(show = true) {
-        this.elements.loader.style.display = show ? 'block' : 'none';
+        if (this.elements.loader) this.elements.loader.style.display = show ? 'block' : 'none';
     },
 
     scrollToBottom() {
@@ -914,20 +934,19 @@ const UIManager = {
     },
 
     updateModelBadge(displayName) {
-        if (!displayName) return;
+        if (!displayName || !this.elements.modelBadge) return;
         this.elements.modelBadge.innerText = `Engine: ${displayName}`;
         const sendBtn = document.querySelector('.input-glass-box button[onclick="handleSendMessage()"]');
-        if (!sendBtn) return;
-
-        sendBtn.className = 'btn btn-primary rounded-circle shadow-lg'; // Reset
-        const name = displayName.toLowerCase();
-        if (name.includes("gemini")) sendBtn.classList.add('btn-gemini-active');
-        else if (name.includes("27b")) sendBtn.classList.add('btn-gemma-27');
-        else if (name.includes("12b")) sendBtn.classList.add('btn-gemma-12');
+        if (sendBtn) {
+            sendBtn.className = 'btn btn-primary rounded-circle shadow-lg';
+            const name = displayName.toLowerCase();
+            if (name.includes("gemini")) sendBtn.classList.add('btn-gemini-active');
+            else if (name.includes("27b")) sendBtn.classList.add('btn-gemma-27');
+        }
     }
 };
 
-// 4. Module lõi Chat
+// 5. Logic Ứng dụng chính (ChatApp)
 const ChatApp = {
     history: [],
     selectedBase64: null,
@@ -937,24 +956,28 @@ const ChatApp = {
         this.history = await StorageManager.getCurrentChat();
         this.renderHistory();
         this.setupEventListeners();
-        loadArchivedChats(); // Tải sidebar
+        this.loadSidebar();
+        
+        // Mặc định ngôn ngữ là tiếng Việt nếu chưa có
+        if (!localStorage.getItem(CONFIG.STORAGE_KEYS.LANG)) {
+            localStorage.setItem(CONFIG.STORAGE_KEYS.LANG, 'vi');
+        }
     },
 
     setupEventListeners() {
         const input = UIManager.elements.userInput;
-        input.addEventListener('input', () => {
-            input.style.height = 'auto';
-            input.style.height = input.scrollHeight + 'px';
+        input?.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = this.scrollHeight + 'px';
         });
 
-        input.addEventListener('keydown', (e) => {
+        input?.addEventListener('keydown', (e) => {
             if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
                 this.handleSend();
             }
         });
 
-        // Paste image hỗ trợ
         window.addEventListener('paste', e => {
             const item = e.clipboardData.items[0];
             if (item?.type.includes('image')) this.handleImageFile(item.getAsFile());
@@ -962,31 +985,13 @@ const ChatApp = {
     },
 
     async handleImageFile(file) {
-        if (!file) return;
         const reader = new FileReader();
         reader.onload = async (e) => {
-            this.selectedBase64 = await this.compressImage(e.target.result);
+            this.selectedBase64 = e.target.result;
             UIManager.elements.imgRender.src = this.selectedBase64;
             UIManager.elements.imgPreview.style.display = 'block';
         };
         reader.readAsDataURL(file);
-    },
-
-    compressImage(base64Str) {
-        return new Promise((resolve) => {
-            const img = new Image();
-            img.src = base64Str;
-            img.onload = () => {
-                const canvas = document.createElement('canvas');
-                const MAX_SIZE = 1280;
-                let { width, height } = img;
-                if (width > height && width > MAX_SIZE) { height *= MAX_SIZE / width; width = MAX_SIZE; }
-                else if (height > MAX_SIZE) { width *= MAX_SIZE / height; height = MAX_SIZE; }
-                canvas.width = width; canvas.height = height;
-                canvas.getContext('2d').drawImage(img, 0, 0, width, height);
-                resolve(canvas.toDataURL('image/jpeg', 0.6));
-            };
-        });
     },
 
     async handleSend() {
@@ -996,45 +1001,44 @@ const ChatApp = {
         this.isProcessing = true;
         UIManager.toggleLoader(true);
 
+        const currentLang = localStorage.getItem(CONFIG.STORAGE_KEYS.LANG) || 'vi';
+        const timestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
         const parts = [];
         if (text) parts.push({ text });
         if (this.selectedBase64) {
             parts.push({ inlineData: { mime_type: "image/jpeg", data: this.selectedBase64.split(',')[1] } });
         }
 
-        const userMsg = { 
-            role: 'user', 
-            parts, 
-            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) 
-        };
-
+        const userMsg = { role: 'user', parts, time: timestamp };
         this.history.push(userMsg);
+        
+        document.querySelector('.welcome-view')?.remove();
         renderMessage(userMsg);
         
-        // Clear inputs
+        // Reset Input
         UIManager.elements.userInput.value = '';
         UIManager.elements.userInput.style.height = 'auto';
         removeImage();
 
         try {
-            const res = await fetch(CONFIG.API_BASE, {
+            const response = await fetch(CONFIG.API_BASE, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     messages: this.history.slice(-CONFIG.MAX_HISTORY),
-                    user_lang: localStorage.getItem(CONFIG.STORAGE_KEYS.LANG) || 'vi'
+                    user_lang: currentLang // Gửi kèm ngôn ngữ để AI phản hồi
                 })
             });
 
-            const data = await res.json();
+            const data = await response.json();
             if (data.success) {
                 UIManager.updateModelBadge(data.provider);
                 const botMsg = {
                     role: 'model',
                     parts: [{ text: data.text }],
                     time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-                    searchMetadata: data.searchMetadata,
-                    provider: data.provider
+                    searchMetadata: data.searchMetadata
                 };
                 
                 this.history.push(botMsg);
@@ -1045,9 +1049,9 @@ const ChatApp = {
                 });
             }
         } catch (err) {
+            console.error(err);
             this.isProcessing = false;
             UIManager.toggleLoader(false);
-            console.error("API Error:", err);
         }
     },
 
@@ -1055,12 +1059,26 @@ const ChatApp = {
         UIManager.elements.chatWindow.innerHTML = '';
         if (this.history.length > 0) {
             document.querySelector('.welcome-view')?.remove();
-            this.history.forEach(msg => renderMessage(msg));
+            this.history.forEach(msg => renderMessage(msg, false));
         }
+        UIManager.scrollToBottom();
+    },
+
+    loadSidebar() {
+        const archived = StorageManager.getArchived();
+        const list = UIManager.elements.archivedList;
+        if (!list) return;
+
+        list.innerHTML = archived.length ? archived.map(s => `
+            <div class="chat-item" onclick="openArchived(${s.id})">
+                <i class="fa-solid fa-clock-rotate-left"></i>
+                <span class="text-truncate">Hội thoại ${new Date(s.id).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span>
+            </div>
+        `).join('') : '<div class="p-3 text-muted small opacity-50">Trống...</div>';
     }
 };
 
-// 5. Các hàm bổ trợ (Global Helpers)
+// 6. Hàm Render Tin Nhắn
 function renderMessage(msg, isNew = false, onComplete = null) {
     const isBot = msg.role === 'model' || msg.role === 'assistant';
     let text = "", imgSrc = null;
@@ -1070,27 +1088,25 @@ function renderMessage(msg, isNew = false, onComplete = null) {
         if (p.inlineData) imgSrc = typeof p.inlineData === 'string' ? p.inlineData : `data:${p.inlineData.mime_type};base64,${p.inlineData.data}`;
     });
 
-    const msgId = `msg-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`;
+    const msgId = `msg-${Date.now()}`;
     const div = document.createElement('div');
     div.className = `msg-box ${isBot ? 'bot-msg' : 'user-msg'}`;
-    div.id = msgId;
+    
+    const searchIcon = (isBot && msg.searchMetadata) ? `<div class="searching-status mb-2" style="color:var(--primary); font-size:13px; font-style:italic;"><i class="fa-solid fa-magnifying-glass fa-beat-fade me-2"></i>Đang truy xuất thông tin...</div>` : '';
 
     div.innerHTML = `
         <div class="msg-avatar" style="background:${isBot ? 'var(--primary)' : 'var(--secondary)'}">
             ${isBot ? '<img src="https://abcsnoob.github.io/assets/image/abcsnoob.webp" style="width:100%; height:100%; border-radius:14px; object-fit:cover">' : 'U'}
         </div>
         <div class="msg-content-wrapper">
-            <div class="msg-header">
-                <span class="fw-bold">${isBot ? "ABC'S NOOB AI" : "ME"}</span>
-                <span class="msg-time">${msg.time || ''}</span>
-            </div>
+            <div class="msg-header"><span class="fw-bold">${isBot ? "ABC'S NOOB AI" : "BẠN"}</span><span class="msg-time">${msg.time || ''}</span></div>
             ${imgSrc ? `<div class="msg-img-wrapper"><img src="${imgSrc}" onclick="window.open(this.src)"></div>` : ''}
             <div class="msg-text">
-                ${isBot && msg.searchMetadata ? `<div class="searching-status mb-2" style="color:var(--primary); font-size:13px; font-style:italic;"><i class="fa-solid fa-magnifying-glass fa-beat-fade me-2"></i>Đang tìm trên web...</div>` : ''}
+                ${searchIcon}
                 <div class="text-body-content"></div>
                 <div class="msg-actions">
-                    <button class="action-btn" onclick="copyText(this, \`${encodeURIComponent(text)}\`)"><i class="fa-regular fa-copy me-1"></i> Copy</button>
-                    <button class="action-btn" onclick="toggleFocusMode('${msgId}')"><i class="fa-solid fa-expand me-1"></i> Focus</button>
+                    <button class="action-btn" onclick="copyText(this, \`${encodeURIComponent(text)}\`)"><i class="fa-regular fa-copy"></i></button>
+                    <button class="action-btn" onclick="toggleFocusMode('${msgId}')"><i class="fa-solid fa-expand"></i></button>
                 </div>
             </div>
         </div>`;
@@ -1098,15 +1114,15 @@ function renderMessage(msg, isNew = false, onComplete = null) {
     UIManager.elements.chatWindow.appendChild(div);
     const body = div.querySelector('.text-body-content');
 
-    if (isBot && isNew && text) {
+    if (isBot && isNew) {
         let i = 0;
         body.style.whiteSpace = "pre-wrap";
-        const interval = setInterval(() => {
+        const timer = setInterval(() => {
             if (i < text.length) {
                 body.textContent += text.charAt(i++);
                 UIManager.scrollToBottom();
             } else {
-                clearInterval(interval);
+                clearInterval(timer);
                 body.style.whiteSpace = "normal";
                 body.innerHTML = marked.parse(text);
                 Prism.highlightAllUnder(div);
@@ -1121,62 +1137,24 @@ function renderMessage(msg, isNew = false, onComplete = null) {
     UIManager.scrollToBottom();
 }
 
-function removeImage() {
-    ChatApp.selectedBase64 = null;
-    UIManager.elements.imgPreview.style.display = 'none';
-    UIManager.elements.imgRender.src = '';
+// 7. Global Helpers
+function handleSendMessage() { ChatApp.handleSend(); }
+function removeImage() { ChatApp.selectedBase64 = null; UIManager.elements.imgPreview.style.display = 'none'; }
+function copyText(btn, encoded) { 
+    navigator.clipboard.writeText(decodeURIComponent(encoded)); 
+    btn.innerHTML = '✅'; setTimeout(() => btn.innerHTML = '<i class="fa-regular fa-copy"></i>', 2000); 
+}
+function setLanguage(lang) {
+    localStorage.setItem(CONFIG.STORAGE_KEYS.LANG, lang);
+    alert('AI sẽ trả lời bằng: ' + (lang === 'vi' ? 'Tiếng Việt' : 'English'));
+}
+function toggleSidebar() {
+    document.getElementById('sidebar').classList.toggle('active');
+    document.getElementById('main-content').classList.toggle('shifted');
 }
 
-function copyText(btn, encoded) {
-    navigator.clipboard.writeText(decodeURIComponent(encoded)).then(() => {
-        const icon = btn.innerHTML;
-        btn.innerHTML = '✅ Done!';
-        setTimeout(() => btn.innerHTML = icon, 2000);
-    });
-}
-
-function toggleFocusMode(id) {
-    const el = document.getElementById(id);
-    if (!el) return;
-    const overlay = document.createElement('div');
-    overlay.className = 'focus-mode';
-    overlay.innerHTML = `<button class="btn btn-danger btn-close-focus" onclick="this.parentElement.remove()"><i class="fa-solid fa-xmark"></i></button>`;
-    const clone = el.cloneNode(true);
-    clone.querySelector('.msg-actions').remove();
-    overlay.appendChild(clone);
-    document.body.appendChild(overlay);
-    Prism.highlightAllUnder(clone);
-}
-
-// Khởi chạy khi DOM sẵn sàng
+// KHỞI CHẠY
 document.addEventListener('DOMContentLoaded', () => ChatApp.init());
-
-/** * Các hàm UI Sidebar giữ nguyên logic cũ nhưng bọc lại gọn hơn 
- */
-async function loadArchivedChats() {
-    const archived = StorageManager.getArchived();
-    const list = UIManager.elements.archivedList;
-    if (!list) return;
-
-    list.innerHTML = archived.length ? archived.map(s => `
-        <div class="chat-item" onclick="openArchived(${s.id})" id="archived-${s.id}">
-            <i class="fa-solid fa-clock text-secondary"></i>
-            <span class="text-truncate">Hội thoại ${new Date(s.id).toLocaleString('vi-VN')}</span>
-        </div>
-    `).join('') : '<p class="small text-muted px-3 py-2 opacity-50">Trống...</p>';
-}
-
-async function startNewChat() {
-    if (!ChatApp.history.length) return;
-    const archived = StorageManager.getArchived();
-    archived.unshift({ id: Date.now(), timestamp: new Date().toISOString(), history: [...ChatApp.history] });
-    StorageManager.saveArchived(archived);
-    
-    ChatApp.history = [];
-    await StorageManager.saveCurrentChat([]);
-    ChatApp.renderHistory();
-    loadArchivedChats();
-}
   </script>
 </body>
 
