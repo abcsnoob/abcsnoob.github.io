@@ -443,6 +443,16 @@ window.addEventListener('drop', e => {
 window.addEventListener('dragend', () => overlay.style.display = 'none');
 
 </script>
+<div id="changelog-overlay" class="noob-overlay">
+    <div class="noob-card text-white">
+        <h3 class="mb-4"><i class="fa-solid fa-rocket me-2 text-primary"></i>Nhật ký cập nhật</h3>
+        <div style="max-height: 400px; overflow-y: auto;">
+            <ul class="list-unstyled">
+                </ul>
+        </div>
+        <button class="btn btn-outline-primary w-100 mt-3" onclick="document.getElementById('changelog-overlay').style.display='none'">Đóng</button>
+    </div>
+</div>
 <body>
  <aside id="sidebar">
     <div class="brand-section">
@@ -479,9 +489,9 @@ window.addEventListener('dragend', () => overlay.style.display = 'none');
         <div class="chat-item btn-chat-use">
             <i class="fa-solid fa-circle-info text-info"></i> <span>Cách dùng</span>
         </div>
-        <div class="chat-item" onclick="loadData()">
-            <i class="fa-solid fa-sync text-success"></i> <span>Đồng bộ</span>
-        </div>
+<div class="chat-item" onclick="showChangelog()">
+    <i class="fa-solid fa-list-check text-primary"></i> <span>Changelog</span>
+</div>
     </div>
 </aside>
  <main id="main-content">
@@ -579,6 +589,38 @@ async function compressImage(base64Str) {
             resolve(canvas.toDataURL('image/jpeg', 0.6)); // Nén 40% chất lượng
         };
     });
+}
+const CHANGELOG_DATA = [
+    {
+        version: "v2.1.0",
+        date: "09/01/2026",
+        title: "Nâng cấp hệ thống lưu trữ",
+        items: [
+            "Chuyển đổi từ localStorage sang localForage (IndexedDB).",
+            "Tối ưu hóa ghi dữ liệu bất đồng bộ cho hiệu năng cao.",
+            "Hỗ trợ lưu trực tiếp Object/Array không cần stringify.",
+            "Tiện thể thêm trang changelog này."
+        ]
+    }
+];
+function showChangelog() {
+    const listContainer = document.querySelector('#changelog-overlay .list-unstyled');
+    
+    // Render từ mảng JSON
+    listContainer.innerHTML = CHANGELOG_DATA.map(log => `
+        <li class="mb-4 border-bottom border-secondary pb-3">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <span class="badge bg-primary">${log.version}</span>
+                <small class="text-muted">${log.date}</small>
+            </div>
+            <h6 class="text-info fw-bold">${log.title}</h6>
+            <ul class="small text-muted ps-3">
+                ${log.items.map(item => `<li>${item}</li>`).join('')}
+            </ul>
+        </li>
+    `).join('');
+
+    document.getElementById('changelog-overlay').style.display = 'flex';
 }
 
 function toggleHistory() {
