@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap" rel="stylesheet">
-
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/localforage/1.10.0/localforage.min.js"></script>
     <style>
         /* Nút tiện ích cho tin nhắn */
 .msg-actions {
@@ -558,7 +558,7 @@ window.addEventListener('dragend', () => overlay.style.display = 'none');
 
  <script>
     const API_BASE = 'https://abcsnoobai.abcsnoob.workers.dev';
-    let currentChatHistory = JSON.parse(localStorage.getItem('noob_chat_history')) || [];
+  let currentChatHistory = []; // Khởi tạo rỗng trước
     let activeGroupId = null;
     let selectedBase64 = null;
 
@@ -884,7 +884,8 @@ async function handleSendMessage() {
             });
             
             currentChatHistory.push(botMsg);
-            localStorage.setItem('noob_chat_history', JSON.stringify(currentChatHistory));
+            // Thay vì JSON.stringify, bác quăng thẳng mảng vào luôn
+await localforage.setItem('noob_chat_history', currentChatHistory);
         } else {
             throw new Error(d.error || "Server gank team thất bại");
         }
@@ -1019,41 +1020,37 @@ async function handleImage(input) {
     reader.readAsDataURL(file);
 }
 
-    function startNewChat() {
-        if(!currentChatHistory.length) return;
-        const archivedChats = JSON.parse(localStorage.getItem('noob_archived_chats') || '[]');
-        archivedChats.push({ id: Date.now(), timestamp: new Date().toISOString(), history: currentChatHistory });
-        localStorage.setItem('noob_archived_chats', JSON.stringify(archivedChats));
-        currentChatHistory = [];
-        localStorage.removeItem('noob_chat_history');
-        loadArchivedChats();
-        switchToCurrentChat();
-    }
-
-    function clearChat() {
-        if(confirm("Xóa toàn bộ tin nhắn trên màn hình?")) {
-            document.getElementById('chat-window').innerHTML = '';
-            if(!activeGroupId) { currentChatHistory = []; localStorage.removeItem('noob_chat_history'); }
-        }
-    }
+async function startNewChat() {
+    if(!currentChatHistory.length) return;
+    const archivedChats = await localforage.getItem('noob_archived_chats') || [];
+    archivedChats.push({ id: Date.now(), timestamp: new Date().toISOString(), history: currentChatHistory });
+    
+    await localforage.setItem('noob_archived_chats', archivedChats);
+    currentChatHistory = [];
+    await localforage.removeItem('noob_chat_history');
+    
+    loadArchivedChats();
+    switchToCurrentChat();
+}
 
     function changeLanguage() {
         const lang = prompt("Nhập ngôn ngữ (vi, en, jp, kr):", localStorage.getItem('noob_lang') || 'vi');
         if(lang) { localStorage.setItem('noob_lang', lang); alert("Đã đổi sang: " + lang.toUpperCase()); }
     }
 
-function loadData() {
+async function loadData() {
+    // Đợi localForage lấy dữ liệu ra
+    currentChatHistory = await localforage.getItem('noob_chat_history') || [];
+    
     document.querySelector('.welcome-view')?.remove();
     const win = document.getElementById('chat-window');
     win.innerHTML = ''; 
 
     if(currentChatHistory.length > 0){
-        // isNew mặc định là false -> hiện chữ ngay lập tức
         currentChatHistory.forEach(msg => renderMessage(msg, false)); 
     }
     loadArchivedChats();
 }
-
 
     window.onload = loadData;
 
