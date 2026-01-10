@@ -937,15 +937,15 @@ async function openArchived(sessionId) {
 
 
 async function handleSendMessage() {
-    // 1. CHẶN GỬI KHI ĐANG BẬN: Tránh spam làm sập luồng
+    // 1. CHẶN GỬI KHI ĐANG BẬN
     if (isTyping) return;
 
     const input = document.getElementById('user-input');
-    const sendBtn = document.getElementById('send-btn'); // Ưu tiên dùng ID cho chuẩn
+    const sendBtn = document.getElementById('send-btn');
     const topLoader = document.getElementById('top-loader-container');
+    const win = document.getElementById('chat-window');
     const text = input.value.trim();
     
-    // Nếu không có text và cũng không có ảnh thì nghỉ
     if (!text && !selectedBase64) return;
 
     // --- BẬT HIỆU ỨNG LOADING ---
@@ -959,23 +959,44 @@ async function handleSendMessage() {
     const timestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     const userParts = [];
     
-    // Đóng gói dữ liệu gửi đi (Sửa mimeType cho đúng chuẩn Gemini)
     if (text) userParts.push({ text });
     if (selectedBase64) {
         userParts.push({ 
             inlineData: { 
-                mimeType: "image/jpeg", // Sửa từ mime_type -> mimeType
+                mimeType: "image/jpeg",
                 data: selectedBase64.split(',')[1] 
             } 
         });
     }
 
-    // Render tin nhắn của User lên màn hình
+    // Render tin nhắn của User
     const msgObj = { role: 'user', parts: userParts, time: timestamp };
     currentChatHistory.push(msgObj);
     renderMessage(msgObj, false);
 
-    // Reset input và ảnh preview ngay sau khi gửi để tạo cảm giác mượt
+    // --- TẠO PHẢN HỒI PLACEHOLDER (ĐANG NHẬP...) ---
+    const placeholderId = 'typing-' + Date.now();
+    const placeholderDiv = document.createElement('div');
+    placeholderDiv.className = 'msg-box bot-msg';
+    placeholderDiv.id = placeholderId;
+    placeholderDiv.innerHTML = `
+        <div class="msg-avatar" style="background:var(--primary)">
+            <img src="https://abcsnoob.github.io/assets/image/abcsnoob.webp" style="width:100%; height:100%; border-radius:14px; object-fit:cover">
+        </div>
+        <div class="msg-content-wrapper">
+            <div class="msg-header">
+                <span class="fw-bold">Abc's Noob AI</span>
+            </div>
+            <div class="msg-text" style="display: flex; align-items: center; gap: 10px; width: fit-content;">
+                <div class="typing-loader"><span></span><span></span><span></span></div>
+                <small style="opacity: 0.6; font-style: italic;">Đang nhập . . .</small>
+            </div>
+        </div>
+    `;
+    win.appendChild(placeholderDiv);
+    win.scrollTop = win.scrollHeight;
+
+    // Reset input
     input.value = '';
     input.style.height = 'auto';
     if (typeof removeImage === 'function') removeImage();
@@ -990,11 +1011,14 @@ async function handleSendMessage() {
             }) 
         });
         
+        // --- XÓA PLACEHOLDER KHI CÓ PHẢN HỒI ---
+        const placeholder = document.getElementById(placeholderId);
+        if (placeholder) placeholder.remove();
+
         if (!res.ok) throw new Error(`Server báo lỗi ${res.status}`);
         const d = await res.json();
         
         if (d.success) {
-            // Cập nhật Badge Model nếu có hàm hỗ trợ
             if (d.provider && typeof updateProviderUI === 'function') {
                 updateProviderUI(d.provider);
             }
@@ -1007,9 +1031,7 @@ async function handleSendMessage() {
                 provider: d.provider 
             };
 
-            // Render tin nhắn Bot với hiệu ứng gõ chữ
             renderMessage(botMsg, true, () => {
-                // KHI GÕ CHỮ XONG: Mở khóa hoàn toàn
                 isTyping = false;
                 if (topLoader) topLoader.style.display = 'none';
                 if (sendBtn) {
@@ -1025,6 +1047,10 @@ async function handleSendMessage() {
             throw new Error(d.error || "AI bị gank bất ngờ");
         }
     } catch (e) {
+        // Xóa placeholder nếu lỗi
+        const placeholder = document.getElementById(placeholderId);
+        if (placeholder) placeholder.remove();
+
         console.error("Lỗi kết nối:", e);
         const errorMsg = {
             role: 'model',
@@ -1033,7 +1059,6 @@ async function handleSendMessage() {
         };
         renderMessage(errorMsg, false);
         
-        // GIẢI PHÓNG KHI LỖI: Tránh bị kẹt vĩnh viễn
         isTyping = false;
         if (topLoader) topLoader.style.display = 'none';
         if (sendBtn) {
