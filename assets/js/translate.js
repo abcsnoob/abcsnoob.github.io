@@ -48,8 +48,6 @@
         if (targetLang !== 'vi') await translateNewNodes(document.body);
         
         const observer = new MutationObserver((mutations) => {
-            // Mỗi khi có nội dung mới: Cập nhật link an toàn & dịch text
-            wrapExternalLinks(); 
             
             if (targetLang !== 'vi') {
                 mutations.forEach(mutation => {
@@ -116,7 +114,7 @@
     }
 
     async function fetchWithRetry(text, target, retries = 2) {
-        const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=vi&tl=${target}&dt=t&q=${encodeURIComponent(text)}`;
+        const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=${target}&dt=t&q=${encodeURIComponent(text)}`;
         for (let i = 0; i < retries; i++) {
             try {
                 const res = await fetch(url);
