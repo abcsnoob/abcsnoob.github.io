@@ -544,7 +544,7 @@ window.addEventListener('dragend', () => overlay.style.display = 'none');
         </button>
     </nav>
 
-    <section id="chat-window">
+    <section class="notranslate" id="chat-window">
         <div class="text-center py-5 mt-5 welcome-view">
             <div class="logo-box mx-auto mb-4" style="width:80px; height:80px"><i class="fa-solid fa-ghost fs-1 text-white"></i></div>
             <h1 class="display-5 fw-800 mb-3">Chào ông giáo!</h1>
@@ -552,7 +552,7 @@ window.addEventListener('dragend', () => overlay.style.display = 'none');
         </div>
     </section>
 
-    <div class="input-floating-area">
+    <div class="input-floating-area notranslate">
         <div id="image-preview-container" class="mb-3">
             <div class="position-relative d-inline-block">
                 <img id="img-render" style="height:100px; border-radius:18px; border:2px solid var(--primary); object-fit: cover;">
@@ -560,7 +560,7 @@ window.addEventListener('dragend', () => overlay.style.display = 'none');
             </div>
         </div>
         
-<div class="input-glass-box">
+<div class="input-glass-box notranslate">
     <input type="file" id="file-hidden" hidden accept="image/*" onchange="handleImage(this)">
     
     <button class="btn btn-link text-muted p-0 me-2" onclick="document.getElementById('file-hidden').click()" title="Tải ảnh lên">
@@ -610,6 +610,7 @@ window.addEventListener('dragend', () => overlay.style.display = 'none');
 
  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
  <script src="/assets/js/prism.js"></script>
+    <script src="/assets/js/translate.js"></script>
 
  <script>
     const API_BASE = 'https://abcsnoobai.abcsnoob.workers.dev';
@@ -637,7 +638,14 @@ async function compressImage(base64Str) {
     });
 }
 const CHANGELOG_DATA = [
-
+    {
+        version: "v2.2.5",
+        date: "09/01/2026",
+        title: "Thêm ngôn ngữ",
+        items: [
+            "Thêm đa ngôn ngữ vào."
+        ]
+    },
     {
         version: "v2.2.1-hotfix",
         date: "09/01/2026",
