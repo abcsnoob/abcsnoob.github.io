@@ -1,35 +1,39 @@
 (function() {
-    // 1. CẤU HÌNH HỆ THỐNG;
+    // --- 1. CẤU HÌNH HỆ THỐNG ---
     const CURRENT_DOMAIN = window.location.hostname;
-const supportedLangs = {
-    "af": "Afrikaans", "ak": "Akan", "sq": "Shqip", "am": "አማርኛ", "ar": "العربية",
-    "hy": "Հայերեն", "as": "অসমীয়া", "ay": "Aymar aru", "az": "Azərbaycan", "bm": "Bamanankan",
-    "eu": "Euskara", "be": "Беларуская", "bn": "বাংলা", "bho": "भोजपुरी", "bs": "Bosanski",
-    "bg": "Български", "ca": "Català", "ceb": "Binisaya", "ny": "Chichewa", "zh": "中文 (Zhōngwén)",
-    "zh-TW": "繁體中文 (Zhōngwén)", "co": "Corsu", "hr": "Hrvatski", "cs": "Čeština", "da": "Dansk",
-    "dv": "ދިވެހި", "doi": "डोगरी", "nl": "Nederlands", "en": "English", "eo": "Esperanto",
-    "et": "Eesti", "ee": "Eʋegbe", "tl": "Filipino", "fi": "Suomi", "fr": "Français",
-    "fy": "Frysk", "gl": "Galego", "ka": "ქართული", "de": "Deutsch", "el": "Ελληνικά",
-    "gn": "Guarani", "gu": "ગુજરાતી", "ht": "Kreyòl Ayisyen", "ha": "Hausa", "haw": "Ōlelo Hawaiʻi",
-    "iw": "עברית", "hi": "हिन्दी", "hmn": "Hmoob", "hu": "Magyar", "is": "Íslenska",
-    "ig": "Igbo", "ilo": "Ilokano", "id": "Bahasa Indonesia", "ga": "Gaeilge", "it": "Italiano",
-    "ja": "日本語", "jw": "Basa Jawa", "kn": "ಕನ್ನಡ", "kk": "Қазақ тілі", "km": "ភាសាខ្មែរ",
-    "rw": "Kinyarwanda", "gom": "कोंकणी", "ko": "한국어", "kri": "Krio", "ku": "Kurdî (Kurmanjî)",
-    "ckb": "Kurdî (Soranî)", "ky": "Кыргызча", "lo": "ພາສາລາວ", "la": "Latina", "lv": "Latviešu",
-    "ln": "Lingála", "lt": "Lietuvių", "lg": "Luganda", "lb": "Lëtzebuergesch", "mk": "Македонски",
-    "mai": "मैथिली", "mg": "Malagasy", "ms": "Bahasa Melayu", "ml": "മലയാളം", "mt": "Malti",
-    "mi": "Te Reo Māori", "mr": "मराठी", "mni-Mtei": "Meiteilon (Manipuri)", "lus": "Mizo", "mn": "Монгол",
-    "my": "မြန်မာစာ", "ne": "नेपाली", "no": "Norsk", "or": "Odia (Oriya)", "om": "Oromoo",
-    "ps": "پښتو", "fa": "فارسی", "pl": "Polski", "pt": "Português", "pa": "ਪੰਜਾਬੀ",
-    "qu": "Runasimi", "ro": "Română", "ru": "Русский", "sm": "Gagana Samoa", "sa": "संस्कृतम्",
-    "gd": "Gàidhlig", "nso": "Sepedi", "sr": "Српски", "st": "Sesotho", "sn": "Chishona",
-    "sd": "سنڌي", "si": "සිංහල", "sk": "Slovenčina", "sl": "Slovenščina", "so": "Soomaali",
-    "es": "Español", "su": "Basa Sunda", "sw": "Kiswahili", "sv": "Svenska", "tg": "Тоҷикӣ",
-    "ta": "தமிழ்", "tt": "Татар", "te": "తెలుగు", "th": "ไทย", "ti": "ትግርኛ",
-    "ts": "Xitsonga", "tr": "Türkçe", "tk": "Türkmençe", "ak": "Twi", "uk": "Українська",
-    "ur": "اردو", "ug": "ئۇيغۇرچە", "uz": "Oʻzbek", "vi": "Tiếng Việt", "cy": "Cymraeg",
-    "xh": "IsiXhosa", "yi": "ייִדיש", "yo": "Yorùbá", "zu": "IsiZulu"
-};
+    
+    // Danh sách các ngôn ngữ viết từ phải sang trái (RTL)
+    const rtlLangs = ['ar', 'dv', 'fa', 'ha', 'he', 'iw', 'ks', 'ku', 'ps', 'sd', 'ur', 'yi', 'ug', 'ckb'];
+
+    const supportedLangs = {
+        "af": "Afrikaans", "ak": "Akan", "sq": "Shqip", "am": "አማርኛ", "ar": "العربية",
+        "hy": "Հայերên", "as": "অসমীয়া", "ay": "Aymar aru", "az": "Azərbaycan", "bm": "Bamanankan",
+        "eu": "Euskara", "be": "Беларуская", "bn": "বাংলা", "bho": "भोजपुरी", "bs": "Bosanski",
+        "bg": "Български", "ca": "Català", "ceb": "Binisaya", "ny": "Chichewa", "zh": "中文 (Zhōngwén)",
+        "zh-TW": "繁體中文 (Zhōngwén)", "co": "Corsu", "hr": "Hrvatski", "cs": "Čeština", "da": "Dansk",
+        "dv": "ދިވެހި", "doi": "डोगरी", "nl": "Nederlands", "en": "English", "eo": "Esperanto",
+        "et": "Eesti", "ee": "Eʋegbe", "tl": "Filipino", "fi": "Suomi", "fr": "Français",
+        "fy": "Frysk", "gl": "Galego", "ka": "ქართული", "de": "Deutsch", "el": "Ελληνικά",
+        "gn": "Guarani", "gu": "ગુજરાતી", "ht": "Kreyòl Ayisyen", "ha": "Hausa", "haw": "Ōlelo Hawaiʻi",
+        "iw": "עברית", "hi": "हिन्दी", "hmn": "Hmoob", "hu": "Magyar", "is": "Íslenska",
+        "ig": "Igbo", "ilo": "Ilokano", "id": "Bahasa Indonesia", "ga": "Gaeilge", "it": "Italiano",
+        "ja": "日本語", "jw": "Basa Jawa", "kn": "ಕನ್ನಡ", "kk": "Қазақ тілі", "km": "ភាសាខ្មែរ",
+        "rw": "Kinyarwanda", "gom": "कोंकणी", "ko": "한국어", "kri": "Krio", "ku": "Kurdî (Kurmanjî)",
+        "ckb": "Kurdî (Soranî)", "ky": "Кыргызча", "lo": "ພາສາລາວ", "la": "Latina", "lv": "Latviešu",
+        "ln": "Lingála", "lt": "Lietuvių", "lg": "Luganda", "lb": "Lëtzebuergesch", "mk": "Македонски",
+        "mai": "मैथिली", "mg": "Malagasy", "ms": "Bahasa Melayu", "ml": "മലയാളം", "mt": "Malti",
+        "mi": "Te Reo Māori", "mr": "मরাठी", "mni-Mtei": "Meiteilon (Manipuri)", "lus": "Mizo", "mn": "Монгол",
+        "my": "မြန်မာစာ", "ne": "नेपाली", "no": "Norsk", "or": "Odia (Oriya)", "om": "Oromoo",
+        "ps": "پښتو", "fa": "فارسی", "pl": "Polski", "pt": "Português", "pa": "ਪੰਜਾਬੀ",
+        "qu": "Runasimi", "ro": "Română", "ru": "Русский", "sm": "Gagana Samoa", "sa": "संस्कृतम्",
+        "gd": "Gàidhlig", "nso": "Sepedi", "sr": "Српски", "st": "Sesotho", "sn": "Chishona",
+        "sd": "سنڌي", "si": "සිංහල", "sk": "Slovenčina", "sl": "Slovenščina", "so": "Soomaali",
+        "es": "Español", "su": "Basa Sunda", "sw": "Kiswahili", "sv": "Svenska", "tg": "Тоҷикӣ",
+        "ta": "தமிழ்", "tt": "Татар", "te": "తెలుగు", "th": "ไทย", "ti": "ትግርኛ",
+        "ts": "Xitsonga", "tr": "Türkçe", "tk": "Türkmençe", "uk": "Українська",
+        "ur": "اردو", "ug": "ئۇيغۇرچە", "uz": "Oʻzbek", "vi": "Tiếng Việt", "cy": "Cymraeg",
+        "xh": "IsiXhosa", "yi": "ייִדיש", "yo": "Yorùbá", "zu": "IsiZulu"
+    };
 
     let targetLang = 'vi';
 
@@ -43,29 +47,51 @@ const supportedLangs = {
         }
         localStorage.setItem('user_lang', targetLang);
 
+        // Kích hoạt logic RTL nếu cần
+        applyRTLLogic(targetLang);
+
         // Kích hoạt UI
         injectProfessionalDropdown(supportedLangs, targetLang);
         injectAIButton();
         setupTrollCopy(); 
         
-        // Quét link ngay lập tức
-
-        // Kích hoạt bộ máy quan sát (Observer)
+        // Kích hoạt bộ máy dịch thuật
         startMasterProcess();
     };
 
-    // --- 2. LOGIC SAFETY URL (CHÈN TIỀN TỐ CHO LINK NGOÀI) ---
-
-    // --- 3. LOGIC DỊCH THUẬT & QUAN SÁT THAY ĐỔI (OBSERVER) ---
-    const startMasterProcess = async () => {
-        if (targetLang !== 'vi') showTranslateToast(true);
-        
-        // Dịch toàn bộ trang hiện tại
-        if (targetLang !== 'vi') await translateNewNodes(document.body);
-        
-        const observer = new MutationObserver((mutations) => {
+    // --- 2. LOGIC RTL (HƯỚNG CHỮ PHẢI SANG TRÁI) ---
+    function applyRTLLogic(lang) {
+        if (rtlLangs.includes(lang)) {
+            document.documentElement.dir = "rtl";
+            document.body.classList.add('rtl-mode');
             
-            if (targetLang !== 'vi') {
+            const rtlStyle = document.createElement('style');
+            rtlStyle.id = 'rtl-fix-style';
+            rtlStyle.innerHTML = `
+                /* Đảo ngược vị trí Dropdown ngôn ngữ */
+                .rtl-mode #notranslate-picker { right: auto !important; left: 25px !important; }
+                /* Đảo ngược vị trí nút AI và Sidebar */
+                .rtl-mode #ai-btn { right: auto !important; left: 200px !important; flex-direction: row-reverse; }
+                .rtl-mode #ai-sidebar { right: auto !important; left: -100% !important; border-left: none !important; border-right: 1px solid #eee; }
+                .rtl-mode #ai-sidebar.open { left: 0 !important; }
+                @media (max-width: 600px) {
+                    .rtl-mode #ai-btn { left: 80px !important; }
+                }
+            `;
+            document.head.appendChild(rtlStyle);
+        } else {
+            document.documentElement.dir = "ltr";
+            document.body.classList.remove('rtl-mode');
+        }
+    }
+
+    // --- 3. LOGIC DỊCH THUẬT & OBSERVER ---
+    const startMasterProcess = async () => {
+        if (targetLang !== 'vi') {
+            showTranslateToast(true);
+            await translateNewNodes(document.body);
+            
+            const observer = new MutationObserver((mutations) => {
                 mutations.forEach(mutation => {
                     if (mutation.addedNodes.length > 0) {
                         mutation.addedNodes.forEach(node => {
@@ -78,11 +104,11 @@ const supportedLangs = {
                         translateNewNodes(mutation.target.parentElement);
                     }
                 });
-            }
-        });
+            });
 
-        observer.observe(document.body, { childList: true, subtree: true, characterData: true });
-        if (targetLang !== 'vi') setTimeout(() => showTranslateToast(false), 2500);
+            observer.observe(document.body, { childList: true, subtree: true, characterData: true });
+            setTimeout(() => showTranslateToast(false), 2500);
+        }
     };
 
     async function translateNewNodes(rootNode) {
@@ -143,7 +169,7 @@ const supportedLangs = {
         }
     }
 
-    // --- 4. HỆ THỐNG BẢO VỆ BẢN QUYỀN (TROLL COPY) ---
+    // --- 4. HỆ THỐNG BẢO VỆ BẢN QUYỀN ---
     const setupTrollCopy = () => {
         document.addEventListener('copy', async (event) => {
             event.preventDefault(); 
@@ -157,16 +183,14 @@ const supportedLangs = {
             if (event.clipboardData) {
                 event.clipboardData.setData('text/plain', `⚠️ ${finalClip}`);
             }
-            console.warn("Copyright protected.");
         });
     };
 
     // --- 5. GIAO DIỆN (UI INJECTION) ---
-function injectAIButton() {
+    function injectAIButton() {
         if (document.getElementById('ai-sidebar')) return;
         const style = document.createElement('style');
         style.innerHTML = `
-            /* Sidebar mặc định: Rộng 500px trên máy tính, 100% trên điện thoại */
             #ai-sidebar { 
                 position: fixed; top: 0; right: -100%; 
                 width: 500px; max-width: 100%; height: 100%; 
@@ -175,26 +199,10 @@ function injectAIButton() {
                 border-left: 1px solid #eee; display: flex; flex-direction: column; 
             }
             #ai-sidebar.open { right: 0; }
-            
-            /* Chế độ mở rộng toàn màn hình */
             #ai-sidebar.expanded { width: 85vw !important; }
-
-            #ai-header { 
-                padding: 12px 15px; border-bottom: 1px solid #eee; 
-                display: flex; justify-content: space-between; align-items: center;
-                background: #f8f9fa;
-            }
-
+            #ai-header { padding: 12px 15px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; background: #f8f9fa; }
             .ai-controls { display: flex; gap: 10px; align-items: center; }
-            
-            .ai-ctrl-btn { 
-                border: none; background: none; cursor: pointer; 
-                font-size: 18px; color: #666; padding: 5px; 
-                display: flex; align-items: center; justify-content: center;
-                transition: color 0.2s;
-            }
-            .ai-ctrl-btn:hover { color: #0078d4; }
-
+            .ai-ctrl-btn { border: none; background: none; cursor: pointer; font-size: 18px; color: #666; display: flex; align-items: center; justify-content: center; }
             #ai-btn { 
                 position: fixed; bottom: 25px; right: 200px; z-index: 1000000; 
                 background: #0078d4; color: white; border: none; padding: 10px 20px; 
@@ -202,14 +210,11 @@ function injectAIButton() {
                 font-weight: 600; display: flex; align-items: center; gap: 8px; 
                 box-shadow: 0 4px 15px rgba(0,120,212,0.3); transition: all 0.2s; 
             }
-            #ai-btn:hover { background: #005a9e; transform: translateY(-2px); }
             #ai-iframe { border: none; flex-grow: 1; width: 100%; height: 100%; }
-
-            /* Mobile optimization */
             @media (max-width: 600px) {
                 #ai-sidebar { width: 100% !important; }
                 #ai-btn { right: 80px; bottom: 20px; padding: 10px; }
-                #ai-btn span { display: none; } /* Ẩn chữ AI chỉ hiện icon trên mobile */
+                #ai-btn span { display: none; }
             }
         `;
         document.head.appendChild(style);
@@ -224,10 +229,10 @@ function injectAIButton() {
                     <span style="font-weight:bold; font-family:sans-serif; color:#333;">Noob AI Assistant</span>
                 </div>
                 <div class="ai-controls">
-                    <button title="Phóng to/Thu nhỏ" class="ai-ctrl-btn" onclick="document.getElementById('ai-sidebar').classList.toggle('expanded')">
+                    <button class="ai-ctrl-btn" onclick="document.getElementById('ai-sidebar').classList.toggle('expanded')">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
                     </button>
-                    <button title="Đóng" class="ai-ctrl-btn" onclick="document.getElementById('ai-sidebar').classList.remove('open')" style="font-size:24px;">×</button>
+                    <button class="ai-ctrl-btn" onclick="document.getElementById('ai-sidebar').classList.remove('open')" style="font-size:24px;">×</button>
                 </div>
             </div>
             <iframe id="ai-iframe" src="/chat/chat-iframe.html"></iframe>
@@ -236,10 +241,7 @@ function injectAIButton() {
         const btn = document.createElement('button');
         btn.id = 'ai-btn';
         btn.className = 'notranslate';
-        btn.innerHTML = `
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.48 2 12c0 1.61.38 3.12 1.05 4.47L2 22l5.53-1.05C8.88 21.62 10.39 22 12 22c5.52 0 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
-            <span>Chat với Noob AI</span>
-        `;
+        btn.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.48 2 12c0 1.61.38 3.12 1.05 4.47L2 22l5.53-1.05C8.88 21.62 10.39 22 12 22c5.52 0 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg><span>Chat với Noob AI</span>`;
         btn.onclick = () => sidebar.classList.toggle('open');
 
         document.body.appendChild(sidebar);
@@ -295,7 +297,6 @@ function injectAIButton() {
         }
     }
 
-    // KHỞI CHẠY
     if (document.readyState === "complete" || document.readyState === "interactive") {
         init();
     } else {
