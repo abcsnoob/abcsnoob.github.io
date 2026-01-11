@@ -1,7 +1,6 @@
 (function() {
     // 1. CẤU HÌNH HỆ THỐNG;
     const CURRENT_DOMAIN = window.location.hostname;
-    
 const supportedLangs = {
     "af": "Afrikaans", "ak": "Akan", "sq": "Shqip", "am": "አማርኛ", "ar": "العربية",
     "hy": "Հայերեն", "as": "অসমীয়া", "ay": "Aymar aru", "az": "Azərbaycan", "bm": "Bamanankan",
