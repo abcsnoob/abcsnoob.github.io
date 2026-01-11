@@ -621,6 +621,9 @@ window.addEventListener('dragend', () => overlay.style.display = 'none');
 // 1. Cấu hình ngôn ngữ mục tiêu (Lấy từ localStorage hoặc mặc định là 'vi')
 let targetLang = localStorage.getItem('user_lang') || 'vi'; 
 
+// 1. Lấy ngôn ngữ từ localStorage hoặc mặc định 'vi'
+let targetLang = localStorage.getItem('user_lang') || 'vi'; 
+
 const supportedLangs = {
     "vi": "Tiếng Việt", "en": "English", "zh": "中文 (Zhōngwén)", "ja": "日本語 (Nihongo)",
     "ko": "한국어 (Hangugeo)", "fr": "Français", "de": "Deutsch", "es": "Español",
@@ -633,30 +636,42 @@ const supportedLangs = {
     "sl": "Slovenščina", "hr": "Hrvatski", "sr": "Српски", "fa": "فارسi", "bn": "বাংলা"
 };
 
-// 2. Hàm tạo Dropdown UI
+// 2. Hàm tạo Dropdown UI (Đã thêm các thuộc tính chống dịch)
 function createLanguageDropdown() {
     const container = document.createElement('div');
     container.id = 'lang-selector-container';
+    
+    // THÊM CÁC DÒNG NÀY ĐỂ CHỐNG DỊCH
+    container.classList.add('notranslate');
+    container.setAttribute('translate', 'no');
+    
     container.style.cssText = `
         position: fixed;
         bottom: 20px;
         right: 20px;
         z-index: 999999;
-        background: white;
-        padding: 5px;
+        background: #fff;
+        padding: 4px;
         border-radius: 8px;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.3);
-        font-family: Arial, sans-serif;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        font-family: system-ui, -apple-system, sans-serif;
+        border: 1px solid #eee;
     `;
 
     const select = document.createElement('select');
     select.id = 'lang-select';
+    // Đảm bảo select cũng không bị dịch
+    select.classList.add('notranslate');
+    select.setAttribute('translate', 'no');
+    
     select.style.cssText = `
-        padding: 6px;
-        border-radius: 4px;
+        padding: 6px 10px;
+        border-radius: 6px;
         border: 1px solid #ddd;
+        background: white;
+        color: #333;
         cursor: pointer;
-        font-size: 14px;
+        font-size: 13px;
         outline: none;
     `;
 
@@ -664,22 +679,21 @@ function createLanguageDropdown() {
         const option = document.createElement('option');
         option.value = code;
         option.textContent = name;
+        // Đảm bảo từng option không bị dịch nội dung (tên ngôn ngữ giữ nguyên bản)
+        option.classList.add('notranslate');
+        option.setAttribute('translate', 'no');
         if (code === targetLang) option.selected = true;
         select.appendChild(option);
     }
 
-    // Sự kiện khi người dùng chọn ngôn ngữ mới
     select.addEventListener('change', async (e) => {
         const newLang = e.target.value;
         if (newLang === targetLang) return;
 
         targetLang = newLang;
-        // Lưu vào localStorage
         localStorage.setItem('user_lang', targetLang);
         
-        console.log("Đã lưu & chuyển sang:", supportedLangs[targetLang]);
-        
-        // Reset đánh dấu để dịch lại toàn bộ nội dung sang ngôn ngữ mới
+        // Reset flag để dịch lại nội dung mới
         resetTranslationStatus();
         await translateNewNodes(document.body);
     });
@@ -688,7 +702,6 @@ function createLanguageDropdown() {
     document.body.appendChild(container);
 }
 
-// Hàm bổ trợ để xóa dấu vết đã dịch khi đổi ngôn ngữ
 function resetTranslationStatus() {
     const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null);
     let node;
@@ -697,17 +710,14 @@ function resetTranslationStatus() {
     }
 }
 
-// 3. Hàm kích hoạt bộ máy quan sát (Observer)
+// 3. Hàm kích hoạt Observer
 const startMasterProcess = async () => {
     createLanguageDropdown();
 
-    // Nếu không phải tiếng Việt (hoặc muốn dịch ngay từ đầu), kích hoạt dịch trang
-    // Lưu ý: Nếu trang gốc là tiếng Việt và targetLang là 'vi', nó sẽ bỏ qua.
-    await translateNewNodes(document.body);
+    // Dịch ban đầu nếu ngôn ngữ khác Tiếng Việt
+    if (targetLang !== 'vi') await translateNewNodes(document.body);
     
     const observer = new MutationObserver((mutations) => {
-        // Luôn kiểm tra dịch nếu ngôn ngữ đích không phải ngôn ngữ gốc của web (giả định gốc là Việt)
-        // Hoặc đơn giản là luôn chạy nếu targetLang khác 'vi'
         if (targetLang !== 'vi') {
             mutations.forEach(mutation => {
                 if (mutation.addedNodes.length > 0) {
@@ -727,7 +737,7 @@ const startMasterProcess = async () => {
     observer.observe(document.body, { childList: true, subtree: true, characterData: true });
 };
 
-// 4. Hàm quét và dịch (Giữ nguyên logic của bạn nhưng tối ưu check)
+// 4. Hàm quét và lọc (Hệ thống bảo vệ dropdown đã nằm ở đây)
 async function translateNewNodes(rootNode) {
     if (!rootNode || isExcluded(rootNode)) return;
 
@@ -737,10 +747,10 @@ async function translateNewNodes(rootNode) {
         {
             acceptNode: (node) => {
                 const parent = node.parentElement;
+                // Kiểm tra cha có bị cấm dịch không
                 if (!parent || isExcluded(parent)) return NodeFilter.FILTER_REJECT;
-                const content = node.textContent.trim();
                 
-                // Điều kiện: độ dài > 1, có chữ cái, và chưa dịch
+                const content = node.textContent.trim();
                 if (content.length > 1 && /[a-zA-Zà-ỹÀ-Ỹ]/.test(content) && !node._isTranslated) {
                     return NodeFilter.FILTER_ACCEPT;
                 }
@@ -759,27 +769,27 @@ async function translateNewNodes(rootNode) {
         const originalText = node.textContent.trim();
         const translated = await fetchWithRetry(originalText, targetLang);
         if (translated && translated !== originalText) {
-            // Sử dụng replace để giữ lại cấu trúc khoảng trắng ban đầu nếu có
             node.textContent = node.textContent.replace(originalText, translated);
             node._isTranslated = true;
         }
     }));
 }
 
-// 5. Loại trừ các thẻ không cần dịch
+// 5. Hàm kiểm tra loại trừ
 function isExcluded(node) {
     const excludedTags = ['SCRIPT', 'STYLE', 'TEXTAREA', 'INPUT', 'NOSCRIPT', 'CODE', 'PRE'];
-    if (node.id === 'lang-selector-container') return true;
+    // Quan trọng: Kiểm tra class 'notranslate' hoặc attribute translate='no'
     return (
         excludedTags.includes(node.tagName) ||
-        node.id === 'notranslate' || 
+        node.id === 'lang-selector-container' || 
         node.classList?.contains('notranslate') ||
         node.getAttribute?.('translate') === 'no' ||
-        node.closest?.('.notranslate')
+        node.closest?.('.notranslate') ||
+        node.closest?.('[translate="no"]')
     );
 }
 
-// 6. Gọi API Google Translate
+// 6. API Dịch
 async function fetchWithRetry(text, target, retries = 2) {
     if (!text || !target) return text;
     const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=${target}&dt=t&q=${encodeURIComponent(text)}`;
@@ -795,7 +805,6 @@ async function fetchWithRetry(text, target, retries = 2) {
     }
 }
 
-// Bắt đầu thực thi
 startMasterProcess();
     // Hàm nén ảnh để AI xử lý nhanh hơn
 async function compressImage(base64Str) {
