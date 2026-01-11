@@ -618,8 +618,6 @@ window.addEventListener('dragend', () => overlay.style.display = 'none');
     let activeGroupId = null;
     let selectedBase64 = null;
     let isTyping = false; // Biến này cực kỳ quan trọng để kiểm soát trạng thái AI đang gõ
-// 1. Cấu hình ngôn ngữ mục tiêu (Lấy từ localStorage hoặc mặc định là 'vi')
-let targetLang = localStorage.getItem('user_lang') || 'vi'; 
 
 // 1. Lấy ngôn ngữ từ localStorage hoặc mặc định 'vi'
 let targetLang = localStorage.getItem('user_lang') || 'vi'; 
