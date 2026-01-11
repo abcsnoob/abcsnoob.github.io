@@ -1,6 +1,5 @@
 (function() {
-    // 1. CẤU HÌNH HỆ THỐNG
-    const REDIRECT_PREFIX = "https://abcsnoob.github.io/go?to=";
+    // 1. CẤU HÌNH HỆ THỐNG;
     const CURRENT_DOMAIN = window.location.hostname;
     
 const supportedLangs = {
