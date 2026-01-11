@@ -3,17 +3,35 @@
     const REDIRECT_PREFIX = "https://abcsnoob.github.io/go?to=";
     const CURRENT_DOMAIN = window.location.hostname;
     
-    const supportedLangs = {
-        "vi": "Tiếng Việt", "en": "English", "zh": "中文 (Zhōngwén)", "ja": "日本語 (Nihongo)",
-        "ko": "한국어 (Hangugeo)", "fr": "Français", "de": "Deutsch", "es": "Español",
-        "pt": "Português", "it": "Italiano", "ru": "Русский", "ar": "العربية",
-        "hi": "हिन्दी", "th": "ไทย", "id": "Bahasa Indonesia", "ms": "Bahasa Melayu",
-        "tr": "Türkçe", "nl": "Nederlands", "pl": "Polski", "sv": "Svenska",
-        "da": "Dansk", "fi": "Suomi", "no": "Norsk", "cs": "Čeština",
-        "el": "Ελληνικά", "he": "עبری", "ro": "Română", "hu": "Magyar",
-        "uk": "Українська", "bg": "Български", "sk": "Slovenčina",
-        "sl": "Slovenščina", "hr": "Hrvatski", "sr": "Српски", "fa": "فارسi", "bn": "বাংলা"
-    };
+const supportedLangs = {
+    "af": "Afrikaans", "ak": "Akan", "sq": "Shqip", "am": "አማርኛ", "ar": "العربية",
+    "hy": "Հայերեն", "as": "অসমীয়া", "ay": "Aymar aru", "az": "Azərbaycan", "bm": "Bamanankan",
+    "eu": "Euskara", "be": "Беларуская", "bn": "বাংলা", "bho": "भोजपुरी", "bs": "Bosanski",
+    "bg": "Български", "ca": "Català", "ceb": "Binisaya", "ny": "Chichewa", "zh": "中文 (Zhōngwén)",
+    "zh-TW": "繁體中文 (Zhōngwén)", "co": "Corsu", "hr": "Hrvatski", "cs": "Čeština", "da": "Dansk",
+    "dv": "ދިވެހި", "doi": "डोगरी", "nl": "Nederlands", "en": "English", "eo": "Esperanto",
+    "et": "Eesti", "ee": "Eʋegbe", "tl": "Filipino", "fi": "Suomi", "fr": "Français",
+    "fy": "Frysk", "gl": "Galego", "ka": "ქართული", "de": "Deutsch", "el": "Ελληνικά",
+    "gn": "Guarani", "gu": "ગુજરાતી", "ht": "Kreyòl Ayisyen", "ha": "Hausa", "haw": "Ōlelo Hawaiʻi",
+    "iw": "עברית", "hi": "हिन्दी", "hmn": "Hmoob", "hu": "Magyar", "is": "Íslenska",
+    "ig": "Igbo", "ilo": "Ilokano", "id": "Bahasa Indonesia", "ga": "Gaeilge", "it": "Italiano",
+    "ja": "日本語", "jw": "Basa Jawa", "kn": "ಕನ್ನಡ", "kk": "Қазақ тілі", "km": "ភាសាខ្មែរ",
+    "rw": "Kinyarwanda", "gom": "कोंकणी", "ko": "한국어", "kri": "Krio", "ku": "Kurdî (Kurmanjî)",
+    "ckb": "Kurdî (Soranî)", "ky": "Кыргызча", "lo": "ພາສາລາວ", "la": "Latina", "lv": "Latviešu",
+    "ln": "Lingála", "lt": "Lietuvių", "lg": "Luganda", "lb": "Lëtzebuergesch", "mk": "Македонски",
+    "mai": "मैथिली", "mg": "Malagasy", "ms": "Bahasa Melayu", "ml": "മലയാളം", "mt": "Malti",
+    "mi": "Te Reo Māori", "mr": "मराठी", "mni-Mtei": "Meiteilon (Manipuri)", "lus": "Mizo", "mn": "Монгол",
+    "my": "မြန်မာစာ", "ne": "नेपाली", "no": "Norsk", "or": "Odia (Oriya)", "om": "Oromoo",
+    "ps": "پښتو", "fa": "فارسی", "pl": "Polski", "pt": "Português", "pa": "ਪੰਜਾਬੀ",
+    "qu": "Runasimi", "ro": "Română", "ru": "Русский", "sm": "Gagana Samoa", "sa": "संस्कृतम्",
+    "gd": "Gàidhlig", "nso": "Sepedi", "sr": "Српски", "st": "Sesotho", "sn": "Chishona",
+    "sd": "سنڌي", "si": "සිංහල", "sk": "Slovenčina", "sl": "Slovenščina", "so": "Soomaali",
+    "es": "Español", "su": "Basa Sunda", "sw": "Kiswahili", "sv": "Svenska", "tg": "Тоҷикӣ",
+    "ta": "தமிழ்", "tt": "Татар", "te": "తెలుగు", "th": "ไทย", "ti": "ትግርኛ",
+    "ts": "Xitsonga", "tr": "Türkçe", "tk": "Türkmençe", "ak": "Twi", "uk": "Українська",
+    "ur": "اردو", "ug": "ئۇيغۇرچە", "uz": "Oʻzbek", "vi": "Tiếng Việt", "cy": "Cymraeg",
+    "xh": "IsiXhosa", "yi": "ייִדיש", "yo": "Yorùbá", "zu": "IsiZulu"
+};
 
     let targetLang = 'vi';
 
