@@ -560,7 +560,7 @@ window.addEventListener('dragend', () => overlay.style.display = 'none');
             </div>
         </div>
         
-<div class="input-glass-box notranslate">
+<div class="input-glass-box">
     <input type="file" id="file-hidden" hidden accept="image/*" onchange="handleImage(this)">
     
     <button class="btn btn-link text-muted p-0 me-2" onclick="document.getElementById('file-hidden').click()" title="Tải ảnh lên">
@@ -571,7 +571,7 @@ window.addEventListener('dragend', () => overlay.style.display = 'none');
         oninput="this.style.height = 'auto'; this.style.height = (this.scrollHeight) + 'px';"></textarea>
     
     <div class="d-flex align-items-center gap-2">
-        <span id="model-badge" class="badge rounded-pill bg-dark border border-secondary text-secondary px-3" 
+        <span id="model-badge" class="badge rounded-pill bg-dark border border-secondary text-secondary px-3 notranslate" 
               style="font-size: 10px; font-weight: 400; letter-spacing: 0.5px;">
             AUTO SELECT
         </span>
