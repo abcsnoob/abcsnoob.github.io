@@ -1,7 +1,9 @@
+/**
+ * Tiện ích mã hóa sử dụng Web Crypto API
+ */
 const CryptoUtil = {
     async deriveKey(password, salt) {
         const enc = new TextEncoder();
-
         const baseKey = await crypto.subtle.importKey(
             "raw",
             enc.encode(password),
@@ -28,25 +30,15 @@ const CryptoUtil = {
     }
 };
 
+/**
+ * Bộ nén và mã hóa lịch sử trò chuyện (.abcsaihistory)
+ */
 const ABCSParser = {
     MAGIC: "ABCSNOOBDEEPMIND",
     VERSION: 0x03,
 
-    ROLE_MAP: {
-        user: 0x01,
-        model: 0x02,
-        assistant: 0x03,
-        system: 0x04
-    },
-
-    ROLE_MAP_REV: {
-        0x01: "user",
-        0x02: "model",
-        0x03: "assistant",
-        0x04: "system"
-    },
-
-    /* ================= SERIALIZE ================= */
+    ROLE_MAP: { user: 0x01, model: 0x02, assistant: 0x03, system: 0x04 },
+    ROLE_MAP_REV: { 0x01: "user", 0x02: "model", 0x03: "assistant", 0x04: "system" },
 
     async serialize(history, password) {
         const enc = new TextEncoder();
@@ -54,133 +46,76 @@ const ABCSParser = {
         const key = await CryptoUtil.deriveKey(password, salt);
 
         const blocks = [];
-
         for (const msg of history) {
-            const role = this.ROLE_MAP[msg.role] ?? 0x01;
-            const text = msg.parts?.map(p => p.text ?? "").join("") ?? "";
-
+            const roleByte = this.ROLE_MAP[msg.role] || 0x01;
+            const text = msg.parts[0].text;
             const iv = crypto.getRandomValues(new Uint8Array(12));
-            const cipher = new Uint8Array(
-                await crypto.subtle.encrypt(
-                    { name: "AES-GCM", iv },
-                    key,
-                    enc.encode(text)
-                )
+            const cipher = await crypto.subtle.encrypt(
+                { name: "AES-GCM", iv },
+                key,
+                enc.encode(text)
             );
-
-            blocks.push({ role, iv, cipher });
+            
+            const block = new Uint8Array(1 + 12 + 4 + cipher.byteLength);
+            block[0] = roleByte;
+            block.set(iv, 1);
+            new DataView(block.buffer).setUint32(13, cipher.byteLength);
+            block.set(new Uint8Array(cipher), 17);
+            blocks.push(block);
         }
 
-        const headerSize =
-            this.MAGIC.length +
-            1 + // version
-            1 + // flags
-            16 + // salt
-            4 + // timestamp
-            2; // count
-
-        let total = headerSize;
-        for (const b of blocks)
-            total += 1 + 12 + 4 + b.cipher.length;
-
-        const buffer = new ArrayBuffer(total);
-        const view = new DataView(buffer);
+        const totalLen = 16 + 1 + 1 + 16 + 4 + 2 + blocks.reduce((a, b) => a + b.length, 0);
+        const final = new Uint8Array(totalLen);
+        const view = new DataView(final.buffer);
         let off = 0;
 
-        // MAGIC
-        for (const c of this.MAGIC) view.setUint8(off++, c.charCodeAt(0));
-        view.setUint8(off++, this.VERSION);
-        view.setUint8(off++, 0x01); // AES-GCM flag
+        enc.encode(this.MAGIC).forEach(b => final[off++] = b);
+        final[off++] = this.VERSION;
+        final[off++] = 0; // Flags
+        final.set(salt, off); off += 16;
+        view.setUint32(off, Math.floor(Date.now() / 1000)); off += 4;
+        view.setUint16(off, blocks.length); off += 2;
+        
+        blocks.forEach(b => {
+            final.set(b, off);
+            off += b.length;
+        });
 
-        new Uint8Array(buffer, off, 16).set(salt);
-        off += 16;
-
-        view.setUint32(off, Math.floor(Date.now() / 1000));
-        off += 4;
-
-        view.setUint16(off, blocks.length);
-        off += 2;
-
-        for (const b of blocks) {
-            view.setUint8(off++, b.role);
-            new Uint8Array(buffer, off, 12).set(b.iv);
-            off += 12;
-
-            view.setUint32(off, b.cipher.length);
-            off += 4;
-
-            new Uint8Array(buffer, off, b.cipher.length).set(b.cipher);
-            off += b.cipher.length;
-        }
-
-        return buffer;
+        return final;
     },
 
-    /* ================= DESERIALIZE ================= */
-
     async deserialize(buffer, password) {
-        const view = new DataView(buffer);
         const dec = new TextDecoder();
+        const view = new DataView(buffer);
         let off = 0;
 
-        let magic = "";
-        for (let i = 0; i < this.MAGIC.length; i++) {
-            magic += String.fromCharCode(view.getUint8(off++));
-        }
-        if (magic !== this.MAGIC) throw new Error("ABCS_BAD_MAGIC");
+        const magic = dec.decode(buffer.slice(0, 16));
+        if (magic !== this.MAGIC) throw new Error("FILE_INVALID");
+        off = 16;
 
         const version = view.getUint8(off++);
-        if (version !== this.VERSION) throw new Error("ABCS_BAD_VERSION");
+        if (version !== this.VERSION) throw new Error("VERSION_MISMATCH");
 
-        off++; // flags
-
-        const salt = new Uint8Array(buffer.slice(off, off + 16));
-        off += 16;
-
-        const timestamp = view.getUint32(off);
-        off += 4;
-
-        const count = view.getUint16(off);
-        off += 2;
+        off++; // skip flags
+        const salt = new Uint8Array(buffer.slice(off, off + 16)); off += 16;
+        off += 4; // skip timestamp
+        const count = view.getUint16(off); off += 2;
 
         const key = await CryptoUtil.deriveKey(password, salt);
         const history = [];
 
         for (let i = 0; i < count; i++) {
-            if (off + 17 > buffer.byteLength)
-                throw new Error("ABCS_TRUNCATED");
-
             const roleByte = view.getUint8(off++);
-            const iv = new Uint8Array(buffer.slice(off, off + 12));
-            off += 12;
+            const iv = new Uint8Array(buffer.slice(off, off + 12)); off += 12;
+            const len = view.getUint32(off); off += 4;
+            const cipher = buffer.slice(off, off + len); off += len;
 
-            const len = view.getUint32(off);
-            off += 4;
-
-            if (off + len > buffer.byteLength)
-                throw new Error("ABCS_BAD_LENGTH");
-
-            const cipher = buffer.slice(off, off + len);
-            off += len;
-
-            let plain;
-            try {
-                plain = await crypto.subtle.decrypt(
-                    { name: "AES-GCM", iv },
-                    key,
-                    cipher
-                );
-            } catch {
-                throw new Error("ABCS_DECRYPT_FAILED");
-            }
-
+            const plain = await crypto.subtle.decrypt({ name: "AES-GCM", iv }, key, cipher);
             history.push({
-                role: this.ROLE_MAP_REV[roleByte] ?? "user",
-                parts: [{ text: dec.decode(plain) }],
-                time: new Date(timestamp * 1000)
+                role: this.ROLE_MAP_REV[roleByte] || "user",
+                parts: [{ text: dec.decode(plain) }]
             });
         }
-
         return history;
     }
 };
