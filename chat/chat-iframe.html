@@ -438,37 +438,42 @@ window.addEventListener('dragleave', e => {
     if(e.clientX === 0 && e.clientY === 0) overlay.style.display = 'none';
 });
 
-window.addEventListener('drop', e => {
+window.addEventListener('drop', async e => {
     e.preventDefault();
     const file = e.dataTransfer.files[0];
+    
     if (file && file.name.endsWith('.abcsaihistory')) {
-        if (confirm(`Bạn có muốn nạp lịch sử từ file "${file.name}"?`)) {
-            const reader = new FileReader();
-            reader.onload = async (ev) => {
-                try {
-                    // Dùng parser để giải mã binary
-                    const history = ABCSParser.deserialize(ev.target.result);
+        let password = prompt("Nhập mật khẩu để mở file (Nếu lúc xuất để trống thì nhấn OK luôn):", "");
+        if (password === null) return;
+        if (password === "") password = "default";
+
+        startLoading();
+        const reader = new FileReader();
+        
+        reader.onload = async (ev) => {
+            try {
+                const history = await ABCSParser.deserialize(ev.target.result, password);
+                
+                if (history && history.length > 0) {
+                    currentChatHistory = history;
+                    await localforage.setItem('noob_chat_history', history);
                     
-                    if (history && history.length > 0) {
-                        currentChatHistory = history;
-                        await localforage.setItem('noob_chat_history', currentChatHistory);
-                        
-                        // Cập nhật giao diện
-                        const win = document.getElementById('chat-window');
+                    // Cập nhật UI
+                    const win = document.getElementById('chat-window');
+                    if (win) {
                         win.innerHTML = '';
-                        const welcome = document.querySelector('.welcome-view');
-                        if (welcome) welcome.style.display = 'none';
-                        
-                        currentChatHistory.forEach(msg => renderMessage(msg, false));
-                        alert("Đã nạp lịch sử 'DeepMind' thành công!");
+                        document.querySelector('.welcome-view').style.display = 'none';
+                        history.forEach(msg => renderMessage(msg, false));
                     }
-                } catch (err) {
-                    alert("Lỗi: Đây không phải file hệ thống ABCS hợp lệ!");
+                    alert("Đã khôi phục tin nhắn thành công!");
                 }
-            };
-            // QUAN TRỌNG: Phải dùng readAsArrayBuffer
-            reader.readAsArrayBuffer(file);
-        }
+            } catch (err) {
+                alert("Mật khẩu không đúng hoặc file đã bị hỏng!");
+            } finally {
+                stopLoading();
+            }
+        };
+        reader.readAsArrayBuffer(file);
     }
 });
 
@@ -1081,42 +1086,50 @@ async function loadArchivedChats() {
     
     console.log("Đã tải lịch sử:", archivedChats.length, "mục"); // Kiểm tra tại F12 console
 }
-
+function stopLoading() {
+    const topLoader = document.getElementById('top-loader-container');
+    if(topLoader) topLoader.style.display = 'none';
+}
 async function exportChat() {
-    await startLoading();
-    const urlParams = new URLSearchParams(window.location.search);
-    const sessionId = urlParams.get('id');
-    let historyToExport = currentChatHistory;
-
-    if(sessionId) {
-        const archivedChats = JSON.parse(localStorage.getItem('noob_archived_chats') || '[]');
-        const session = archivedChats.find(s => s.id == sessionId);
-        if(session) historyToExport = session.history;
+    if (!currentChatHistory || currentChatHistory.length === 0) {
+        alert("Không có lịch sử để xuất!");
+        return;
     }
 
-    if(!historyToExport || historyToExport.length === 0) {
-        stopLoading();
-        return alert("Không có tin nhắn để xuất!");
-    }
+    // Nếu người dùng nhấn Cancel (null) thì dừng. 
+    // Nếu để trống "" hoặc nhập thì tiếp tục.
+    let password = prompt("Nhập mật khẩu để bảo vệ file (Để trống nếu muốn xuất ngay):", "");
+    
+    if (password === null) return; // Người dùng bấm nút Hủy
+    if (password === "") password = "default"; // Tự động dùng pass mặc định nếu để trống
+
+    startLoading();
 
     try {
-        // Sử dụng Parser để tạo dữ liệu Binary
-        const binaryData = ABCSParser.serialize(historyToExport);
-        const blob = new Blob([binaryData], { type: "application/octet-stream" });
+        // Thực hiện serialize với mật khẩu (đã được xử lý trống)
+        const binaryData = await ABCSParser.serialize(currentChatHistory, password);
         
+        const blob = new Blob([binaryData], { type: "application/octet-stream" });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
-        const fileName = sessionId ? `archived_${sessionId}.abcsaihistory` : `current_chat.abcsaihistory`;
         
+        const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
         a.href = url;
-        a.download = fileName;
+        a.download = `chat-${timestamp}.abcsaihistory`;
+        document.body.appendChild(a);
         a.click();
-        URL.revokeObjectURL(url);
+        
+        setTimeout(() => {
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }, 100);
+
     } catch (err) {
-        console.error(err);
-        alert("Lỗi khi đóng gói file binary!");
+        console.error("Export error:", err);
+        alert("Lỗi khi đóng gói file: " + err.message);
+    } finally {
+        stopLoading();
     }
-    stopLoading();
 }
 
 function switchToCurrentChat() {
