@@ -1,3 +1,33 @@
+const CryptoUtil = {
+    async deriveKey(password, salt) {
+        const enc = new TextEncoder();
+
+        const baseKey = await crypto.subtle.importKey(
+            "raw",
+            enc.encode(password),
+            "PBKDF2",
+            false,
+            ["deriveKey"]
+        );
+
+        return crypto.subtle.deriveKey(
+            {
+                name: "PBKDF2",
+                salt,
+                iterations: 100000,
+                hash: "SHA-256"
+            },
+            baseKey,
+            {
+                name: "AES-GCM",
+                length: 256
+            },
+            false,
+            ["encrypt", "decrypt"]
+        );
+    }
+};
+
 const ABCSParser = {
     MAGIC: "ABCSNOOBDEEPMIND",
     VERSION: 0x03,
@@ -53,8 +83,8 @@ const ABCSParser = {
         for (const b of blocks)
             total += 1 + 12 + 4 + b.cipher.length;
 
-        const buf = new ArrayBuffer(total);
-        const view = new DataView(buf);
+        const buffer = new ArrayBuffer(total);
+        const view = new DataView(buffer);
         let off = 0;
 
         // MAGIC
@@ -62,7 +92,7 @@ const ABCSParser = {
         view.setUint8(off++, this.VERSION);
         view.setUint8(off++, 0x01); // AES-GCM flag
 
-        new Uint8Array(buf, off, 16).set(salt);
+        new Uint8Array(buffer, off, 16).set(salt);
         off += 16;
 
         view.setUint32(off, Math.floor(Date.now() / 1000));
@@ -71,20 +101,19 @@ const ABCSParser = {
         view.setUint16(off, blocks.length);
         off += 2;
 
-        // Blocks
         for (const b of blocks) {
             view.setUint8(off++, b.role);
-            new Uint8Array(buf, off, 12).set(b.iv);
+            new Uint8Array(buffer, off, 12).set(b.iv);
             off += 12;
 
             view.setUint32(off, b.cipher.length);
             off += 4;
 
-            new Uint8Array(buf, off, b.cipher.length).set(b.cipher);
+            new Uint8Array(buffer, off, b.cipher.length).set(b.cipher);
             off += b.cipher.length;
         }
 
-        return buf;
+        return buffer;
     },
 
     /* ================= DESERIALIZE ================= */
@@ -103,7 +132,7 @@ const ABCSParser = {
         const version = view.getUint8(off++);
         if (version !== this.VERSION) throw new Error("ABCS_BAD_VERSION");
 
-        off++; // flags (reserved)
+        off++; // flags
 
         const salt = new Uint8Array(buffer.slice(off, off + 16));
         off += 16;
