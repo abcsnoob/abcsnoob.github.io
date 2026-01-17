@@ -10,6 +10,7 @@
     <link rel="stylesheet" href="/assets/css/prism.css">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/localforage/1.10.0/localforage.min.js"></script>
+    <script src="js/abcs-parser.js"></script>
     <style>
         /* Nút tiện ích cho tin nhắn */
 .msg-actions {
@@ -439,36 +440,35 @@ window.addEventListener('dragleave', e => {
 
 window.addEventListener('drop', e => {
     e.preventDefault();
-    overlay.style.display = 'none';
-    if(!e.dataTransfer.files.length) return;
-
     const file = e.dataTransfer.files[0];
-    const reader = new FileReader();
-
-    if(file.name.endsWith('.abcsaihistory')) {
-        if(confirm(`Tệp "${file.name}" sẽ ghi đè chat hiện tại. Tiếp tục?`)) {
-            reader.onload = (ev) => {
+    if (file && file.name.endsWith('.abcsaihistory')) {
+        if (confirm(`Bạn có muốn nạp lịch sử từ file "${file.name}"?`)) {
+            const reader = new FileReader();
+            reader.onload = async (ev) => {
                 try {
-                    const data = JSON.parse(ev.target.result);
-                    if(data.history) {
-                        currentChatHistory = data.history;
-                        localStorage.setItem('noob_chat_history', JSON.stringify(currentChatHistory));
-                        switchToCurrentChat();
-                        alert('Đã nạp lịch sử chat!');
-                    } else alert('File không hợp lệ!');
-                } catch(err) { alert('Lỗi đọc file!'); }
+                    // Dùng parser để giải mã binary
+                    const history = ABCSParser.deserialize(ev.target.result);
+                    
+                    if (history && history.length > 0) {
+                        currentChatHistory = history;
+                        await localforage.setItem('noob_chat_history', currentChatHistory);
+                        
+                        // Cập nhật giao diện
+                        const win = document.getElementById('chat-window');
+                        win.innerHTML = '';
+                        const welcome = document.querySelector('.welcome-view');
+                        if (welcome) welcome.style.display = 'none';
+                        
+                        currentChatHistory.forEach(msg => renderMessage(msg, false));
+                        alert("Đã nạp lịch sử 'DeepMind' thành công!");
+                    }
+                } catch (err) {
+                    alert("Lỗi: Đây không phải file hệ thống ABCS hợp lệ!");
+                }
             };
-            reader.readAsText(file);
+            // QUAN TRỌNG: Phải dùng readAsArrayBuffer
+            reader.readAsArrayBuffer(file);
         }
-    } else if(file.type.startsWith('image/')) {
-        reader.onload = (ev) => {
-            selectedBase64 = ev.target.result;
-            document.getElementById('img-render').src = selectedBase64;
-            document.getElementById('image-preview-container').style.display = 'block';
-        };
-        reader.readAsDataURL(file);
-    } else {
-        alert('Chỉ chấp nhận file .abcsaihistory hoặc hình ảnh!');
     }
 });
 
@@ -1084,7 +1084,6 @@ async function loadArchivedChats() {
 
 async function exportChat() {
     await startLoading();
-
     const urlParams = new URLSearchParams(window.location.search);
     const sessionId = urlParams.get('id');
     let historyToExport = currentChatHistory;
@@ -1092,20 +1091,32 @@ async function exportChat() {
     if(sessionId) {
         const archivedChats = JSON.parse(localStorage.getItem('noob_archived_chats') || '[]');
         const session = archivedChats.find(s => s.id == sessionId);
-        if(!session) return alert("Không tìm thấy lịch sử chat!");
-        historyToExport = session.history;
+        if(session) historyToExport = session.history;
     }
 
-    if(!historyToExport.length) return alert("Chưa có tin nhắn gì để chia sẻ!");
+    if(!historyToExport || historyToExport.length === 0) {
+        stopLoading();
+        return alert("Không có tin nhắn để xuất!");
+    }
 
-    const data = { timestamp: new Date().toISOString(), history: historyToExport };
-    const blob = new Blob([JSON.stringify(data, null, 2)], {type: "application/json"});
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${sessionId || 'current'}.abcsaihistory`;
-    a.click();
-    URL.revokeObjectURL(url);
+    try {
+        // Sử dụng Parser để tạo dữ liệu Binary
+        const binaryData = ABCSParser.serialize(historyToExport);
+        const blob = new Blob([binaryData], { type: "application/octet-stream" });
+        
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        const fileName = sessionId ? `archived_${sessionId}.abcsaihistory` : `current_chat.abcsaihistory`;
+        
+        a.href = url;
+        a.download = fileName;
+        a.click();
+        URL.revokeObjectURL(url);
+    } catch (err) {
+        console.error(err);
+        alert("Lỗi khi đóng gói file binary!");
+    }
+    stopLoading();
 }
 
 function switchToCurrentChat() {
