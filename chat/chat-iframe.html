@@ -572,10 +572,9 @@ window.addEventListener('dragend', () => overlay.style.display = 'none');
         <div class="d-flex align-items-center gap-3">
         <button class="btn btn-outline-light border-0 d-flex align-items-center justify-content-center" 
                 id="sidebarToggle" style="width: 40px; height: 40px; border-radius: 12px; background: var(--glass);">
-            <i class="fa-solid fa-arrow-right"></i>
+            <i class="fa-solid fa-arrow-left"></i>
         </button>
-        
-        <div>
+        </div>
         <div>
             <h5 class="m-0 fw-800" id="chat-title">Hệ thống Trợ lý</h5>
             <span class="text-success small"><i class="fa-solid fa-circle me-1" style="font-size:8px"></i> Latency: 12ms</span>
@@ -1540,9 +1539,9 @@ document.addEventListener('DOMContentLoaded', async () => { // Thêm async ở �
     // Thay đổi icon từ bars sang xmark khi đóng mở
     const icon = this.querySelector('i');
     if (document.body.classList.contains('sidebar-toggled')) {
-        icon.classList.replace('fa-bars', 'fa-arrow-right');
+        icon.classList.replace('fa-arrow-left', 'fa-arrow-right');
     } else {
-        icon.classList.replace('fa-arrow-right', 'fa-bars');
+        icon.classList.replace('fa-arrow-right', 'fa-arrow-left');
     }
 });
 
