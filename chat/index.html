@@ -23,17 +23,23 @@
             padding: 20px;
         }
 
-        .iframe-container {
-            width: 100%;
-            max-width: 1100px;
-            height: 82vh;
-            border: none;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-            background: #fff;
-            display: none;
-            transition: opacity 0.5s ease;
-        }
+.iframe-container {
+    /* Tăng từ 1100px lên 1200px */
+    width: 100%;
+    max-width: 1200px; 
+
+    /* Tăng chiều cao: 
+       Bạn đang dùng đơn vị vh (82vh), nếu muốn cộng thêm chính xác 100px, 
+       chúng ta sẽ dùng hàm calc() */
+    height: calc(82vh + 100px); 
+
+    border: none;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    background: #fff;
+    display: none;
+    transition: opacity 0.5s ease;
+}
 
         .loading-overlay {
             position: absolute;
