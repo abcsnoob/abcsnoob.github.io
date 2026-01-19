@@ -156,7 +156,16 @@
         }
 
         /* Sidebar, chat, input, modals... giữ nguyên */
-        #sidebar { width: var(--sidebar-width); background: rgba(10, 12, 17, 0.85); backdrop-filter: blur(25px); border-right: 1px solid var(--glass-border); display: flex; flex-direction: column; transition: all 0.4s ease; z-index: 1001; }
+       #sidebar {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    flex-shrink: 0;
+    z-index: 1050;
+}
+
+/* Trạng thái Sidebar bị đóng */
+body.sidebar-hidden #sidebar {
+    margin-left: calc(var(--sidebar-width) * -1);
+}
         .brand-section { padding: 40px 24px 20px; }
         .logo-box { width: 50px; height: 50px; background: linear-gradient(135deg, var(--primary), var(--secondary)); border-radius: 14px; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 25px rgba(0, 210, 255, 0.4); margin-bottom: 20px; }
         .nav-container { flex: 1; overflow-y: auto; padding: 10px 16px; }
@@ -165,16 +174,45 @@
         .chat-item:hover { background: var(--glass); color: #fff; border-color: var(--glass-border); }
         .chat-item.active { background: linear-gradient(90deg, rgba(0, 210, 255, 0.15), transparent); border-color: rgba(0, 210, 255, 0.3); color: var(--primary); }
         #main-content { flex: 1; display: flex; flex-direction: column; position: relative; background: transparent; }
-       .header-bar {
-    height: 80px;
-    padding: 0 25px;
-    border-bottom: 1px solid var(--glass-border);
+.header-bar {
+    height: 70px; /* Giảm nhẹ chiều cao cho gọn */
+    padding: 0 15px;
     display: flex;
-    align-items: center; /* Căn giữa tất cả theo chiều dọc */
-    justify-content: space-between; /* Đẩy cụm trái và cụm phải ra 2 đầu */
-    background: rgba(5, 7, 10, 0.4);
+    align-items: center;
+    justify-content: space-between;
+    background: rgba(5, 7, 10, 0.6);
     backdrop-filter: blur(15px);
+    border-bottom: 1px solid var(--glass-border);
     flex-shrink: 0;
+}
+
+/* RESPONSIVE CHO MOBILE */
+@media (max-width: 768px) {
+    #sidebar {
+        position: fixed;
+        height: 100vh;
+        /* Trên mobile mặc định là ẩn */
+        margin-left: calc(var(--sidebar-width) * -1);
+    }
+    
+    /* Khi mở sidebar trên mobile */
+    body.sidebar-open #sidebar {
+        margin-left: 0;
+    }
+
+    #chat-window, .input-floating-area {
+        padding-left: 5% !important;
+        padding-right: 5% !important;
+    }
+
+    .header-bar h5 {
+        font-size: 14px; /* Chữ nhỏ lại trên điện thoại */
+    }
+
+    /* Ẩn bớt chữ ở nút để tránh tràn */
+    .btn-sm span {
+        display: none;
+    }
 }
         #chat-window { flex: 1; overflow-y: auto; padding: 40px 18%; scroll-behavior: smooth; }
         .msg-box { margin-bottom: 45px; display: flex; gap: 22px; animation: slideUp 0.6s cubic-bezier(0.2, 0.8, 0.2, 1); }
@@ -579,27 +617,25 @@ window.addEventListener('dragend', () => overlay.style.display = 'none');
         <span class="loader"></span>
     </div>
 <nav class="header-bar">
-    <div class="d-flex align-items-center gap-3">
+    <div class="d-flex align-items-center gap-2">
         <button class="btn btn-outline-light border-0 d-flex align-items-center justify-content-center" 
                 id="sidebarToggle" 
-                style="width: 42px; height: 42px; border-radius: 12px; background: var(--glass);">
-            <i class="fa-solid fa-bars"></i>
+                style="width: 40px; height: 40px; border-radius: 10px; background: var(--glass);">
+            <i class="fa-solid fa-xmark" id="toggleIcon"></i>
         </button>
         
         <div class="lh-1">
-            <h5 class="m-0 fw-800" id="chat-title">Hội thoại hiện tại</h5>
-            <span class="text-success small" style="font-size: 11px;">
-                <i class="fa-solid fa-circle me-1" style="font-size:7px"></i> Latency: 12ms
-            </span>
+            <h5 class="m-0 fw-800 text-truncate" style="max-width: 150px;">Hệ thống Trợ lý</h5>
+            <span class="text-success" style="font-size: 10px;"><i class="fa-solid fa-circle me-1"></i> 12ms</span>
         </div>
     </div>
 
-    <div class="d-flex align-items-center gap-2">
-        <button class="btn btn-danger btn-sm rounded-pill px-3 shadow-sm" onclick="clearChat()">
-            <i class="fa-solid fa-trash-can me-1"></i> Xóa Chat
+    <div class="d-flex gap-2">
+        <button class="btn btn-danger btn-sm rounded-pill px-3" onclick="clearChat()">
+            <i class="fa-solid fa-trash-can"></i> <span>Xóa</span>
         </button>
         <button class="btn btn-outline-light btn-sm rounded-pill px-3" onclick="exportChat()">
-            <i class="fa-solid fa-share-nodes me-1"></i> Chia sẻ
+            <i class="fa-solid fa-share-nodes"></i> <span>Chia sẻ</span>
         </button>
     </div>
 </nav>
@@ -1550,17 +1586,38 @@ document.addEventListener('DOMContentLoaded', async () => { // Thêm async ở �
         });
     }
 
-    document.getElementById('sidebarToggle').addEventListener('click', function() {
-    document.body.classList.toggle('sidebar-toggled');
-    
-    // Thay đổi icon từ bars sang xmark khi đóng mở
-    const icon = this.querySelector('i');
-    if (document.body.classList.contains('sidebar-toggled')) {
-        icon.classList.replace('fa-arrow-left', 'fa-arrow-right');
+const sidebarToggle = document.getElementById('sidebarToggle');
+const toggleIcon = document.getElementById('toggleIcon');
+
+// Hàm cập nhật Icon dựa trên trạng thái thực tế
+function updateToggleUI() {
+    const isMobile = window.innerWidth <= 768;
+    const isHidden = document.body.classList.contains('sidebar-hidden');
+    const isOpenMobile = document.body.classList.contains('sidebar-open');
+
+    if (isMobile) {
+        // Trên Mobile: sidebar-open quyết định
+        toggleIcon.className = isOpenMobile ? 'fa-solid fa-xmark' : 'fa-solid fa-bars';
     } else {
-        icon.classList.replace('fa-arrow-right', 'fa-arrow-left');
+        // Trên Desktop: sidebar-hidden quyết định
+        toggleIcon.className = isHidden ? 'fa-solid fa-bars' : 'fa-solid fa-xmark';
     }
+}
+
+sidebarToggle.addEventListener('click', () => {
+    if (window.innerWidth <= 768) {
+        document.body.classList.toggle('sidebar-open');
+    } else {
+        document.body.classList.toggle('sidebar-hidden');
+    }
+    updateToggleUI();
 });
+
+// Lắng nghe sự kiện xoay màn hình/thay đổi kích thước
+window.addEventListener('resize', updateToggleUI);
+
+// Khởi tạo icon đúng lúc load trang
+updateToggleUI();;
 
     // 3. KHÔI PHỤC HỘI THOẠI BẰNG LOCALFORAGE [SỬA TẠI ĐÂY]
     try {
