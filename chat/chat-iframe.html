@@ -819,7 +819,7 @@ body.sidebar-toggled .input-floating-area {
     
         // Kiểm tra dấu hiệu thiết bị di động/máy tính bảng
         const isMobileDevice = /android|iphone|kindle|ipad|playbook|silk|blackberry|iemobile|opera mini/i.test(userAgent.toLowerCase());
-        const isSmallScreen = screenWidth < 1024; // Ngưỡng kích thước máy tính
+        const isSmallScreen = screenWidth < 768; // Ngưỡng kích thước máy tính
     
         if (isMobileDevice || isSmallScreen) {
             // Ghi đè nội dung trang web để ngăn chặn truy cập
