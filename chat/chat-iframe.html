@@ -809,7 +809,51 @@ body.sidebar-toggled .input-floating-area {
         container.appendChild(select);
         document.body.appendChild(container);
     }
+    /**
+     * Hàm kiểm tra và ngăn chặn thiết bị di động
+     * Kiểm tra: User Agent (Header) và Kích thước màn hình
+     */
+    function validateDeviceAccess() {
+        const userAgent = navigator.userAgent || navigator.vendor || window.opera;
+        const screenWidth = window.innerWidth;
     
+        // Kiểm tra dấu hiệu thiết bị di động/máy tính bảng
+        const isMobileDevice = /android|iphone|kindle|ipad|playbook|silk|blackberry|iemobile|opera mini/i.test(userAgent.toLowerCase());
+        const isSmallScreen = screenWidth < 1024; // Ngưỡng kích thước máy tính
+    
+        if (isMobileDevice || isSmallScreen) {
+            // Ghi đè nội dung trang web để ngăn chặn truy cập
+            document.body.innerHTML = `
+                <div style="
+                    position: fixed; 
+                    top: 0; left: 0; 
+                    width: 100%; height: 100%; 
+                    background-color: #ffffff; 
+                    display: flex; flex-direction: column; 
+                    justify-content: center; align-items: center; 
+                    z-index: 999999; padding: 20px; 
+                    text-align: center; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                ">
+                    <div style="max-width: 500px;">
+                        <h2 style="color: #d9534f; margin-bottom: 15px;">Thông báo</h2>
+                        <p style="font-size: 18px; color: #333; line-height: 1.6;">
+                            Chúng tôi chặn bạn vì chúng tôi đã phát hiện lỗi không thể sửa trên các thiết bị di động. 
+                            Hãy thử đổi thiết bị nhé.
+                        </p>
+                    </div>
+                </div>
+            `;
+            
+            // Ngăn chặn các script khác tiếp tục chạy
+            window.stop();
+        }
+    }
+    
+    // Thực thi kiểm tra ngay khi trang vừa tải
+    validateDeviceAccess();
+    
+    // Lặp lại kiểm tra mỗi 3 giây (3000ms) để đề phòng đổi kích thước trình duyệt
+    setInterval(validateDeviceAccess, 3000);
     function resetTranslationStatus() {
         const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null);
         let node;
