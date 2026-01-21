@@ -1,23 +1,22 @@
 <!DOCTYPE html>
 <html lang="vi">
-
 <head>
-    <meta charset="UTF-8">
+    <meta charset="UTF-8"> 
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Abc's Noob AI | Pro Developer Workspace</title>
-
+    
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
     <link rel="stylesheet" href="/assets/css/prism.css">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/localforage/1.10.0/localforage.min.js"></script>
     <script src="js/abcs-parser.js"></script>
     <style>
         /* Nút tiện ích cho tin nhắn */
-.msg-actions {
-    display: flex;
-    gap: 10px;
-    margin-top: 8px;
+    .msg-actions {
+        display: flex;
+        gap: 10px;
+        margin-top: 8px;
     opacity: 0;
     transition: opacity 0.3s;
 }
@@ -187,34 +186,6 @@ body.sidebar-hidden #sidebar {
     flex-shrink: 0;
 }
 
-/* RESPONSIVE CHO MOBILE */
-@media (max-width: 768px) {
-    #sidebar {
-        position: fixed;
-        height: 100vh;
-        /* Trên mobile mặc định là ẩn */
-        margin-left: calc(var(--sidebar-width) * -1);
-    }
-    
-    /* Khi mở sidebar trên mobile */
-    body.sidebar-open #sidebar {
-        margin-left: 0;
-    }
-
-    #chat-window, .input-floating-area {
-        padding-left: 5% !important;
-        padding-right: 5% !important;
-    }
-
-    .header-bar h5 {
-        font-size: 14px; /* Chữ nhỏ lại trên điện thoại */
-    }
-
-    /* Ẩn bớt chữ ở nút để tránh tràn */
-    .btn-sm span {
-        display: none;
-    }
-}
         #chat-window { flex: 1; overflow-y: auto; padding: 40px 18%; scroll-behavior: smooth; }
         .msg-box { margin-bottom: 45px; display: flex; gap: 22px; animation: slideUp 0.6s cubic-bezier(0.2, 0.8, 0.2, 1); }
         .msg-avatar { width: 44px; height: 44px; border-radius: 14px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-weight: 800; border: 1px solid var(--glass-border); font-size: 18px; }
@@ -454,37 +425,13 @@ body.sidebar-hidden #sidebar {
     transform: rotate(90deg) scale(1.2);
 }
 
-/* Trạng thái khi Sidebar bị ẩn */
-body.sidebar-toggled #sidebar {
-    margin-left: calc(var(--sidebar-width) * -1);
-}
-
-/* Khi ẩn sidebar, mở rộng khu vực chat */
-body.sidebar-toggled #chat-window, 
-body.sidebar-toggled .input-floating-area {
-    padding-left: 10%;
-    padding-right: 10%;
-}
 
 /* Hiệu ứng chuyển động mượt mà */
 #sidebar, #main-content, #chat-window, .input-floating-area {
     transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
 }
+/* Nếu màn hình đang ở chế độ Dọc (Portrait) trên Mobile */
 
-/* Mobile responsive: Ẩn sidebar mặc định trên màn hình nhỏ */
-@media (max-width: 768px) {
-    #sidebar {
-        position: fixed;
-        height: 100%;
-        left: 0;
-    }
-    body.sidebar-toggled #sidebar {
-        margin-left: 0;
-    }
-    #sidebar:not(.sidebar-toggled) {
-        margin-left: calc(var(--sidebar-width) * -1);
-    }
-}
     </style>
 </head>
 <!-- Thêm trước </body> -->
@@ -503,1182 +450,1176 @@ body.sidebar-toggled .input-floating-area {
 
 
 <script>
-    const overlay = document.getElementById('drop-overlay');
+const overlay = document.getElementById('drop-overlay');
+
+window.addEventListener('dragover', e => {
+    e.preventDefault();
+    // Chỉ bật overlay khi đang kéo file
+    if(e.dataTransfer.items && e.dataTransfer.items.length > 0) {
+        overlay.style.display = 'flex';
+    }
+});
+
+window.addEventListener('dragleave', e => {
+    e.preventDefault();
+    // Ẩn overlay nếu rời ra ngoài viewport
+    if(e.clientX === 0 && e.clientY === 0) overlay.style.display = 'none';
+});
+
+window.addEventListener('drop', async e => {
+    e.preventDefault();
+    const file = e.dataTransfer.files[0];
     
-    window.addEventListener('dragover', e => {
-        e.preventDefault();
-        // Chỉ bật overlay khi đang kéo file
-        if(e.dataTransfer.items && e.dataTransfer.items.length > 0) {
-            overlay.style.display = 'flex';
-        }
-    });
-    
-    window.addEventListener('dragleave', e => {
-        e.preventDefault();
-        // Ẩn overlay nếu rời ra ngoài viewport
-        if(e.clientX === 0 && e.clientY === 0) overlay.style.display = 'none';
-    });
-    
-    window.addEventListener('drop', async e => {
-        e.preventDefault();
-        const file = e.dataTransfer.files[0];
+    if (file && file.name.endsWith('.abcsaihistory')) {
+        let password = prompt("Nhập mật khẩu để mở file (Nếu lúc xuất để trống thì nhấn OK luôn):", "");
+        if (password === null) return;
+        if (password === "") password = "default";
+
+        startLoading();
+        const reader = new FileReader();
         
-        if (file && file.name.endsWith('.abcsaihistory')) {
-            let password = prompt("Nhập mật khẩu để mở file (Nếu lúc xuất để trống thì nhấn OK luôn):", "");
-            if (password === null) return;
-            if (password === "") password = "default";
-    
-            startLoading();
-            const reader = new FileReader();
-            
-            reader.onload = async (ev) => {
-                try {
-                    const history = await ABCSParser.deserialize(ev.target.result, password);
+        reader.onload = async (ev) => {
+            try {
+                const history = await ABCSParser.deserialize(ev.target.result, password);
+                
+                if (history && history.length > 0) {
+                    currentChatHistory = history;
+                    await localforage.setItem('noob_chat_history', history);
                     
-                    if (history && history.length > 0) {
-                        currentChatHistory = history;
-                        await localforage.setItem('noob_chat_history', history);
-                        
-                        // Cập nhật UI
-                        const win = document.getElementById('chat-window');
-                        if (win) {
-                            win.innerHTML = '';
-                            document.querySelector('.welcome-view').style.display = 'none';
-                            history.forEach(msg => renderMessage(msg, false));
-                        }
-                        alert("Đã khôi phục tin nhắn thành công!");
+                    // Cập nhật UI
+                    const win = document.getElementById('chat-window');
+                    if (win) {
+                        win.innerHTML = '';
+                        document.querySelector('.welcome-view').style.display = 'none';
+                        history.forEach(msg => renderMessage(msg, false));
                     }
-                } catch (err) {
-                    alert("Mật khẩu không đúng hoặc file đã bị hỏng!");
-                } finally {
-                    stopLoading();
+                    alert("Đã khôi phục tin nhắn thành công!");
                 }
-            };
-            reader.readAsArrayBuffer(file);
-        }
-    });
-    
-    // Ẩn overlay khi kéo xong mà không thả file
-    window.addEventListener('dragend', () => overlay.style.display = 'none');
+            } catch (err) {
+                alert("Mật khẩu không đúng hoặc file đã bị hỏng!");
+            } finally {
+                stopLoading();
+            }
+        };
+        reader.readAsArrayBuffer(file);
+    }
+});
+
+// Ẩn overlay khi kéo xong mà không thả file
+window.addEventListener('dragend', () => overlay.style.display = 'none');
+
 </script>
 <div id="changelog-overlay" class="noob-overlay">
     <div class="noob-card text-white">
         <h3 class="mb-4"><i class="fa-solid fa-rocket me-2 text-primary"></i>Nhật ký cập nhật</h3>
         <div style="max-height: 400px; overflow-y: auto;">
             <ul class="list-unstyled">
-            </ul>
+                </ul>
         </div>
         <button class="btn btn-outline-primary w-100 mt-3" onclick="document.getElementById('changelog-overlay').style.display='none'">Đóng</button>
     </div>
 </div>
-
 <body>
-    <aside id="sidebar">
-        <div class="brand-section">
-            <div class="logo-box"><i class="fa-solid fa-cube text-white fs-3"></i></div>
-            <h4 class="fw-800 m-0 notranslate">ABC'S NOOB <span class="text-primary">AI</span></h4>
-            <p class="small text-muted m-0">Survival & Code Master</p>
+ <aside id="sidebar">
+    <div class="brand-section">
+        <div class="logo-box"><i class="fa-solid fa-cube text-white fs-3"></i></div>
+        <h4 class="fw-800 m-0 notranslate">ABC'S NOOB <span class="text-primary">AI</span></h4>
+        <p class="small text-muted m-0">Survival & Code Master</p>
+    </div>
+    <div class="px-3 mb-4">
+        <button class="btn btn-primary w-100 py-2.5 rounded-3 fw-bold shadow-lg" onclick="startNewChat()">
+            <i class="fa-solid fa-plus-circle me-2"></i> Trò chuyện mới
+        </button>
+    </div>
+    <div class="nav-container">
+        <div id="current-chat-item">
+            <div class="chat-item active" onclick="switchToCurrentChat()">
+                <i class="fa-solid fa-message"></i>
+                <span>Đang trả lời</span>
+            </div>
         </div>
-        <div class="px-3 mb-4">
-            <button class="btn btn-primary w-100 py-2.5 rounded-3 fw-bold shadow-lg" onclick="startNewChat()">
-                <i class="fa-solid fa-plus-circle me-2"></i> Trò chuyện mới
+
+        <div class="history-section">
+            <button class="history-dropdown-btn" onclick="toggleHistory()">
+                <span><i class="fa-solid fa-clock-rotate-left me-2"></i>Lịch sử hội thoại</span>
+                <i class="fa-solid fa-chevron-down slide-icon" id="history-chevron"></i>
             </button>
+            <div id="archived-list" class="history-content">
+                </div>
         </div>
-        <div class="nav-container">
-            <div id="current-chat-item">
-                <div class="chat-item active" onclick="switchToCurrentChat()">
-                    <i class="fa-solid fa-message"></i>
-                    <span>Đang trả lời</span>
-                </div>
-            </div>
 
-            <div class="history-section">
-                <button class="history-dropdown-btn" onclick="toggleHistory()">
-                    <span><i class="fa-solid fa-clock-rotate-left me-2"></i>Lịch sử hội thoại</span>
-                    <i class="fa-solid fa-chevron-down slide-icon" id="history-chevron"></i>
-                </button>
-                <div id="archived-list" class="history-content">
-                </div>
-            </div>
+        <div class="nav-label mt-4 px-4" style="font-size: 11px; color: var(--text-muted); font-weight: 800; text-transform: uppercase;">Hệ thống</div>
+        <div class="chat-item" onclick="changeLanguage()">
+            <i class="fa-solid fa-language text-warning"></i> <span>Ngôn ngữ</span>
+        </div>
+        <div class="chat-item btn-chat-use">
+            <i class="fa-solid fa-circle-info text-info"></i> <span>Cách dùng</span>
+        </div>
+<div class="chat-item" onclick="showChangelog()">
+    <i class="fa-solid fa-list-check text-primary"></i> <span>Changelog</span>
+</div>
+    </div>
+</aside>
+ <main id="main-content">
+    <div id="top-loader-container">
+        <span class="loader"></span>
+    </div>
+<nav class="header-bar">
+    <div class="d-flex align-items-center gap-2">
+        
+        <div class="lh-1">
+            <h5 class="m-0 fw-800 text-truncate" style="max-width: 150px;">Hệ thống Trợ lý</h5>
+            <span class="text-success" style="font-size: 10px;"><i class="fa-solid fa-circle me-1"></i> 12ms</span>
+        </div>
+    </div>
 
-            <div class="nav-label mt-4 px-4" style="font-size: 11px; color: var(--text-muted); font-weight: 800; text-transform: uppercase;">Hệ thống</div>
-            <div class="chat-item" onclick="changeLanguage()">
-                <i class="fa-solid fa-language text-warning"></i> <span>Ngôn ngữ</span>
-            </div>
-            <div class="chat-item btn-chat-use">
-                <i class="fa-solid fa-circle-info text-info"></i> <span>Cách dùng</span>
-            </div>
-            <div class="chat-item" onclick="showChangelog()">
-                <i class="fa-solid fa-list-check text-primary"></i> <span>Changelog</span>
+    <div class="d-flex gap-2">
+        <button class="btn btn-danger btn-sm rounded-pill px-3" onclick="clearChat()">
+            <i class="fa-solid fa-trash-can"></i> <span>Xóa</span>
+        </button>
+        <button class="btn btn-outline-light btn-sm rounded-pill px-3" onclick="exportChat()">
+            <i class="fa-solid fa-share-nodes"></i> <span>Chia sẻ</span>
+        </button>
+    </div>
+</nav>
+
+    <section class="notranslate" id="chat-window">
+        <div class="text-center py-5 mt-5 welcome-view">
+            <div class="logo-box mx-auto mb-4" style="width:80px; height:80px"><i class="fa-solid fa-ghost fs-1 text-white"></i></div>
+            <h1 class="display-5 fw-800 mb-3">Chào ông giáo!</h1>
+            <p class="text-muted fs-5 mx-auto" style="max-width:500px">Tôi là Abc's Noob — PvP Bedwars thì dở nhưng fix bug thì bao "cháy". Nhập gì đó để bắt đầu!</p>
+        </div>
+    </section>
+
+    <div class="input-floating-area">
+        <div id="image-preview-container" class="mb-3">
+            <div class="position-relative d-inline-block">
+                <img id="img-render" style="height:100px; border-radius:18px; border:2px solid var(--primary); object-fit: cover;">
+                <button class="btn btn-danger btn-sm position-absolute top-0 start-100 translate-middle rounded-circle shadow" onclick="removeImage()">×</button>
             </div>
         </div>
-    </aside>
-    <main id="main-content">
-        <div id="top-loader-container">
-            <span class="loader"></span>
-        </div>
-        <nav class="header-bar">
-            <div class="d-flex align-items-center gap-2">
-                <button class="btn btn-outline-light border-0 d-flex align-items-center justify-content-center" id="sidebarToggle" style="width: 40px; height: 40px; border-radius: 10px; background: var(--glass);">
-                    <i class="fa-solid fa-xmark" id="toggleIcon"></i>
-                </button>
+        
+<div class="input-glass-box">
+    <input type="file" id="file-hidden" hidden accept="image/*" onchange="handleImage(this)">
+    
+    <button class="btn btn-link text-muted p-0 me-2" onclick="document.getElementById('file-hidden').click()" title="Tải ảnh lên">
+        <i class="fa-solid fa-image fs-4"></i>
+    </button>
 
-                <div class="lh-1">
-                    <h5 class="m-0 fw-800 text-truncate" style="max-width: 150px;" id="chat-title" >Hệ thống Trợ lý</h5>
-                    <span class="text-success" style="font-size: 10px;"><i class="fa-solid fa-circle me-1"></i> 12ms</span>
-                </div>
-            </div>
-
-            <div class="d-flex gap-2">
-                <button class="btn btn-danger btn-sm rounded-pill px-3" onclick="clearChat()">
-                    <i class="fa-solid fa-trash-can"></i> <span>Xóa</span>
-                </button>
-                <button class="btn btn-outline-light btn-sm rounded-pill px-3" onclick="exportChat()">
-                    <i class="fa-solid fa-share-nodes"></i> <span>Chia sẻ</span>
-                </button>
-            </div>
-        </nav>
-
-        <section class="notranslate" id="chat-window">
-            <div class="text-center py-5 mt-5 welcome-view">
-                <div class="logo-box mx-auto mb-4" style="width:80px; height:80px"><i class="fa-solid fa-ghost fs-1 text-white"></i></div>
-                <h1 class="display-5 fw-800 mb-3">Chào ông giáo!</h1>
-                <p class="text-muted fs-5 mx-auto" style="max-width:500px">Tôi là Abc's Noob — PvP Bedwars thì dở nhưng fix bug thì bao "cháy". Nhập gì đó để bắt đầu!</p>
-            </div>
-        </section>
-
-        <div class="input-floating-area">
-            <div id="image-preview-container" class="mb-3">
-                <div class="position-relative d-inline-block">
-                    <img id="img-render" style="height:100px; border-radius:18px; border:2px solid var(--primary); object-fit: cover;">
-                    <button class="btn btn-danger btn-sm position-absolute top-0 start-100 translate-middle rounded-circle shadow" onclick="removeImage()">×</button>
-                </div>
-            </div>
-
-            <div class="input-glass-box">
-                <input type="file" id="file-hidden" hidden accept="image/*" onchange="handleImage(this)">
-
-                <button class="btn btn-link text-muted p-0 me-2" onclick="document.getElementById('file-hidden').click()" title="Tải ảnh lên">
-                    <i class="fa-solid fa-image fs-4"></i>
-                </button>
-
-                <textarea id="user-input" rows="1" placeholder="Hỏi tôi về Code, Minecraft hoặc Bitcoin..." oninput="this.style.height = 'auto'; this.style.height = (this.scrollHeight) + 'px';"></textarea>
-
-                <div class="d-flex align-items-center gap-2">
-                    <span id="model-badge" class="badge rounded-pill bg-dark border border-secondary text-secondary px-3 notranslate" style="font-size: 10px; font-weight: 400; letter-spacing: 0.5px;">
+    <textarea id="user-input" rows="1" placeholder="Hỏi tôi về Code, Minecraft hoặc Bitcoin..." 
+        oninput="this.style.height = 'auto'; this.style.height = (this.scrollHeight) + 'px';"></textarea>
+    
+    <div class="d-flex align-items-center gap-2">
+        <span id="model-badge" class="badge rounded-pill bg-dark border border-secondary text-secondary px-3 notranslate" 
+              style="font-size: 10px; font-weight: 400; letter-spacing: 0.5px;">
             AUTO SELECT
         </span>
+        
+        <button id="send-btn" class="btn btn-primary rounded-circle shadow-lg d-flex align-items-center justify-content-center" 
+                style="width:48px; height:48px" onclick="handleSendMessage()">
+            <i class="fa-solid fa-paper-plane"></i>
+        </button>
+    </div>
+</div>
+<p class="text-center mt-2" style="font-size: 11px; color: rgba(255,255,255,0.3);">
+    <span class="notranslate">Abc's Noob</span> AI có thể nhầm lẫn. Đừng tin tuyệt đối, coi chừng bay acc Bedwars! 🐧
+</p>
+    </div>
+ </main>
+<!-- Overlay Tutorial -->
+<div id="tutorial-overlay" class="noob-overlay">
+    <div class="noob-card text-white">
+        <h3 class="mb-4">Hướng dẫn sử dụng</h3>
+        <ul class="list-group list-group-flush mb-3">
+            <li class="list-group-item bg-transparent border-0 p-2">🟢 <b>Trò chuyện mới:</b> Tạo hội thoại mới và lưu cũ.</li>
+            <li class="list-group-item bg-transparent border-0 p-2">🟢 <b>Hội thoại hiện tại:</b> Xem chat hiện tại.</li>
+            <li class="list-group-item bg-transparent border-0 p-2">🟢 <b>Hội thoại cũ:</b> Mở chat đã lưu.</li>
+            <li class="list-group-item bg-transparent border-0 p-2">🟢 <b>Upload ảnh:</b> Nhấn vào icon ảnh hoặc kéo thả.</li>
+            <li class="list-group-item bg-transparent border-0 p-2">🟢 <b>Export chat:</b> Xuất toàn bộ chat ra file .abcsaihistory.</li>
+            <li class="list-group-item bg-transparent border-0 p-2">🟢 <b>Ngôn ngữ:</b> Chọn ngôn ngữ AI.</li>
+            <li class="list-group-item bg-transparent border-0 p-2">🟢 <b>Drag & Drop:</b> Kéo thả file .abcsaihistory hoặc hình ảnh.</li>
+        </ul>
+        <button class="btn btn-primary w-100" onclick="closeTutorial()">Đóng</button>
+    </div>
+</div>
+<div id="focus-modal">
+    <span class="close-focus" onclick="closeFocusMode()">&times;</span>
+    <div id="focus-content"></div>
+</div>
 
-                    <button id="send-btn" class="btn btn-primary rounded-circle shadow-lg d-flex align-items-center justify-content-center" style="width:48px; height:48px" onclick="handleSendMessage()">
-                        <i class="fa-solid fa-paper-plane"></i>
+ <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+ <script src="/assets/js/prism.js"></script>
+
+
+ <script>
+    const API_BASE = 'https://abcsnoobai.abcsnoob.workers.dev';
+  let currentChatHistory = []; // Khởi tạo rỗng trước
+    let activeGroupId = null;
+    let selectedBase64 = null;
+    let isTyping = false; // Biến này cực kỳ quan trọng để kiểm soát trạng thái AI đang gõ
+
+// 1. Lấy ngôn ngữ từ localStorage hoặc mặc định 'vi'
+let targetLang = localStorage.getItem('user_lang') || 'vi'; 
+
+const supportedLangs = {
+    "af": "Afrikaans", "ak": "Akan", "sq": "Shqip", "am": "አማርኛ", "ar": "العربية",
+    "hy": "Հայերեն", "as": "অসমীয়া", "ay": "Aymar aru", "az": "Azərbaycan", "bm": "Bamanankan",
+    "eu": "Euskara", "be": "Беларуская", "bn": "বাংলা", "bho": "भोजपुरी", "bs": "Bosanski",
+    "bg": "Български", "ca": "Català", "ceb": "Binisaya", "ny": "Chichewa", "zh": "中文 (Zhōngwén)",
+    "zh-TW": "繁體中文 (Zhōngwén)", "co": "Corsu", "hr": "Hrvatski", "cs": "Čeština", "da": "Dansk",
+    "dv": "ދިވެހި", "doi": "डोगरी", "nl": "Nederlands", "en": "English", "eo": "Esperanto",
+    "et": "Eesti", "ee": "Eʋegbe", "tl": "Filipino", "fi": "Suomi", "fr": "Français",
+    "fy": "Frysk", "gl": "Galego", "ka": "ქართული", "de": "Deutsch", "el": "Ελληνικά",
+    "gn": "Guarani", "gu": "ગુજરાતી", "ht": "Kreyòl Ayisyen", "ha": "Hausa", "haw": "Ōlelo Hawaiʻi",
+    "iw": "עברית", "hi": "हिन्दी", "hmn": "Hmoob", "hu": "Magyar", "is": "Íslenska",
+    "ig": "Igbo", "ilo": "Ilokano", "id": "Bahasa Indonesia", "ga": "Gaeilge", "it": "Italiano",
+    "ja": "日本語", "jw": "Basa Jawa", "kn": "ಕನ್ನಡ", "kk": "Қазақ тілі", "km": "ភាសាខ្មែរ",
+    "rw": "Kinyarwanda", "gom": "कोंकणी", "ko": "한국어", "kri": "Krio", "ku": "Kurdî (Kurmanjî)",
+    "ckb": "Kurdî (Soranî)", "ky": "Кыргызча", "lo": "ພາສາລາວ", "la": "Latina", "lv": "Latviešu",
+    "ln": "Lingála", "lt": "Lietuvių", "lg": "Luganda", "lb": "Lëtzebuergesch", "mk": "Македонски",
+    "mai": "मैथिली", "mg": "Malagasy", "ms": "Bahasa Melayu", "ml": "മലയാളം", "mt": "Malti",
+    "mi": "Te Reo Māori", "mr": "मराठी", "mni-Mtei": "Meiteilon (Manipuri)", "lus": "Mizo", "mn": "Монгол",
+    "my": "မြန်မာစာ", "ne": "नेपाली", "no": "Norsk", "or": "Odia (Oriya)", "om": "Oromoo",
+    "ps": "پښتو", "fa": "فارسی", "pl": "Polski", "pt": "Português", "pa": "ਪੰਜਾਬੀ",
+    "qu": "Runasimi", "ro": "Română", "ru": "Русский", "sm": "Gagana Samoa", "sa": "संस्कृतम्",
+    "gd": "Gàidhlig", "nso": "Sepedi", "sr": "Српски", "st": "Sesotho", "sn": "Chishona",
+    "sd": "سنڌي", "si": "සිංහල", "sk": "Slovenčina", "sl": "Slovenščina", "so": "Soomaali",
+    "es": "Español", "su": "Basa Sunda", "sw": "Kiswahili", "sv": "Svenska", "tg": "Тоҷикӣ",
+    "ta": "தமிழ்", "tt": "Татар", "te": "తెలుగు", "th": "ไทย", "ti": "ትግርኛ",
+    "ts": "Xitsonga", "tr": "Türkçe", "tk": "Türkmençe", "ak": "Twi", "uk": "Українська",
+    "ur": "اردو", "ug": "ئۇيغۇرچە", "uz": "Oʻzbek", "vi": "Tiếng Việt", "cy": "Cymraeg",
+    "xh": "IsiXhosa", "yi": "ייִדיש", "yo": "Yorùbá", "zu": "IsiZulu"
+};
+
+// 2. Hàm tạo Dropdown UI (Đã thêm các thuộc tính chống dịch)
+function createLanguageDropdown() {
+    const container = document.createElement('div');
+    container.id = 'lang-selector-container';
+    
+    // THÊM CÁC DÒNG NÀY ĐỂ CHỐNG DỊCH
+    container.classList.add('notranslate');
+    container.setAttribute('translate', 'no');
+    window.addEventListener("load", () => {
+    autoRotateLandscape();
+});
+
+async function autoRotateLandscape() {
+    const isMobile = /Mobi|Android|iPhone/i.test(navigator.userAgent);
+    if (!isMobile) return;
+
+    // Tạo nút xoay ẩn sẵn trong DOM (hoặc dùng CSS để ẩn/hiện)
+    const rotateBtn = document.createElement('button');
+    rotateBtn.innerHTML = '🔄 Xoay màn hình ngang';
+    rotateBtn.style = `
+        position: fixed; top: 20px; right: 20px; z-index: 9999;
+        padding: 10px 15px; background: #ff4757; color: white;
+        border: none; border-radius: 5px; display: none; font-weight: bold;
+    `;
+    document.body.appendChild(rotateBtn);
+
+    const tryLockOrientation = async () => {
+        try {
+            // Yêu cầu Fullscreen trước (bắt buộc trên nhiều trình duyệt)
+            if (!document.fullscreenElement) {
+                await document.documentElement.requestFullscreen();
+            }
+            // Thử khóa màn hình ngang
+            await screen.orientation.lock('landscape');
+            rotateBtn.style.display = 'none'; // Ẩn nút nếu thành công
+        } catch (error) {
+            console.error("Không thể xoay tự động:", error);
+            rotateBtn.style.display = 'block'; // Hiện nút nếu thất bại
+        }
+    };
+
+    // 1. Cố gắng chạy khi có tương tác đầu tiên
+    document.body.addEventListener('click', async () => {
+        await tryLockOrientation();
+    }, { once: true });
+
+    // 2. Gán sự kiện cho nút bấm thủ công (phòng trường hợp click trên bị chặn)
+    rotateBtn.addEventListener('click', async (e) => {
+        e.stopPropagation(); // Ngăn sự kiện nổi bọt
+        await tryLockOrientation();
+    });
+}
+
+// Gọi hàm
+autoRotateLandscape();
+
+    container.style.cssText = `
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        z-index: 999999;
+        background: #fff;
+        padding: 4px;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        font-family: system-ui, -apple-system, sans-serif;
+        border: 1px solid #eee;
+    `;
+
+    const select = document.createElement('select');
+    select.id = 'lang-select';
+    // Đảm bảo select cũng không bị dịch
+    select.classList.add('notranslate');
+    select.setAttribute('translate', 'no');
+    
+    select.style.cssText = `
+        padding: 6px 10px;
+        border-radius: 6px;
+        border: 1px solid #ddd;
+        background: white;
+        color: #333;
+        cursor: pointer;
+        font-size: 13px;
+        outline: none;
+    `;
+
+    for (const [code, name] of Object.entries(supportedLangs)) {
+        const option = document.createElement('option');
+        option.value = code;
+        option.textContent = name;
+        // Đảm bảo từng option không bị dịch nội dung (tên ngôn ngữ giữ nguyên bản)
+        option.classList.add('notranslate');
+        option.setAttribute('translate', 'no');
+        if (code === targetLang) option.selected = true;
+        select.appendChild(option);
+    }
+
+    select.addEventListener('change', async (e) => {
+        const newLang = e.target.value;
+        if (newLang === targetLang) return;
+
+        targetLang = newLang;
+        localStorage.setItem('user_lang', targetLang);
+        
+        // Reset flag để dịch lại nội dung mới
+        resetTranslationStatus();
+        await translateNewNodes(document.body);
+    });
+
+    container.appendChild(select);
+    document.body.appendChild(container);
+}
+
+// 3. Hàm kích hoạt Observer
+const startMasterProcess = async () => {
+    createLanguageDropdown();
+
+    // Dịch ban đầu nếu ngôn ngữ khác Tiếng Việt
+    if (targetLang !== 'vi') await translateNewNodes(document.body);
+    
+    const observer = new MutationObserver((mutations) => {
+        if (targetLang !== 'vi') {
+            mutations.forEach(mutation => {
+                if (mutation.addedNodes.length > 0) {
+                    mutation.addedNodes.forEach(node => {
+                        if (node.nodeType === 1 || node.nodeType === 3) {
+                            translateNewNodes(node.parentElement || node);
+                        }
+                    });
+                }
+                if (mutation.type === 'characterData') {
+                    translateNewNodes(mutation.target.parentElement);
+                }
+            });
+        }
+    });
+
+    observer.observe(document.body, { childList: true, subtree: true, characterData: true });
+};
+
+// 4. Hàm quét và lọc (Hệ thống bảo vệ dropdown đã nằm ở đây)
+async function translateNewNodes(rootNode) {
+    if (!rootNode || isExcluded(rootNode)) return;
+
+    const walker = document.createTreeWalker(
+        rootNode, 
+        NodeFilter.SHOW_TEXT,
+        {
+            acceptNode: (node) => {
+                const parent = node.parentElement;
+                // Kiểm tra cha có bị cấm dịch không
+                if (!parent || isExcluded(parent)) return NodeFilter.FILTER_REJECT;
+                
+                const content = node.textContent.trim();
+                if (content.length > 1 && /[a-zA-Zà-ỹÀ-Ỹ]/.test(content) && !node._isTranslated) {
+                    return NodeFilter.FILTER_ACCEPT;
+                }
+                return NodeFilter.FILTER_REJECT;
+            }
+        }
+    );
+
+    const nodes = [];
+    let currentNode;
+    while(currentNode = walker.nextNode()) nodes.push(currentNode);
+
+    if (nodes.length === 0) return;
+
+    await Promise.all(nodes.map(async (node) => {
+        const originalText = node.textContent.trim();
+        const translated = await fetchWithRetry(originalText, targetLang);
+        if (translated && translated !== originalText) {
+            node.textContent = node.textContent.replace(originalText, translated);
+            node._isTranslated = true;
+        }
+    }));
+}
+
+// 5. Hàm kiểm tra loại trừ
+function isExcluded(node) {
+    const excludedTags = ['SCRIPT', 'STYLE', 'TEXTAREA', 'INPUT', 'NOSCRIPT', 'CODE', 'PRE'];
+    // Quan trọng: Kiểm tra class 'notranslate' hoặc attribute translate='no'
+    return (
+        excludedTags.includes(node.tagName) ||
+        node.id === 'lang-selector-container' || 
+        node.classList?.contains('notranslate') ||
+        node.getAttribute?.('translate') === 'no' ||
+        node.closest?.('.notranslate') ||
+        node.closest?.('[translate="no"]')
+    );
+}
+
+// 6. API Dịch
+async function fetchWithRetry(text, target, retries = 2) {
+    if (!text || !target) return text;
+    const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=${target}&dt=t&q=${encodeURIComponent(text)}`;
+    for (let i = 0; i < retries; i++) {
+        try {
+            const res = await fetch(url);
+            const json = await res.json();
+            return json[0].map(item => item[0]).join('');
+        } catch (err) {
+            if (i === retries - 1) return text;
+            await new Promise(r => setTimeout(r, 500));
+        }
+    }
+}
+
+startMasterProcess();
+    // Hàm nén ảnh để AI xử lý nhanh hơn
+async function compressImage(base64Str) {
+    return new Promise((resolve) => {
+        const img = new Image();
+        img.src = base64Str;
+        img.onload = () => {
+            const canvas = document.createElement('canvas');
+            const MAX_SIZE = 1280; // Ép về chuẩn HD
+            let width = img.width, height = img.height;
+            if (width > height && width > MAX_SIZE) { height *= MAX_SIZE / width; width = MAX_SIZE; }
+            else if (height > MAX_SIZE) { width *= MAX_SIZE / height; height = MAX_SIZE; }
+            canvas.width = width; canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+            resolve(canvas.toDataURL('image/jpeg', 0.6)); // Nén 40% chất lượng
+        };
+    });
+}
+const CHANGELOG_DATA = [
+        {
+        version: "v2.3.0",
+        date: "17/01/2026",
+        title: "Mã hóa độc quyền",
+        items: [
+            "Thêm mã hóa độc quyền cho file lịch sử."
+        ]
+    },
+    {
+        version: "v2.2.5",
+        date: "09/01/2026",
+        title: "Thêm ngôn ngữ",
+        items: [
+            "Thêm đa ngôn ngữ vào."
+        ]
+    },
+    {
+        version: "v2.2.1-hotfix",
+        date: "09/01/2026",
+        title: "Sửa lỗi logic",
+        items: [
+            "Fix lại nút gửi chết tiệt đếch hoạt động."
+        ]
+    },
+    {
+        version: "v2.2.0",
+        date: "09/01/2026",
+        title: "Tối ưu",
+        items: [
+            "Tối ưu lại code và thêm cảnh báo :bruh:."
+        ]
+    },
+  {
+        version: "v2.1.0",
+        date: "09/01/2026",
+        title: "Nâng cấp hệ thống lưu trữ",
+        items: [
+            "Chuyển đổi từ localStorage sang localForage (IndexedDB).",
+            "Tối ưu hóa ghi dữ liệu bất đồng bộ cho hiệu năng cao.",
+            "Hỗ trợ lưu trực tiếp Object/Array không cần stringify."
+        ]
+    }
+  
+];
+function showChangelog() {
+    const listContainer = document.querySelector('#changelog-overlay .list-unstyled');
+    
+    // Render từ mảng JSON
+    listContainer.innerHTML = CHANGELOG_DATA.map(log => `
+        <li class="mb-4 border-bottom border-secondary pb-3">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <span class="badge bg-primary">${log.version}</span>
+                <small class="text-muted">${log.date}</small>
+            </div>
+            <h6 class="text-info fw-bold">${log.title}</h6>
+            <ul class="small text-muted ps-3">
+                ${log.items.map(item => `<li>${item}</li>`).join('')}
+            </ul>
+        </li>
+    `).join('');
+
+    document.getElementById('changelog-overlay').style.display = 'flex';
+}
+
+function toggleHistory() {
+    const content = document.getElementById('archived-list');
+    const chevron = document.getElementById('history-chevron');
+    
+    content.classList.toggle('show');
+    
+    if (content.classList.contains('show')) {
+        chevron.style.transform = 'rotate(180deg)';
+    } else {
+        chevron.style.transform = 'rotate(0deg)';
+    }
+}
+function removeImage() {
+    selectedBase64 = null;
+    const container = document.getElementById('image-preview-container');
+    const img = document.getElementById('img-render');
+    if(container) container.style.display = 'none';
+    if(img) img.src = '';
+}
+
+// Cập nhật lại xử lý file/paste để có nén ảnh
+async function processFile(file) {
+    if (!file.type.startsWith('image/')) return;
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+        selectedBase64 = await compressImage(e.target.result); // Nén ở đây
+        document.getElementById('img-render').src = selectedBase64;
+        document.getElementById('image-preview-container').style.display = 'block';
+    };
+    reader.readAsDataURL(file);
+}
+
+// Hỗ trợ Paste ảnh
+window.addEventListener('paste', e => {
+    const item = e.clipboardData.items[0];
+    if (item?.type.includes('image')) processFile(item.getAsFile());
+});
+function openTutorial() {
+    document.getElementById('tutorial-overlay').style.display = 'flex';
+}
+
+// Hỗ trợ dán ảnh trực tiếp từ clipboard (Ctrl + V)
+window.addEventListener('paste', e => {
+    const items = e.clipboardData.items;
+    for (let i = 0; i < items.length; i++) {
+        if (items[i].type.indexOf('image') !== -1) {
+            const blob = items[i].getAsFile();
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                selectedBase64 = event.target.result;
+                document.getElementById('img-render').src = selectedBase64;
+                document.getElementById('image-preview-container').style.display = 'block';
+            };
+            reader.readAsDataURL(blob);
+        }
+    }
+});
+function updateProviderUI(providerName) {
+    const badge = document.getElementById('model-badge');
+    if (badge) {
+        badge.innerText = providerName.toUpperCase();
+        badge.style.color = "#00d4ff";
+    }
+}
+function typeWriter(element, text, onComplete) {
+    let i = 0;
+    isTyping = true;
+    element.innerHTML = "";
+
+    function typing() {
+        if (i < text.length) {
+            const currentText = text.substring(0, i + 1);
+            
+            // KIỂM TRA XEM CÓ ĐANG TRONG KHỐI CODE DỞ DANG KHÔNG
+            // Đếm số dấu gạch chéo ngược (backticks)
+            const backtickCount = (currentText.match(/```/g) || []).length;
+            
+            if (backtickCount % 2 !== 0) {
+                // Đang trong khối code chưa đóng: Hiển thị thô để không làm sập HTML
+                element.textContent = currentText; 
+                element.style.whiteSpace = "pre-wrap";
+            } else {
+                // Ngoài khối code hoặc đã đóng khối code: Render Markdown bình thường
+                try {
+                    element.innerHTML = marked.parse(currentText);
+                } catch (e) {
+                    // Nếu marked parse lỗi, quay về hiển thị thô
+                    element.textContent = currentText;
+                }
+            }
+
+            element.setAttribute('data-raw', currentText);
+            i++;
+            
+            const win = document.getElementById('chat-window');
+            if (win) win.scrollTop = win.scrollHeight;
+            
+            // Tăng tốc độ gõ để tránh nghẽn luồng xử lý
+            setTimeout(typing, 1); 
+        } else {
+            // KẾT THÚC: Render chuẩn xác lần cuối
+            element.style.whiteSpace = "normal";
+            element.innerHTML = marked.parse(text);
+            element.setAttribute('data-raw', text);
+            
+            // Chỉ highlight sau khi đã gõ xong hoàn toàn
+            if (window.Prism) {
+                Prism.highlightAllUnder(element);
+            }
+            
+            isTyping = false;
+            if (onComplete) onComplete(); 
+        }
+    }
+    typing();
+}
+async function clearChat() {
+    if (confirm("Bạn có chắc chắn muốn xóa toàn bộ tin nhắn hiện tại?")) {
+        // 1. Xóa mảng lịch sử hiện tại
+        currentChatHistory = [];
+        
+        // 2. Xóa dữ liệu trong bộ nhớ tạm (localForage như đã sửa ở lỗi 1)
+        await localforage.removeItem('noob_chat_history');
+        
+        // 3. Xóa giao diện chat
+        const win = document.getElementById('chat-window');
+        if (win) win.innerHTML = '';
+        
+        // 4. Hiện lại màn hình chào mừng
+        const welcome = document.querySelector('.welcome-view');
+        if (welcome) welcome.style.display = 'flex';
+        
+        // 5. Reset ô nhập liệu
+        const tx = document.getElementById('user-input');
+        if (tx) {
+            tx.value = '';
+            tx.style.height = 'auto';
+        }
+        
+        console.log("Đã dọn dẹp cửa sổ chat.");
+    }
+}
+
+function closeTutorial() {
+    document.getElementById('tutorial-overlay').style.display = 'none';
+}
+const topLoader = document.getElementById('top-loader-container');
+
+// Hàm tạo hiệu ứng chờ 3 giây
+function startLoading() {
+    return new Promise(resolve => {
+        if(topLoader) topLoader.style.display = 'block';
+        
+        setTimeout(() => {
+            if(topLoader) topLoader.style.display = 'none';
+            resolve(); // Trả về kết quả sau 3 giây để chạy tiếp code phía sau
+        }, 3000);
+    });
+}
+// Gắn lại nút Cách dùng
+document.querySelector('.btn-chat-use')?.addEventListener('click', openTutorial);
+
+async function loadArchivedChats() {
+    await startLoading();
+    const archivedChats = JSON.parse(localStorage.getItem('noob_archived_chats') || '[]');
+    const list = document.getElementById('archived-list');
+    
+    if (!list) return;
+
+    if (archivedChats.length === 0) {
+        list.innerHTML = '<p class="small text-muted px-3 py-2 opacity-50">Không có hội thoại cũ...</p>';
+        return;
+    }
+
+    // Vẽ giao diện ngay lập tức từ localStorage
+    list.innerHTML = archivedChats.map(s => `
+        <div class="chat-item" onclick="openArchived(${s.id})" id="archived-${s.id}">
+            <i class="fa-solid fa-clock text-secondary"></i>
+            <span class="text-truncate">Hội thoại ${new Date(s.id).toLocaleString('vi-VN')}</span>
+        </div>
+    `).join('');
+    
+    console.log("Đã tải lịch sử:", archivedChats.length, "mục"); // Kiểm tra tại F12 console
+}
+function stopLoading() {
+    const topLoader = document.getElementById('top-loader-container');
+    if(topLoader) topLoader.style.display = 'none';
+}
+async function exportChat() {
+    if (!currentChatHistory || currentChatHistory.length === 0) {
+        alert("Không có lịch sử để xuất!");
+        return;
+    }
+
+    // Nếu người dùng nhấn Cancel (null) thì dừng. 
+    // Nếu để trống "" hoặc nhập thì tiếp tục.
+    let password = prompt("Nhập mật khẩu để bảo vệ file (Để trống nếu muốn xuất ngay):", "");
+    
+    if (password === null) return; // Người dùng bấm nút Hủy
+    if (password === "") password = "default"; // Tự động dùng pass mặc định nếu để trống
+
+    startLoading();
+
+    try {
+        // Thực hiện serialize với mật khẩu (đã được xử lý trống)
+        const binaryData = await ABCSParser.serialize(currentChatHistory, password);
+        
+        const blob = new Blob([binaryData], { type: "application/octet-stream" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        
+        const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+        a.href = url;
+        a.download = `chat-${timestamp}.abcsaihistory`;
+        document.body.appendChild(a);
+        a.click();
+        
+        setTimeout(() => {
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }, 100);
+
+    } catch (err) {
+        console.error("Export error:", err);
+        alert("Lỗi khi đóng gói file: " + err.message);
+    } finally {
+        stopLoading();
+    }
+}
+
+function switchToCurrentChat() {
+    document.querySelectorAll('#archived-list .chat-item, #current-chat-item .chat-item').forEach(i => i.classList.remove('active'));
+    document.querySelector('#current-chat-item .chat-item').classList.add('active');
+
+    document.getElementById('chat-title').innerText = "Hội thoại hiện tại";
+
+    const win = document.getElementById('chat-window');
+    win.innerHTML = ''; // reset
+
+    currentChatHistory.forEach(msg => renderMessage(msg));
+
+    // Xóa param ?id
+    const url = new URL(window.location);
+    url.searchParams.delete('id');
+    window.history.replaceState({}, '', url);
+}
+
+async function openArchived(sessionId) {
+    await startLoading();
+
+    const archivedChats = JSON.parse(localStorage.getItem('noob_archived_chats') || '[]');
+    const session = archivedChats.find(s => s.id === sessionId);
+    if(!session) return;
+
+    document.querySelectorAll('#archived-list .chat-item, #current-chat-item .chat-item').forEach(i => i.classList.remove('active'));
+    document.getElementById(`archived-${sessionId}`)?.classList.add('active');
+
+    const win = document.getElementById('chat-window');
+    win.innerHTML = '';
+    session.history.forEach(msg => renderMessage(msg));
+
+    document.getElementById('chat-title').innerText = `Hội thoại cũ: ${new Date(session.timestamp).toLocaleString()}`;
+
+    const url = new URL(window.location);
+    url.searchParams.set('id', sessionId);
+    window.history.replaceState({}, '', url);
+}
+
+
+async function handleSendMessage() {
+    // 1. CHẶN GỬI KHI ĐANG BẬN
+    if (isTyping) return;
+
+    const input = document.getElementById('user-input');
+    const sendBtn = document.getElementById('send-btn');
+    const topLoader = document.getElementById('top-loader-container');
+    const win = document.getElementById('chat-window');
+    const text = input.value.trim();
+    
+    if (!text && !selectedBase64) return;
+
+    // --- BẬT HIỆU ỨNG LOADING ---
+    isTyping = true; 
+    if (topLoader) topLoader.style.display = 'block'; 
+    if (sendBtn) {
+        sendBtn.disabled = true;
+        sendBtn.style.opacity = '0.5';
+    }
+
+    const timestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const userParts = [];
+    
+    if (text) userParts.push({ text });
+    if (selectedBase64) {
+        userParts.push({ 
+            inlineData: { 
+                mimeType: "image/jpeg",
+                data: selectedBase64.split(',')[1] 
+            } 
+        });
+    }
+
+    // Render tin nhắn của User
+    const msgObj = { role: 'user', parts: userParts, time: timestamp };
+    currentChatHistory.push(msgObj);
+    renderMessage(msgObj, false);
+
+    // --- TẠO PHẢN HỒI PLACEHOLDER (ĐANG NHẬP...) ---
+    const placeholderId = 'typing-' + Date.now();
+    const placeholderDiv = document.createElement('div');
+    placeholderDiv.className = 'msg-box bot-msg';
+    placeholderDiv.id = placeholderId;
+    placeholderDiv.innerHTML = `
+        <div class="msg-avatar" style="background:var(--primary)">
+            <img src="https://abcsnoob.github.io/assets/image/abcsnoob.webp" style="width:100%; height:100%; border-radius:14px; object-fit:cover">
+        </div>
+        <div class="msg-content-wrapper">
+            <div class="msg-header">
+                <span class="fw-bold">Abc's Noob AI</span>
+            </div>
+            <div class="msg-text" style="display: flex; align-items: center; gap: 10px; width: fit-content;">
+                <div class="typing-loader"><span></span><span></span><span></span></div>
+                <small style="opacity: 0.6; font-style: italic;">Đang nhập . . .</small>
+            </div>
+        </div>
+    `;
+    win.appendChild(placeholderDiv);
+    win.scrollTop = win.scrollHeight;
+
+    // Reset input
+    input.value = '';
+    input.style.height = 'auto';
+    if (typeof removeImage === 'function') removeImage();
+
+    try {
+        const res = await fetch(API_BASE, { 
+            method: 'POST', 
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                messages: currentChatHistory.slice(-10),
+                user_lang: localStorage.getItem('noob_lang') || 'vi'
+            }) 
+        });
+        
+        // --- XÓA PLACEHOLDER KHI CÓ PHẢN HỒI ---
+        const placeholder = document.getElementById(placeholderId);
+        if (placeholder) placeholder.remove();
+
+        if (!res.ok) throw new Error(`Server báo lỗi ${res.status}`);
+        const d = await res.json();
+        
+        if (d.success) {
+            if (d.provider && typeof updateProviderUI === 'function') {
+                updateProviderUI(d.provider);
+            }
+
+            const botMsg = { 
+                role: 'model', 
+                parts: [{ text: d.text || '' }],
+                time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                searchMetadata: d.searchMetadata,
+                provider: d.provider 
+            };
+
+            renderMessage(botMsg, true, () => {
+                isTyping = false;
+                if (topLoader) topLoader.style.display = 'none';
+                if (sendBtn) {
+                    sendBtn.disabled = false;
+                    sendBtn.style.opacity = '1';
+                }
+                input.focus();
+            });
+            
+            currentChatHistory.push(botMsg);
+            await localforage.setItem('noob_chat_history', currentChatHistory);
+        } else {
+            throw new Error(d.error || "AI bị gank bất ngờ");
+        }
+    } catch (e) {
+        // Xóa placeholder nếu lỗi
+        const placeholder = document.getElementById(placeholderId);
+        if (placeholder) placeholder.remove();
+
+        console.error("Lỗi kết nối:", e);
+        const errorMsg = {
+            role: 'model',
+            parts: [{ text: "Haizz, ping cao quá tôi bị gank rồi! Check lại mạng xem sao ông giáo ơi..." }],
+            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        };
+        renderMessage(errorMsg, false);
+        
+        isTyping = false;
+        if (topLoader) topLoader.style.display = 'none';
+        if (sendBtn) {
+            sendBtn.disabled = false;
+            sendBtn.style.opacity = '1';
+        }
+    }
+}
+
+function renderMessage(msg, isNew = false, onComplete = null) {
+    const win = document.getElementById('chat-window');
+    const isBot = msg.role === 'model' || msg.role === 'assistant';
+    let text = "", imgSrc = null;
+
+    msg.parts.forEach(p => {
+        if (p.text) text = p.text;
+        if (p.inlineData) imgSrc = typeof p.inlineData === 'string' ? p.inlineData : `data:${p.inlineData.mime_type};base64,${p.inlineData.data}`;
+    });
+
+let searchingStatus = "";
+    if (isBot && msg.searchMetadata) {
+        searchingStatus = `
+            <div class="searching-status mb-2" style="color: var(--primary); font-size: 13px; font-weight: 600; font-style: italic;">
+                <i class="fa-solid fa-magnifying-glass fa-beat-fade me-2"></i>Đang tìm trên web...
+            </div>`;
+    }
+
+    const div = document.createElement('div');
+    div.className = `msg-box ${isBot ? 'bot-msg' : 'user-msg'}`;
+    // Gán ID để dễ truy vấn cho chế độ Focus
+    const msgId = 'msg-' + Date.now() + Math.random().toString(36).substr(2, 5);
+    div.id = msgId;
+
+    div.innerHTML = `
+        <div class="msg-avatar" style="background:${isBot ? 'var(--primary)' : 'var(--secondary)'}">
+            ${isBot ? '<img src="https://abcsnoob.github.io/assets/image/abcsnoob.webp" style="width:100%; height:100%; border-radius:14px; object-fit:cover">' : 'U'}
+        </div>
+        <div class="msg-content-wrapper">
+            <div class="msg-header">
+                <span class="fw-bold">${isBot ? "ABC'S NOOB AI" : "ME"}</span>
+                <span class="msg-time">${msg.time || ''}</span>
+            </div>
+            ${imgSrc ? `<div class="msg-img-wrapper"><img src="${imgSrc}" onclick="window.open(this.src)"></div>` : ''}
+            <div class="msg-text">
+                ${searchingStatus}
+                <div class="text-body-content"></div>
+                <div class="msg-actions">
+                    <button class="action-btn" onclick="copyText(this, \`${encodeURIComponent(text)}\`)">
+                        <i class="fa-regular fa-copy me-1"></i> Copy
+                    </button>
+                    <button class="action-btn" onclick="toggleFocusMode('${msgId}')">
+                        <i class="fa-solid fa-expand me-1"></i> Focus
                     </button>
                 </div>
             </div>
-            <p class="text-center mt-2" style="font-size: 11px; color: rgba(255,255,255,0.3);">
-                <span class="notranslate">Abc's Noob</span> AI có thể nhầm lẫn. Đừng tin tuyệt đối, coi chừng bay acc Bedwars! 🐧
-            </p>
-        </div>
-    </main>
-    <!-- Overlay Tutorial -->
-    <div id="tutorial-overlay" class="noob-overlay">
-        <div class="noob-card text-white">
-            <h3 class="mb-4">Hướng dẫn sử dụng</h3>
-            <ul class="list-group list-group-flush mb-3">
-                <li class="list-group-item bg-transparent border-0 p-2">🟢 <b>Trò chuyện mới:</b> Tạo hội thoại mới và lưu cũ.</li>
-                <li class="list-group-item bg-transparent border-0 p-2">🟢 <b>Hội thoại hiện tại:</b> Xem chat hiện tại.</li>
-                <li class="list-group-item bg-transparent border-0 p-2">🟢 <b>Hội thoại cũ:</b> Mở chat đã lưu.</li>
-                <li class="list-group-item bg-transparent border-0 p-2">🟢 <b>Upload ảnh:</b> Nhấn vào icon ảnh hoặc kéo thả.</li>
-                <li class="list-group-item bg-transparent border-0 p-2">🟢 <b>Export chat:</b> Xuất toàn bộ chat ra file .abcsaihistory.</li>
-                <li class="list-group-item bg-transparent border-0 p-2">🟢 <b>Ngôn ngữ:</b> Chọn ngôn ngữ AI.</li>
-                <li class="list-group-item bg-transparent border-0 p-2">🟢 <b>Drag & Drop:</b> Kéo thả file .abcsaihistory hoặc hình ảnh.</li>
-            </ul>
-            <button class="btn btn-primary w-100" onclick="closeTutorial()">Đóng</button>
-        </div>
-    </div>
-    <div id="focus-modal">
-        <span class="close-focus" onclick="closeFocusMode()">&times;</span>
-        <div id="focus-content"></div>
-    </div>
+        </div>`;
 
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <script src="/assets/js/prism.js"></script>
-
-
-    <script>
-        const API_BASE = 'https://abcsnoobai.abcsnoob.workers.dev';
-      let currentChatHistory = []; // Khởi tạo rỗng trước
-        let activeGroupId = null;
-        let selectedBase64 = null;
-        let isTyping = false; // Biến này cực kỳ quan trọng để kiểm soát trạng thái AI đang gõ
+    win.appendChild(div);
+    const textElem = div.querySelector('.text-body-content');
     
-    // 1. Lấy ngôn ngữ từ localStorage hoặc mặc định 'vi'
-    let targetLang = localStorage.getItem('user_lang') || 'vi'; 
+    if (isBot && isNew && text) {
+        typeWriter(textElem, text, onComplete);
+    } else {
+        textElem.innerHTML = marked.parse(text || "");
+        Prism.highlightAllUnder(div);
+        if (onComplete) onComplete();
+    }
+    win.scrollTop = win.scrollHeight;
+}
+
+// Hàm Copy văn bản
+function copyText(btn, encodedText) {
+    const text = decodeURIComponent(encodedText);
+    navigator.clipboard.writeText(text).then(() => {
+        const originalHTML = btn.innerHTML;
+        btn.innerHTML = '<i class="fa-solid fa-check me-1"></i> Đã xong!';
+        btn.classList.add('btn-success');
+        setTimeout(() => {
+            btn.innerHTML = originalHTML;
+            btn.classList.remove('btn-success');
+        }, 2000);
+    });
+}
+
+// Hàm bật/tắt chế độ Focus 100%
+function toggleFocusMode(msgId) {
+    const msgElement = document.getElementById(msgId);
+    if (!msgElement) return;
+
+    // Lấy nội dung đã được render (bao gồm cả các khối code)
+    const bodyContent = msgElement.querySelector('.text-body-content').innerHTML;
+    const focusModal = document.getElementById('focus-modal');
+    const focusContent = document.getElementById('focus-content');
+
+    // Đổ nội dung vào modal
+    focusContent.innerHTML = `
+        <div style="margin-bottom: 20px; border-bottom: 1px solid #333; padding-bottom: 10px;">
+            <small style="color: var(--primary)">CHẾ ĐỘ TẬP TRUNG</small>
+        </div>
+        ${bodyContent}
+    `;
+
+    // Hiển thị modal với hiệu ứng
+    focusModal.style.display = 'block';
+    document.body.style.overflow = 'hidden'; // Chặn cuộn trang web bên dưới
+
+    // Re-highlight code trong modal bằng Prism
+    Prism.highlightAllUnder(focusContent);
+}
+window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+        closeFocusMode();
+    }
+});
+function closeFocusMode() {
+    document.getElementById('focus-modal').style.display = 'none';
+    document.body.style.overflow = 'auto'; // Cho phép cuộn lại
+}
+async function handleImage(input) {
+    const file = input.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+        selectedBase64 = await compressImage(e.target.result); // NÉN ẢNH
+        document.getElementById('img-render').src = selectedBase64;
+        document.getElementById('image-preview-container').style.display = 'block';
+    };
+    reader.readAsDataURL(file);
+}
+
+async function startNewChat() { // Thêm async
+    if (currentChatHistory.length === 0) return;
+
+    let archivedChats = JSON.parse(localStorage.getItem('noob_archived_chats') || '[]');
     
-    const supportedLangs = {
-        "af": "Afrikaans", "ak": "Akan", "sq": "Shqip", "am": "አማርኛ", "ar": "العربية",
-        "hy": "Հայերեն", "as": "অসমীয়া", "ay": "Aymar aru", "az": "Azərbaycan", "bm": "Bamanankan",
-        "eu": "Euskara", "be": "Беларуская", "bn": "বাংলা", "bho": "भोजपुरी", "bs": "Bosanski",
-        "bg": "Български", "ca": "Català", "ceb": "Binisaya", "ny": "Chichewa", "zh": "中文 (Zhōngwén)",
-        "zh-TW": "繁體中文 (Zhōngwén)", "co": "Corsu", "hr": "Hrvatski", "cs": "Čeština", "da": "Dansk",
-        "dv": "ދިވެހި", "doi": "डोगरी", "nl": "Nederlands", "en": "English", "eo": "Esperanto",
-        "et": "Eesti", "ee": "Eʋegbe", "tl": "Filipino", "fi": "Suomi", "fr": "Français",
-        "fy": "Frysk", "gl": "Galego", "ka": "ქართული", "de": "Deutsch", "el": "Ελληνικά",
-        "gn": "Guarani", "gu": "ગુજરાતી", "ht": "Kreyòl Ayisyen", "ha": "Hausa", "haw": "Ōlelo Hawaiʻi",
-        "iw": "עברית", "hi": "हिन्दी", "hmn": "Hmoob", "hu": "Magyar", "is": "Íslenska",
-        "ig": "Igbo", "ilo": "Ilokano", "id": "Bahasa Indonesia", "ga": "Gaeilge", "it": "Italiano",
-        "ja": "日本語", "jw": "Basa Jawa", "kn": "ಕನ್ನಡ", "kk": "Қазақ тілі", "km": "ភាសាខ្មែរ",
-        "rw": "Kinyarwanda", "gom": "कोंकणी", "ko": "한국어", "kri": "Krio", "ku": "Kurdî (Kurmanjî)",
-        "ckb": "Kurdî (Soranî)", "ky": "Кыргызча", "lo": "ພາສາລາວ", "la": "Latina", "lv": "Latviešu",
-        "ln": "Lingála", "lt": "Lietuvių", "lg": "Luganda", "lb": "Lëtzebuergesch", "mk": "Македонски",
-        "mai": "मैथिली", "mg": "Malagasy", "ms": "Bahasa Melayu", "ml": "മലയാളം", "mt": "Malti",
-        "mi": "Te Reo Māori", "mr": "मराठी", "mni-Mtei": "Meiteilon (Manipuri)", "lus": "Mizo", "mn": "Монгол",
-        "my": "မြန်မာစာ", "ne": "नेपाली", "no": "Norsk", "or": "Odia (Oriya)", "om": "Oromoo",
-        "ps": "پښتو", "fa": "فارسی", "pl": "Polski", "pt": "Português", "pa": "ਪੰਜਾਬੀ",
-        "qu": "Runasimi", "ro": "Română", "ru": "Русский", "sm": "Gagana Samoa", "sa": "संस्कृतम्",
-        "gd": "Gàidhlig", "nso": "Sepedi", "sr": "Српски", "st": "Sesotho", "sn": "Chishona",
-        "sd": "سنڌي", "si": "සිංහල", "sk": "Slovenčina", "sl": "Slovenščina", "so": "Soomaali",
-        "es": "Español", "su": "Basa Sunda", "sw": "Kiswahili", "sv": "Svenska", "tg": "Тоҷикӣ",
-        "ta": "தமிழ்", "tt": "Татар", "te": "తెలుగు", "th": "ไทย", "ti": "ትግርኛ",
-        "ts": "Xitsonga", "tr": "Türkçe", "tk": "Türkmençe", "ak": "Twi", "uk": "Українська",
-        "ur": "اردو", "ug": "ئۇيغۇرچە", "uz": "Oʻzbek", "vi": "Tiếng Việt", "cy": "Cymraeg",
-        "xh": "IsiXhosa", "yi": "ייִדיש", "yo": "Yorùbá", "zu": "IsiZulu"
+    const newEntry = {
+        id: Date.now(),
+        timestamp: new Date().toISOString(),
+        history: [...currentChatHistory]
     };
     
-    // 2. Hàm tạo Dropdown UI (Đã thêm các thuộc tính chống dịch)
-    function createLanguageDropdown() {
-        const container = document.createElement('div');
-        container.id = 'lang-selector-container';
-        
-        // THÊM CÁC DÒNG NÀY ĐỂ CHỐNG DỊCH
-        container.classList.add('notranslate');
-        container.setAttribute('translate', 'no');
-        
-        container.style.cssText = `
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            z-index: 999999;
-            background: #fff;
-            padding: 4px;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            font-family: system-ui, -apple-system, sans-serif;
-            border: 1px solid #eee;
-        `;
+    archivedChats.unshift(newEntry);
+    localStorage.setItem('noob_archived_chats', JSON.stringify(archivedChats));
     
-        const select = document.createElement('select');
-        select.id = 'lang-select';
-        // Đảm bảo select cũng không bị dịch
-        select.classList.add('notranslate');
-        select.setAttribute('translate', 'no');
-        
-        select.style.cssText = `
-            padding: 6px 10px;
-            border-radius: 6px;
-            border: 1px solid #ddd;
-            background: white;
-            color: #333;
-            cursor: pointer;
-            font-size: 13px;
-            outline: none;
-        `;
+    // RESET TRẠNG THÁI [SỬA TẠI ĐÂY]
+    currentChatHistory = [];
+    await localforage.removeItem('noob_chat_history'); // Xóa bằng localforage thay vì localStorage
+
+    loadArchivedChats(); 
+    switchToCurrentChat();
     
-        for (const [code, name] of Object.entries(supportedLangs)) {
-            const option = document.createElement('option');
-            option.value = code;
-            option.textContent = name;
-            // Đảm bảo từng option không bị dịch nội dung (tên ngôn ngữ giữ nguyên bản)
-            option.classList.add('notranslate');
-            option.setAttribute('translate', 'no');
-            if (code === targetLang) option.selected = true;
-            select.appendChild(option);
-        }
+    const content = document.getElementById('archived-list');
+    if (content) content.classList.add('show');
+}
+
+    function changeLanguage() {
+        const lang = prompt("Nhập ngôn ngữ (vi, en, jp, kr):", localStorage.getItem('noob_lang') || 'vi');
+        if(lang) { localStorage.setItem('noob_lang', lang); alert("Đã đổi sang: " + lang.toUpperCase()); }
+    }
+
+async function loadData() {
+    // Đợi localForage lấy dữ liệu ra
+    currentChatHistory = await localforage.getItem('noob_chat_history') || [];
     
-        select.addEventListener('change', async (e) => {
-            const newLang = e.target.value;
-            if (newLang === targetLang) return;
-    
-            targetLang = newLang;
-            localStorage.setItem('user_lang', targetLang);
-            
-            // Reset flag để dịch lại nội dung mới
-            resetTranslationStatus();
-            await translateNewNodes(document.body);
+    document.querySelector('.welcome-view')?.remove();
+    const win = document.getElementById('chat-window');
+    win.innerHTML = ''; 
+
+    if(currentChatHistory.length > 0){
+        currentChatHistory.forEach(msg => renderMessage(msg, false)); 
+    }
+    loadArchivedChats();
+}
+
+document.addEventListener('DOMContentLoaded', async () => { // Thêm async ở đây
+    // 1. Tải danh sách lịch sử vào sidebar (LocalStorage cho danh sách mục lục thì ổn, nhưng chat history nên dùng localForage)
+    loadArchivedChats(); 
+
+    // 2. Thiết lập cho ô nhập liệu (Giữ nguyên logic của bạn)
+    const tx = document.getElementById('user-input');
+    if (tx) {
+        tx.addEventListener('input', function() { 
+            this.style.height = 'auto'; 
+            this.style.height = (this.scrollHeight) + 'px'; 
         });
-    
-        container.appendChild(select);
-        document.body.appendChild(container);
-    }
-    /**
-     * Hàm kiểm tra và ngăn chặn thiết bị di động
-     * Kiểm tra: User Agent (Header) và Kích thước màn hình
-     */
-    function validateDeviceAccess() {
-        const userAgent = navigator.userAgent || navigator.vendor || window.opera;
-        const screenWidth = window.innerWidth;
-    
-        // Kiểm tra dấu hiệu thiết bị di động/máy tính bảng
-        const isMobileDevice = /android|iphone|kindle|ipad|playbook|silk|blackberry|iemobile|opera mini/i.test(userAgent.toLowerCase());
-        const isSmallScreen = screenWidth < 768; // Ngưỡng kích thước máy tính
-    
-        if (isMobileDevice || isSmallScreen) {
-            // Ghi đè nội dung trang web để ngăn chặn truy cập
-            document.body.innerHTML = `
-                <div style="
-                    position: fixed; 
-                    top: 0; left: 0; 
-                    width: 100%; height: 100%; 
-                    background-color: #ffffff; 
-                    display: flex; flex-direction: column; 
-                    justify-content: center; align-items: center; 
-                    z-index: 999999; padding: 20px; 
-                    text-align: center; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-                ">
-                    <div style="max-width: 500px;">
-                        <h2 style="color: #d9534f; margin-bottom: 15px;">Thông báo</h2>
-                        <p style="font-size: 18px; color: #333; line-height: 1.6;">
-                            Chúng tôi chặn bạn vì chúng tôi đã phát hiện lỗi không thể sửa trên các thiết bị di động. 
-                            Hãy thử đổi thiết bị nhé.
-                        </p>
-                    </div>
-                </div>
-            `;
-            
-            // Ngăn chặn các script khác tiếp tục chạy
-            window.stop();
-        }
-    }
-    
-    // Thực thi kiểm tra ngay khi trang vừa tải
-    validateDeviceAccess();
-    
-    // Lặp lại kiểm tra mỗi 3 giây (3000ms) để đề phòng đổi kích thước trình duyệt
-    setInterval(validateDeviceAccess, 3000);
-    function resetTranslationStatus() {
-        const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null);
-        let node;
-        while(node = walker.nextNode()) {
-            node._isTranslated = false;
-        }
-    }
-    
-    // 3. Hàm kích hoạt Observer
-    const startMasterProcess = async () => {
-        createLanguageDropdown();
-    
-        // Dịch ban đầu nếu ngôn ngữ khác Tiếng Việt
-        if (targetLang !== 'vi') await translateNewNodes(document.body);
-        
-        const observer = new MutationObserver((mutations) => {
-            if (targetLang !== 'vi') {
-                mutations.forEach(mutation => {
-                    if (mutation.addedNodes.length > 0) {
-                        mutation.addedNodes.forEach(node => {
-                            if (node.nodeType === 1 || node.nodeType === 3) {
-                                translateNewNodes(node.parentElement || node);
-                            }
-                        });
-                    }
-                    if (mutation.type === 'characterData') {
-                        translateNewNodes(mutation.target.parentElement);
-                    }
-                });
-            }
-        });
-    
-        observer.observe(document.body, { childList: true, subtree: true, characterData: true });
-    };
-    
-    // 4. Hàm quét và lọc (Hệ thống bảo vệ dropdown đã nằm ở đây)
-    async function translateNewNodes(rootNode) {
-        if (!rootNode || isExcluded(rootNode)) return;
-    
-        const walker = document.createTreeWalker(
-            rootNode, 
-            NodeFilter.SHOW_TEXT,
-            {
-                acceptNode: (node) => {
-                    const parent = node.parentElement;
-                    // Kiểm tra cha có bị cấm dịch không
-                    if (!parent || isExcluded(parent)) return NodeFilter.FILTER_REJECT;
-                    
-                    const content = node.textContent.trim();
-                    if (content.length > 1 && /[a-zA-Zà-ỹÀ-Ỹ]/.test(content) && !node._isTranslated) {
-                        return NodeFilter.FILTER_ACCEPT;
-                    }
-                    return NodeFilter.FILTER_REJECT;
-                }
-            }
-        );
-    
-        const nodes = [];
-        let currentNode;
-        while(currentNode = walker.nextNode()) nodes.push(currentNode);
-    
-        if (nodes.length === 0) return;
-    
-        await Promise.all(nodes.map(async (node) => {
-            const originalText = node.textContent.trim();
-            const translated = await fetchWithRetry(originalText, targetLang);
-            if (translated && translated !== originalText) {
-                node.textContent = node.textContent.replace(originalText, translated);
-                node._isTranslated = true;
-            }
-        }));
-    }
-    
-    // 5. Hàm kiểm tra loại trừ
-    function isExcluded(node) {
-        const excludedTags = ['SCRIPT', 'STYLE', 'TEXTAREA', 'INPUT', 'NOSCRIPT', 'CODE', 'PRE'];
-        // Quan trọng: Kiểm tra class 'notranslate' hoặc attribute translate='no'
-        return (
-            excludedTags.includes(node.tagName) ||
-            node.id === 'lang-selector-container' || 
-            node.classList?.contains('notranslate') ||
-            node.getAttribute?.('translate') === 'no' ||
-            node.closest?.('.notranslate') ||
-            node.closest?.('[translate="no"]')
-        );
-    }
-    
-    // 6. API Dịch
-    async function fetchWithRetry(text, target, retries = 2) {
-        if (!text || !target) return text;
-        const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=${target}&dt=t&q=${encodeURIComponent(text)}`;
-        for (let i = 0; i < retries; i++) {
-            try {
-                const res = await fetch(url);
-                const json = await res.json();
-                return json[0].map(item => item[0]).join('');
-            } catch (err) {
-                if (i === retries - 1) return text;
-                await new Promise(r => setTimeout(r, 500));
-            }
-        }
-    }
-    
-    startMasterProcess();
-        // Hàm nén ảnh để AI xử lý nhanh hơn
-    async function compressImage(base64Str) {
-        return new Promise((resolve) => {
-            const img = new Image();
-            img.src = base64Str;
-            img.onload = () => {
-                const canvas = document.createElement('canvas');
-                const MAX_SIZE = 1280; // Ép về chuẩn HD
-                let width = img.width, height = img.height;
-                if (width > height && width > MAX_SIZE) { height *= MAX_SIZE / width; width = MAX_SIZE; }
-                else if (height > MAX_SIZE) { width *= MAX_SIZE / height; height = MAX_SIZE; }
-                canvas.width = width; canvas.height = height;
-                const ctx = canvas.getContext('2d');
-                ctx.drawImage(img, 0, 0, width, height);
-                resolve(canvas.toDataURL('image/jpeg', 0.6)); // Nén 40% chất lượng
-            };
+        tx.addEventListener('keydown', (e) => { 
+            if(e.key === 'Enter' && !e.shiftKey) { 
+                e.preventDefault(); 
+                handleSendMessage(); 
+            } 
         });
     }
-    const CHANGELOG_DATA = [
-            {
-            version: "v2.3.0",
-            date: "17/01/2026",
-            title: "Mã hóa độc quyền",
-            items: [
-                "Thêm mã hóa độc quyền cho file lịch sử."
-            ]
-        },
-        {
-            version: "v2.2.5",
-            date: "09/01/2026",
-            title: "Thêm ngôn ngữ",
-            items: [
-                "Thêm đa ngôn ngữ vào."
-            ]
-        },
-        {
-            version: "v2.2.1-hotfix",
-            date: "09/01/2026",
-            title: "Sửa lỗi logic",
-            items: [
-                "Fix lại nút gửi chết tiệt đếch hoạt động."
-            ]
-        },
-        {
-            version: "v2.2.0",
-            date: "09/01/2026",
-            title: "Tối ưu",
-            items: [
-                "Tối ưu lại code và thêm cảnh báo :bruh:."
-            ]
-        },
-      {
-            version: "v2.1.0",
-            date: "09/01/2026",
-            title: "Nâng cấp hệ thống lưu trữ",
-            items: [
-                "Chuyển đổi từ localStorage sang localForage (IndexedDB).",
-                "Tối ưu hóa ghi dữ liệu bất đồng bộ cho hiệu năng cao.",
-                "Hỗ trợ lưu trực tiếp Object/Array không cần stringify."
-            ]
-        }
-      
-    ];
-    function showChangelog() {
-        const listContainer = document.querySelector('#changelog-overlay .list-unstyled');
-        
-        // Render từ mảng JSON
-        listContainer.innerHTML = CHANGELOG_DATA.map(log => `
-            <li class="mb-4 border-bottom border-secondary pb-3">
-                <div class="d-flex justify-content-between align-items-center mb-2">
-                    <span class="badge bg-primary">${log.version}</span>
-                    <small class="text-muted">${log.date}</small>
-                </div>
-                <h6 class="text-info fw-bold">${log.title}</h6>
-                <ul class="small text-muted ps-3">
-                    ${log.items.map(item => `<li>${item}</li>`).join('')}
-                </ul>
-            </li>
-        `).join('');
-    
-        document.getElementById('changelog-overlay').style.display = 'flex';
+
+const sidebarToggle = document.getElementById('sidebarToggle');
+const toggleIcon = document.getElementById('toggleIcon');
+
+// Hàm cập nhật Icon dựa trên trạng thái thực tế
+function updateToggleUI() {
+    const isMobile = window.innerWidth <= 768;
+    const isHidden = document.body.classList.contains('sidebar-hidden');
+    const isOpenMobile = document.body.classList.contains('sidebar-open');
+
+    if (isMobile) {
+        // Trên Mobile: sidebar-open quyết định
+        toggleIcon.className = isOpenMobile ? 'fa-solid fa-xmark' : 'fa-solid fa-bars';
+    } else {
+        // Trên Desktop: sidebar-hidden quyết định
+        toggleIcon.className = isHidden ? 'fa-solid fa-bars' : 'fa-solid fa-xmark';
     }
-    
-    function toggleHistory() {
-        const content = document.getElementById('archived-list');
-        const chevron = document.getElementById('history-chevron');
-        
-        content.classList.toggle('show');
-        
-        if (content.classList.contains('show')) {
-            chevron.style.transform = 'rotate(180deg)';
-        } else {
-            chevron.style.transform = 'rotate(0deg)';
-        }
+}
+
+sidebarToggle.addEventListener('click', () => {
+    if (window.innerWidth <= 768) {
+        document.body.classList.toggle('sidebar-open');
+    } else {
+        document.body.classList.toggle('sidebar-hidden');
     }
-    function removeImage() {
-        selectedBase64 = null;
-        const container = document.getElementById('image-preview-container');
-        const img = document.getElementById('img-render');
-        if(container) container.style.display = 'none';
-        if(img) img.src = '';
-    }
-    
-    // Cập nhật lại xử lý file/paste để có nén ảnh
-    async function processFile(file) {
-        if (!file.type.startsWith('image/')) return;
-        const reader = new FileReader();
-        reader.onload = async (e) => {
-            selectedBase64 = await compressImage(e.target.result); // Nén ở đây
-            document.getElementById('img-render').src = selectedBase64;
-            document.getElementById('image-preview-container').style.display = 'block';
-        };
-        reader.readAsDataURL(file);
-    }
-    
-    // Hỗ trợ Paste ảnh
-    window.addEventListener('paste', e => {
-        const item = e.clipboardData.items[0];
-        if (item?.type.includes('image')) processFile(item.getAsFile());
-    });
-    function openTutorial() {
-        document.getElementById('tutorial-overlay').style.display = 'flex';
-    }
-    
-    // Hỗ trợ dán ảnh trực tiếp từ clipboard (Ctrl + V)
-    window.addEventListener('paste', e => {
-        const items = e.clipboardData.items;
-        for (let i = 0; i < items.length; i++) {
-            if (items[i].type.indexOf('image') !== -1) {
-                const blob = items[i].getAsFile();
-                const reader = new FileReader();
-                reader.onload = (event) => {
-                    selectedBase64 = event.target.result;
-                    document.getElementById('img-render').src = selectedBase64;
-                    document.getElementById('image-preview-container').style.display = 'block';
-                };
-                reader.readAsDataURL(blob);
-            }
-        }
-    });
-    function updateProviderUI(providerName) {
-        const badge = document.getElementById('model-badge');
-        if (badge) {
-            badge.innerText = providerName.toUpperCase();
-            badge.style.color = "#00d4ff";
-        }
-    }
-    function typeWriter(element, text, onComplete) {
-        let i = 0;
-        isTyping = true;
-        element.innerHTML = "";
-    
-        function typing() {
-            if (i < text.length) {
-                const currentText = text.substring(0, i + 1);
-                
-                // KIỂM TRA XEM CÓ ĐANG TRONG KHỐI CODE DỞ DANG KHÔNG
-                // Đếm số dấu gạch chéo ngược (backticks)
-                const backtickCount = (currentText.match(/```/g) || []).length;
-                
-                if (backtickCount % 2 !== 0) {
-                    // Đang trong khối code chưa đóng: Hiển thị thô để không làm sập HTML
-                    element.textContent = currentText; 
-                    element.style.whiteSpace = "pre-wrap";
-                } else {
-                    // Ngoài khối code hoặc đã đóng khối code: Render Markdown bình thường
-                    try {
-                        element.innerHTML = marked.parse(currentText);
-                    } catch (e) {
-                        // Nếu marked parse lỗi, quay về hiển thị thô
-                        element.textContent = currentText;
-                    }
-                }
-    
-                element.setAttribute('data-raw', currentText);
-                i++;
-                
-                const win = document.getElementById('chat-window');
-                if (win) win.scrollTop = win.scrollHeight;
-                
-                // Tăng tốc độ gõ để tránh nghẽn luồng xử lý
-                setTimeout(typing, 1); 
-            } else {
-                // KẾT THÚC: Render chuẩn xác lần cuối
-                element.style.whiteSpace = "normal";
-                element.innerHTML = marked.parse(text);
-                element.setAttribute('data-raw', text);
-                
-                // Chỉ highlight sau khi đã gõ xong hoàn toàn
-                if (window.Prism) {
-                    Prism.highlightAllUnder(element);
-                }
-                
-                isTyping = false;
-                if (onComplete) onComplete(); 
-            }
-        }
-        typing();
-    }
-    async function clearChat() {
-        if (confirm("Bạn có chắc chắn muốn xóa toàn bộ tin nhắn hiện tại?")) {
-            // 1. Xóa mảng lịch sử hiện tại
-            currentChatHistory = [];
-            
-            // 2. Xóa dữ liệu trong bộ nhớ tạm (localForage như đã sửa ở lỗi 1)
-            await localforage.removeItem('noob_chat_history');
-            
-            // 3. Xóa giao diện chat
-            const win = document.getElementById('chat-window');
-            if (win) win.innerHTML = '';
-            
-            // 4. Hiện lại màn hình chào mừng
+    updateToggleUI();
+});
+
+// Lắng nghe sự kiện xoay màn hình/thay đổi kích thước
+window.addEventListener('resize', updateToggleUI);
+
+// Khởi tạo icon đúng lúc load trang
+updateToggleUI();;
+
+    // 3. KHÔI PHỤC HỘI THOẠI BẰNG LOCALFORAGE [SỬA TẠI ĐÂY]
+    try {
+        const savedChat = await localforage.getItem('noob_chat_history'); // Đọc bất đồng bộ
+        if (savedChat && savedChat.length > 0) {
+            currentChatHistory = savedChat;
             const welcome = document.querySelector('.welcome-view');
-            if (welcome) welcome.style.display = 'flex';
+            if (welcome) welcome.style.display = 'none';
             
-            // 5. Reset ô nhập liệu
-            const tx = document.getElementById('user-input');
-            if (tx) {
-                tx.value = '';
-                tx.style.height = 'auto';
-            }
-            
-            console.log("Đã dọn dẹp cửa sổ chat.");
+            const win = document.getElementById('chat-window');
+            win.innerHTML = '';
+            currentChatHistory.forEach(msg => renderMessage(msg, false));
         }
+    } catch (err) {
+        console.error("Lỗi khi tải lịch sử chat:", err);
     }
     
-    function closeTutorial() {
-        document.getElementById('tutorial-overlay').style.display = 'none';
-    }
-    const topLoader = document.getElementById('top-loader-container');
-    
-    // Hàm tạo hiệu ứng chờ 3 giây
-    function startLoading() {
-        return new Promise(resolve => {
-            if(topLoader) topLoader.style.display = 'block';
-            
-            setTimeout(() => {
-                if(topLoader) topLoader.style.display = 'none';
-                resolve(); // Trả về kết quả sau 3 giây để chạy tiếp code phía sau
-            }, 3000);
-        });
-    }
-    // Gắn lại nút Cách dùng
-    document.querySelector('.btn-chat-use')?.addEventListener('click', openTutorial);
-    
-    async function loadArchivedChats() {
-        await startLoading();
-        const archivedChats = JSON.parse(localStorage.getItem('noob_archived_chats') || '[]');
-        const list = document.getElementById('archived-list');
-        
-        if (!list) return;
-    
-        if (archivedChats.length === 0) {
-            list.innerHTML = '<p class="small text-muted px-3 py-2 opacity-50">Không có hội thoại cũ...</p>';
-            return;
-        }
-    
-        // Vẽ giao diện ngay lập tức từ localStorage
-        list.innerHTML = archivedChats.map(s => `
-            <div class="chat-item" onclick="openArchived(${s.id})" id="archived-${s.id}">
-                <i class="fa-solid fa-clock text-secondary"></i>
-                <span class="text-truncate">Hội thoại ${new Date(s.id).toLocaleString('vi-VN')}</span>
-            </div>
-        `).join('');
-        
-        console.log("Đã tải lịch sử:", archivedChats.length, "mục"); // Kiểm tra tại F12 console
-    }
-    function stopLoading() {
-        const topLoader = document.getElementById('top-loader-container');
-        if(topLoader) topLoader.style.display = 'none';
-    }
-    async function exportChat() {
-        if (!currentChatHistory || currentChatHistory.length === 0) {
-            alert("Không có lịch sử để xuất!");
-            return;
-        }
-    
-        // Nếu người dùng nhấn Cancel (null) thì dừng. 
-        // Nếu để trống "" hoặc nhập thì tiếp tục.
-        let password = prompt("Nhập mật khẩu để bảo vệ file (Để trống nếu muốn xuất ngay):", "");
-        
-        if (password === null) return; // Người dùng bấm nút Hủy
-        if (password === "") password = "default"; // Tự động dùng pass mặc định nếu để trống
-    
-        startLoading();
-    
-        try {
-            // Thực hiện serialize với mật khẩu (đã được xử lý trống)
-            const binaryData = await ABCSParser.serialize(currentChatHistory, password);
-            
-            const blob = new Blob([binaryData], { type: "application/octet-stream" });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            
-            const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
-            a.href = url;
-            a.download = `chat-${timestamp}.abcsaihistory`;
-            document.body.appendChild(a);
-            a.click();
-            
-            setTimeout(() => {
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
-            }, 100);
-    
-        } catch (err) {
-            console.error("Export error:", err);
-            alert("Lỗi khi đóng gói file: " + err.message);
-        } finally {
-            stopLoading();
-        }
-    }
-    
-    function switchToCurrentChat() {
-        document.querySelectorAll('#archived-list .chat-item, #current-chat-item .chat-item').forEach(i => i.classList.remove('active'));
-        document.querySelector('#current-chat-item .chat-item').classList.add('active');
-    
-        document.getElementById('chat-title').innerText = "Hội thoại hiện tại";
-    
-        const win = document.getElementById('chat-window');
-        win.innerHTML = ''; // reset
-    
-        currentChatHistory.forEach(msg => renderMessage(msg));
-    
-        // Xóa param ?id
-        const url = new URL(window.location);
-        url.searchParams.delete('id');
-        window.history.replaceState({}, '', url);
-    }
-    
-    async function openArchived(sessionId) {
-        await startLoading();
-    
-        const archivedChats = JSON.parse(localStorage.getItem('noob_archived_chats') || '[]');
-        const session = archivedChats.find(s => s.id === sessionId);
-        if(!session) return;
-    
-        document.querySelectorAll('#archived-list .chat-item, #current-chat-item .chat-item').forEach(i => i.classList.remove('active'));
-        document.getElementById(`archived-${sessionId}`)?.classList.add('active');
-    
-        const win = document.getElementById('chat-window');
-        win.innerHTML = '';
-        session.history.forEach(msg => renderMessage(msg));
-    
-        document.getElementById('chat-title').innerText = `Hội thoại cũ: ${new Date(session.timestamp).toLocaleString()}`;
-    
-        const url = new URL(window.location);
-        url.searchParams.set('id', sessionId);
-        window.history.replaceState({}, '', url);
-    }
-    
-    
-    async function handleSendMessage() {
-        // 1. CHẶN GỬI KHI ĐANG BẬN
-        if (isTyping) return;
-    
-        const input = document.getElementById('user-input');
-        const sendBtn = document.getElementById('send-btn');
-        const topLoader = document.getElementById('top-loader-container');
-        const win = document.getElementById('chat-window');
-        const text = input.value.trim();
-        
-        if (!text && !selectedBase64) return;
-    
-        // --- BẬT HIỆU ỨNG LOADING ---
-        isTyping = true; 
-        if (topLoader) topLoader.style.display = 'block'; 
-        if (sendBtn) {
-            sendBtn.disabled = true;
-            sendBtn.style.opacity = '0.5';
-        }
-    
-        const timestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        const userParts = [];
-        
-        if (text) userParts.push({ text });
-        if (selectedBase64) {
-            userParts.push({ 
-                inlineData: { 
-                    mimeType: "image/jpeg",
-                    data: selectedBase64.split(',')[1] 
-                } 
-            });
-        }
-    
-        // Render tin nhắn của User
-        const msgObj = { role: 'user', parts: userParts, time: timestamp };
-        currentChatHistory.push(msgObj);
-        renderMessage(msgObj, false);
-    
-        // --- TẠO PHẢN HỒI PLACEHOLDER (ĐANG NHẬP...) ---
-        const placeholderId = 'typing-' + Date.now();
-        const placeholderDiv = document.createElement('div');
-        placeholderDiv.className = 'msg-box bot-msg';
-        placeholderDiv.id = placeholderId;
-        placeholderDiv.innerHTML = `
-            <div class="msg-avatar" style="background:var(--primary)">
-                <img src="https://abcsnoob.github.io/assets/image/abcsnoob.webp" style="width:100%; height:100%; border-radius:14px; object-fit:cover">
-            </div>
-            <div class="msg-content-wrapper">
-                <div class="msg-header">
-                    <span class="fw-bold">Abc's Noob AI</span>
-                </div>
-                <div class="msg-text" style="display: flex; align-items: center; gap: 10px; width: fit-content;">
-                    <div class="typing-loader"><span></span><span></span><span></span></div>
-                    <small style="opacity: 0.6; font-style: italic;">Đang nhập . . .</small>
-                </div>
-            </div>
-        `;
-        win.appendChild(placeholderDiv);
-        win.scrollTop = win.scrollHeight;
-    
-        // Reset input
-        input.value = '';
-        input.style.height = 'auto';
-        if (typeof removeImage === 'function') removeImage();
-    
-        try {
-            const res = await fetch(API_BASE, { 
-                method: 'POST', 
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                    messages: currentChatHistory.slice(-10),
-                    user_lang: localStorage.getItem('noob_lang') || 'vi'
-                }) 
-            });
-            
-            // --- XÓA PLACEHOLDER KHI CÓ PHẢN HỒI ---
-            const placeholder = document.getElementById(placeholderId);
-            if (placeholder) placeholder.remove();
-    
-            if (!res.ok) throw new Error(`Server báo lỗi ${res.status}`);
-            const d = await res.json();
-            
-            if (d.success) {
-                if (d.provider && typeof updateProviderUI === 'function') {
-                    updateProviderUI(d.provider);
-                }
-    
-                const botMsg = { 
-                    role: 'model', 
-                    parts: [{ text: d.text || '' }],
-                    time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-                    searchMetadata: d.searchMetadata,
-                    provider: d.provider 
-                };
-    
-                renderMessage(botMsg, true, () => {
-                    isTyping = false;
-                    if (topLoader) topLoader.style.display = 'none';
-                    if (sendBtn) {
-                        sendBtn.disabled = false;
-                        sendBtn.style.opacity = '1';
-                    }
-                    input.focus();
-                });
-                
-                currentChatHistory.push(botMsg);
-                await localforage.setItem('noob_chat_history', currentChatHistory);
-            } else {
-                throw new Error(d.error || "AI bị gank bất ngờ");
-            }
-        } catch (e) {
-            // Xóa placeholder nếu lỗi
-            const placeholder = document.getElementById(placeholderId);
-            if (placeholder) placeholder.remove();
-    
-            console.error("Lỗi kết nối:", e);
-            const errorMsg = {
-                role: 'model',
-                parts: [{ text: "Haizz, ping cao quá tôi bị gank rồi! Check lại mạng xem sao ông giáo ơi..." }],
-                time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-            };
-            renderMessage(errorMsg, false);
-            
-            isTyping = false;
-            if (topLoader) topLoader.style.display = 'none';
-            if (sendBtn) {
-                sendBtn.disabled = false;
-                sendBtn.style.opacity = '1';
-            }
-        }
-    }
-    
-    function renderMessage(msg, isNew = false, onComplete = null) {
-        const win = document.getElementById('chat-window');
-        const isBot = msg.role === 'model' || msg.role === 'assistant';
-        let text = "", imgSrc = null;
-    
-        msg.parts.forEach(p => {
-            if (p.text) text = p.text;
-            if (p.inlineData) imgSrc = typeof p.inlineData === 'string' ? p.inlineData : `data:${p.inlineData.mime_type};base64,${p.inlineData.data}`;
-        });
-    
-    let searchingStatus = "";
-        if (isBot && msg.searchMetadata) {
-            searchingStatus = `
-                <div class="searching-status mb-2" style="color: var(--primary); font-size: 13px; font-weight: 600; font-style: italic;">
-                    <i class="fa-solid fa-magnifying-glass fa-beat-fade me-2"></i>Đang tìm trên web...
-                </div>`;
-        }
-    
-        const div = document.createElement('div');
-        div.className = `msg-box ${isBot ? 'bot-msg' : 'user-msg'}`;
-        // Gán ID để dễ truy vấn cho chế độ Focus
-        const msgId = 'msg-' + Date.now() + Math.random().toString(36).substr(2, 5);
-        div.id = msgId;
-    
-        div.innerHTML = `
-            <div class="msg-avatar" style="background:${isBot ? 'var(--primary)' : 'var(--secondary)'}">
-                ${isBot ? '<img src="https://abcsnoob.github.io/assets/image/abcsnoob.webp" style="width:100%; height:100%; border-radius:14px; object-fit:cover">' : 'U'}
-            </div>
-            <div class="msg-content-wrapper">
-                <div class="msg-header">
-                    <span class="fw-bold">${isBot ? "ABC'S NOOB AI" : "ME"}</span>
-                    <span class="msg-time">${msg.time || ''}</span>
-                </div>
-                ${imgSrc ? `<div class="msg-img-wrapper"><img src="${imgSrc}" onclick="window.open(this.src)"></div>` : ''}
-                <div class="msg-text">
-                    ${searchingStatus}
-                    <div class="text-body-content"></div>
-                    <div class="msg-actions">
-                        <button class="action-btn" onclick="copyText(this, \`${encodeURIComponent(text)}\`)">
-                            <i class="fa-regular fa-copy me-1"></i> Copy
-                        </button>
-                        <button class="action-btn" onclick="toggleFocusMode('${msgId}')">
-                            <i class="fa-solid fa-expand me-1"></i> Focus
-                        </button>
-                    </div>
-                </div>
-            </div>`;
-    
-        win.appendChild(div);
-        const textElem = div.querySelector('.text-body-content');
-        
-        if (isBot && isNew && text) {
-            typeWriter(textElem, text, onComplete);
-        } else {
-            textElem.innerHTML = marked.parse(text || "");
-            Prism.highlightAllUnder(div);
-            if (onComplete) onComplete();
-        }
-        win.scrollTop = win.scrollHeight;
-    }
-    
-    // Hàm Copy văn bản
-    function copyText(btn, encodedText) {
-        const text = decodeURIComponent(encodedText);
-        navigator.clipboard.writeText(text).then(() => {
-            const originalHTML = btn.innerHTML;
-            btn.innerHTML = '<i class="fa-solid fa-check me-1"></i> Đã xong!';
-            btn.classList.add('btn-success');
-            setTimeout(() => {
-                btn.innerHTML = originalHTML;
-                btn.classList.remove('btn-success');
-            }, 2000);
-        });
-    }
-    
-    // Hàm bật/tắt chế độ Focus 100%
-    function toggleFocusMode(msgId) {
-        const msgElement = document.getElementById(msgId);
-        if (!msgElement) return;
-    
-        // Lấy nội dung đã được render (bao gồm cả các khối code)
-        const bodyContent = msgElement.querySelector('.text-body-content').innerHTML;
-        const focusModal = document.getElementById('focus-modal');
-        const focusContent = document.getElementById('focus-content');
-    
-        // Đổ nội dung vào modal
-        focusContent.innerHTML = `
-            <div style="margin-bottom: 20px; border-bottom: 1px solid #333; padding-bottom: 10px;">
-                <small style="color: var(--primary)">CHẾ ĐỘ TẬP TRUNG</small>
-            </div>
-            ${bodyContent}
-        `;
-    
-        // Hiển thị modal với hiệu ứng
-        focusModal.style.display = 'block';
-        document.body.style.overflow = 'hidden'; // Chặn cuộn trang web bên dưới
-    
-        // Re-highlight code trong modal bằng Prism
-        Prism.highlightAllUnder(focusContent);
-    }
-    window.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') {
-            closeFocusMode();
-        }
-    });
-    function closeFocusMode() {
-        document.getElementById('focus-modal').style.display = 'none';
-        document.body.style.overflow = 'auto'; // Cho phép cuộn lại
-    }
-    async function handleImage(input) {
-        const file = input.files[0];
-        if(!file) return;
-        const reader = new FileReader();
-        reader.onload = async (e) => {
-            selectedBase64 = await compressImage(e.target.result); // NÉN ẢNH
-            document.getElementById('img-render').src = selectedBase64;
-            document.getElementById('image-preview-container').style.display = 'block';
-        };
-        reader.readAsDataURL(file);
-    }
-    
-    async function startNewChat() { // Thêm async
-        if (currentChatHistory.length === 0) return;
-    
-        let archivedChats = JSON.parse(localStorage.getItem('noob_archived_chats') || '[]');
-        
-        const newEntry = {
-            id: Date.now(),
-            timestamp: new Date().toISOString(),
-            history: [...currentChatHistory]
-        };
-        
-        archivedChats.unshift(newEntry);
-        localStorage.setItem('noob_archived_chats', JSON.stringify(archivedChats));
-        
-        // RESET TRẠNG THÁI [SỬA TẠI ĐÂY]
-        currentChatHistory = [];
-        await localforage.removeItem('noob_chat_history'); // Xóa bằng localforage thay vì localStorage
-    
-        loadArchivedChats(); 
-        switchToCurrentChat();
-        
-        const content = document.getElementById('archived-list');
-        if (content) content.classList.add('show');
-    }
-    
-        function changeLanguage() {
-            const lang = prompt("Nhập ngôn ngữ (vi, en, jp, kr):", localStorage.getItem('noob_lang') || 'vi');
-            if(lang) { localStorage.setItem('noob_lang', lang); alert("Đã đổi sang: " + lang.toUpperCase()); }
-        }
-    
-    async function loadData() {
-        // Đợi localForage lấy dữ liệu ra
-        currentChatHistory = await localforage.getItem('noob_chat_history') || [];
-        
-        document.querySelector('.welcome-view')?.remove();
-        const win = document.getElementById('chat-window');
-        win.innerHTML = ''; 
-    
-        if(currentChatHistory.length > 0){
-            currentChatHistory.forEach(msg => renderMessage(msg, false)); 
-        }
-        loadArchivedChats();
-    }
-    
-    document.addEventListener('DOMContentLoaded', async () => { // Thêm async ở đây
-        // 1. Tải danh sách lịch sử vào sidebar (LocalStorage cho danh sách mục lục thì ổn, nhưng chat history nên dùng localForage)
-        loadArchivedChats(); 
-    
-        // 2. Thiết lập cho ô nhập liệu (Giữ nguyên logic của bạn)
-        const tx = document.getElementById('user-input');
-        if (tx) {
-            tx.addEventListener('input', function() { 
-                this.style.height = 'auto'; 
-                this.style.height = (this.scrollHeight) + 'px'; 
-            });
-            tx.addEventListener('keydown', (e) => { 
-                if(e.key === 'Enter' && !e.shiftKey) { 
-                    e.preventDefault(); 
-                    handleSendMessage(); 
-                } 
-            });
-        }
-    
-    const sidebarToggle = document.getElementById('sidebarToggle');
-    const toggleIcon = document.getElementById('toggleIcon');
-    
-    // Hàm cập nhật Icon dựa trên trạng thái thực tế
-    function updateToggleUI() {
-        const isMobile = window.innerWidth <= 768;
-        const isHidden = document.body.classList.contains('sidebar-hidden');
-        const isOpenMobile = document.body.classList.contains('sidebar-open');
-    
-        if (isMobile) {
-            // Trên Mobile: sidebar-open quyết định
-            toggleIcon.className = isOpenMobile ? 'fa-solid fa-xmark' : 'fa-solid fa-bars';
-        } else {
-            // Trên Desktop: sidebar-hidden quyết định
-            toggleIcon.className = isHidden ? 'fa-solid fa-bars' : 'fa-solid fa-xmark';
-        }
-    }
-    
-    sidebarToggle.addEventListener('click', () => {
-        if (window.innerWidth <= 768) {
-            document.body.classList.toggle('sidebar-open');
-        } else {
-            document.body.classList.toggle('sidebar-hidden');
-        }
-        updateToggleUI();
-    });
-    
-    // Lắng nghe sự kiện xoay màn hình/thay đổi kích thước
-    window.addEventListener('resize', updateToggleUI);
-    
-    // Khởi tạo icon đúng lúc load trang
-    updateToggleUI();;
-    
-        // 3. KHÔI PHỤC HỘI THOẠI BẰNG LOCALFORAGE [SỬA TẠI ĐÂY]
-        try {
-            const savedChat = await localforage.getItem('noob_chat_history'); // Đọc bất đồng bộ
-            if (savedChat && savedChat.length > 0) {
-                currentChatHistory = savedChat;
-                const welcome = document.querySelector('.welcome-view');
-                if (welcome) welcome.style.display = 'none';
-                
-                const win = document.getElementById('chat-window');
-                win.innerHTML = '';
-                currentChatHistory.forEach(msg => renderMessage(msg, false));
-            }
-        } catch (err) {
-            console.error("Lỗi khi tải lịch sử chat:", err);
-        }
-        
-        // 4. Highlight menu hiện tại
-        switchToCurrentChat();
-    });
-    </script>
+    // 4. Highlight menu hiện tại
+    switchToCurrentChat();
+});
+ </script>
 </body>
-
 </html>
