@@ -115,26 +115,36 @@ const NoobEngine = {
         `;
     },
 
-    bindEvents() {
+bindEvents() {
         const input = document.getElementById('user-input');
         const sendBtn = document.getElementById('send-btn');
 
-        input.addEventListener('input', (e) => {
-            let val = e.target.value;
-            let lowVal = val.toLowerCase();
+input.addEventListener('input', (e) => {
+    let val = e.target.value;
+    let lowVal = val.toLowerCase();
 
-            // --- 🥚 EASTER EGGS LOGIC (CHỨA TỪ) ---
-            if (lowVal.includes('gemini')) document.body.classList.add('gemini-mode');
+    // Hàm kiểm tra đúng điều kiện dấu cách
+    const hasExact = (word) => {
+        // Regex này kiểm tra 3 trường hợp:
+        // 1. ^word\s : Đứng đầu và có space sau
+        // 2. \sword\s: Đứng giữa có 2 space bao quanh
+        // 3. \sword$ : Đứng cuối và có space trước
+        const regex = new RegExp(`(^${word}\\s)|(\\s${word}\\s)|(\\s${word}$)`, 'i');
+        return regex.test(val);
+    };
+
+            // --- 🥚 EASTER EGGS LOGIC ---
+            if (hasExact('gemini')) document.body.classList.add('gemini-mode');
             
-            if (lowVal.includes('never')) input.value = "Never gonna give you up, never gonna let you down";
+            if (hasExact('never')) input.value = "Never gonna give you up, never gonna let you down";
             
-            if (lowVal.includes('youtube')) input.value = "YouTube: Broadcast Yourself";
+            if (hasExact('youtube')) input.value = "YouTube: Broadcast Yourself";
             
-            if (lowVal.includes('roblox')) {
+            if (hasExact('roblox')) {
                 input.value = Math.random() < 0.6 ? "Roblox: Powering Imagination" : "Roblox: Your safety is not our problem";
             }
             
-            if (lowVal.includes('java')) {
+            if (hasExact('java')) {
                 const scare = document.createElement('div');
                 scare.className = 'java-jumpscare';
                 scare.innerHTML = '<h1 style="color:white; font-size:8vw;">JAVA UPDATE AVAILABLE!!!</h1>';
@@ -143,13 +153,13 @@ const NoobEngine = {
                 input.value = '';
             }
 
-            if (lowVal.includes('matrix')) {
+            if (hasExact('matrix')) {
                 document.body.style.filter = 'contrast(1.2) brightness(1.1) sepia(1) hue-rotate(60deg)';
                 document.body.style.fontFamily = '"Courier New", monospace';
                 input.value = "Follow the white rabbit...";
             }
 
-            if (lowVal.includes('gravity')) {
+            if (hasExact('gravity')) {
                 const main = document.getElementById('main');
                 main.style.transition = 'transform 1s cubic-bezier(0.47, 0, 0.745, 0.715)';
                 main.style.transform = 'translateY(100vh) rotate(10deg)';
@@ -160,7 +170,7 @@ const NoobEngine = {
                 input.value = '';
             }
 
-            if (lowVal.includes('thanos')) {
+            if (hasExact('thanos')) {
                 const bubbles = document.querySelectorAll('.bubble');
                 bubbles.forEach((b, i) => {
                     setTimeout(() => {
@@ -173,112 +183,82 @@ const NoobEngine = {
                 input.value = "I don't feel so good...";
             }
 
-            if (lowVal.includes('roll')) {
+            if (hasExact('roll')) {
                 document.body.style.transition = '2s';
                 document.body.style.transform = 'rotate(360deg)';
                 setTimeout(() => { document.body.style.transform = 'none'; }, 2000);
                 input.value = '';
             }
 
-            if (lowVal.includes('rickroll')) {
+            if (hasExact('rickroll')) {
                 window.open('https://www.youtube.com/watch?v=dQw4w9WgXcQ', '_blank');
                 input.value = "You've been Rickrolled!";
             }
 
-            if (lowVal.includes('backrooms') || lowVal.includes('bkr')) {
+            if (hasExact('backrooms') || hasExact('bkr')) {
                 const overlay = document.createElement('div');
-                overlay.style = `position: fixed; inset: 0; z-index: 99999; background: url('https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fwallpaperaccess.com%2Ffull%2F7952699.jpg&f=1&nofb=1&ipt=adad7190f275753db29eba088b289668791e5de1305b0c278b6b0d8d497410a6') center/cover; filter: sepia(0.5) contrast(1.2) brightness(0.8); display: flex; align-items: center; justify-content: center; flex-direction: column; color: #222; font-family: 'serif'; text-shadow: 0 0 10px rgba(0,0,0,0.5);`;
-                overlay.innerHTML = `<div style="background: rgba(255,255,255,0.1); padding: 20px; backdrop-filter: blur(5px); text-align:center;"><h1 style="font-size: 3rem; margin:0;">LEVEL 0</h1><p style="font-weight: bold;">If you're not careful and you noclip out of reality...</p></div><audio autoplay loop><source src="https://www.soundboard.com/handler/Downloadaudio.ashx?id=614332" type="audio/mpeg"></audio>`;
+                overlay.style = `position: fixed; inset: 0; z-index: 99999; background: url('https://wallpaperaccess.com/full/7952699.jpg') center/cover; filter: sepia(0.5) contrast(1.2) brightness(0.8); display: flex; align-items: center; justify-content: center; flex-direction: column; color: #222; font-family: 'serif';`;
+                overlay.innerHTML = `<div style="background: rgba(255,255,255,0.1); padding: 20px; backdrop-filter: blur(5px); text-align:center;"><h1 style="font-size: 3rem; margin:0;">LEVEL 0</h1><p style="font-weight: bold;">If you're not careful and you noclip out of reality...</p></div>`;
                 document.body.appendChild(overlay);
                 setTimeout(() => { overlay.style.opacity = '0'; setTimeout(() => overlay.remove(), 1000); }, 5000);
                 input.value = '';
             }
 
-            if (lowVal.includes('jerry')) {
-                for (let i = 0; i < 15; i++) {
-                    const bird = document.createElement('div');
-                    bird.innerHTML = '🐦';
-                    bird.style = `position: fixed; bottom: -50px; left: ${Math.random() * 100}vw; font-size: 30px; z-index: 10001; transition: 3s linear; pointer-events: none; transform: rotate(${Math.random() * 360}deg);`;
-                    document.body.appendChild(bird);
-                    setTimeout(() => {
-                        bird.style.transform = `translateY(-110vh) translateX(${Math.random() * 200 - 100}px) rotate(720deg)`;
-                        setTimeout(() => bird.remove(), 3000);
-                    }, 100);
-                }
-                input.value = "Jerry is everything. Jerry is all.";
-                const status = document.getElementById('model-status');
-                status.innerText = "Praise Jerry 🛐"; status.style.color = "#00acee";
-            }
+if (hasExact('windows') || hasExact('bsod')) {
+        // Reset input ngay để tránh loop
+        input.value = '';
 
-            if (lowVal.includes('nyan')) {
-                const nyan = document.createElement('img');
-                nyan.src = 'https://static.wikia.nocookie.net/nyancat/images/b/b1/Acb1f0fd64578c46239226a06fd0b13e.gif';
-                nyan.style = `position: fixed; left: -200px; top: ${Math.random() * 80}vh; z-index: 10001; width: 150px; transition: 4s linear;`;
-                document.body.appendChild(nyan);
-                setTimeout(() => { nyan.style.left = '110vw'; setTimeout(() => nyan.remove(), 4000); }, 100);
-                input.value = "Nyan nyan nyan nyan...";
-            }
+        const bsod = document.createElement('div');
+        // Thiết lập z-index = 8000 theo ý ông giáo
+        bsod.style = `
+            position: fixed; 
+            inset: 0; 
+            z-index: 8000; 
+            background: #0078d7; 
+            color: white; 
+            font-family: 'Segoe UI', Tahoma, sans-serif; 
+            padding: 10% 15%; 
+            cursor: none; 
+            user-select: none;
+        `;
+        
+        bsod.innerHTML = `
+            <div style="font-size: 120px; line-height: 1; margin-bottom: 20px;">:(</div>
+            <h2 style="font-weight: 300; font-size: 30px; line-height: 1.4; max-width: 800px;">
+                Your PC ran into a problem and needs to restart. We're just collecting some error info, and then we'll restart for you.
+            </h2>
+            <div style="font-size: 25px; margin-top: 25px;">
+                <span id="progress-val">0</span>% complete
+            </div>
+            <div style="margin-top: 40px; display: flex; gap: 20px; align-items: flex-start;">
+                <img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=https://www.youtube.com/watch?v=dQw4w9WgXcQ" 
+                     style="width: 100px; height: 100px; filter: brightness(0) invert(1);">
+                <div style="font-size: 14px; line-height: 1.6; opacity: 0.8;">
+                    For more information about this issue and possible fixes, visit<br>
+                    https://www.windows.com/stopcode<br><br>
+                    Stop code: CRITICAL_PROCESS_DIED
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(bsod);
 
-            if (lowVal.includes('overclock')) {
-                document.body.style.animation = 'shake 0.1s infinite';
-                document.getElementById('model-status').innerText = "CRITICAL: CPU 105°C 🔥";
-                document.getElementById('status-indicator').style.background = "#ff0000";
+        let prog = 0;
+        const interval = setInterval(() => {
+            prog += Math.floor(Math.random() * 12) + 1;
+            if (prog >= 100) {
+                prog = 100;
+                clearInterval(interval);
                 setTimeout(() => {
-                    document.body.style.animation = 'none';
-                    document.getElementById('model-status').innerText = "System Cooled Down";
-                    document.getElementById('status-indicator').style.background = "#00ff88";
-                }, 3000);
-                input.value = '';
+                    bsod.style.transition = 'opacity 0.5s ease';
+                    bsod.style.opacity = '0';
+                    setTimeout(() => bsod.remove(), 500);
+                }, 1000);
             }
-
-            if (lowVal.includes('peter') || lowVal.includes('spidey')) {
-                const main = document.getElementById('main');
-                main.style.transition = 'transform 1s cubic-bezier(0.68, -0.55, 0.265, 1.55)';
-                main.style.transformOrigin = 'top center';
-                main.style.transform = 'rotate(180deg)';
-                input.value = "With great power comes great responsibility.";
-                setTimeout(() => { main.style.transform = 'none'; }, 5000);
-            }
-
-            if (lowVal.includes('vanish')) {
-                const bubbles = document.querySelectorAll('.bubble');
-                bubbles.forEach(b => {
-                    b.style.transition = '0.5s'; b.style.transform = 'scale(0)'; b.style.opacity = '0';
-                });
-                input.value = "Phù... Biến mất hết rồi!";
-                setTimeout(() => { bubbles.forEach(b => { b.style.transform = 'scale(1)'; b.style.opacity = '1'; }); }, 3000);
-            }
-
-            if (lowVal.includes('donate') || lowVal.includes('money')) {
-                input.value = "Đang quét ví Momo của ông giáo... Đùa thôi, cho Noob AI xin cốc cafe nhé! ☕";
-                const btn = document.querySelector('.btn-new');
-                btn.innerText = "☕ BUY COFFEE"; btn.style.background = "#ffdd00"; btn.style.color = "#000";
-                setTimeout(() => { btn.innerHTML = '<i class="fa-solid fa-plus"></i> NEW CHAT'; btn.style = ""; }, 5000);
-            }
-
-            if (lowVal.includes('windows') || lowVal.includes('bsod') || lowVal.includes('error')) {
-                const bsod = document.createElement('div');
-                bsod.style = `position: fixed; inset: 0; z-index: 999999; background: #0078d7; color: white; font-family: 'Segoe UI', Tahoma, sans-serif; padding: 10% 15%; cursor: none;`;
-                bsod.innerHTML = `<div style="font-size: 120px; line-height: 1;">:(</div><h2 style="font-weight: 300; margin-top: 30px; font-size: 30px;">Your PC ran into a problem and needs to restart.</h2><div style="font-size: 25px; margin-top: 20px;"><span id="progress-val">0</span>% complete</div>`;
-                document.body.appendChild(bsod);
-                let prog = 0;
-                const interval = setInterval(() => {
-                    prog += Math.floor(Math.random() * 15);
-                    if (prog >= 100) { prog = 100; clearInterval(interval); setTimeout(() => bsod.remove(), 1000); }
-                    document.getElementById('progress-val').innerText = prog;
-                }, 400);
-                input.value = '';
-            }
-
-            if (lowVal.includes('duo') || lowVal.includes('duolingo')) {
-                const duo = document.createElement('div');
-                duo.style = `position: fixed; bottom: -300px; right: 20px; z-index: 10002; transition: 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275); cursor: pointer;`;
-                duo.innerHTML = `<img src="https://ih1.redbubble.net/image.5720296720.6258/flat,750x,075,f-pad,750x1000,f8f8f8.webp" style="width: 200px;"><div id="duo-bubble" style="position: absolute; top: -40px; left: -50px; background: white; color: black; padding: 10px; border-radius: 15px; border: 2px solid #58cc02; font-weight: bold; opacity:0;">Học bài đi! 🔪</div>`;
-                document.body.appendChild(duo);
-                setTimeout(() => { duo.style.bottom = '20px'; setTimeout(() => document.getElementById('duo-bubble').style.opacity='1', 800); }, 100);
-                duo.onclick = () => { duo.style.transform = 'scale(0)'; setTimeout(() => duo.remove(), 500); };
-                input.value = "Spanish or Vanish?";
-            }
+            const progEl = document.getElementById('progress-val');
+            if (progEl) progEl.innerText = prog;
+        }, 300);
+    }
 
             input.style.height = 'auto';
             input.style.height = input.scrollHeight + 'px';
@@ -287,6 +267,7 @@ const NoobEngine = {
         input.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); this.handleSend(); } });
         sendBtn.onclick = () => this.handleSend();
     },
+
 
     async handleSend() {
         const input = document.getElementById('user-input');
@@ -376,4 +357,3 @@ const NoobEngine = {
 
 // Đảm bảo thư viện marked đã được load trước khi chạy
 NoobEngine.init();
-
