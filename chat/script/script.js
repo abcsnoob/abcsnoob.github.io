@@ -1,10 +1,3 @@
-/**
- * 🤖 ABC'S NOOB AI - ULTIMATE PRO ENGINE v7.0 (SPECIAL EDITION)
- * ---------------------------------------------------------
- * Bản quyền: Abc's Noob | Dev by Gemini
- * Features: Fixed UI Contrast, SSE Stream, Multi-Easter Eggs
- */
-
 const NoobEngine = {
     state: {
         history: [],
@@ -472,3 +465,4 @@ if (lowVal === 'duo' || lowVal === 'duolingo' || lowVal === 'owl') {
 };
 
 NoobEngine.init();
+
