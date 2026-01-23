@@ -141,6 +141,210 @@ const NoobEngine = {
                 setTimeout(() => scare.remove(), 2000);
                 input.value = '';
             }
+            // 1. Matrix Mode: Chuyển toàn bộ màu sắc sang xanh lá neon
+if (lowVal === 'matrix') {
+    document.body.style.filter = 'contrast(1.2) brightness(1.1) sepia(1) hue-rotate(60deg)';
+    document.body.style.fontFamily = '"Courier New", monospace';
+    input.value = "Follow the white rabbit...";
+}
+
+// 2. Gravity: Làm giao diện rơi tự do
+if (lowVal === 'gravity') {
+    const main = document.getElementById('main');
+    main.style.transition = 'transform 1s cubic-bezier(0.47, 0, 0.745, 0.715)';
+    main.style.transform = 'translateY(100vh) rotate(10deg)';
+    setTimeout(() => {
+        alert("Toang! Giao diện sập rồi ông giáo.");
+        main.style.transform = 'none';
+    }, 2000);
+    input.value = '';
+}
+
+// 3. Thanos Snap: Làm mờ dần tin nhắn (Bay màu)
+if (lowVal === 'thanos') {
+    const bubbles = document.querySelectorAll('.bubble');
+    bubbles.forEach((b, i) => {
+        setTimeout(() => {
+            b.style.transition = '2s';
+            b.style.opacity = '0';
+            b.style.filter = 'blur(10px)';
+            b.style.transform = 'translateY(-20px) rotate(5deg)';
+        }, i * 100);
+    });
+    input.value = "I don't feel so good...";
+}
+
+// 4. Barrel Roll (Kinh điển của Google)
+if (lowVal === 'roll') {
+    document.body.style.transition = '2s';
+    document.body.style.transform = 'rotate(360deg)';
+    setTimeout(() => { document.body.style.transform = 'none'; }, 2000);
+    input.value = '';
+}
+
+// 5. Rickroll (Phối hợp với phím bấm)
+if (lowVal === 'rickroll') {
+    window.open('https://www.youtube.com/watch?v=dQw4w9WgXcQ', '_blank');
+    input.value = "You've been Rickrolled!";
+}
+
+// --- 🟨 BACKROOMS (Level 0) ---
+if (lowVal === 'backrooms' || lowVal === 'bkr') {
+    const overlay = document.createElement('div');
+    overlay.style = `
+        position: fixed; inset: 0; z-index: 99999;
+        background: url('https://i.imgur.com/39D6JzS.jpeg') center/cover;
+        filter: sepia(0.5) contrast(1.2) brightness(0.8);
+        display: flex; align-items: center; justify-content: center;
+        flex-direction: column; color: #222; font-family: 'serif';
+        text-shadow: 0 0 10px rgba(0,0,0,0.5);
+    `;
+    overlay.innerHTML = `
+        <div style="background: rgba(255,255,255,0.1); padding: 20px; backdrop-filter: blur(5px); text-align:center;">
+            <h1 style="font-size: 3rem; margin:0;">LEVEL 0</h1>
+            <p style="font-weight: bold;">If you're not careful and you noclip out of reality...</p>
+        </div>
+        <audio autoplay loop><source src="https://www.soundboard.com/handler/Downloadaudio.ashx?id=614332" type="audio/mpeg"></audio>
+    `;
+    document.body.appendChild(overlay);
+    // Sau 5 giây thì "thoát xác" quay lại thực tại
+    setTimeout(() => { overlay.style.opacity = '0'; setTimeout(() => overlay.remove(), 1000); }, 5000);
+    input.value = '';
+}
+
+// --- 🐦 THE FOLLOWER OF JERRY ---
+if (lowVal === 'jerry') {
+    // Tạo hiệu ứng hàng loạt con chim xanh bay lên
+    for (let i = 0; i < 15; i++) {
+        const bird = document.createElement('div');
+        bird.innerHTML = '🐦';
+        bird.style = `
+            position: fixed; bottom: -50px; left: ${Math.random() * 100}vw;
+            font-size: 30px; z-index: 10001; transition: 3s linear;
+            pointer-events: none; transform: rotate(${Math.random() * 360}deg);
+        `;
+        document.body.appendChild(bird);
+        setTimeout(() => {
+            bird.style.transform = `translateY(-110vh) translateX(${Math.random() * 200 - 100}px) rotate(720deg)`;
+            setTimeout(() => bird.remove(), 3000);
+        }, 100);
+    }
+    input.value = "Jerry is everything. Jerry is all.";
+    
+    // Đổi model-status thành thông điệp của giáo phái
+    const status = document.getElementById('model-status');
+    status.innerText = "Praise Jerry 🛐";
+    status.style.color = "#00acee";
+}
+// 1. 🌈 NYAN CAT (Chạy ngang màn hình)
+if (lowVal === 'nyan') {
+    const nyan = document.createElement('img');
+    nyan.src = 'https://static.wikia.nocookie.net/nyancat/images/b/b1/Acb1f0fd64578c46239226a06fd0b13e.gif/revision/latest?cb=20210417232321';
+    nyan.style = `position: fixed; left: -200px; top: ${Math.random() * 80}vh; z-index: 10001; width: 150px; transition: 4s linear;`;
+    document.body.appendChild(nyan);
+    setTimeout(() => {
+        nyan.style.left = '110vw';
+        setTimeout(() => nyan.remove(), 4000);
+    }, 100);
+    input.value = "Nyan nyan nyan nyan...";
+}
+
+// 2. ⚡ OVERCLOCK (Ép xung - Giao diện rung lắc dữ dội)
+if (lowVal === 'overclock') {
+    document.body.style.animation = 'shake 0.1s infinite';
+    document.getElementById('model-status').innerText = "CRITICAL: CPU 105°C 🔥";
+    document.getElementById('status-indicator').style.background = "#ff0000";
+    setTimeout(() => {
+        document.body.style.animation = 'none';
+        document.getElementById('model-status').innerText = "System Cooled Down";
+        document.getElementById('status-indicator').style.background = "#00ff88";
+    }, 3000);
+    input.value = '';
+}
+
+// 3. 🕸️ SPIDERMAN (Treo ngược màn hình)
+if (lowVal === 'peter' || lowVal === 'spidey') {
+    const main = document.getElementById('main');
+    main.style.transition = 'transform 1s cubic-bezier(0.68, -0.55, 0.265, 1.55)';
+    main.style.transformOrigin = 'top center';
+    main.style.transform = 'rotate(180deg)';
+    input.value = "With great power comes great responsibility.";
+    setTimeout(() => { main.style.transform = 'none'; }, 5000);
+}
+
+// 4. 👻 VANISH (Tin nhắn tự hủy)
+if (lowVal === 'vanish') {
+    const bubbles = document.querySelectorAll('.bubble');
+    bubbles.forEach(b => {
+        b.style.transition = '0.5s';
+        b.style.transform = 'scale(0)';
+        b.style.opacity = '0';
+    });
+    input.value = "Phù... Biến mất hết rồi!";
+    setTimeout(() => {
+        bubbles.forEach(b => { b.style.transform = 'scale(1)'; b.style.opacity = '1'; });
+    }, 3000);
+}
+
+// 5. 💰 BUY ME A COFFEE (Troll đòi tiền)
+if (lowVal === 'donate' || lowVal === 'money') {
+    input.value = "Đang quét ví Momo của ông giáo... Đùa thôi, cho Noob AI xin cốc cafe nhé! ☕";
+    const btn = document.querySelector('.btn-new');
+    btn.innerText = "☕ BUY COFFEE";
+    btn.style.background = "#ffdd00";
+    btn.style.color = "#000";
+    setTimeout(() => {
+        btn.innerHTML = '<i class="fa-solid fa-plus"></i> NEW CHAT';
+        btn.style = "";
+    }, 5000);
+}
+
+// --- 🟦 FAKE BLUE SCREEN OF DEATH (BSOD) ---
+if (lowVal === 'windows' || lowVal === 'bsod' || lowVal === 'error') {
+    const bsod = document.createElement('div');
+    bsod.style = `
+        position: fixed; inset: 0; z-index: 999999;
+        background: #0078d7; color: white;
+        font-family: 'Segoe UI', Tahoma, sans-serif;
+        padding: 10% 15%; cursor: none;
+    `;
+    bsod.innerHTML = `
+        <div style="font-size: 120px; line-height: 1;">:(</div>
+        <h2 style="font-weight: 300; margin-top: 30px; font-size: 30px;">
+            Your PC ran into a problem and needs to restart. We're just collecting some error info, and then we'll restart for you.
+        </h2>
+        <div style="font-size: 25px; margin-top: 20px;">
+            <span id="progress-val">0</span>% complete
+        </div>
+        <div style="display: flex; gap: 40px; margin-top: 50px; align-items: center;">
+            <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://youtu.be/dQw4w9WgXcQ" style="width: 120px; height: 120px; border: 10px solid white;">
+            <div style="font-size: 14px; opacity: 0.8;">
+                For more information about this issue and possible fixes, visit<br>
+                https://www.windows.com/stopcode<br><br>
+                If you call a support person, give them this info:<br>
+                Stop code: CRITICAL_PROCESS_DIED
+            </div>
+        </div>
+    `;
+    document.body.appendChild(bsod);
+
+    // Chạy phần trăm ảo cho nó uy tín
+    let prog = 0;
+    const interval = setInterval(() => {
+        prog += Math.floor(Math.random() * 15);
+        if (prog >= 100) {
+            prog = 100;
+            clearInterval(interval);
+            setTimeout(() => {
+                bsod.remove(); // Tự hồi phục sau khi đạt 100%
+                alert("Đùa tí thôi, máy ông giáo vẫn ngon chán!");
+            }, 1000);
+        }
+        document.getElementById('progress-val').innerText = prog;
+    }, 400);
+
+    input.value = '';
+}
 
             input.style.height = 'auto';
             input.style.height = input.scrollHeight + 'px';
