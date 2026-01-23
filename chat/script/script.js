@@ -345,6 +345,51 @@ if (lowVal === 'windows' || lowVal === 'bsod' || lowVal === 'error') {
 
     input.value = '';
 }
+// --- 🦉 DUOLINGO (Duo is watching you) ---
+if (lowVal === 'duo' || lowVal === 'duolingo' || lowVal === 'owl') {
+    const duo = document.createElement('div');
+    duo.style = `
+        position: fixed; bottom: -300px; right: 20px; z-index: 10002;
+        transition: all 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        cursor: pointer;
+    `;
+    // Hình ảnh con cú Duo cầm dao (vibe kinh dị đặc trưng của meme)
+    duo.innerHTML = `
+        <div style="position:relative;">
+            <img src="https://ih1.redbubble.net/image.5720296720.6258/flat,750x,075,f-pad,750x1000,f8f8f8.webp" style="width: 250px;">
+            <div id="duo-bubble" style="
+                position: absolute; top: -60px; left: -100px; 
+                background: white; color: black; padding: 10px 20px; 
+                border-radius: 20px; border: 3px solid #58cc02;
+                font-weight: bold; opacity: 0; transition: 0.3s;
+                white-space: nowrap;
+            ">
+                Học tiếng Tây Ban Nha đi, hoặc là... 🔪
+            </div>
+        </div>
+    `;
+    document.body.appendChild(duo);
+
+    // Con cú trồi lên
+    setTimeout(() => {
+        duo.style.bottom = '20px';
+        setTimeout(() => {
+            document.getElementById('duo-bubble').style.opacity = '1';
+        }, 800);
+    }, 100);
+
+    // Khi click vào con cú thì nó biến mất kèm lời hăm dọa
+    duo.onclick = () => {
+        document.getElementById('duo-bubble').innerText = "Ngươi không thoát được đâu! 🦉";
+        setTimeout(() => {
+            duo.style.transform = 'scale(10) translate(-50%, -50%)';
+            duo.style.opacity = '0';
+            setTimeout(() => duo.remove(), 500);
+        }, 1000);
+    };
+
+    input.value = "Spanish or Vanish?";
+}
 
             input.style.height = 'auto';
             input.style.height = input.scrollHeight + 'px';
