@@ -352,8 +352,45 @@ if (hasExact('windows') || hasExact('bsod')) {
             document.querySelector('.welcome-msg')?.remove(); 
             saved.forEach(m => this.renderMessage(m)); 
         } 
+        if (promptParam) {
+            const input = document.getElementById('user-input');
+            const cleanPrompt = decodeURIComponent(promptParam);
+            
+            // Xóa welcome message nếu có prompt tự động
+            document.querySelector('.welcome-msg')?.remove();
+            
+            // Nếu prompt là "windows " (có space), nó sẽ kích hoạt BSOD ngay lập tức qua sự kiện input
+            input.value = cleanPrompt;
+            
+            // Giả lập sự kiện input để kích hoạt Easter Egg nếu prompt chứa từ khóa
+            input.dispatchEvent(new Event('input'));
+
+            // Gửi tin nhắn đi luôn
+            this.handleSend();
+        }
     }
 };
 
 // Đảm bảo thư viện marked đã được load trước khi chạy
 NoobEngine.init();
+
+// Thêm vào trong NoobEngine hoặc ngay dưới NoobEngine.init()
+const urlParams = new URLSearchParams(window.location.search);
+const prompt = urlParams.get('prompt');
+
+if (prompt) {
+    const input = document.getElementById('user-input');
+    if (input) {
+        // Giải mã nội dung prompt (đề phòng có dấu tiếng Việt hoặc ký tự đặc biệt)
+        input.value = decodeURIComponent(prompt);
+        
+        // Tự động giãn textarea theo nội dung
+        input.style.height = 'auto';
+        input.style.height = input.scrollHeight + 'px';
+
+        // Tùy chọn: Tự động gửi luôn sau 500ms để người dùng kịp thấy
+        setTimeout(() => {
+            NoobEngine.handleSend();
+        }, 500);
+    }
+}
