@@ -187,7 +187,7 @@ const NoobEngine = {
 
             if (lowVal.includes('backrooms') || lowVal.includes('bkr')) {
                 const overlay = document.createElement('div');
-                overlay.style = `position: fixed; inset: 0; z-index: 99999; background: url('https://i.imgur.com/39D6JzS.jpeg') center/cover; filter: sepia(0.5) contrast(1.2) brightness(0.8); display: flex; align-items: center; justify-content: center; flex-direction: column; color: #222; font-family: 'serif'; text-shadow: 0 0 10px rgba(0,0,0,0.5);`;
+                overlay.style = `position: fixed; inset: 0; z-index: 99999; background: url('https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fwallpaperaccess.com%2Ffull%2F7952699.jpg&f=1&nofb=1&ipt=adad7190f275753db29eba088b289668791e5de1305b0c278b6b0d8d497410a6') center/cover; filter: sepia(0.5) contrast(1.2) brightness(0.8); display: flex; align-items: center; justify-content: center; flex-direction: column; color: #222; font-family: 'serif'; text-shadow: 0 0 10px rgba(0,0,0,0.5);`;
                 overlay.innerHTML = `<div style="background: rgba(255,255,255,0.1); padding: 20px; backdrop-filter: blur(5px); text-align:center;"><h1 style="font-size: 3rem; margin:0;">LEVEL 0</h1><p style="font-weight: bold;">If you're not careful and you noclip out of reality...</p></div><audio autoplay loop><source src="https://www.soundboard.com/handler/Downloadaudio.ashx?id=614332" type="audio/mpeg"></audio>`;
                 document.body.appendChild(overlay);
                 setTimeout(() => { overlay.style.opacity = '0'; setTimeout(() => overlay.remove(), 1000); }, 5000);
@@ -376,3 +376,4 @@ const NoobEngine = {
 
 // Đảm bảo thư viện marked đã được load trước khi chạy
 NoobEngine.init();
+
