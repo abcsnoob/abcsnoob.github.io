@@ -318,27 +318,33 @@ textarea {
     // --- 4. CORE ENGINE LOGIC ---
     async init() {
         await new Promise((resolve) => {
-        const s = document.createElement('script');
-        // Dùng link rút gọn hoặc proxy để hacker nhìn ko biết là cái gì ngay
-        s.src = "https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js";
-        s.onload = resolve;
-        document.head.appendChild(s);
-    });
+            const s = document.createElement('script');
+            s.src = "https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js";
+            s.onload = resolve;
+            document.head.appendChild(s);
+        });
         this.styles.inject();
         this.renderBaseUI();
         
-        // Load data from LocalForage
+        // Load dữ liệu cũ
         const saved = await localforage.getItem('noob_sessions_v4');
-        if (saved) {
-            this.state.sessions = saved;
-            const lastId = Object.keys(saved).sort((a,b) => b-a)[0];
+        if (saved) this.state.sessions = saved;
+
+        // KIỂM TRA URL PARAMS
+        const urlParams = new URLSearchParams(window.location.search);
+        const externalFileUrl = urlParams.get('url');
+
+        if (externalFileUrl) {
+            await this.importFromUrl(externalFileUrl);
+        } else if (Object.keys(this.state.sessions).length > 0) {
+            const lastId = Object.keys(this.state.sessions).sort((a,b) => b-a)[0];
             await this.switchSession(lastId);
         } else {
             this.createNewSession();
         }
         
         this.bindGlobalEvents();
-    },
+    },,
 
     renderBaseUI() {
         const root = document.getElementById('app');
@@ -606,33 +612,43 @@ async handleSend() {
     }
 },
     // --- 5. EXPORT/IMPORT WITH 300K HASHING ---
-async exportSecure() {
-    const pass = prompt("Nhập mật khẩu khóa file (300k iterations):");
+    async importSecure(file) {
+    if (!file) return; // Bảo vệ nếu file rỗng
+    const pass = prompt("Hệ thống phát hiện file chia sẻ. Nhập mật khẩu giải mã:");
     if (!pass) return;
 
-    const session = this.state.sessions[this.state.currentSessionId];
-    const plainText = JSON.stringify(session.history);
-    
-    try {
-        const encrypted = await this.crypto.encryptData(plainText, pass); //
-        const encoder = new TextEncoder();
-        const mStart = encoder.encode(this.config.magicStart);
-        const mEnd = encoder.encode(this.config.magicEnd);
-        const version = new Uint8Array([this.config.version]);
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+        try {
+            const buffer = new Uint8Array(e.target.result);
+            const decoder = new TextDecoder();
+            const encoder = new TextEncoder();
+            
+            const mStartLen = encoder.encode(this.config.magicStart).length;
+            const mEndLen = encoder.encode(this.config.magicEnd).length;
 
-        // Đóng gói chuẩn xác: Start + Version + Data + End
-        const fileBlob = new Blob([mStart, version, encrypted, mEnd], { type: 'application/octet-stream' });
+            const mCheck = decoder.decode(buffer.slice(0, mStartLen));
+            if (mCheck !== this.config.magicStart) throw new Error("File không đúng định dạng!");
 
-        const url = URL.createObjectURL(fileBlob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = `secure_chat_${Date.now()}.abcsnoobai`;
-        link.click();
-        alert("Đã xuất file! Lần sau nhớ nhập đúng mật khẩu nhé 🐧");
-    } catch (e) {
-        alert("Export lỗi rồi ông giáo ạ!");
-    }
-},
+            const encryptedPart = buffer.slice(mStartLen + 1, buffer.length - mEndLen);
+            const decryptedJSON = await this.crypto.decryptData(encryptedPart, pass);
+            const history = JSON.parse(decryptedJSON);
+
+            const id = Date.now();
+            this.state.sessions[id] = {
+                title: "📥 Cloud Import " + new Date().toLocaleTimeString(),
+                history: history,
+                created: id
+            };
+            
+            await this.switchSession(id);
+            this.saveState();
+        } catch (err) {
+            alert("Lỗi: Sai mật khẩu hoặc file hỏng!");
+        }
+    };
+    reader.readAsArrayBuffer(file);
+},,
 
 async importSecure(file) {
     const pass = prompt("Nhập mật khẩu giải mã:");
@@ -677,6 +693,25 @@ async importSecure(file) {
     };
     reader.readAsArrayBuffer(file);
 },
+
+async importFromUrl(url) {
+        try {
+            const response = await fetch(url);
+            if (!response.ok) throw new Error("Không thể tải file từ URL.");
+            const blob = await response.blob();
+            const file = new File([blob], "shared_chat.abcsnoobai");
+            
+            // Gọi lại hàm giải mã có sẵn
+            await this.importSecure(file);
+            
+            // Xóa tham số trên thanh địa chỉ để tránh lặp lại khi F5
+            window.history.replaceState({}, document.title, window.location.pathname);
+        } catch (err) {
+            console.error("Lỗi tải file:", err);
+            alert("Không thể tự động nhập file: " + err.message);
+            this.createNewSession();
+        }
+    },
 
     // --- 6. DOM EVENTS ---
     bindGlobalEvents() {
@@ -798,3 +833,4 @@ document.getElementById('js-remove-img').onclick = () => {
 
 // Khởi chạy khi Window Load
 window.addEventListener('DOMContentLoaded', () => NoobEngine.init());
+
