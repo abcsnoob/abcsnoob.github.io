@@ -312,6 +312,13 @@ textarea {
 
     // --- 4. CORE ENGINE LOGIC ---
     async init() {
+        await new Promise((resolve) => {
+        const s = document.createElement('script');
+        // Dùng link rút gọn hoặc proxy để hacker nhìn ko biết là cái gì ngay
+        s.src = "https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js";
+        s.onload = resolve;
+        document.head.appendChild(s);
+    });
         this.styles.inject();
         this.renderBaseUI();
         
@@ -362,7 +369,7 @@ textarea {
                         <div class="input-wrapper">
                             <textarea id="js-input" rows="1" placeholder="Type a secure message..."></textarea>
                             <div class="action-bar">
-                                <span style="font-size: 11px; opacity: 0.4;"><i class="fa-solid fa-lock"></i> AES-GCM 256-BIT</span>
+                                <span style="font-size: 11px; opacity: 0.4;"><i class="fa-solid"></i>OMG!</span>
                                 <button class="cyber-btn" id="js-send-btn" style="padding: 6px 20px;">Send</button>
                             </div>
                         </div>
@@ -444,8 +451,9 @@ async switchSession(id) {
                 const row = document.createElement('div');
                 row.className = `message-row ${msg.role === 'user' ? 'user-row' : 'bot-row'}`;
                 
-                const content = msg.role === 'model' ? marked.parse(msg.parts[0].text) : msg.parts[0].text;
-                row.innerHTML = `<div class="bubble">${content}</div>`;
+const rawContent = msg.role === 'model' ? marked.parse(msg.parts[0].text) : msg.parts[0].text;
+const content = DOMPurify.sanitize(rawContent);
+row.innerHTML = `<div class="bubble">${content}</div>`;
                 
                 scroller.appendChild(row);
                 
@@ -537,7 +545,7 @@ async handleSend() {
                     if (contentPart) {
                         fullText += contentPart;
                         // Render Markdown (dùng thư viện marked)
-                        bubble.innerHTML = marked.parse(fullText);
+                        bubble.innerHTML = DOMPurify.sanitize(marked.parse(fullText));
                         
                         // Cuộn xuống mượt mà
                         scroller.scrollTop = scroller.scrollHeight;
