@@ -344,7 +344,7 @@ textarea {
         }
         
         this.bindGlobalEvents();
-    },,
+    },
 
     renderBaseUI() {
         const root = document.getElementById('app');
@@ -833,4 +833,5 @@ document.getElementById('js-remove-img').onclick = () => {
 
 // Khởi chạy khi Window Load
 window.addEventListener('DOMContentLoaded', () => NoobEngine.init());
+
 
