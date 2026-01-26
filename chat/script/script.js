@@ -648,7 +648,7 @@ async handleSend() {
         }
     };
     reader.readAsArrayBuffer(file);
-},,
+},
 
 async importSecure(file) {
     const pass = prompt("Nhập mật khẩu giải mã:");
@@ -833,5 +833,6 @@ document.getElementById('js-remove-img').onclick = () => {
 
 // Khởi chạy khi Window Load
 window.addEventListener('DOMContentLoaded', () => NoobEngine.init());
+
 
 
