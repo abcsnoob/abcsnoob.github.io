@@ -464,60 +464,64 @@ async handleSend() {
     const input = document.getElementById('js-input');
     const text = input.value.trim();
     
-    // Chặn nếu đang gửi hoặc không có chữ
+    // Chặn nếu đang bận PvP (isTyping) hoặc không có chữ
     if (!text || this.state.isTyping) return;
 
     this.state.isTyping = true;
     const session = this.state.sessions[this.state.currentSessionId];
     
-    // Xóa màn hình chào nếu đây là tin nhắn đầu tiên
+    // Xóa màn hình chào nếu là tin đầu tiên
     const welcome = document.querySelector('.welcome');
     if (welcome) welcome.remove();
 
-    // 1. Đẩy tin nhắn của User lên UI
+    // 1. Đẩy tin nhắn User lên UI & Lịch sử
     const userMsg = { role: 'user', parts: [{ text }] };
     session.history.push(userMsg);
     await this.appendMessageUI(userMsg);
     
-    // Reset ô input
     input.value = '';
     input.style.height = 'auto';
 
-    // 2. Tạo khung chứa cho Bot (với hiệu ứng typing)
+    // 2. Tạo khung chứa cho Bot
     const scroller = document.getElementById('chat-scroller');
     const row = document.createElement('div');
-    row.className = 'message-row bot-row reveal typing'; // Thêm class typing để hiện con trỏ
+    row.className = 'message-row bot-row reveal typing';
     const bubble = document.createElement('div');
     bubble.className = 'bubble';
     row.appendChild(bubble);
     scroller.appendChild(row);
 
     let fullText = "";
+    let buffer = ""; // <--- "Cứu cánh" để không bị cắt tin nhắn
 
     try {
         const response = await fetch(this.config.apiEndpoint, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ 
-                messages: session.history // Gửi kèm lịch sử để Bot nhớ persona
+                messages: session.history 
             })
         });
 
-        if (!response.ok) throw new Error("Server Noob đang bận PvP, thử lại sau nhé!");
+        if (!response.ok) throw new Error("Server đang bận gank nhau, thử lại sau nhé!");
 
         const reader = response.body.getReader();
         const decoder = new TextDecoder();
 
-        // 3. Vòng lặp đọc Stream cực mạnh
+        // 3. Vòng lặp đọc Stream chống cắt ngang
         while (true) {
             const { done, value } = await reader.read();
             if (done) break;
 
-            // Giải mã chunk nhận được
-            const chunk = decoder.decode(value, { stream: true });
+            // Cộng dồn mảnh dữ liệu mới vào buffer
+            buffer += decoder.decode(value, { stream: true });
             
-            // Tách các dòng bắt đầu bằng "data: "
-            const lines = chunk.split("\n");
+            // Tách các dòng dữ liệu hoàn chỉnh (kết thúc bằng \n)
+            let lines = buffer.split("\n");
+            
+            // Dòng cuối cùng có thể chưa hoàn chỉnh, giữ lại trong buffer cho vòng lặp sau
+            buffer = lines.pop(); 
+
             for (const line of lines) {
                 const trimmedLine = line.trim();
                 if (!trimmedLine || !trimmedLine.startsWith("data: ")) continue;
@@ -527,30 +531,40 @@ async handleSend() {
 
                 try {
                     const data = JSON.parse(jsonStr);
-                    // Truy xuất text từ cấu trúc của Gemini API
-                    if (data.candidates && data.candidates[0].content.parts[0].text) {
-                        const newText = data.candidates[0].content.parts[0].text;
-                        fullText += newText;
-
-                        // Render Markdown và cuộn xuống
+                    // Truy xuất text từ cấu trúc Gemini/Gemma
+                    const contentPart = data.candidates?.[0]?.content?.parts?.[0]?.text;
+                    
+                    if (contentPart) {
+                        fullText += contentPart;
+                        // Render Markdown (dùng thư viện marked)
                         bubble.innerHTML = marked.parse(fullText);
+                        
+                        // Cuộn xuống mượt mà
                         scroller.scrollTop = scroller.scrollHeight;
                     }
                 } catch (e) {
-                    console.error("Lỗi parse gói tin:", e);
+                    console.error("Mảnh JSON bị lỗi, đang đợi mảnh tiếp theo...", e);
+                    // Nếu lỗi parse, có thể do dòng này vẫn bị xẻ đôi, gộp lại vào buffer
+                    buffer = line + "\n" + buffer;
                 }
             }
         }
 
-        // Lưu tin nhắn Bot vào lịch sử sau khi stream xong
+        // 4. Lưu vào lịch sử sau khi Stream kết thúc thành công
         session.history.push({ role: 'model', parts: [{ text: fullText }] });
 
     } catch (err) {
+        console.error("Bug rồi ông giáo ạ:", err);
         bubble.innerHTML = `<span style="color:var(--danger)">⚠️ Lỗi hệ thống: ${err.message}</span>`;
     } finally {
-        row.classList.remove('typing'); // Tắt con trỏ nhấp nháy
+        row.classList.remove('typing');
         this.state.isTyping = false;
         this.saveState();
+        
+        // Đảm bảo cuộn xuống lần cuối
+        setTimeout(() => {
+            scroller.scrollTop = scroller.scrollHeight;
+        }, 50);
     }
 },
     // --- 5. EXPORT/IMPORT WITH 300K HASHING ---
