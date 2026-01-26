@@ -299,7 +299,12 @@ textarea {
     box-shadow: 0 20px 40px rgba(0,0,0,0.2); animation: modalIn 0.3s ease-out;
 }
 @keyframes modalIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
-
+.bubble img {
+    max-width: 100%;
+    border-radius: 8px;
+    margin-top: 8px;
+    display: block;
+}
 /* Custom Scrollbar */
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
@@ -368,10 +373,16 @@ textarea {
                     <div class="composer">
                         <div class="input-wrapper">
                             <textarea id="js-input" rows="1" placeholder="Type a secure message..."></textarea>
-                            <div class="action-bar">
-                                <span style="font-size: 11px; opacity: 0.4;"><i class="fa-solid"></i>OMG!</span>
-                                <button class="cyber-btn" id="js-send-btn" style="padding: 6px 20px;">Send</button>
-                            </div>
+<div class="action-bar">
+    <div class="d-flex gap-2 align-items-center">
+        <button class="cyber-btn" id="js-image-btn" title="Upload Image"><i class="fa-solid fa-image"></i></button>
+        <div id="js-image-preview" style="display:none; position:relative;">
+            <img src="" id="js-preview-img" style="height:32px; border-radius:4px; border:1px solid var(--p)">
+            <i class="fa-solid fa-circle-xmark" id="js-remove-img" style="position:absolute; top:-5px; right:-5px; font-size:12px; cursor:pointer; color:var(--danger)"></i>
+        </div>
+    </div>
+    <button class="cyber-btn" id="js-send-btn" style="padding: 6px 20px;">Send</button>
+</div>
                         </div>
                     </div>
                 </main>
@@ -393,6 +404,7 @@ textarea {
                 </div>
             </div>
             <input type="file" id="js-file-hidden" hidden accept=".abcsnoobai">
+            <input type="file" id="js-image-hidden" hidden accept="image/*">
         `;
     },
 
@@ -445,35 +457,45 @@ async switchSession(id) {
     },
 
     appendMessageUI(msg) {
-        return new Promise(resolve => {
-            setTimeout(() => {
-                const scroller = document.getElementById('chat-scroller');
-                const row = document.createElement('div');
-                row.className = `message-row ${msg.role === 'user' ? 'user-row' : 'bot-row'}`;
-                
-const rawContent = msg.role === 'model' ? marked.parse(msg.parts[0].text) : msg.parts[0].text;
-const content = DOMPurify.sanitize(rawContent);
-row.innerHTML = `<div class="bubble">${content}</div>`;
-                
-                scroller.appendChild(row);
-                
-                // Trigger animation
-                requestAnimationFrame(() => {
-                    row.classList.add('reveal');
-                    scroller.scrollTop = scroller.scrollHeight;
-                });
-                
-                resolve();
-            }, this.config.renderDelay);
-        });
-    },
+    return new Promise(resolve => {
+        setTimeout(() => {
+            const scroller = document.getElementById('chat-scroller');
+            const row = document.createElement('div');
+            row.className = `message-row ${msg.role === 'user' ? 'user-row' : 'bot-row'}`;
+            
+            let htmlContent = "";
+            msg.parts.forEach(part => {
+                if (part.text) {
+                    // Nếu là Model thì dùng marked, User thì text thuần (hoặc tùy ông giáo)
+                    htmlContent += msg.role === 'model' ? marked.parse(part.text) : `<div>${part.text}</div>`;
+                }
+                if (part.inline_data) {
+                    // Hiển thị ảnh trực tiếp từ Base64
+                    htmlContent += `<img src="data:${part.inline_data.mime_type};base64,${part.inline_data.data}" 
+                                     style="max-width:200px; border-radius:8px; margin-top:5px; display:block;">`;
+                }
+            });
+
+            const content = DOMPurify.sanitize(htmlContent);
+            row.innerHTML = `<div class="bubble">${content}</div>`;
+            
+            scroller.appendChild(row);
+            requestAnimationFrame(() => {
+                row.classList.add('reveal');
+                scroller.scrollTop = scroller.scrollHeight;
+            });
+            resolve();
+        }, this.config.renderDelay);
+    });
+},
 
 async handleSend() {
     const input = document.getElementById('js-input');
     const text = input.value.trim();
+    const imageBase64 = this.state.pendingImage; // Lấy ảnh từ state nếu có
     
-    // Chặn nếu đang bận PvP (isTyping) hoặc không có chữ
-    if (!text || this.state.isTyping) return;
+    // Chặn nếu không có nội dung và không có ảnh, hoặc đang bận
+    if ((!text && !imageBase64) || this.state.isTyping) return;
 
     this.state.isTyping = true;
     const session = this.state.sessions[this.state.currentSessionId];
@@ -482,15 +504,35 @@ async handleSend() {
     const welcome = document.querySelector('.welcome');
     if (welcome) welcome.remove();
 
-    // 1. Đẩy tin nhắn User lên UI & Lịch sử
-    const userMsg = { role: 'user', parts: [{ text }] };
+    // 1. Chuẩn bị dữ liệu tin nhắn (Multi-part)
+    const userMsgParts = [];
+    if (text) userMsgParts.push({ text: text });
+    
+    if (imageBase64) {
+        const [mimeInfo, base64Data] = imageBase64.split(',');
+        const mimeType = mimeInfo.match(/:(.*?);/)[1];
+        userMsgParts.push({
+            inline_data: {
+                mime_type: mimeType,
+                data: base64Data
+            }
+        });
+    }
+
+    const userMsg = { role: 'user', parts: userMsgParts };
     session.history.push(userMsg);
+    
+    // 2. Hiển thị tin nhắn User lên UI
     await this.appendMessageUI(userMsg);
     
+    // Reset Input và Preview ảnh ngay sau khi nhấn gửi
     input.value = '';
     input.style.height = 'auto';
+    this.state.pendingImage = null;
+    const previewArea = document.getElementById('js-image-preview');
+    if (previewArea) previewArea.style.display = 'none';
 
-    // 2. Tạo khung chứa cho Bot
+    // 3. Tạo khung chứa cho Bot (Typing animation)
     const scroller = document.getElementById('chat-scroller');
     const row = document.createElement('div');
     row.className = 'message-row bot-row reveal typing';
@@ -500,7 +542,7 @@ async handleSend() {
     scroller.appendChild(row);
 
     let fullText = "";
-    let buffer = ""; // <--- "Cứu cánh" để không bị cắt tin nhắn
+    let buffer = ""; 
 
     try {
         const response = await fetch(this.config.apiEndpoint, {
@@ -516,18 +558,12 @@ async handleSend() {
         const reader = response.body.getReader();
         const decoder = new TextDecoder();
 
-        // 3. Vòng lặp đọc Stream chống cắt ngang
         while (true) {
             const { done, value } = await reader.read();
             if (done) break;
 
-            // Cộng dồn mảnh dữ liệu mới vào buffer
             buffer += decoder.decode(value, { stream: true });
-            
-            // Tách các dòng dữ liệu hoàn chỉnh (kết thúc bằng \n)
             let lines = buffer.split("\n");
-            
-            // Dòng cuối cùng có thể chưa hoàn chỉnh, giữ lại trong buffer cho vòng lặp sau
             buffer = lines.pop(); 
 
             for (const line of lines) {
@@ -539,37 +575,31 @@ async handleSend() {
 
                 try {
                     const data = JSON.parse(jsonStr);
-                    // Truy xuất text từ cấu trúc Gemini/Gemma
                     const contentPart = data.candidates?.[0]?.content?.parts?.[0]?.text;
                     
                     if (contentPart) {
                         fullText += contentPart;
-                        // Render Markdown (dùng thư viện marked)
+                        // Render Markdown bảo mật bằng DOMPurify
                         bubble.innerHTML = DOMPurify.sanitize(marked.parse(fullText));
-                        
-                        // Cuộn xuống mượt mà
                         scroller.scrollTop = scroller.scrollHeight;
                     }
                 } catch (e) {
-                    console.error("Mảnh JSON bị lỗi, đang đợi mảnh tiếp theo...", e);
-                    // Nếu lỗi parse, có thể do dòng này vẫn bị xẻ đôi, gộp lại vào buffer
-                    buffer = line + "\n" + buffer;
+                    console.error("Lỗi parse stream:", e);
                 }
             }
         }
 
-        // 4. Lưu vào lịch sử sau khi Stream kết thúc thành công
+        // 4. Lưu phản hồi của Bot vào lịch sử
         session.history.push({ role: 'model', parts: [{ text: fullText }] });
 
     } catch (err) {
         console.error("Bug rồi ông giáo ạ:", err);
-        bubble.innerHTML = `<span style="color:var(--danger)">⚠️ Lỗi hệ thống: ${err.message}</span>`;
+        bubble.innerHTML = `<span style="color:var(--danger)">⚠️ Lỗi: ${err.message}</span>`;
     } finally {
         row.classList.remove('typing');
         this.state.isTyping = false;
         this.saveState();
         
-        // Đảm bảo cuộn xuống lần cuối
         setTimeout(() => {
             scroller.scrollTop = scroller.scrollHeight;
         }, 50);
@@ -664,7 +694,27 @@ async importSecure(file) {
                 this.handleSend();
             }
         };
-        
+        // Xử lý chọn ảnh
+document.getElementById('js-image-btn').onclick = () => document.getElementById('js-image-hidden').click();
+
+document.getElementById('js-image-hidden').onchange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = (f) => {
+            document.getElementById('js-preview-img').src = f.target.result;
+            document.getElementById('js-image-preview').style.display = 'block';
+            this.state.pendingImage = f.target.result; // Lưu vào state tạm thời
+        };
+        reader.readAsDataURL(file);
+    }
+};
+
+document.getElementById('js-remove-img').onclick = () => {
+    this.state.pendingImage = null;
+    document.getElementById('js-image-preview').style.display = 'none';
+    document.getElementById('js-image-hidden').value = '';
+};
         // Auto resize textarea
         document.getElementById('js-input').oninput = (e) => {
             e.target.style.height = 'auto';
