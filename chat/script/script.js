@@ -598,7 +598,7 @@ async exportSecure() {
         link.href = url;
         link.download = `secure_chat_${Date.now()}.abcsnoobai`;
         link.click();
-        alert("Đã xuất file! Lần sau nhớ nhập đúng '12345' nhé 🐧");
+        alert("Đã xuất file! Lần sau nhớ nhập đúng mật khẩu nhé 🐧");
     } catch (e) {
         alert("Export lỗi rồi ông giáo ạ!");
     }
