@@ -772,6 +772,15 @@ async importSecure(directSource = null) {
         `;
         document.body.insertAdjacentHTML('beforeend', modalHTML);
 
+// === BIND EVENT CHO MODAL (ĐÚNG CHỖ) ===
+const localBtn = document.getElementById('js-import-local-btn');
+const fileInput = document.getElementById('js-file-hidden');
+
+if (localBtn && fileInput) {
+    localBtn.onclick = () => fileInput.click();
+}
+
+
         // Xử lý nút "Kéo về"
 document.getElementById('js-submit-code-btn').onclick = () => {
     const code = document.getElementById('js-import-code-input').value.trim();
@@ -911,9 +920,6 @@ async importFromUrl(url) {
             this.state.sidebarOpen = !this.state.sidebarOpen;
             document.getElementById('sidebar').classList.toggle('collapsed');
         };
-        document.getElementById('js-import-local-btn').onclick = () => {
-            document.getElementById('js-file-hidden').click();
-        };
 
         // Send Msg
         document.getElementById('js-send-btn').onclick = () => this.handleSend();
@@ -1030,5 +1036,6 @@ document.getElementById('js-remove-img').onclick = () => {
 
 // Khởi chạy khi Window Load
 window.addEventListener('DOMContentLoaded', () => NoobEngine.init());
+
 
 
