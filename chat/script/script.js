@@ -786,10 +786,6 @@ document.getElementById('js-submit-code-btn').onclick = () => {
 };
 
     },
-// Bắt sự kiện chọn file từ máy
-document.getElementById('js-import-local-btn').onclick = () => {
-    document.getElementById('js-file-hidden').click();
-};
 
     // Hàm xử lý logic giải mã lõi
 async processImport(source) {
@@ -915,6 +911,9 @@ async importFromUrl(url) {
             this.state.sidebarOpen = !this.state.sidebarOpen;
             document.getElementById('sidebar').classList.toggle('collapsed');
         };
+        document.getElementById('js-import-local-btn').onclick = () => {
+            document.getElementById('js-file-hidden').click();
+        };
 
         // Send Msg
         document.getElementById('js-send-btn').onclick = () => this.handleSend();
@@ -1031,4 +1030,5 @@ document.getElementById('js-remove-img').onclick = () => {
 
 // Khởi chạy khi Window Load
 window.addEventListener('DOMContentLoaded', () => NoobEngine.init());
+
 
