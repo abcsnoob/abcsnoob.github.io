@@ -611,88 +611,279 @@ async handleSend() {
         }, 50);
     }
 },
-    // --- 5. EXPORT/IMPORT WITH 300K HASHING ---
-    async importSecure(file) {
-    if (!file) return; // Bảo vệ nếu file rỗng
-    const pass = prompt("Hệ thống phát hiện file chia sẻ. Nhập mật khẩu giải mã:");
-    if (!pass) return;
+async exportSecure() {
+        const session = this.state.sessions[this.state.currentSessionId];
+        if (!session || !session.history || session.history.length === 0) {
+            alert("Chưa có nội dung gì để share đâu ông giáo ơi!");
+            return;
+        }
 
-    const reader = new FileReader();
-    reader.onload = async (e) => {
+        const pass = prompt("Thiết lập mật khẩu bảo mật để khóa file (Hệ thống sẽ băm 300k lần):");
+        if (!pass) return;
+
+        const shareBtn = document.getElementById('js-share-btn');
+        const originalText = shareBtn.innerHTML;
+
         try {
-            const buffer = new Uint8Array(e.target.result);
-            const decoder = new TextDecoder();
+            // 1. Mã hóa dữ liệu (AES-GCM + PBKDF2 300k iterations)
+            const jsonStr = JSON.stringify(session.history);
+            const encryptedData = await this.crypto.encryptData(jsonStr, pass);
+
+            // 2. Đóng gói file theo cấu trúc Noob Engine V4
             const encoder = new TextEncoder();
+            const mStart = encoder.encode(this.config.magicStart);
+            const mEnd = encoder.encode(this.config.magicEnd);
+            const version = new Uint8Array([this.config.version]);
+
+            const finalFile = new Uint8Array(mStart.length + version.length + encryptedData.length + mEnd.length);
+            finalFile.set(mStart, 0);
+            finalFile.set(version, mStart.length);
+            finalFile.set(encryptedData, mStart.length + version.length);
+            finalFile.set(mEnd, mStart.length + version.length + encryptedData.length);
+
+            const fileName = `NoobChat_${Date.now()}.abcsnoobai`;
+            const fileBlob = new Blob([finalFile], { type: 'application/octet-stream' });
+
+            // 3. Hiệu ứng đang xử lý
+            shareBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang lên mây...';
+            shareBtn.disabled = true;
+
+            // 4. Upload thông qua Worker Proxy để tránh lỗi 403/500
+            const formData = new FormData();
+            formData.append('reqtype', 'fileupload');
+            formData.append('fileToUpload', fileBlob, fileName);
+
+            const response = await fetch(`${this.config.apiEndpoint}/upload-catbox`, {
+                method: 'POST',
+                body: formData
+            });
+
+            if (!response.ok) throw new Error("Server Catbox đang bận gank nhau, Worker cứu không kịp!");
+
+            const catboxUrl = await response.text();
+            const fileCode = catboxUrl.split('/').pop(); // Lấy "tên_file.abcsnoobai"
+            const shareLink = `${window.location.origin}${window.location.pathname}?url=${encodeURIComponent(catboxUrl.trim())}`;
+
+            // 5. Giao diện tùy chỉnh hiển thị kết quả
+            const resultHTML = `
+                <div class="share-result-card" style="background: var(--surface); border: 1px solid var(--p); border-radius: 12px; padding: 16px; margin-top: 10px; border-left: 4px solid var(--p);">
+                    <h4 style="color: var(--p); margin: 0 0 12px 0; font-family: 'Space Grotesk'; font-size: 16px;">
+                        <i class="fa-solid fa-cloud-arrow-up"></i> Tải lên thành công!
+                    </h4>
+                    
+                    <div style="margin-bottom: 12px;">
+                        <label style="font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px;">Link chia sẻ bảo mật</label>
+                        <div style="display: flex; gap: 5px; margin-top: 4px;">
+                            <input type="text" value="${shareLink}" readonly id="js-share-url" 
+                                   style="flex: 1; background: var(--bg); border: 1px solid var(--border); color: var(--text); padding: 6px 10px; border-radius: 6px; font-size: 12px; outline: none;">
+                            <button class="cyber-btn" onclick="NoobEngine.copyToClipboard('${shareLink}', this)" title="Copy Link">
+                                <i class="fa-solid fa-copy"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                        <a href="${catboxUrl.trim()}" target="_blank" class="cyber-btn" style="text-decoration: none; justify-content: center; background: var(--p-glow);">
+                            <i class="fa-solid fa-download"></i> Tải file
+                        </a>
+                        <button class="cyber-btn" style="justify-content: center;" onclick="NoobEngine.copyToClipboard('${fileCode}', this)">
+                            <i class="fa-solid fa-code"></i> Copy Code
+                        </button>
+                    </div>
+                    
+                    <div style="font-size: 10px; color: var(--text-muted); margin-top: 10px; display: flex; justify-content: space-between;">
+                        <span>Mã định danh: <b style="color: var(--text)">${fileCode}</b></span>
+                        <span>Mật khẩu: <i class="fa-solid fa-lock"></i> Đã mã hóa</span>
+                    </div>
+                </div>
+            `;
+
+            // Render vào khung chat
+            const scroller = document.getElementById('chat-scroller');
+            const row = document.createElement('div');
+            row.className = 'message-row bot-row reveal';
+            row.innerHTML = `<div class="bubble" style="width: 100%; max-width: 400px;">${resultHTML}</div>`;
+            scroller.appendChild(row);
             
-            const mStartLen = encoder.encode(this.config.magicStart).length;
-            const mEndLen = encoder.encode(this.config.magicEnd).length;
+            // Cuộn xuống cuối
+            setTimeout(() => { scroller.scrollTop = scroller.scrollHeight; }, 100);
 
-            const mCheck = decoder.decode(buffer.slice(0, mStartLen));
-            if (mCheck !== this.config.magicStart) throw new Error("File không đúng định dạng!");
+        } catch (err) {
+            console.error("Lỗi Export:", err);
+            alert("Lỗi: " + err.message);
+        } finally {
+            shareBtn.innerHTML = originalText;
+            shareBtn.disabled = false;
+        }
+    },
 
-            const encryptedPart = buffer.slice(mStartLen + 1, buffer.length - mEndLen);
+    // Hàm bổ trợ để copy nhanh
+    copyToClipboard(text, btn) {
+        navigator.clipboard.writeText(text).then(() => {
+            const icon = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-check" style="color: var(--success)"></i>';
+            setTimeout(() => { btn.innerHTML = icon; }, 2000);
+        });
+    },
+
+async importSecure(directSource = null) {
+        // Nếu chọn file từ máy, xử lý luôn không hiện Modal
+        if (directSource instanceof File) {
+            return await this.processImport(directSource);
+        }
+
+        // Xóa cái modal cũ nếu lỡ nó còn tồn tại
+        const oldModal = document.getElementById('js-noob-import-portal');
+        if (oldModal) oldModal.remove();
+
+        const modalHTML = `
+            <div id="js-noob-import-portal" style="position:fixed; inset:0; background:rgba(0,0,0,0.85); backdrop-filter:blur(10px); display:flex; align-items:center; justify-content:center; z-index:99999;">
+                <div style="width:90%; max-width:380px; background:var(--bg); border:1px solid var(--p); padding:24px; border-radius:16px; box-shadow: 0 0 30px var(--p-glow); display:block !important;">
+                    <h3 style="margin-top:0; font-family:'Space Grotesk'; color:var(--p); display:flex; align-items:center; gap:10px;">
+                        <i class="fa-solid fa-file-import"></i> Cổng Nhập Dữ Liệu
+                    </h3>
+                    
+                    <div style="margin-bottom:20px;">
+                        <label style="font-size:11px; color:var(--text-muted); display:block; margin-bottom:8px; letter-spacing:1px; font-weight:bold;">NHẬP MÃ CODE CATBOX</label>
+                        <div style="display:flex; gap:8px;">
+                            <input type="text" id="js-import-code-input" placeholder="Ví dụ: abcxyz.abcsnoobai" 
+                                   style="flex:1; background:var(--surface); border:1px solid var(--border); color:var(--text); padding:10px; border-radius:8px; outline:none; font-size:13px;">
+                            <button class="cyber-btn" id="js-submit-code-btn" style="white-space:nowrap;">Kéo về</button>
+                        </div>
+                    </div>
+
+                    <div style="text-align:center; margin-bottom:20px; position:relative;">
+                        <hr style="border:0; border-top:1px solid var(--border);">
+                        <span style="position:absolute; top:-10px; left:50%; transform:translateX(-50%); background:var(--bg); padding:0 10px; color:var(--text-muted); font-size:11px;">HOẶC</span>
+                    </div>
+
+<button
+  class="cyber-btn w-100"
+  id="js-import-local-btn"
+  style="justify-content:center; padding:12px; background:var(--p-glow); margin-bottom:12px;">
+    <i class="fa-solid fa-hard-drive"></i> Chọn file từ máy tính
+</button>
+
+
+                    <button class="cyber-btn w-100" style="border:none; background:transparent; color:var(--text-muted); justify-content:center;" 
+                            onclick="document.getElementById('js-noob-import-portal').remove()">Hủy bỏ</button>
+                </div>
+            </div>
+        `;
+        document.body.insertAdjacentHTML('beforeend', modalHTML);
+
+        // Xử lý nút "Kéo về"
+document.getElementById('js-submit-code-btn').onclick = () => {
+    const code = document.getElementById('js-import-code-input').value.trim();
+    if (!code) return alert("Nhập code Catbox đi ông giáo!");
+
+    const catboxUrl = `https://files.catbox.moe/${code}`;
+    const redirectUrl =
+        `https://abcsnoob.github.io/chat/chat-iframe.html?url=${encodeURIComponent(catboxUrl)}`;
+
+    // Chuyển hướng tạm
+    window.location.href = redirectUrl;
+};
+
+    },
+
+    // Hàm xử lý logic giải mã lõi
+async processImport(source) {
+        let buffer;
+        const scroller = document.getElementById('chat-scroller');
+
+        try {
+            // 1. GIAI ĐOẠN LẤY DỮ LIỆU THÔ (RAW DATA)
+            if (source instanceof File) {
+                // Nếu là file chọn từ máy
+                buffer = await source.arrayBuffer();
+            } else if (typeof source === 'string' && source.trim() !== "") {
+                // Nếu là mã Code hoặc URL
+                let targetUrl = source.trim();
+                
+                // Tự động nhận diện nếu chỉ nhập mã (ví dụ: abc.abcsnoobai)
+                if (!targetUrl.startsWith('http')) {
+                    targetUrl = `https://files.catbox.moe/${targetUrl}`;
+                }
+
+                // Hiển thị thông báo đang kéo file cho người dùng đỡ sốt ruột
+                const loadingMsg = document.createElement('div');
+                loadingMsg.className = 'message-row bot-row reveal';
+                loadingMsg.id = 'js-import-loading';
+                loadingMsg.innerHTML = `<div class="bubble"><i class="fa-solid fa-cloud-arrow-down fa-bounce"></i> Đang kéo dữ liệu từ mây về...</div>`;
+                scroller.appendChild(loadingMsg);
+                scroller.scrollTop = scroller.scrollHeight;
+
+                // Gọi qua Worker Proxy (Lệnh GET) để bypass CORS
+                const response = await fetch(`${this.config.apiEndpoint}/upload-catbox?get=${encodeURIComponent(targetUrl)}`);
+                
+                // Xóa thông báo loading
+                const loader = document.getElementById('js-import-loading');
+                if (loader) loader.remove();
+
+                if (!response.ok) throw new Error("Không thể truy cập file! Mã code sai hoặc server bị gank.");
+                buffer = await response.arrayBuffer();
+            } else {
+                return; // Không có nguồn dữ liệu hợp lệ
+            }
+
+            // 2. GIAI ĐOẠN KIỂM TRA ĐỊNH DẠNG (MAGIC BYTES)
+            const data = new Uint8Array(buffer);
+            const decoder = new TextEncoder();
+            const textDecoder = new TextDecoder();
+            
+            const mStart = this.config.magicStart;
+            const mEnd = this.config.magicEnd;
+            const mStartLen = decoder.encode(mStart).length;
+            const mEndLen = decoder.encode(mEnd).length;
+
+            // Kiểm tra Magic Start
+            const header = textDecoder.decode(data.slice(0, mStartLen));
+            if (header !== mStart) {
+                throw new Error("File không đúng định dạng Noob Engine (Sai Magic Start)!");
+            }
+
+            // Kiểm tra Magic End
+            const footer = textDecoder.decode(data.slice(data.length - mEndLen));
+            if (footer !== mEnd) {
+                throw new Error("File bị hỏng hoặc thiếu dữ liệu kết thúc!");
+            }
+
+            // 3. GIAI ĐOẠN GIẢI MÃ (AES-GCM)
+            const pass = prompt("Dữ liệu này đã được khóa. Nhập mật khẩu để bắt đầu giải mã 300k vòng băm:");
+            if (!pass) return;
+
+            // Trích xuất dữ liệu mã hóa (Bỏ qua Magic Start + 1 byte Version)
+            const encryptedPart = data.slice(mStartLen + 1, data.length - mEndLen);
+            
+            // Giải mã bằng module Crypto có sẵn trong NoobEngine
             const decryptedJSON = await this.crypto.decryptData(encryptedPart, pass);
             const history = JSON.parse(decryptedJSON);
 
-            const id = Date.now();
-            this.state.sessions[id] = {
-                title: "📥 Cloud Import " + new Date().toLocaleTimeString(),
+            // 4. GIAI ĐOẠN TẠO SESSION VÀ HIỂN THỊ
+            const newId = Date.now().toString();
+            const titlePrefix = source instanceof File ? "📁 " : "☁️ ";
+            const titleName = source instanceof File ? source.name : (source.length > 15 ? "Cloud Chat" : source);
+
+            this.state.sessions[newId] = {
+                title: titlePrefix + titleName,
                 history: history,
-                created: id
+                created: newId
             };
-            
-            await this.switchSession(id);
+
+            // Chuyển sang session mới và lưu lại
+            await this.switchSession(newId);
             this.saveState();
-        } catch (err) {
-            alert("Lỗi: Sai mật khẩu hoặc file hỏng!");
-        }
-    };
-    reader.readAsArrayBuffer(file);
-},
-
-async importSecure(file) {
-    const pass = prompt("Nhập mật khẩu giải mã:");
-    if (!pass) return;
-
-    const reader = new FileReader();
-    reader.onload = async (e) => {
-        try {
-            const buffer = new Uint8Array(e.target.result);
-            const decoder = new TextDecoder();
-            const encoder = new TextEncoder();
             
-            const mStartLen = encoder.encode(this.config.magicStart).length;
-            const mEndLen = encoder.encode(this.config.magicEnd).length;
+            // Thông báo thành công kiểu "dev chuyên nghiệp"
+            alert("🔓 Giải mã thành công! Toàn bộ lịch sử đã được khôi phục.");
 
-            // Kiểm tra Magic Bytes đầu file
-            const mCheck = decoder.decode(buffer.slice(0, mStartLen));
-            if (mCheck !== this.config.magicStart) throw new Error("File không đúng định dạng Noob Engine!");
-
-            // Cắt phần Encrypted chính xác tuyệt đối
-            // Vị trí: Bỏ qua Start (mStartLen) và Version (1 byte)
-            const encryptedPart = buffer.slice(mStartLen + 1, buffer.length - mEndLen);
-
-            // Giải mã với 300k vòng băm
-            const decryptedJSON = await this.crypto.decryptData(encryptedPart, pass);
-            const history = JSON.parse(decryptedJSON);
-
-            const id = Date.now();
-            this.state.sessions[id] = {
-                title: "📥 Đã khôi phục " + new Date().toLocaleTimeString(),
-                history: history,
-                created: id
-            };
-            
-            await this.switchSession(id);
-            this.saveState();
-            alert("Giải mã thành công! Hú hồn chưa?");
         } catch (err) {
-            console.error(err);
-            alert("Lỗi: Sai mật khẩu hoặc file đã bị 'gank' (hỏng)!");
+            console.error("Lỗi Import Process:", err);
+            // Nếu lỗi do sai mật khẩu hoặc JSON parse lỗi
+            alert("Toang rồi ông giáo: " + (err.message.includes("decryption") ? "Sai mật khẩu rồi!" : err.message));
         }
-    };
-    reader.readAsArrayBuffer(file);
-},
+    },
 
 async importFromUrl(url) {
         try {
@@ -759,8 +950,11 @@ document.getElementById('js-remove-img').onclick = () => {
 
         // Actions
         document.getElementById('js-new-btn').onclick = () => this.createNewSession();
-        document.getElementById('js-share-btn').onclick = () => this.exportSecure();
-        document.getElementById('js-import-btn').onclick = () => document.getElementById('js-file-hidden').click();
+        document.getElementById('js-share-btn').onclick = () => {
+    NoobEngine.exportSecure();
+};
+
+       document.getElementById('js-import-btn').onclick = () => this.importSecure();
         document.getElementById('js-file-hidden').onchange = (e) => this.importSecure(e.target.files[0]);
 
         // Settings Modal
@@ -833,6 +1027,3 @@ document.getElementById('js-remove-img').onclick = () => {
 
 // Khởi chạy khi Window Load
 window.addEventListener('DOMContentLoaded', () => NoobEngine.init());
-
-
-
