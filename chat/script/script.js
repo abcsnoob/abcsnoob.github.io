@@ -618,8 +618,9 @@ async exportSecure() {
             return;
         }
 
-        const pass = prompt("Thiết lập mật khẩu bảo mật để khóa file (Hệ thống sẽ băm 300k lần):");
-        if (!pass) return;
+let pass = prompt("Thiết lập mật khẩu (Để trống để dùng mật khẩu mặc định):");
+if (pass === null) return; // Người dùng nhấn Cancel -> Thoát
+if (pass.trim() === "") pass = "default"; // Không nhập gì -> Dùng "default"
 
         const shareBtn = document.getElementById('js-share-btn');
         const originalText = shareBtn.innerHTML;
@@ -859,8 +860,10 @@ async processImport(source) {
             }
 
             // 3. GIAI ĐOẠN GIẢI MÃ (AES-GCM)
-            const pass = prompt("Dữ liệu này đã được khóa. Nhập mật khẩu để bắt đầu giải mã 300k vòng băm:");
-            if (!pass) return;
+// Thay thế bằng:
+let pass = prompt("Nhập mật khẩu giải mã (Để trống nếu dùng mật khẩu mặc định):");
+if (pass === null) return; // Người dùng nhấn Cancel -> Thoát
+if (pass.trim() === "") pass = "default"; // Tự động dùng "default" để giải mã
 
             // Trích xuất dữ liệu mã hóa (Bỏ qua Magic Start + 1 byte Version)
             const encryptedPart = data.slice(mStartLen + 1, data.length - mEndLen);
@@ -1036,6 +1039,7 @@ document.getElementById('js-remove-img').onclick = () => {
 
 // Khởi chạy khi Window Load
 window.addEventListener('DOMContentLoaded', () => NoobEngine.init());
+
 
 
 
