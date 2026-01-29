@@ -830,39 +830,92 @@ async processImport(source) {
             if (!response.ok) throw new Error("Mã code sai hoặc file không tồn tại.");
             buffer = await response.arrayBuffer();
         } else { return; }
+
         const data = new Uint8Array(buffer);
         const textDecoder = new TextDecoder();
         const mStartLen = new TextEncoder().encode(this.config.magicStart).length;
         const mEndLen = new TextEncoder().encode(this.config.magicEnd).length;
-        if (textDecoder.decode(data.slice(0, mStartLen)) !== this.config.magicStart) throw new Error("File không đúng định dạng NoobEngine!");
+
+        if (textDecoder.decode(data.slice(0, mStartLen)) !== this.config.magicStart) {
+            throw new Error("File không đúng định dạng NoobEngine!");
+        }
+
+        // --- BẮT ĐẦU: HIỂN THỊ Ô NHẬP PASSWORD CÓ NÚT SHOW/HIDE ---
         const { value: pass } = await Swal.fire({
             title: 'Mở khóa dữ liệu',
             input: 'password',
             inputLabel: 'Nhập mật khẩu để giải mã',
+            inputPlaceholder: 'Mật khẩu...',
             showCancelButton: true,
             confirmButtonColor: 'var(--p)',
             background: 'var(--bg)',
             color: 'var(--text)',
-            confirmButtonText: 'Giải mã'
+            confirmButtonText: 'Giải mã',
+            cancelButtonText: 'Hủy',
+            // Thêm nút con mắt để xem mật khẩu
+            didOpen: () => {
+                const input = Swal.getInput();
+                const container = input.parentElement;
+                container.style.position = 'relative';
+                
+                const eye = document.createElement('i');
+                eye.className = 'fa-solid fa-eye';
+                eye.style.cssText = `
+                    position: absolute; right: 15px; top: 50%; 
+                    transform: translateY(-50%); cursor: pointer; 
+                    color: var(--p); z-index: 10;
+                `;
+                
+                eye.onclick = () => {
+                    if (input.type === 'password') {
+                        input.type = 'text';
+                        eye.className = 'fa-solid fa-eye-slash';
+                    } else {
+                        input.type = 'password';
+                        eye.className = 'fa-solid fa-eye';
+                    }
+                };
+                container.appendChild(eye);
+            }
         });
+
         if (pass === undefined) return;
         const finalPass = pass.trim() === "" ? "default" : pass;
+
         const encryptedPart = data.slice(mStartLen + 1, data.length - mEndLen);
         const decryptedJSON = await this.crypto.decryptData(encryptedPart, finalPass);
+        
         const payload = JSON.parse(decryptedJSON);
         const history = payload.h ? payload.h : (Array.isArray(payload) ? payload : []);
         const title = payload.t ? payload.t : "Imported Chat";
+
         const newId = Date.now().toString();
         this.state.sessions[newId] = { title, history, created: newId };
+        
         await this.switchSession(newId);
         this.saveState();
-        if (document.getElementById('js-noob-import-portal')) document.getElementById('js-noob-import-portal').remove();
-        Swal.fire({ icon: 'success', title: 'Thành công', text: `Đã mở: ${title}`, timer: 1500, showConfirmButton: false, background: 'var(--bg)', color: 'var(--text)' });
+
+        if (document.getElementById('js-noob-import-portal')) {
+            document.getElementById('js-noob-import-portal').remove();
+        }
+
+        // --- HIỂN THỊ THÔNG BÁO THÀNH CÔNG VỚI NÚT OK ---
+        Swal.fire({ 
+            icon: 'success', 
+            title: 'Thành công', 
+            text: `Đã mở cuộc trò chuyện: ${title}`, 
+            showConfirmButton: true, // Hiện nút OK
+            confirmButtonText: 'Tuyệt vời',
+            confirmButtonColor: 'var(--p)',
+            background: 'var(--bg)', 
+            color: 'var(--text)' 
+        });
+
     } catch (err) {
         Swal.fire({ 
             icon: 'error', 
             title: 'Lỗi giải mã', 
-            text: err.message.includes("decryption") ? "Mật khẩu không chính xác!" : err.message,
+            text: err.message.includes("decryption") || err.message.includes("Padding") ? "Mật khẩu không chính xác!" : err.message,
             background: 'var(--bg)',
             color: 'var(--text)'
         });
@@ -1032,6 +1085,7 @@ async deleteSession(id) {
 
 // Khởi chạy khi Window Load
 window.addEventListener('DOMContentLoaded', () => NoobEngine.init());
+
 
 
 
