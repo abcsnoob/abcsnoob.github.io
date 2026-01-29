@@ -495,50 +495,87 @@ async switchSession(id) {
     });
 },
 
+async generateAutoTitle(sessionId) {
+    const session = this.state.sessions[sessionId];
+    // Chỉ chạy khi có đúng 2 tin nhắn (User và Model)
+    if (!session || session.history.length !== 2) return;
+
+    try {
+        const response = await fetch(this.config.apiEndpoint, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                messages: [
+                    ...session.history,
+                    { role: 'user', parts: [{ text: "Dựa trên nội dung trên, hãy đặt một tiêu đề ngắn gọn cho cuộc trò chuyện này, tối đa 7 từ. Chỉ trả về text tiêu đề, không thêm gì khác." }] }
+                ] 
+            })
+        });
+
+        if (response.ok) {
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+            let fullTitle = "";
+
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+                const chunk = decoder.decode(value);
+                const lines = chunk.split("\n");
+                for (const line of lines) {
+                    if (line.startsWith("data: ")) {
+                        const jsonStr = line.replace("data: ", "");
+                        if (jsonStr === "[DONE]") break;
+                        try {
+                            const data = JSON.parse(jsonStr);
+                            const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+                            if (text) fullTitle += text;
+                        } catch(e) {}
+                    }
+                }
+            }
+            
+            if (fullTitle) {
+                session.title = fullTitle.replace(/["']/g, '').trim();
+                this.renderSessionList();
+                this.saveState();
+            }
+        }
+    } catch (e) {
+        console.error("Lỗi đặt tiêu đề tự động:", e);
+    }
+},
+
 async handleSend() {
     const input = document.getElementById('js-input');
     const text = input.value.trim();
-    const imageBase64 = this.state.pendingImage; // Lấy ảnh từ state nếu có
+    const imageBase64 = this.state.pendingImage;
     
-    // Chặn nếu không có nội dung và không có ảnh, hoặc đang bận
     if ((!text && !imageBase64) || this.state.isTyping) return;
 
     this.state.isTyping = true;
     const session = this.state.sessions[this.state.currentSessionId];
     
-    // Xóa màn hình chào nếu là tin đầu tiên
     const welcome = document.querySelector('.welcome');
     if (welcome) welcome.remove();
 
-    // 1. Chuẩn bị dữ liệu tin nhắn (Multi-part)
     const userMsgParts = [];
     if (text) userMsgParts.push({ text: text });
-    
     if (imageBase64) {
         const [mimeInfo, base64Data] = imageBase64.split(',');
         const mimeType = mimeInfo.match(/:(.*?);/)[1];
-        userMsgParts.push({
-            inline_data: {
-                mime_type: mimeType,
-                data: base64Data
-            }
-        });
+        userMsgParts.push({ inline_data: { mime_type: mimeType, data: base64Data } });
     }
 
     const userMsg = { role: 'user', parts: userMsgParts };
     session.history.push(userMsg);
-    
-    // 2. Hiển thị tin nhắn User lên UI
     await this.appendMessageUI(userMsg);
     
-    // Reset Input và Preview ảnh ngay sau khi nhấn gửi
     input.value = '';
     input.style.height = 'auto';
     this.state.pendingImage = null;
-    const previewArea = document.getElementById('js-image-preview');
-    if (previewArea) previewArea.style.display = 'none';
+    document.getElementById('js-image-preview').style.display = 'none';
 
-    // 3. Tạo khung chứa cho Bot (Typing animation)
     const scroller = document.getElementById('chat-scroller');
     const row = document.createElement('div');
     row.className = 'message-row bot-row reveal typing';
@@ -554,12 +591,8 @@ async handleSend() {
         const response = await fetch(this.config.apiEndpoint, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-                messages: session.history 
-            })
+            body: JSON.stringify({ messages: session.history })
         });
-
-        if (!response.ok) throw new Error("Server đang bận gank nhau, thử lại sau nhé!");
 
         const reader = response.body.getReader();
         const decoder = new TextDecoder();
@@ -567,156 +600,114 @@ async handleSend() {
         while (true) {
             const { done, value } = await reader.read();
             if (done) break;
-
             buffer += decoder.decode(value, { stream: true });
             let lines = buffer.split("\n");
             buffer = lines.pop(); 
 
             for (const line of lines) {
-                const trimmedLine = line.trim();
-                if (!trimmedLine || !trimmedLine.startsWith("data: ")) continue;
-
-                const jsonStr = trimmedLine.replace("data: ", "");
+                if (!line.trim().startsWith("data: ")) continue;
+                const jsonStr = line.replace("data: ", "");
                 if (jsonStr === "[DONE]") break;
-
                 try {
                     const data = JSON.parse(jsonStr);
                     const contentPart = data.candidates?.[0]?.content?.parts?.[0]?.text;
-                    
                     if (contentPart) {
                         fullText += contentPart;
-                        // Render Markdown bảo mật bằng DOMPurify
                         bubble.innerHTML = DOMPurify.sanitize(marked.parse(fullText));
                         scroller.scrollTop = scroller.scrollHeight;
                     }
-                } catch (e) {
-                    console.error("Lỗi parse stream:", e);
-                }
+                } catch (e) {}
             }
         }
-
-        // 4. Lưu phản hồi của Bot vào lịch sử
         session.history.push({ role: 'model', parts: [{ text: fullText }] });
-
     } catch (err) {
-        console.error("Bug rồi ông giáo ạ:", err);
         bubble.innerHTML = `<span style="color:var(--danger)">⚠️ Lỗi: ${err.message}</span>`;
     } finally {
         row.classList.remove('typing');
         this.state.isTyping = false;
         this.saveState();
-        
-        setTimeout(() => {
-            scroller.scrollTop = scroller.scrollHeight;
-        }, 50);
+        // Tự động kích hoạt tạo tiêu đề sau khi Bot trả lời xong tin đầu tiên
+        if (session.history.length === 2) {
+            this.generateAutoTitle(this.state.currentSessionId);
+        }
     }
 },
 async exportSecure() {
-        const session = this.state.sessions[this.state.currentSessionId];
-        if (!session || !session.history || session.history.length === 0) {
-            alert("Chưa có nội dung gì để share đâu ông giáo ơi!");
-            return;
-        }
+    const session = this.state.sessions[this.state.currentSessionId];
+    if (!session || !session.history.length) {
+        alert("Chưa có nội dung gì để share đâu!");
+        return;
+    }
 
-let pass = prompt("Thiết lập mật khẩu (Để trống để dùng mật khẩu mặc định):");
-if (pass === null) return; // Người dùng nhấn Cancel -> Thoát
-if (pass.trim() === "") pass = "default"; // Không nhập gì -> Dùng "default"
+    let pass = prompt("Thiết lập mật khẩu (Để trống dùng mặc định):");
+    if (pass === null) return;
+    if (pass.trim() === "") pass = "default";
 
-        const shareBtn = document.getElementById('js-share-btn');
-        const originalText = shareBtn.innerHTML;
+    const shareBtn = document.getElementById('js-share-btn');
+    const originalText = shareBtn.innerHTML;
 
-        try {
-            // 1. Mã hóa dữ liệu (AES-GCM + PBKDF2 300k iterations)
-            const jsonStr = JSON.stringify(session.history);
-            const encryptedData = await this.crypto.encryptData(jsonStr, pass);
+    try {
+        // Cấu trúc dữ liệu mới: Bao gồm tiêu đề và lịch sử
+        const payload = {
+            t: session.title,
+            h: session.history
+        };
+        const jsonStr = JSON.stringify(payload);
+        const encryptedData = await this.crypto.encryptData(jsonStr, pass);
 
-            // 2. Đóng gói file theo cấu trúc Noob Engine V4
-            const encoder = new TextEncoder();
-            const mStart = encoder.encode(this.config.magicStart);
-            const mEnd = encoder.encode(this.config.magicEnd);
-            const version = new Uint8Array([this.config.version]);
+        const encoder = new TextEncoder();
+        const mStart = encoder.encode(this.config.magicStart);
+        const mEnd = encoder.encode(this.config.magicEnd);
+        const version = new Uint8Array([this.config.version]);
 
-            const finalFile = new Uint8Array(mStart.length + version.length + encryptedData.length + mEnd.length);
-            finalFile.set(mStart, 0);
-            finalFile.set(version, mStart.length);
-            finalFile.set(encryptedData, mStart.length + version.length);
-            finalFile.set(mEnd, mStart.length + version.length + encryptedData.length);
+        const finalFile = new Uint8Array(mStart.length + version.length + encryptedData.length + mEnd.length);
+        finalFile.set(mStart, 0);
+        finalFile.set(version, mStart.length);
+        finalFile.set(encryptedData, mStart.length + version.length);
+        finalFile.set(mEnd, mStart.length + version.length + encryptedData.length);
 
-            const fileName = `NoobChat_${Date.now()}.abcsnoobai`;
-            const fileBlob = new Blob([finalFile], { type: 'application/octet-stream' });
+        const fileName = `NoobChat_${Date.now()}.abcsnoobai`;
+        const fileBlob = new Blob([finalFile], { type: 'application/octet-stream' });
 
-            // 3. Hiệu ứng đang xử lý
-            shareBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang lên mây...';
-            shareBtn.disabled = true;
+        shareBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang tải lên...';
+        shareBtn.disabled = true;
 
-            // 4. Upload thông qua Worker Proxy để tránh lỗi 403/500
-            const formData = new FormData();
-            formData.append('reqtype', 'fileupload');
-            formData.append('fileToUpload', fileBlob, fileName);
+        const formData = new FormData();
+        formData.append('reqtype', 'fileupload');
+        formData.append('fileToUpload', fileBlob, fileName);
 
-            const response = await fetch(`${this.config.apiEndpoint}/upload-catbox`, {
-                method: 'POST',
-                body: formData
-            });
+        const response = await fetch(`${this.config.apiEndpoint}/upload-catbox`, {
+            method: 'POST',
+            body: formData
+        });
 
-            if (!response.ok) throw new Error("Server Catbox đang bận gank nhau, Worker cứu không kịp!");
+        if (!response.ok) throw new Error("Upload thất bại!");
 
-            const catboxUrl = await response.text();
-            const fileCode = catboxUrl.split('/').pop(); // Lấy "tên_file.abcsnoobai"
-            const shareLink = `${window.location.origin}${window.location.pathname}?url=${encodeURIComponent(catboxUrl.trim())}`;
+        const catboxUrl = await response.text();
+        const fileCode = catboxUrl.split('/').pop().replace('.abcsnoobai', ''); // Chỉ lấy mã code, bỏ đuôi
+        const shareLink = `${window.location.origin}${window.location.pathname}?url=${encodeURIComponent(catboxUrl.trim())}`;
 
-            // 5. Giao diện tùy chỉnh hiển thị kết quả
-            const resultHTML = `
-                <div class="share-result-card" style="background: var(--surface); border: 1px solid var(--p); border-radius: 12px; padding: 16px; margin-top: 10px; border-left: 4px solid var(--p);">
-                    <h4 style="color: var(--p); margin: 0 0 12px 0; font-family: 'Space Grotesk'; font-size: 16px;">
-                        <i class="fa-solid fa-cloud-arrow-up"></i> Tải lên thành công!
-                    </h4>
-                    
-                    <div style="margin-bottom: 12px;">
-                        <label style="font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px;">Link chia sẻ bảo mật</label>
-                        <div style="display: flex; gap: 5px; margin-top: 4px;">
-                            <input type="text" value="${shareLink}" readonly id="js-share-url" 
-                                   style="flex: 1; background: var(--bg); border: 1px solid var(--border); color: var(--text); padding: 6px 10px; border-radius: 6px; font-size: 12px; outline: none;">
-                            <button class="cyber-btn" onclick="NoobEngine.copyToClipboard('${shareLink}', this)" title="Copy Link">
-                                <i class="fa-solid fa-copy"></i>
-                            </button>
-                        </div>
-                    </div>
+        // Hiển thị kết quả (giữ nguyên UI của bạn)
+        const scroller = document.getElementById('chat-scroller');
+        const row = document.createElement('div');
+        row.className = 'message-row bot-row reveal';
+        row.innerHTML = `<div class="bubble" style="width: 100%; max-width: 400px;">
+            <div style="background:var(--surface); border:1px solid var(--p); border-radius:12px; padding:16px;">
+                <h4 style="color:var(--p); margin:0 0 10px 0;">Tải lên thành công!</h4>
+                <div style="font-size:12px; margin-bottom:10px;">Mã Code: <b>${fileCode}</b></div>
+                <input type="text" value="${shareLink}" readonly style="width:100%; background:var(--bg); color:var(--text); border:1px solid var(--border); padding:5px; border-radius:4px; font-size:11px;">
+            </div>
+        </div>`;
+        scroller.appendChild(row);
+        scroller.scrollTop = scroller.scrollHeight;
 
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                        <a href="${catboxUrl.trim()}" target="_blank" class="cyber-btn" style="text-decoration: none; justify-content: center; background: var(--p-glow);">
-                            <i class="fa-solid fa-download"></i> Tải file
-                        </a>
-                        <button class="cyber-btn" style="justify-content: center;" onclick="NoobEngine.copyToClipboard('${fileCode}', this)">
-                            <i class="fa-solid fa-code"></i> Copy Code
-                        </button>
-                    </div>
-                    
-                    <div style="font-size: 10px; color: var(--text-muted); margin-top: 10px; display: flex; justify-content: space-between;">
-                        <span>Mã định danh: <b style="color: var(--text)">${fileCode}</b></span>
-                        <span>Mật khẩu: <i class="fa-solid fa-lock"></i> Đã mã hóa</span>
-                    </div>
-                </div>
-            `;
-
-            // Render vào khung chat
-            const scroller = document.getElementById('chat-scroller');
-            const row = document.createElement('div');
-            row.className = 'message-row bot-row reveal';
-            row.innerHTML = `<div class="bubble" style="width: 100%; max-width: 400px;">${resultHTML}</div>`;
-            scroller.appendChild(row);
-            
-            // Cuộn xuống cuối
-            setTimeout(() => { scroller.scrollTop = scroller.scrollHeight; }, 100);
-
-        } catch (err) {
-            console.error("Lỗi Export:", err);
-            alert("Lỗi: " + err.message);
-        } finally {
-            shareBtn.innerHTML = originalText;
-            shareBtn.disabled = false;
-        }
-    },
+    } catch (err) {
+        alert("Lỗi: " + err.message);
+    } finally {
+        shareBtn.innerHTML = originalText;
+        shareBtn.disabled = false;
+    }
+},
 
     // Hàm bổ trợ để copy nhanh
     copyToClipboard(text, btn) {
@@ -797,105 +788,63 @@ document.getElementById('js-submit-code-btn').onclick = () => {
 
     },
 
-    // Hàm xử lý logic giải mã lõi
-async processImport(source) {
-        let buffer;
-        const scroller = document.getElementById('chat-scroller');
+    // Hàm xử lý logic giải mã lõiasync processImport(source) {
+    let buffer;
+    const scroller = document.getElementById('chat-scroller');
 
-        try {
-            // 1. GIAI ĐOẠN LẤY DỮ LIỆU THÔ (RAW DATA)
-            if (source instanceof File) {
-                // Nếu là file chọn từ máy
-                buffer = await source.arrayBuffer();
-            } else if (typeof source === 'string' && source.trim() !== "") {
-                // Nếu là mã Code hoặc URL
-                let targetUrl = source.trim();
-                
-                // Tự động nhận diện nếu chỉ nhập mã (ví dụ: abc.abcsnoobai)
-                if (!targetUrl.startsWith('http')) {
-                    targetUrl = `https://files.catbox.moe/${targetUrl}`;
-                }
-
-                // Hiển thị thông báo đang kéo file cho người dùng đỡ sốt ruột
-                const loadingMsg = document.createElement('div');
-                loadingMsg.className = 'message-row bot-row reveal';
-                loadingMsg.id = 'js-import-loading';
-                loadingMsg.innerHTML = `<div class="bubble"><i class="fa-solid fa-cloud-arrow-down fa-bounce"></i> Đang kéo dữ liệu từ mây về...</div>`;
-                scroller.appendChild(loadingMsg);
-                scroller.scrollTop = scroller.scrollHeight;
-
-                // Gọi qua Worker Proxy (Lệnh GET) để bypass CORS
-                const response = await fetch(`${this.config.apiEndpoint}/upload-catbox?get=${encodeURIComponent(targetUrl)}`);
-                
-                // Xóa thông báo loading
-                const loader = document.getElementById('js-import-loading');
-                if (loader) loader.remove();
-
-                if (!response.ok) throw new Error("Không thể truy cập file! Mã code sai hoặc server bị gank.");
-                buffer = await response.arrayBuffer();
-            } else {
-                return; // Không có nguồn dữ liệu hợp lệ
+    try {
+        if (source instanceof File) {
+            buffer = await source.arrayBuffer();
+        } else if (typeof source === 'string' && source.trim() !== "") {
+            let targetUrl = source.trim();
+            
+            // HARDCODE: Tự động thêm đuôi nếu chỉ nhập mã code
+            if (!targetUrl.startsWith('http')) {
+                if (!targetUrl.endsWith('.abcsnoobai')) targetUrl += '.abcsnoobai';
+                targetUrl = `https://files.catbox.moe/${targetUrl}`;
             }
 
-            // 2. GIAI ĐOẠN KIỂM TRA ĐỊNH DẠNG (MAGIC BYTES)
-            const data = new Uint8Array(buffer);
-            const decoder = new TextEncoder();
-            const textDecoder = new TextDecoder();
-            
-            const mStart = this.config.magicStart;
-            const mEnd = this.config.magicEnd;
-            const mStartLen = decoder.encode(mStart).length;
-            const mEndLen = decoder.encode(mEnd).length;
+            const response = await fetch(`${this.config.apiEndpoint}/upload-catbox?get=${encodeURIComponent(targetUrl)}`);
+            if (!response.ok) throw new Error("Mã code sai hoặc file không tồn tại.");
+            buffer = await response.arrayBuffer();
+        } else { return; }
 
-            // Kiểm tra Magic Start
-            const header = textDecoder.decode(data.slice(0, mStartLen));
-            if (header !== mStart) {
-                throw new Error("File không đúng định dạng Noob Engine (Sai Magic Start)!");
-            }
+        const data = new Uint8Array(buffer);
+        const textDecoder = new TextDecoder();
+        const mStartLen = new TextEncoder().encode(this.config.magicStart).length;
+        const mEndLen = new TextEncoder().encode(this.config.magicEnd).length;
 
-            // Kiểm tra Magic End
-            const footer = textDecoder.decode(data.slice(data.length - mEndLen));
-            if (footer !== mEnd) {
-                throw new Error("File bị hỏng hoặc thiếu dữ liệu kết thúc!");
-            }
+        // Kiểm tra định dạng (Magic Bytes)
+        if (textDecoder.decode(data.slice(0, mStartLen)) !== this.config.magicStart) throw new Error("Sai định dạng!");
 
-            // 3. GIAI ĐOẠN GIẢI MÃ (AES-GCM)
-// Thay thế bằng:
-let pass = prompt("Nhập mật khẩu giải mã (Để trống nếu dùng mật khẩu mặc định):");
-if (pass === null) return; // Người dùng nhấn Cancel -> Thoát
-if (pass.trim() === "") pass = "default"; // Tự động dùng "default" để giải mã
+        let pass = prompt("Nhập mật khẩu giải mã:");
+        if (pass === null) return;
+        if (pass.trim() === "") pass = "default";
 
-            // Trích xuất dữ liệu mã hóa (Bỏ qua Magic Start + 1 byte Version)
-            const encryptedPart = data.slice(mStartLen + 1, data.length - mEndLen);
-            
-            // Giải mã bằng module Crypto có sẵn trong NoobEngine
-            const decryptedJSON = await this.crypto.decryptData(encryptedPart, pass);
-            const history = JSON.parse(decryptedJSON);
+        const encryptedPart = data.slice(mStartLen + 1, data.length - mEndLen);
+        const decryptedJSON = await this.crypto.decryptData(encryptedPart, pass);
+        
+        const payload = JSON.parse(decryptedJSON);
+        
+        // Xử lý cả format cũ (chỉ array) và format mới (object có t và h)
+        const history = payload.h ? payload.h : (Array.isArray(payload) ? payload : []);
+        const title = payload.t ? payload.t : (source instanceof File ? source.name : "Imported Chat");
 
-            // 4. GIAI ĐOẠN TẠO SESSION VÀ HIỂN THỊ
-            const newId = Date.now().toString();
-            const titlePrefix = source instanceof File ? "📁 " : "☁️ ";
-            const titleName = source instanceof File ? source.name : (source.length > 15 ? "Cloud Chat" : source);
+        const newId = Date.now().toString();
+        this.state.sessions[newId] = {
+            title: title,
+            history: history,
+            created: newId
+        };
 
-            this.state.sessions[newId] = {
-                title: titlePrefix + titleName,
-                history: history,
-                created: newId
-            };
+        await this.switchSession(newId);
+        this.saveState();
+        alert("🔓 Đã giải mã thành công cuộc hội thoại: " + title);
 
-            // Chuyển sang session mới và lưu lại
-            await this.switchSession(newId);
-            this.saveState();
-            
-            // Thông báo thành công kiểu "dev chuyên nghiệp"
-            alert("🔓 Giải mã thành công! Toàn bộ lịch sử đã được khôi phục.");
-
-        } catch (err) {
-            console.error("Lỗi Import Process:", err);
-            // Nếu lỗi do sai mật khẩu hoặc JSON parse lỗi
-            alert("Toang rồi ông giáo: " + (err.message.includes("decryption") ? "Sai mật khẩu rồi!" : err.message));
-        }
-    },
+    } catch (err) {
+        alert("Toang rồi: " + (err.message.includes("decryption") ? "Sai mật khẩu!" : err.message));
+    }
+},
 
 async importFromUrl(url) {
         try {
@@ -1039,7 +988,3 @@ document.getElementById('js-remove-img').onclick = () => {
 
 // Khởi chạy khi Window Load
 window.addEventListener('DOMContentLoaded', () => NoobEngine.init());
-
-
-
-
