@@ -683,6 +683,17 @@ async exportSecure() {
         const fileName = `NoobChat_${Date.now()}.abcsnoobai`;
         const fileBlob = new Blob([finalFile], { type: 'application/octet-stream' });
 
+        // --- BẮT ĐẦU: TỰ ĐỘNG TẢI FILE VỀ MÁY ---
+        const downloadUrl = URL.createObjectURL(fileBlob);
+        const link = document.createElement('a');
+        link.href = downloadUrl;
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(downloadUrl); // Giải phóng bộ nhớ
+        // --- KẾT THÚC: TẢI FILE ---
+
         shareBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Uploading...';
         shareBtn.disabled = true;
 
@@ -704,11 +715,18 @@ async exportSecure() {
         const scroller = document.getElementById('chat-scroller');
         const row = document.createElement('div');
         row.className = 'message-row bot-row reveal';
-        row.innerHTML = `<div class="bubble" style="width: 100%; max-width: 400px;">
+        row.innerHTML = `
+        <div class="bubble" style="width: 100%; max-width: 400px;">
             <div style="background:var(--surface); border:1px solid var(--p); border-radius:12px; padding:16px;">
-                <h4 style="color:var(--p); margin:0 0 10px 0;">Tải lên thành công!</h4>
-                <div style="font-size:12px; margin-bottom:10px;">Mã Code: <b>${fileCode}</b></div>
-                <input type="text" value="${shareLink}" readonly style="width:100%; background:var(--bg); color:var(--text); border:1px solid var(--border); padding:5px; border-radius:4px; font-size:11px;">
+                <h4 style="color:var(--p); margin:0 0 10px 0;">Xuất dữ liệu thành công!</h4>
+                <div style="font-size:12px; margin-bottom:10px; color:var(--text-muted);">
+                    <i class="fa-solid fa-file-download"></i> File đã được tải về máy của bạn.
+                </div>
+                <div style="font-size:12px; margin-bottom:10px;">Mã Code Cloud: <b>${fileCode}</b></div>
+                <input type="text" value="${shareLink}" readonly style="width:100%; background:var(--bg); color:var(--text); border:1px solid var(--border); padding:5px; border-radius:4px; font-size:11px; margin-bottom:10px;">
+                <button onclick="window.open('${catboxUrl.trim()}', '_blank')" style="width:100%; padding:8px; border-radius:6px; background:var(--p); color:#fff; border:none; cursor:pointer; font-size:12px;">
+                    <i class="fa-solid fa-cloud-download"></i> Tải lại từ Cloud
+                </button>
             </div>
         </div>`;
         scroller.appendChild(row);
@@ -1014,6 +1032,7 @@ async deleteSession(id) {
 
 // Khởi chạy khi Window Load
 window.addEventListener('DOMContentLoaded', () => NoobEngine.init());
+
 
 
 
