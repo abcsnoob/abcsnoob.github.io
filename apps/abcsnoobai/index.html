@@ -29,13 +29,19 @@ body { background: #0f172a; color: white; font-family: 'Segoe UI', Tahoma, Genev
 <div id="download-cards" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 w-full max-w-6xl mb-12">
     <!-- Cards sẽ được JS tạo ra -->
 </div>
+<div class="mt-6 flex gap-4 justify-center">
+    <a href="https://abcsnoob.github.io/chat/" class="bg-emerald-600 hover:bg-emerald-500 text-white px-6 py-2 rounded-full font-bold transition flex items-center gap-2">
+        <i class="fas fa-globe"></i> Dùng bản Web (Không cần cài đặt)
+    </a>
+</div>
 
 <script>
 const platforms = [
-  { name: 'Windows', icon: 'fab fa-windows', key: 'windows', ext: '.zip', info: 'Windows 8/10/11' },
-  { name: 'MacOS', icon: 'fab fa-apple', key: 'macos', ext: '.zip', info: 'Darwin / Intel & M1-3' },
-  { name: 'Linux', icon: 'fab fa-linux', key: 'linux', ext: '.tar.gz', info: 'Debian Compatible' },
-  { name: 'Android', icon: 'fab fa-android', key: 'android', ext: '.apk', info: 'Android 5.1 - 15' }
+  { name: 'Windows', icon: 'fab fa-windows', key: 'windows', ext: '.zip', info: 'Windows 8/10/11 (Đã test)' },
+  { name: 'MacOS', icon: 'fab fa-apple', key: 'macos', ext: '.zip', info: 'Intel & Apple Silicon (Beta)' },
+  // Đổi Debian Compatible thành Universal để người dùng bớt lo
+  { name: 'Linux', icon: 'fab fa-linux', key: 'linux', ext: '.tar.gz', info: 'Bản thực thi đa nền tảng (Beta)' }, 
+  { name: 'Android', icon: 'fab fa-android', key: 'android', ext: '.apk', info: 'Android 5.1 - 15 (Đã test)' }
 ];
 
 const jsonUrl = 'https://raw.githubusercontent.com/abcsnoob/abcsnoobytb/refs/heads/main/aiapp-release.json'; // file JSON của bạn
