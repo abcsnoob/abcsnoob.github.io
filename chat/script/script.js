@@ -316,13 +316,21 @@ textarea {
     },
 
     // --- 4. CORE ENGINE LOGIC ---
-    async init() {
-        await new Promise((resolve) => {
+async init() {
+    await new Promise((resolve) => {
+        // Nạp đồng thời cả DOMPurify và SweetAlert2
+        const scripts = [
+            "https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js",
+            "https://cdn.jsdelivr.net/npm/sweetalert2@11"
+        ];
+        let loaded = 0;
+        scripts.forEach(src => {
             const s = document.createElement('script');
-            s.src = "https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js";
-            s.onload = resolve;
+            s.src = src;
+            s.onload = () => { if(++loaded === scripts.length) resolve(); };
             document.head.appendChild(s);
         });
+    });
         this.styles.inject();
         this.renderBaseUI();
         
@@ -635,25 +643,31 @@ async handleSend() {
 async exportSecure() {
     const session = this.state.sessions[this.state.currentSessionId];
     if (!session || !session.history.length) {
-        alert("Chưa có nội dung gì để share đâu!");
+        Swal.fire({ icon: 'warning', title: 'Trống rỗng', text: 'Chưa có nội dung gì để share!', background: 'var(--bg)', color: 'var(--text)' });
         return;
     }
 
-    let pass = prompt("Thiết lập mật khẩu (Để trống dùng mặc định):");
-    if (pass === null) return;
-    if (pass.trim() === "") pass = "default";
+    const { value: pass } = await Swal.fire({
+        title: 'Mã hóa cuộc trò chuyện',
+        input: 'password',
+        inputLabel: 'Đặt mật khẩu (Để trống nếu dùng mặc định)',
+        inputPlaceholder: 'Nhập mật khẩu...',
+        showCancelButton: true,
+        confirmButtonColor: 'var(--p)',
+        background: 'var(--bg)',
+        color: 'var(--text)'
+    });
+
+    if (pass === undefined) return; 
+    const finalPass = pass.trim() === "" ? "default" : pass;
 
     const shareBtn = document.getElementById('js-share-btn');
     const originalText = shareBtn.innerHTML;
 
     try {
-        // Cấu trúc dữ liệu mới: Bao gồm tiêu đề và lịch sử
-        const payload = {
-            t: session.title,
-            h: session.history
-        };
+        const payload = { t: session.title, h: session.history };
         const jsonStr = JSON.stringify(payload);
-        const encryptedData = await this.crypto.encryptData(jsonStr, pass);
+        const encryptedData = await this.crypto.encryptData(jsonStr, finalPass);
 
         const encoder = new TextEncoder();
         const mStart = encoder.encode(this.config.magicStart);
@@ -669,7 +683,7 @@ async exportSecure() {
         const fileName = `NoobChat_${Date.now()}.abcsnoobai`;
         const fileBlob = new Blob([finalFile], { type: 'application/octet-stream' });
 
-        shareBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang tải lên...';
+        shareBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Uploading...';
         shareBtn.disabled = true;
 
         const formData = new FormData();
@@ -684,10 +698,9 @@ async exportSecure() {
         if (!response.ok) throw new Error("Upload thất bại!");
 
         const catboxUrl = await response.text();
-        const fileCode = catboxUrl.split('/').pop().replace('.abcsnoobai', ''); // Chỉ lấy mã code, bỏ đuôi
+        const fileCode = catboxUrl.split('/').pop().replace('.abcsnoobai', '');
         const shareLink = `${window.location.origin}${window.location.pathname}?url=${encodeURIComponent(catboxUrl.trim())}`;
 
-        // Hiển thị kết quả (giữ nguyên UI của bạn)
         const scroller = document.getElementById('chat-scroller');
         const row = document.createElement('div');
         row.className = 'message-row bot-row reveal';
@@ -702,7 +715,7 @@ async exportSecure() {
         scroller.scrollTop = scroller.scrollHeight;
 
     } catch (err) {
-        alert("Lỗi: " + err.message);
+        Swal.fire({ icon: 'error', title: 'Lỗi', text: err.message, background: 'var(--bg)', color: 'var(--text)' });
     } finally {
         shareBtn.innerHTML = originalText;
         shareBtn.disabled = false;
@@ -784,65 +797,59 @@ async importSecure(directSource = null) {
         };
     }, // Đã thêm dấu đóng ngoặc và phẩy ở đây
 
-    async processImport(source) {
-        let buffer;
-        try {
-            if (source instanceof File) {
-                buffer = await source.arrayBuffer();
-            } else if (typeof source === 'string' && source.trim() !== "") {
-                let targetUrl = source.trim();
-                
-                // HARDCODE: Tự động thêm đuôi .abcsnoobai
-                if (!targetUrl.startsWith('http')) {
-                    if (!targetUrl.endsWith('.abcsnoobai')) targetUrl += '.abcsnoobai';
-                    targetUrl = `https://files.catbox.moe/${targetUrl}`;
-                }
-
-                const response = await fetch(`${this.config.apiEndpoint}/upload-catbox?get=${encodeURIComponent(targetUrl)}`);
-                if (!response.ok) throw new Error("Mã code sai hoặc file không tồn tại.");
-                buffer = await response.arrayBuffer();
-            } else { return; }
-
-            const data = new Uint8Array(buffer);
-            const textDecoder = new TextDecoder();
-            const mStartLen = new TextEncoder().encode(this.config.magicStart).length;
-            const mEndLen = new TextEncoder().encode(this.config.magicEnd).length;
-
-            if (textDecoder.decode(data.slice(0, mStartLen)) !== this.config.magicStart) throw new Error("Sai định dạng!");
-
-            let pass = prompt("Nhập mật khẩu giải mã(để trống nếu ko có hehe):");
-            if (pass === null) return;
-            if (pass.trim() === "") pass = "default";
-
-            // Lấy dữ liệu mã hóa (nằm giữa MagicStart+Version và MagicEnd)
-            const encryptedPart = data.slice(mStartLen + 1, data.length - mEndLen);
-            const decryptedJSON = await this.crypto.decryptData(encryptedPart, pass);
-            
-            const payload = JSON.parse(decryptedJSON);
-            
-            // Xử lý tiêu đề được băm chung (nếu có)
-            const history = payload.h ? payload.h : (Array.isArray(payload) ? payload : []);
-            const title = payload.t ? payload.t : (source instanceof File ? source.name : "Imported Chat");
-
-            const newId = Date.now().toString();
-            this.state.sessions[newId] = {
-                title: title,
-                history: history,
-                created: newId
-            };
-
-            await this.switchSession(newId);
-            this.saveState();
-            
-            const modal = document.getElementById('js-noob-import-portal');
-            if (modal) modal.remove();
-            
-            alert("🔓 Đã giải mã thành công: " + title);
-
-        } catch (err) {
-            alert("Lỗi giải mã: " + (err.message.includes("decryption") ? "Mật khẩu sai rồi!" : err.message));
-        }
-    },
+async processImport(source) {
+    let buffer;
+    try {
+        if (source instanceof File) {
+            buffer = await source.arrayBuffer();
+        } else if (typeof source === 'string' && source.trim() !== "") {
+            let targetUrl = source.trim();
+            if (!targetUrl.startsWith('http')) {
+                if (!targetUrl.endsWith('.abcsnoobai')) targetUrl += '.abcsnoobai';
+                targetUrl = `https://files.catbox.moe/${targetUrl}`;
+            }
+            const response = await fetch(`${this.config.apiEndpoint}/upload-catbox?get=${encodeURIComponent(targetUrl)}`);
+            if (!response.ok) throw new Error("Mã code sai hoặc file không tồn tại.");
+            buffer = await response.arrayBuffer();
+        } else { return; }
+        const data = new Uint8Array(buffer);
+        const textDecoder = new TextDecoder();
+        const mStartLen = new TextEncoder().encode(this.config.magicStart).length;
+        const mEndLen = new TextEncoder().encode(this.config.magicEnd).length;
+        if (textDecoder.decode(data.slice(0, mStartLen)) !== this.config.magicStart) throw new Error("File không đúng định dạng NoobEngine!");
+        const { value: pass } = await Swal.fire({
+            title: 'Mở khóa dữ liệu',
+            input: 'password',
+            inputLabel: 'Nhập mật khẩu để giải mã',
+            showCancelButton: true,
+            confirmButtonColor: 'var(--p)',
+            background: 'var(--bg)',
+            color: 'var(--text)',
+            confirmButtonText: 'Giải mã'
+        });
+        if (pass === undefined) return;
+        const finalPass = pass.trim() === "" ? "default" : pass;
+        const encryptedPart = data.slice(mStartLen + 1, data.length - mEndLen);
+        const decryptedJSON = await this.crypto.decryptData(encryptedPart, finalPass);
+        const payload = JSON.parse(decryptedJSON);
+        const history = payload.h ? payload.h : (Array.isArray(payload) ? payload : []);
+        const title = payload.t ? payload.t : "Imported Chat";
+        const newId = Date.now().toString();
+        this.state.sessions[newId] = { title, history, created: newId };
+        await this.switchSession(newId);
+        this.saveState();
+        if (document.getElementById('js-noob-import-portal')) document.getElementById('js-noob-import-portal').remove();
+        Swal.fire({ icon: 'success', title: 'Thành công', text: `Đã mở: ${title}`, timer: 1500, showConfirmButton: false, background: 'var(--bg)', color: 'var(--text)' });
+    } catch (err) {
+        Swal.fire({ 
+            icon: 'error', 
+            title: 'Lỗi giải mã', 
+            text: err.message.includes("decryption") ? "Mật khẩu không chính xác!" : err.message,
+            background: 'var(--bg)',
+            color: 'var(--text)'
+        });
+    }
+},
 
 async importFromUrl(url) {
         try {
@@ -933,11 +940,21 @@ document.getElementById('js-remove-img').onclick = () => {
             localStorage.setItem('noob_theme', this.state.theme);
         };
 
-        document.getElementById('js-reset-btn').onclick = () => {
-            if (confirm("Mọi dữ liệu sẽ bị bốc hơi. Chắc chứ?")) {
-                localforage.clear().then(() => location.reload());
-            }
-        };
+document.getElementById('js-reset-btn').onclick = async () => {
+    const result = await Swal.fire({
+        title: 'Xóa sạch bách?',
+        text: "Mọi hội thoại và cài đặt sẽ bị xóa sạch!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#f85149',
+        confirmButtonText: 'Reset toàn bộ',
+        background: 'var(--bg)',
+        color: 'var(--text)'
+    });
+    if (result.isConfirmed) {
+        localforage.clear().then(() => location.reload());
+    }
+};
     },
 
     renderSessionList() {
@@ -966,18 +983,29 @@ document.getElementById('js-remove-img').onclick = () => {
         });
     },
 
-    deleteSession(id) {
-        if (confirm("Xóa đoạn hội thoại này?")) {
-            delete this.state.sessions[id];
-            const remaining = Object.keys(this.state.sessions);
-            if (remaining.length) {
-                this.switchSession(remaining[0]);
-            } else {
-                this.createNewSession();
-            }
-            this.saveState();
+async deleteSession(id) {
+    const result = await Swal.fire({
+        title: 'Xóa hội thoại?',
+        text: "Dữ liệu này sẽ biến mất mãi mãi!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: 'var(--danger)',
+        confirmButtonText: 'Xóa ngay',
+        cancelButtonText: 'Hủy',
+        background: 'var(--bg)',
+        color: 'var(--text)'
+    });
+    if (result.isConfirmed) {
+        delete this.state.sessions[id];
+        const remaining = Object.keys(this.state.sessions);
+        if (remaining.length) {
+            this.switchSession(remaining[0]);
+        } else {
+            this.createNewSession();
         }
-    },
+        this.saveState();
+    }
+},
 
     saveState() {
         localforage.setItem('noob_sessions_v4', this.state.sessions);
@@ -986,5 +1014,6 @@ document.getElementById('js-remove-img').onclick = () => {
 
 // Khởi chạy khi Window Load
 window.addEventListener('DOMContentLoaded', () => NoobEngine.init());
+
 
 
