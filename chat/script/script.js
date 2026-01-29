@@ -810,7 +810,7 @@ async importSecure(directSource = null) {
 
             if (textDecoder.decode(data.slice(0, mStartLen)) !== this.config.magicStart) throw new Error("Sai định dạng!");
 
-            let pass = prompt("Nhập mật khẩu giải mã:");
+            let pass = prompt("Nhập mật khẩu giải mã(để trống nếu ko có hehe):");
             if (pass === null) return;
             if (pass.trim() === "") pass = "default";
 
@@ -986,4 +986,5 @@ document.getElementById('js-remove-img').onclick = () => {
 
 // Khởi chạy khi Window Load
 window.addEventListener('DOMContentLoaded', () => NoobEngine.init());
+
 
