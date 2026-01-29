@@ -738,7 +738,7 @@ async importSecure(directSource = null) {
                     <div style="margin-bottom:20px;">
                         <label style="font-size:11px; color:var(--text-muted); display:block; margin-bottom:8px; letter-spacing:1px; font-weight:bold;">NHẬP MÃ CODE CATBOX</label>
                         <div style="display:flex; gap:8px;">
-                            <input type="text" id="js-import-code-input" placeholder="Ví dụ: abcxyz.abcsnoobai" 
+                            <input type="text" id="js-import-code-input" placeholder="Ví dụ: abcxyz" 
                                    style="flex:1; background:var(--surface); border:1px solid var(--border); color:var(--text); padding:10px; border-radius:8px; outline:none; font-size:13px;">
                             <button class="cyber-btn" id="js-submit-code-btn" style="white-space:nowrap;">Kéo về</button>
                         </div>
@@ -749,13 +749,9 @@ async importSecure(directSource = null) {
                         <span style="position:absolute; top:-10px; left:50%; transform:translateX(-50%); background:var(--bg); padding:0 10px; color:var(--text-muted); font-size:11px;">HOẶC</span>
                     </div>
 
-<button
-  class="cyber-btn w-100"
-  id="js-import-local-btn"
-  style="justify-content:center; padding:12px; background:var(--p-glow); margin-bottom:12px;">
-    <i class="fa-solid fa-hard-drive"></i> Chọn file từ máy tính
-</button>
-
+                    <button class="cyber-btn w-100" id="js-import-local-btn" style="justify-content:center; padding:12px; background:var(--p-glow); margin-bottom:12px;">
+                        <i class="fa-solid fa-hard-drive"></i> Chọn file từ máy tính
+                    </button>
 
                     <button class="cyber-btn w-100" style="border:none; background:transparent; color:var(--text-muted); justify-content:center;" 
                             onclick="document.getElementById('js-noob-import-portal').remove()">Hủy bỏ</button>
@@ -764,87 +760,89 @@ async importSecure(directSource = null) {
         `;
         document.body.insertAdjacentHTML('beforeend', modalHTML);
 
-// === BIND EVENT CHO MODAL (ĐÚNG CHỖ) ===
-const localBtn = document.getElementById('js-import-local-btn');
-const fileInput = document.getElementById('js-file-hidden');
+        // BIND EVENT CHO MODAL
+        const localBtn = document.getElementById('js-import-local-btn');
+        const fileInput = document.getElementById('js-file-hidden');
 
-if (localBtn && fileInput) {
-    localBtn.onclick = () => fileInput.click();
-}
-
+        if (localBtn && fileInput) {
+            localBtn.onclick = () => fileInput.click();
+        }
 
         // Xử lý nút "Kéo về"
-document.getElementById('js-submit-code-btn').onclick = () => {
-    const code = document.getElementById('js-import-code-input').value.trim();
-    if (!code) return alert("Nhập code Catbox đi ông giáo!");
+        document.getElementById('js-submit-code-btn').onclick = () => {
+            let code = document.getElementById('js-import-code-input').value.trim();
+            if (!code) return alert("Nhập code Catbox đi ông giáo!");
 
-    const catboxUrl = `https://files.catbox.moe/${code}`;
-    const redirectUrl =
-        `https://abcsnoob.github.io/chat/chat-iframe.html?url=${encodeURIComponent(catboxUrl)}`;
+            // Tự động thêm đuôi nếu người dùng chỉ nhập code
+            if (!code.endsWith('.abcsnoobai')) code += '.abcsnoobai';
 
-    // Chuyển hướng tạm
-    window.location.href = redirectUrl;
-};
+            const catboxUrl = `https://files.catbox.moe/${code}`;
+            const redirectUrl = `https://abcsnoob.github.io/chat/chat-iframe.html?url=${encodeURIComponent(catboxUrl)}`;
 
-    },
-
-    // Hàm xử lý logic giải mã lõiasync processImport(source) {
-    let buffer;
-    const scroller = document.getElementById('chat-scroller');
-
-    try {
-        if (source instanceof File) {
-            buffer = await source.arrayBuffer();
-        } else if (typeof source === 'string' && source.trim() !== "") {
-            let targetUrl = source.trim();
-            
-            // HARDCODE: Tự động thêm đuôi nếu chỉ nhập mã code
-            if (!targetUrl.startsWith('http')) {
-                if (!targetUrl.endsWith('.abcsnoobai')) targetUrl += '.abcsnoobai';
-                targetUrl = `https://files.catbox.moe/${targetUrl}`;
-            }
-
-            const response = await fetch(`${this.config.apiEndpoint}/upload-catbox?get=${encodeURIComponent(targetUrl)}`);
-            if (!response.ok) throw new Error("Mã code sai hoặc file không tồn tại.");
-            buffer = await response.arrayBuffer();
-        } else { return; }
-
-        const data = new Uint8Array(buffer);
-        const textDecoder = new TextDecoder();
-        const mStartLen = new TextEncoder().encode(this.config.magicStart).length;
-        const mEndLen = new TextEncoder().encode(this.config.magicEnd).length;
-
-        // Kiểm tra định dạng (Magic Bytes)
-        if (textDecoder.decode(data.slice(0, mStartLen)) !== this.config.magicStart) throw new Error("Sai định dạng!");
-
-        let pass = prompt("Nhập mật khẩu giải mã:");
-        if (pass === null) return;
-        if (pass.trim() === "") pass = "default";
-
-        const encryptedPart = data.slice(mStartLen + 1, data.length - mEndLen);
-        const decryptedJSON = await this.crypto.decryptData(encryptedPart, pass);
-        
-        const payload = JSON.parse(decryptedJSON);
-        
-        // Xử lý cả format cũ (chỉ array) và format mới (object có t và h)
-        const history = payload.h ? payload.h : (Array.isArray(payload) ? payload : []);
-        const title = payload.t ? payload.t : (source instanceof File ? source.name : "Imported Chat");
-
-        const newId = Date.now().toString();
-        this.state.sessions[newId] = {
-            title: title,
-            history: history,
-            created: newId
+            // Chuyển hướng hoặc xử lý trực tiếp tùy logic của bạn
+            window.location.href = redirectUrl;
         };
+    }, // Đã thêm dấu đóng ngoặc và phẩy ở đây
 
-        await this.switchSession(newId);
-        this.saveState();
-        alert("🔓 Đã giải mã thành công cuộc hội thoại: " + title);
+    async processImport(source) {
+        let buffer;
+        try {
+            if (source instanceof File) {
+                buffer = await source.arrayBuffer();
+            } else if (typeof source === 'string' && source.trim() !== "") {
+                let targetUrl = source.trim();
+                
+                // HARDCODE: Tự động thêm đuôi .abcsnoobai
+                if (!targetUrl.startsWith('http')) {
+                    if (!targetUrl.endsWith('.abcsnoobai')) targetUrl += '.abcsnoobai';
+                    targetUrl = `https://files.catbox.moe/${targetUrl}`;
+                }
 
-    } catch (err) {
-        alert("Toang rồi: " + (err.message.includes("decryption") ? "Sai mật khẩu!" : err.message));
-    }
-},
+                const response = await fetch(`${this.config.apiEndpoint}/upload-catbox?get=${encodeURIComponent(targetUrl)}`);
+                if (!response.ok) throw new Error("Mã code sai hoặc file không tồn tại.");
+                buffer = await response.arrayBuffer();
+            } else { return; }
+
+            const data = new Uint8Array(buffer);
+            const textDecoder = new TextDecoder();
+            const mStartLen = new TextEncoder().encode(this.config.magicStart).length;
+            const mEndLen = new TextEncoder().encode(this.config.magicEnd).length;
+
+            if (textDecoder.decode(data.slice(0, mStartLen)) !== this.config.magicStart) throw new Error("Sai định dạng!");
+
+            let pass = prompt("Nhập mật khẩu giải mã:");
+            if (pass === null) return;
+            if (pass.trim() === "") pass = "default";
+
+            // Lấy dữ liệu mã hóa (nằm giữa MagicStart+Version và MagicEnd)
+            const encryptedPart = data.slice(mStartLen + 1, data.length - mEndLen);
+            const decryptedJSON = await this.crypto.decryptData(encryptedPart, pass);
+            
+            const payload = JSON.parse(decryptedJSON);
+            
+            // Xử lý tiêu đề được băm chung (nếu có)
+            const history = payload.h ? payload.h : (Array.isArray(payload) ? payload : []);
+            const title = payload.t ? payload.t : (source instanceof File ? source.name : "Imported Chat");
+
+            const newId = Date.now().toString();
+            this.state.sessions[newId] = {
+                title: title,
+                history: history,
+                created: newId
+            };
+
+            await this.switchSession(newId);
+            this.saveState();
+            
+            const modal = document.getElementById('js-noob-import-portal');
+            if (modal) modal.remove();
+            
+            alert("🔓 Đã giải mã thành công: " + title);
+
+        } catch (err) {
+            alert("Lỗi giải mã: " + (err.message.includes("decryption") ? "Mật khẩu sai rồi!" : err.message));
+        }
+    },
 
 async importFromUrl(url) {
         try {
@@ -988,3 +986,4 @@ document.getElementById('js-remove-img').onclick = () => {
 
 // Khởi chạy khi Window Load
 window.addEventListener('DOMContentLoaded', () => NoobEngine.init());
+
