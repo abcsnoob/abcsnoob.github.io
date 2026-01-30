@@ -352,6 +352,16 @@ async init() {
         }
         
         this.bindGlobalEvents();
+    const loader = document.getElementById('initial-loader');
+    if (loader) {
+        // Thêm class 'loaded' để kích hoạt hiệu ứng fade-out từ CSS
+        loader.classList.add('loaded');
+        
+        // Đợi hiệu ứng transition hoàn tất (0.5s) rồi xóa hẳn phần tử khỏi DOM
+        setTimeout(() => {
+            loader.remove();
+        }, 500);
+    }
     },
 
     renderBaseUI() {
@@ -1085,6 +1095,7 @@ async deleteSession(id) {
 
 // Khởi chạy khi Window Load
 window.addEventListener('DOMContentLoaded', () => NoobEngine.init());
+
 
 
 
