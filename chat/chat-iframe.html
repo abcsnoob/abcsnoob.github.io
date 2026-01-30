@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,12 +8,56 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
     <link rel="stylesheet" href="script/ui/prism.css">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap" rel="stylesheet">
+    
+    <style>
+        /* CSS cho Spinner xuất hiện ngay khi mở trang */
+        #initial-loader {
+            position: fixed;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background-color: #0d1117; /* Màu nền dark mode khớp với app */
+            z-index: 10000;
+            transition: opacity 0.5s ease, visibility 0.5s;
+        }
+        .spinner-box {
+            width: 50px;
+            height: 50px;
+            border: 3px solid rgba(88, 166, 255, 0.1);
+            border-top: 3px solid #58a6ff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        .loader-text {
+            margin-top: 15px;
+            color: #58a6ff;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-size: 12px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        
+        /* Ẩn spinner khi có class loaded */
+        #initial-loader.loaded {
+            opacity: 0;
+            visibility: hidden;
+        }
+    </style>
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/localforage/1.10.0/localforage.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 </head>
 <body>
-  <div id="app"></div>
-    <script src="script/prism.js"></script>
-    <script src="script/script.js"></script>
+    <div id="initial-loader">
+        <div class="spinner-box"></div>
+        <div class="loader-text">Loading Noob Engine...</div>
+    </div>
+
+    <div id="app"></div>
+    <script src="script/script.js" defer></script>
+    <script src="script/prism.js" defer></script>
 </body>
 </html>
