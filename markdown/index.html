@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>markdown =)</title>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/tokyo-night-dark.min.css">
+    
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/localforage/1.10.0/localforage.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+
+    <style>
+        :root {
+            --primary: #4e73df;
+            --success: #1cc88a;
+            --dark: #2c3e50;
+            --gray: #858796;
+            --light: #f8f9fc;
+            --border: #e3e6f0;
+            --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        * { box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0; padding: 0;
+            background: var(--light);
+            color: #3a3b45;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* --- Header --- */
+        header {
+            background: #fff;
+            padding: 10px 25px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--border);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            z-index: 50;
+        }
+
+        .brand { display: flex; align-items: center; gap: 10px; font-weight: 800; color: var(--primary); font-size: 1.3rem; text-decoration: none; }
+        
+        .action-bar { display: flex; gap: 8px; }
+        
+        button {
+            border: none;
+            padding: 8px 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 13px;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: #fff;
+        }
+
+        .btn-new { background: var(--primary); }
+        .btn-url { background: #36b9cc; }
+        .btn-local { background: var(--gray); }
+        .btn-share { background: var(--success); box-shadow: 0 4px 6px rgba(28, 200, 138, 0.2); }
+        button:hover { opacity: 0.9; transform: translateY(-2px); }
+        button:active { transform: translateY(0); }
+
+        /* --- Toolbar --- */
+        .toolbar {
+            background: #f8f9fc;
+            padding: 5px 20px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .tool-group { display: flex; gap: 5px; border-right: 1px solid var(--border); padding-right: 15px; }
+        .tool-btn {
+            background: none; border: none; padding: 5px 8px; color: #5a5c69; cursor: pointer;
+            border-radius: 4px; transition: var(--transition); font-size: 14px;
+        }
+        .tool-btn:hover { background: #eaecf4; color: var(--primary); }
+
+        /* --- Workspace --- */
+        .workspace { display: flex; flex: 1; overflow: hidden; position: relative; }
+        
+        .pane { flex: 1; display: flex; flex-direction: column; background: #fff; transition: var(--transition); }
+        #editor-pane { border-right: 1px solid var(--border); }
+        
+        .pane-header {
+            background: #f8f9fc;
+            padding: 6px 15px;
+            font-size: 11px;
+            font-weight: 700;
+            color: #b7b9cc;
+            text-transform: uppercase;
+            display: flex;
+            justify-content: space-between;
+            border-bottom: 1px solid #f1f3f9;
+        }
+
+        textarea {
+            width: 100%;
+            flex: 1;
+            padding: 25px;
+            border: none;
+            outline: none;
+            resize: none;
+            font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+            font-size: 14px;
+            line-height: 1.8;
+            color: #2e2f37;
+        }
+
+        #preview {
+            flex: 1;
+            padding: 40px;
+            overflow-y: auto;
+            scroll-behavior: smooth;
+        }
+
+        /* --- Markdown Styling --- */
+        .markdown-body { color: #3a3b45; font-size: 16px; line-height: 1.6; }
+        .markdown-body h1 { border-bottom: 1px solid #eee; padding-bottom: 10px; margin-top: 0; }
+        .markdown-body pre { background: #1a1b26; border-radius: 12px; padding: 20px; overflow-x: auto; margin: 20px 0; border: 1px solid #24283b; }
+        .markdown-body code { font-family: 'Cascadia Code', monospace; font-size: 0.9em; background: #f1f3f9; padding: 2px 5px; border-radius: 4px; color: #e91e63; }
+        .markdown-body pre code { background: transparent; padding: 0; color: #cfc9c2; }
+        .markdown-body blockquote { border-left: 5px solid var(--primary); margin: 0; padding: 10px 25px; background: #f8f9fc; color: #6e707e; font-style: italic; }
+        .markdown-body img { max-width: 100%; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        .markdown-body table { border-collapse: collapse; width: 100%; margin: 20px 0; }
+        .markdown-body th, .markdown-body td { border: 1px solid #e3e6f0; padding: 12px; }
+        .markdown-body th { background: #f8f9fc; }
+
+        /* --- Modals --- */
+        .modal-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.5); 
+            display: none; align-items: center; justify-content: center; z-index: 1000;
+            backdrop-filter: blur(4px);
+        }
+        .modal-card {
+            background: #fff; padding: 30px; border-radius: 12px; width: 450px;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.2); animation: slideUp 0.3s ease;
+        }
+        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        .modal-card input { width: 100%; padding: 12px; margin: 15px 0; border: 1px solid var(--border); border-radius: 8px; }
+
+        /* --- Custom Scrollbar --- */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #d1d3e2; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #b7b9cc; }
+
+        #lang-selector { margin-left: 15px; display: flex; gap: 4px; }
+        .lang-btn { background: #eaecf4; color: #5a5c69; padding: 4px 10px; border-radius: 4px; font-size: 11px; cursor: pointer; border: 1px solid transparent; }
+        .lang-btn.active { background: var(--primary); color: #fff; }
+    </style>
+</head>
+<body>
+
+<header>
+    <a href="#" class="brand">
+        <i class="fa-solid fa-file-code"></i> Markdown =)
+    </a>
+    <div class="action-bar">
+        <button class="btn-new" onclick="createNew()"><i class="fa-solid fa-plus"></i> New</button>
+        <button class="btn-local" onclick="document.getElementById('file-input').click()"><i class="fa-solid fa-file-import"></i> Local File</button>
+        <button class="btn-url" onclick="openModal()"><i class="fa-solid fa-globe"></i> URL</button>
+        <button class="btn-share" onclick="saveAndShare()"><i class="fa-solid fa-paper-plane"></i> Save & Share</button>
+    </div>
+    <input type="file" id="file-input" hidden onchange="handleFile(event)">
+</header>
+
+<div class="toolbar">
+    <div class="tool-group">
+        <button class="tool-btn" onclick="insertFormat('**', '**')" title="Bold"><i class="fa-solid fa-bold"></i></button>
+        <button class="tool-btn" onclick="insertFormat('*', '*')" title="Italic"><i class="fa-solid fa-italic"></i></button>
+        <button class="tool-btn" onclick="insertFormat('~~', '~~')" title="Strikethrough"><i class="fa-solid fa-strikethrough"></i></button>
+    </div>
+    <div class="tool-group">
+        <button class="tool-btn" onclick="insertFormat('# ', '')" title="H1"><i class="fa-solid fa-heading"></i>1</button>
+        <button class="tool-btn" onclick="insertFormat('## ', '')" title="H2"><i class="fa-solid fa-heading"></i>2</button>
+    </div>
+    <div class="tool-group">
+        <button class="tool-btn" onclick="insertFormat('[', '](url)')" title="Link"><i class="fa-solid fa-link"></i></button>
+        <button class="tool-btn" onclick="insertFormat('![alt](', ')')" title="Image"><i class="fa-solid fa-image"></i></button>
+        <button class="tool-btn" onclick="insertFormat('```\n', '\n```')" title="Code Block"><i class="fa-solid fa-code"></i></button>
+    </div>
+    <div id="lang-selector"></div>
+</div>
+
+<div class="workspace">
+    <div class="pane" id="editor-pane">
+        <div class="pane-header">
+            <span>Editor</span>
+            <span id="char-stats">0 chrs | 0 words</span>
+        </div>
+        <textarea id="main-editor" spellcheck="false" placeholder="Viết Markdown tại đây..."></textarea>
+    </div>
+    
+    <div class="pane">
+        <div class="pane-header">Preview</div>
+        <article id="preview" class="markdown-body"></article>
+    </div>
+</div>
+
+<div id="url-modal" class="modal-overlay">
+    <div class="modal-card">
+        <h3><i class="fa-solid fa-cloud-arrow-down"></i> Nhập URL file Markdown</h3>
+        <p style="color: #858796; font-size: 14px;">Hỗ trợ link raw từ GitHub, Gist, Pastebin...</p>
+        <input type="text" id="url-field" placeholder="https://example.com/document.md">
+        <div style="display: flex; gap: 10px; justify-content: flex-end;">
+            <button class="btn-local" onclick="closeModal()">Hủy</button>
+            <button class="btn-url" onclick="importFromUrl()">Tải về</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const editor = document.getElementById('main-editor');
+    const preview = document.getElementById('preview');
+    const stats = document.getElementById('char-stats');
+    const urlParams = new URLSearchParams(window.location.search);
+    let debounceTimer;
+
+    localforage.config({ name: 'md_partygoers' });
+
+    // --- Cấu hình Renderer ---
+    marked.setOptions({
+        highlight: (code, lang) => {
+            if (lang && hljs.getLanguage(lang)) return hljs.highlight(code, { language: lang }).value;
+            return hljs.highlightAuto(code).value;
+        },
+        breaks: true,
+        gfm: true
+    });
+
+    // --- Khởi tạo ứng dụng ---
+    async function initApp() {
+        const c = urlParams.get('content'), f = urlParams.get('file'), l = urlParams.get('lang');
+        
+        try {
+            if (c) {
+                loadContent(c.replace(/\\n/g, '\n'));
+            } else if (f) {
+                const text = await fetchText(f);
+                loadContent(text);
+            } else if (l) {
+                setupLanguages(l);
+            } else {
+                const draft = await localforage.getItem('last_draft');
+                loadContent(draft || "# Bắt đầu ngay\nSử dụng toolbar phía trên để định dạng.");
+            }
+        } catch (e) { alert("Lỗi: " + e.message); }
+
+        editor.addEventListener('input', () => {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(() => {
+                const val = editor.value;
+                renderMarkdown(val);
+                localforage.setItem('last_draft', val);
+            }, 300); // Debounce 300ms
+        });
+    }
+
+    function renderMarkdown(md) {
+        preview.innerHTML = DOMPurify.sanitize(marked.parse(md));
+        preview.querySelectorAll('pre code').forEach(el => hljs.highlightElement(el));
+        const wc = md.trim() ? md.trim().split(/\s+/).length : 0;
+        stats.innerText = `${md.length} chrs | ${wc} words`;
+    }
+
+    function loadContent(md) {
+        editor.value = md;
+        renderMarkdown(md);
+    }
+
+    // --- Xử lý Toolbar ---
+    function insertFormat(prefix, suffix) {
+        const start = editor.selectionStart;
+        const end = editor.selectionEnd;
+        const text = editor.value;
+        const selected = text.substring(start, end);
+        const before = text.substring(0, start);
+        const after = text.substring(end);
+        
+        editor.value = before + prefix + selected + suffix + after;
+        editor.focus();
+        editor.setSelectionRange(start + prefix.length, end + prefix.length);
+        renderMarkdown(editor.value);
+    }
+
+    // --- Xử lý File & URL ---
+    async function fetchText(url) {
+        const res = await fetch(url);
+        if (!res.ok) throw new Error("Không thể tải URL");
+        return await res.text();
+    }
+
+    function handleFile(e) {
+        const file = e.target.files[0];
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+            loadContent(ev.target.result);
+            syncUrl(ev.target.result);
+        };
+        reader.readAsText(file);
+    }
+
+    async function setupLanguages(jsonPath) {
+        const config = await (await fetch(jsonPath)).json();
+        const box = document.getElementById('lang-selector');
+        const curr = urlParams.get('use') || Object.keys(config)[0];
+        
+        Object.keys(config).forEach(k => {
+            const b = document.createElement('div');
+            b.className = `lang-btn ${k === curr ? 'active' : ''}`;
+            b.innerText = k.toUpperCase();
+            b.onclick = () => location.search = `?lang=${jsonPath}&use=${k}`;
+            box.appendChild(b);
+        });
+        loadContent(await fetchText(config[curr]));
+    }
+
+    function openModal() { document.getElementById('url-modal').style.display = 'flex'; }
+    function closeModal() { document.getElementById('url-modal').style.display = 'none'; }
+
+    async function importFromUrl() {
+        const url = document.getElementById('url-field').value;
+        if (!url) return;
+        location.search = `?file=${encodeURIComponent(url)}`;
+    }
+
+    // --- Lưu & Chia sẻ ---
+    function syncUrl(md) {
+        const n = new URL(location.href);
+        n.search = `?content=${encodeURIComponent(md.replace(/\n/g, '\\n'))}`;
+        window.history.pushState({}, '', n);
+        return n.href;
+    }
+
+    function saveAndShare() {
+        const link = syncUrl(editor.value);
+        navigator.clipboard.writeText(link);
+        alert("🎉 Đã lưu! Link chia sẻ đã được copy vào bộ nhớ tạm.");
+    }
+
+    function createNew() { if (confirm("Xóa nội dung hiện tại và tạo mới?")) loadContent(""); }
+
+    initApp();
+</script>
+</body>
+</html>
