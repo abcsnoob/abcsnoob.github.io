@@ -5,62 +5,92 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>markdown =)</title>
     
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/tokyo-night-dark.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/localforage/1.10.0/localforage.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
-    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
-    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/nprogress/0.2.0/nprogress.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/nprogress/0.2.0/nprogress.min.css">
+    
 
     <style>
+                #nprogress .bar { 
+            background: #4e73df !important; 
+            height: 3px !important; 
+            z-index: 2000 !important; /* Đảm bảo luôn nằm trên cùng */
+        }
+        #nprogress .peg { box-shadow: 0 0 10px var(--primary), 0 0 5px var(--primary) !important; }
+    </style>
+<script>
+        NProgress.start();
+</script>
+</head>
+<body>
+
+<header>
+    <div class="logo" onclick="goHome()">markdown =)</div>
+    <div class="btn-group">
+        <button class="btn-p" onclick="createNew()"><i class="fa-solid fa-plus"></i> New</button>
+        <button class="btn-s" onclick="document.getElementById('file-in').click()"><i class="fa-solid fa-upload"></i> Local</button>
+        <button class="btn-p" style="background:#36b9cc" onclick="toggleModal(true)"><i class="fa-solid fa-globe"></i> Open URL</button>
+        <button class="btn-v" onclick="saveAndShare()"><i class="fa-solid fa-share-nodes"></i> Share</button>
+    </div>
+    <input type="file" id="file-in" hidden onchange="handleLocalFile(event)">
+</header>
+
+<div class="workspace">
+    <div class="pane" id="editor-pane">
+        <div class="p-header"><span>Editor</span><span id="char-count">0 chars</span></div>
+        <textarea id="ed" spellcheck="false" placeholder="Viết markdown..."></textarea>
+    </div>
+    <div class="pane">
+        <div class="p-header">Live Preview</div>
+        <article id="pv" class="markdown-body"></article>
+    </div>
+</div>
+
+<div class="modal" id="url-modal">
+    <div class="modal-content">
+        <h3 style="margin-top:0">Import from URL</h3>
+        <input type="text" id="url-input" placeholder="https://raw.githubusercontent.com/...">
+        <div style="display:flex; gap:10px; justify-content:flex-end;">
+            <button class="btn-s" onclick="toggleModal(false)">Hủy</button>
+            <button class="btn-p" onclick="submitUrl()">Tải file</button>
+        </div>
+    </div>
+</div>
+
+<div id="toast">Thông báo</div>
+
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/tokyo-night-dark.min.css">
+        <style>
         :root {
             --primary: #4e73df; --success: #1cc88a; --info: #36b9cc;
-            --dark: #1a1b26; --gray: #858796; --light: #f8f9fc;
-            --border: #e3e6f0; --shadow: 0 4px 12px rgba(0,0,0,0.1);
+            --dark: #1a1b26; --gray: #858796; --light: #f8f9fc; --border: #e3e6f0;
         }
+
+        /* Progress Bar Style - GitHub/YouTube Look */
+
 
         * { box-sizing: border-box; }
         body {
-            font-family: 'Inter', -apple-system, system-ui, sans-serif;
-            margin: 0; padding: 0; background: var(--light);
-            height: 100vh; display: flex; flex-direction: column; overflow: hidden;
+            font-family: 'Inter', system-ui, sans-serif; margin: 0; padding: 0;
+            background: var(--light); height: 100vh; display: flex; flex-direction: column; overflow: hidden;
         }
 
-        /* Navbar & Toolbar */
         header {
             background: #fff; padding: 8px 20px; display: flex; align-items: center;
-            justify-content: space-between; border-bottom: 1px solid var(--border);
-            z-index: 100; box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            justify-content: space-between; border-bottom: 1px solid var(--border); z-index: 100;
         }
-        .logo { font-weight: 800; color: var(--primary); font-size: 1.2rem; cursor: pointer; }
+        .logo { font-weight: 800; color: var(--primary); font-size: 1.2rem; cursor: pointer; user-select: none; }
         .btn-group { display: flex; gap: 6px; }
         
         button {
             border: none; padding: 7px 14px; border-radius: 6px; cursor: pointer;
-            font-weight: 600; font-size: 13px; transition: 0.2s;
-            display: flex; align-items: center; gap: 6px; color: #fff;
+            font-weight: 600; font-size: 13px; transition: 0.2s; display: flex; align-items: center; gap: 6px; color: #fff;
         }
         .btn-p { background: var(--primary); }
         .btn-s { background: var(--gray); }
-        .btn-i { background: var(--info); }
         .btn-v { background: var(--success); }
         button:hover { opacity: 0.9; transform: translateY(-1px); }
 
-        .toolbar {
-            background: #fdfdfd; padding: 5px 20px; border-bottom: 1px solid var(--border);
-            display: flex; gap: 15px; align-items: center; overflow-x: auto;
-        }
-        .tool-group { display: flex; gap: 4px; padding-right: 15px; border-right: 1px solid var(--border); }
-        .t-btn {
-            background: none; border: none; padding: 6px; color: #5a5c69;
-            cursor: pointer; border-radius: 4px; font-size: 14px;
-        }
-        .t-btn:hover { background: #eaecf4; color: var(--primary); }
-
-        /* Workspace */
         .workspace { display: flex; flex: 1; overflow: hidden; }
         .pane { flex: 1; display: flex; flex-direction: column; overflow: hidden; background: #fff; }
         #editor-pane { border-right: 1px solid var(--border); }
@@ -72,237 +102,185 @@
         }
 
         textarea {
-            width: 100%; flex: 1; padding: 25px; border: none; outline: none;
-            resize: none; font-family: 'Cascadia Code', 'Fira Code', monospace;
-            font-size: 14px; line-height: 1.8; color: #2e2f37;
+            width: 100%; flex: 1; padding: 25px; border: none; outline: none; resize: none;
+            font-family: 'Cascadia Code', 'Fira Code', monospace; font-size: 14px; line-height: 1.8; color: #2e2f37;
         }
 
-        #preview { flex: 1; padding: 40px; overflow-y: auto; position: relative; }
+        #preview { flex: 1; padding: 40px; overflow-y: auto; scroll-behavior: smooth; }
 
-        /* Custom MD Content */
+        /* Code Block Styling */
         .markdown-body { font-size: 16px; color: #3a3b45; }
         .markdown-body pre {
             position: relative; background: var(--dark) !important;
-            padding: 35px 20px 20px; border-radius: 12px; margin: 24px 0;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.15);
+            padding: 35px 20px 20px; border-radius: 12px; margin: 20px 0;
         }
         .markdown-body pre::before {
             content: attr(data-lang); position: absolute; top: 0; right: 0;
             background: #414868; color: #a9b1d6; padding: 4px 12px;
-            font-size: 11px; font-weight: bold; border-radius: 0 12px 0 12px;
-            text-transform: uppercase; letter-spacing: 0.5px;
+            font-size: 11px; font-weight: bold; border-radius: 0 12px 0 12px; text-transform: uppercase;
         }
-        .copy-code {
-            position: absolute; top: 6px; right: 80px; background: rgba(255,255,255,0.1);
-            color: #ccc; border: none; border-radius: 4px; padding: 3px 8px;
-            font-size: 10px; cursor: pointer; transition: 0.2s;
-        }
-        .copy-code:hover { background: var(--primary); color: #fff; }
-        .markdown-body code { color: #e91e63; background: #f1f3f9; padding: 2px 5px; border-radius: 4px; font-size: 0.9em; }
+        .markdown-body code { color: #e91e63; background: #f1f3f9; padding: 2px 5px; border-radius: 4px; }
         .markdown-body pre code { color: #cfc9c2; background: transparent; padding: 0; }
-        .markdown-body blockquote { border-left: 5px solid var(--primary); background: #f8f9fc; padding: 15px 20px; margin: 0; color: #6e707e; }
 
-        /* Toast & Modals */
-        #toast {
-            position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
-            background: #333; color: #fff; padding: 10px 25px; border-radius: 50px;
-            font-size: 13px; opacity: 0; transition: 0.3s; z-index: 1000;
-        }
+        /* Modal & Toast */
         .modal {
             display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6);
             align-items: center; justify-content: center; z-index: 1000; backdrop-filter: blur(2px);
         }
-        .modal-c { background: #fff; padding: 30px; border-radius: 15px; width: 420px; box-shadow: var(--shadow); }
-        .modal-c input { width: 100%; padding: 12px; margin: 15px 0; border: 1px solid var(--border); border-radius: 8px; }
-
-        #langs { margin-left: auto; display: flex; gap: 4px; }
-        .l-btn { background: #eaecf4; padding: 4px 10px; border-radius: 4px; font-size: 11px; cursor: pointer; border: 1px solid transparent; }
-        .l-btn.active { background: var(--primary); color: #fff; }
+        .modal-content { background: #fff; padding: 25px; border-radius: 15px; width: 420px; }
+        .modal-content input { width: 100%; padding: 12px; margin: 15px 0; border: 1px solid var(--border); border-radius: 8px; outline: none; }
+        
+        #toast {
+            position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+            background: #333; color: #fff; padding: 10px 25px; border-radius: 50px;
+            font-size: 13px; opacity: 0; transition: 0.4s; z-index: 1000; pointer-events: none;
+        }
     </style>
-</head>
-<body>
-
-<header>
-    <div class="logo" onclick="location.reload()">markdown =) <small style="font-weight: 400; font-size: 10px;">v2.0</small></div>
-    <div class="btn-group">
-        <button class="btn-p" onclick="createNew()"><i class="fa-solid fa-file-circle-plus"></i> New</button>
-        <button class="btn-s" onclick="document.getElementById('f-in').click()"><i class="fa-solid fa-folder-open"></i> Open</button>
-        <button class="btn-i" onclick="toggleModal(true)"><i class="fa-solid fa-cloud-arrow-down"></i> URL</button>
-        <button class="btn-v" onclick="share()"><i class="fa-solid fa-share-nodes"></i> Save & Share</button>
-    </div>
-    <input type="file" id="f-in" hidden onchange="importLocal(event)">
-</header>
-
-<div class="toolbar">
-    <div class="tool-group">
-        <button class="t-btn" onclick="ins('**','**')"><i class="fa-solid fa-bold"></i></button>
-        <button class="t-btn" onclick="ins('*','*')"><i class="fa-solid fa-italic"></i></button>
-        <button class="t-btn" onclick="ins('~~','~~')"><i class="fa-solid fa-strikethrough"></i></button>
-    </div>
-    <div class="tool-group">
-        <button class="t-btn" onclick="ins('# ','')"><i class="fa-solid fa-heading"></i>1</button>
-        <button class="t-btn" onclick="ins('## ','')"><i class="fa-solid fa-heading"></i>2</button>
-    </div>
-    <div class="tool-group">
-        <button class="t-btn" onclick="ins('- ','')"><i class="fa-solid fa-list-ul"></i></button>
-        <button class="t-btn" onclick="ins('1. ','')"><i class="fa-solid fa-list-ol"></i></button>
-        <button class="t-btn" onclick="ins('> ','')"><i class="fa-solid fa-quote-left"></i></button>
-    </div>
-    <div class="tool-group">
-        <button class="t-btn" onclick="ins('[','](url)')"><i class="fa-solid fa-link"></i></button>
-        <button class="t-btn" onclick="ins('![alt](',')')"><i class="fa-solid fa-image"></i></button>
-        <button class="t-btn" onclick="ins('```\n','\n```')"><i class="fa-solid fa-terminal"></i></button>
-    </div>
-    <div id="langs"></div>
-</div>
-
-<div class="workspace">
-    <div class="pane" id="editor-pane">
-        <div class="p-header"><span>Markdown Editor</span><span id="st-c">0 chars</span></div>
-        <textarea id="ed" spellcheck="false" placeholder="Bắt đầu viết Markdown..."></textarea>
-    </div>
-    <div class="pane">
-        <div class="p-header">Live Preview</div>
-        <article id="pv" class="markdown-body"></article>
-    </div>
-</div>
-
-<div id="toast">Message here</div>
-
-<div class="modal" id="u-modal">
-    <div class="modal-c">
-        <h3><i class="fa-solid fa-link"></i> Import from URL</h3>
-        <p style="font-size: 13px; color: #858796;">Link raw từ GitHub, Gist hoặc bất kỳ file .md nào.</p>
-        <input type="text" id="u-field" placeholder="https://raw.githubusercontent.com/...">
-        <div style="display:flex; gap:10px; justify-content:flex-end;">
-            <button class="btn-s" onclick="toggleModal(false)">Cancel</button>
-            <button class="btn-p" onclick="importUrl()">Fetch Content</button>
-        </div>
-    </div>
-</div>
-
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/localforage/1.10.0/localforage.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 <script>
-    const ed = document.getElementById('ed'), pv = document.getElementById('pv'), st = document.getElementById('st-c'), urlQ = new URLSearchParams(window.location.search);
-    let timer, isSyncing = false;
+    // START PROGRESS BAR NGAY LẬP TỨC KHI SCRIPT CHẠY
 
-    localforage.config({ name: 'Ultimate_MD_Editor' });
-    mermaid.initialize({ startOnLoad: false, theme: 'dark' });
 
-    // 1. Renderer Configuration
+    const ed = document.getElementById('ed'), pv = document.getElementById('pv'), st = document.getElementById('char-count');
+    let renderTimer;
+
+    localforage.config({ name: 'MD_SPA_Ultimate' });
+    NProgress.configure({ showSpinner: false, speed: 500, minimum: 0.2 });
+
+    // Renderer Setup
     const renderer = new marked.Renderer();
     renderer.code = function(code, lang) {
-        if (lang === 'mermaid') return `<div class="mermaid">${code}</div>`;
-        const validLang = lang || 'text';
-        const highlighted = lang && hljs.getLanguage(lang) ? hljs.highlight(code, { language: lang }).value : hljs.highlightAuto(code).value;
-        return `<pre data-lang="${validLang}"><button class="copy-code" onclick="copySnippet(this)">Copy</button><code>${highlighted}</code></pre>`;
+        const text = typeof code === 'object' ? code.text : code;
+        const language = lang || 'text';
+        let highlighted;
+        try {
+            highlighted = hljs.getLanguage(language) ? hljs.highlight(text, { language }).value : hljs.highlightAuto(text).value;
+        } catch (e) { highlighted = text; }
+        return `<pre data-lang="${language}"><code>${highlighted}</code></pre>`;
     };
-
     marked.setOptions({ renderer, breaks: true, gfm: true });
 
-    // 2. Core Functions
-    async function init() {
-        const c = urlQ.get('content'), f = urlQ.get('file'), l = urlQ.get('lang');
-        if (c) load(c.replace(/\\n/g, '\n'));
-        else if (f) try { load(await (await fetch(f)).text()); } catch(e) { showToast("Fetch Error!"); }
-        else if (l) setupLangs(l);
-        else load(await localforage.getItem('last_draft') || "# Welcome to Gemini MD Pro\n\n```ping\nPinging google.com...\n```");
+    // SPA Routing & Global Request Handler
+    async function handleRouting() {
+        NProgress.start(); // Luôn chạy progress bar đầu tiên khi đổi route
+        const params = new URLSearchParams(window.location.search);
+        const file = params.get('file');
+        const content = params.get('content');
 
-        ed.addEventListener('input', () => {
-            clearTimeout(timer);
-            timer = setTimeout(() => { render(ed.value); localforage.setItem('last_draft', ed.value); }, 300);
-        });
+        if (file) {
+            await fetchRemoteFile(file);
+        } else if (content) {
+            updateUI(content.replace(/\\n/g, '\n'));
+            NProgress.done();
+        } else {
+            const saved = await localforage.getItem('last_draft');
+            updateUI(saved || "# markdown =)\nChào mừng bạn!");
+            NProgress.done();
+        }
+    }
 
-        // Shortcut Keys
-        window.onkeydown = (e) => {
-            if (e.ctrlKey || e.metaKey) {
-                if (e.key === 'b') { e.preventDefault(); ins('**','**'); }
-                if (e.key === 'i') { e.preventDefault(); ins('*','*'); }
-                if (e.key === 'Enter') { e.preventDefault(); share(); }
-            }
-        };
-
-        // Scroll Sync
-        ed.onscroll = () => {
-            if (isSyncing) return; isSyncing = true;
-            const scrollRatio = ed.scrollTop / (ed.scrollHeight - ed.clientHeight);
-            pv.scrollTop = scrollRatio * (pv.scrollHeight - pv.clientHeight);
-            setTimeout(() => isSyncing = false, 50);
-        };
+    function updateUI(md) {
+        ed.value = md;
+        render(md);
     }
 
     function render(md) {
+        // Có thể start progress bar nhẹ ở đây nếu render cực nặng
         pv.innerHTML = DOMPurify.sanitize(marked.parse(md));
         pv.querySelectorAll('pre code').forEach(b => hljs.highlightElement(b));
-        if (window.MathJax) MathJax.typesetPromise();
-        mermaid.run();
-        st.innerText = `${md.length} chars | ${md.trim() ? md.trim().split(/\s+/).length : 0} words`;
+        st.innerText = `${md.length} chars`;
     }
 
-    function load(md) { ed.value = md; render(md); }
-
-    function ins(p, s) {
-        const start = ed.selectionStart, end = ed.selectionEnd, txt = ed.value;
-        ed.value = txt.substring(0, start) + p + txt.substring(start, end) + s + txt.substring(end);
-        ed.focus(); ed.setSelectionRange(start + p.length, end + p.length);
-        render(ed.value);
+    async function fetchRemoteFile(url) {
+        NProgress.set(0.4); // Nhảy tới 40% ngay lập tức
+        try {
+            const res = await fetch(url);
+            if (!res.ok) throw new Error();
+            const text = await res.text();
+            updateUI(text);
+            showToast("Tải file thành công!");
+        } catch (e) {
+            showToast("Lỗi tải file từ URL!");
+        } finally {
+            NProgress.done();
+        }
     }
 
-    // 3. Components
+    // Modal & Actions
+    function toggleModal(show) { document.getElementById('url-modal').style.display = show ? 'flex' : 'none'; }
+
+    function submitUrl() {
+        const url = document.getElementById('url-input').value.trim();
+        if (url) {
+            toggleModal(false);
+            NProgress.start(); // Bắt đầu bar ngay khi click nút
+            const newUrl = `${window.location.pathname}?file=${encodeURIComponent(url)}`;
+            window.history.pushState({ path: newUrl }, '', newUrl);
+            fetchRemoteFile(url);
+        }
+    }
+
+    function saveAndShare() {
+        NProgress.start(); // Bắt đầu bar ngay khi nhấn Share
+        const mdEncoded = ed.value.replace(/\n/g, '\\n');
+        const sharePath = `${window.location.pathname}?content=${encodeURIComponent(mdEncoded)}`;
+        window.history.pushState({ path: sharePath }, '', sharePath);
+        navigator.clipboard.writeText(window.location.href);
+        
+        // Giả lập xử lý 500ms để bar chạy đẹp hơn
+        setTimeout(() => {
+            showToast("Đã lưu và copy link!");
+            NProgress.done();
+        }, 500);
+    }
+
+    function handleLocalFile(e) {
+        NProgress.start();
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+            updateUI(ev.target.result);
+            NProgress.done();
+            showToast("Đã nạp file local!");
+        };
+        reader.readAsText(e.target.files[0]);
+    }
+
+    function goHome() {
+        NProgress.start();
+        window.history.pushState({}, '', window.location.pathname);
+        handleRouting();
+    }
+
     function showToast(msg) {
         const t = document.getElementById('toast');
         t.innerText = msg; t.style.opacity = '1';
         setTimeout(() => t.style.opacity = '0', 3000);
     }
 
-    function toggleModal(show) { document.getElementById('u-modal').style.display = show ? 'flex' : 'none'; }
-
-    async function importUrl() {
-        const u = document.getElementById('u-field').value;
-        if (!u) return;
-        location.search = `?file=${encodeURIComponent(u)}`;
+    function createNew() { 
+        if(confirm("Xóa nội dung?")) {
+            NProgress.start();
+            updateUI("");
+            NProgress.done();
+        }
     }
 
-    function importLocal(e) {
-        const reader = new FileReader();
-        reader.onload = (ev) => { load(ev.target.result); syncUrl(ev.target.result); showToast("File imported!"); };
-        reader.readAsText(e.target.files[0]);
-    }
+    // Init listeners
+    window.addEventListener('popstate', handleRouting);
 
-    async function setupLangs(path) {
-        const cfg = await (await fetch(path)).json();
-        const box = document.getElementById('langs'), use = urlQ.get('use') || Object.keys(cfg)[0];
-        Object.keys(cfg).forEach(k => {
-            const b = document.createElement('div');
-            b.className = `l-btn ${k === use ? 'active' : ''}`;
-            b.innerText = k.toUpperCase();
-            b.onclick = () => location.search = `?lang=${path}&use=${k}`;
-            box.appendChild(b);
-        });
-        load(await (await fetch(cfg[use])).text());
-    }
+    ed.addEventListener('input', () => {
+        clearTimeout(renderTimer);
+        renderTimer = setTimeout(() => {
+            render(ed.value);
+            localforage.setItem('last_draft', ed.value);
+        }, 300);
+    });
 
-    function copySnippet(btn) {
-        const code = btn.nextElementSibling.innerText;
-        navigator.clipboard.writeText(code);
-        btn.innerText = "Copied!";
-        setTimeout(() => btn.innerText = "Copy", 2000);
-    }
-
-    function syncUrl(md) {
-        const n = new URL(location.href); n.search = `?content=${encodeURIComponent(md.replace(/\n/g, '\\n'))}`;
-        window.history.pushState({}, '', n);
-        return n.href;
-    }
-
-    function share() {
-        const link = syncUrl(ed.value);
-        navigator.clipboard.writeText(link);
-        showToast("Link copied to clipboard!");
-    }
-
-    function createNew() { if(confirm("Discard changes?")) load(""); }
-
-    init();
+    // Chạy route lần đầu
+    handleRouting();
 </script>
 </body>
 </html>
