@@ -162,39 +162,45 @@ function renderLocalScreen() {
 }
 // ---------------- REMOTE TRACKS ----------------
 room.on(RoomEvent.TrackSubscribed, (track, publication, participant) => {
-    if (track.kind !== Track.Kind.Video) return;
-
-    const wrapper = document.createElement('div');
-    wrapper.className = "video-wrapper";
-
-    if (track.source === Track.Source.ScreenShare) {
-        wrapper.classList.add("screen-share-video");
+    // 1. Nếu là Audio (bao gồm cả mic và âm thanh màn hình)
+    if (track.kind === Track.Kind.Audio) {
+        const audioEl = track.attach(); // Tạo element audio ẩn để phát tiếng
+        document.body.appendChild(audioEl);
+        return; // Xử lý xong audio thì dừng, không chạy code render video bên dưới
     }
 
-    wrapper.id = `wrap-${participant.identity}-${track.source}`;
+    // 2. Nếu là Video (Camera hoặc Screen Share)
+    if (track.kind === Track.Kind.Video) {
+        const wrapper = document.createElement('div');
+        wrapper.className = "video-wrapper";
+        if (track.source === Track.Source.ScreenShare) {
+            wrapper.classList.add("screen-share-video");
+        }
 
-    const video = track.attach();
+        wrapper.id = `wrap-${participant.identity}-${track.source}`;
+        const video = track.attach();
 
-    const label = document.createElement('div');
-    label.className = "username-label";
-    label.innerText =
-        participant.identity +
-        (track.source === Track.Source.ScreenShare ? " (Sharing)" : "");
+        const label = document.createElement('div');
+        label.className = "username-label";
+        label.innerText = participant.identity + (track.source === Track.Source.ScreenShare ? " (Sharing)" : "");
 
-    wrapper.append(video, label);
+        wrapper.append(video, label);
 
-    if (track.source === Track.Source.ScreenShare)
-        videoGrid.prepend(wrapper);
-    else
-        videoGrid.appendChild(wrapper);
+        if (track.source === Track.Source.ScreenShare)
+            videoGrid.prepend(wrapper);
+        else
+            videoGrid.appendChild(wrapper);
 
-    adjustLayout();
+        adjustLayout();
+    }
 });
 
 room.on(RoomEvent.TrackUnsubscribed, (track, publication, participant) => {
     track.detach().forEach(el => el.remove());
-    document.getElementById(`wrap-${participant.identity}-${track.source}`)?.remove();
-    adjustLayout();
+    if (track.kind === Track.Kind.Video) {
+        document.getElementById(`wrap-${participant.identity}-${track.source}`)?.remove();
+        adjustLayout();
+    }
 });
 
 // ---------------- CHAT ----------------
