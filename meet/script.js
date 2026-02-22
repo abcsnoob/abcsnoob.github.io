@@ -352,9 +352,11 @@ setInterval(async () => {
     const iconEl = document.getElementById("ping-icon");
     const textEl = document.getElementById("ping-value");
 
-    // 1. Trạng thái mặc định khi chưa có dữ liệu hoặc mất kết nối Room
+    // 1. Kiểm tra kết nối (Nếu không có data thì để màu xám)
     if (!room || room.state !== "connected") {
-        if (iconEl) iconEl.style.color = "gray"; // Không có data: xám
+        if (iconEl) {
+            iconEl.className = "bi bi-reception-4 text-secondary ping-icon";
+        }
         if (textEl) textEl.innerText = "--";
         return;
     }
@@ -375,31 +377,28 @@ setInterval(async () => {
         NProgress.done();
 
         const pingValue = Math.round((endTime - startTime) / 2);
-
         if (textEl) textEl.innerText = `${pingValue}`;
 
-        // 2. Logic đổi màu cho ID ping-icon
+        // 2. Logic đổi Class tại ID ping-icon theo mốc bạn chọn
         if (iconEl) {
-            let color = "";
-            if (pingValue <= 20) {
-                color = "#2ecc71"; // Xanh lá
-            } else if (pingValue <= 90) {
-                color = "#f1c40f"; // Vàng
-            } else if (pingValue <= 100) {
-                color = "#e67e22"; // Vàng ngả đỏ (Cam)
-            } else {
-                color = "#e74c3c"; // Đỏ lè lưỡi
-            }
+            let colorClass = "";
             
-            iconEl.style.color = color;
+            if (pingValue <= 50) {
+                colorClass = "text-success"; // 0-50ms: Xanh
+            } else if (pingValue <= 120) {
+                colorClass = "text-warning"; // 51-120ms: Vàng
+            } else {
+                colorClass = "text-danger";  // 120ms+: Đỏ
+            }
+
+            // Cập nhật lại toàn bộ class để đảm bảo không bị dính class cũ
+            iconEl.className = `bi bi-reception-4 ${colorClass} ping-icon`;
         }
 
     } catch (error) {
         NProgress.done();
-        console.error("Lỗi kết nối khi Ping:", error);
-        
-        if (iconEl) iconEl.style.color = "#c0392b"; // Đỏ sẫm khi lỗi kết nối
-        if (textEl) textEl.innerText = "Error";
+        if (iconEl) iconEl.className = "bi bi-reception-4 text-danger ping-icon";
+        if (textEl) textEl.innerText = "Err";
     }
 }, 10000);
 // ---------------- TOGGLE CHAT ----------------
