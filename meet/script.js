@@ -407,7 +407,7 @@ setInterval(async () => {
         if (iconEl) iconEl.className = "bi bi-reception-4 text-danger ping-icon";
         if (textEl) textEl.innerText = "Err";
     }
-}, 10000); // 10 giây check một lần
+}, 3000); // 10 giây check một lần
 // ---------------- TOGGLE CHAT ----------------
 const toggleChatBtn = document.getElementById('toggle-chat');
 const chatSidebar = document.getElementById('chat-sidebar');
