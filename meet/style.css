@@ -1,0 +1,177 @@
+/* ============================================================
+   1. RESET & NỀN TẢNG (GLOBAL)
+   ============================================================ */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body { 
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+    overflow: hidden; /* Khóa cuộn toàn trang tuyệt đối */
+    width: 100vw;
+    height: 100vh;
+    background-color: #0b0b0b;
+    color: white;
+}
+
+/* Container chính bao toàn bộ ứng dụng */
+.main-container {
+    display: flex;
+    width: 100%;
+    height: 100vh;
+    overflow: hidden;
+}
+
+/* ============================================================
+   2. HỆ THỐNG VIDEO (VIDEO GRID) - FIX LỖI MẤT CAM
+   ============================================================ */
+#video-grid {
+    flex: 1; /* Chiếm toàn bộ không gian bên trái sidebar */
+    display: flex;
+    flex-direction: column; /* Ép Share ở trên, Cam ở dưới */
+    gap: 20px;
+    padding: 15px;
+    height: calc(100vh - 90px); /* Trừ đi chiều cao của Toolbar điều khiển */
+    overflow-y: auto; 
+    overflow-x: hidden;
+    transition: all 0.3s ease-in-out;
+}
+
+/* Cấu trúc cho màn hình Share (Cái to ở trên) */
+.screen-share-video {
+    width: 100% !important;
+    flex: 0 0 60%; /* Ép chiếm 60% chiều cao vùng video để không lấn át cam */
+    min-height: 300px;
+    max-height: 600px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: #000;
+    border-radius: 12px;
+    flex-shrink: 0; /* Không cho phép bị bóp nhỏ */
+}
+
+.screen-share-video video {
+    width: 100%;
+    height: 100%;
+    object-fit: contain !important; /* Quan trọng: Thấy toàn bộ màn hình share */
+    border: 1px solid #333;
+    border-radius: 12px;
+}
+
+/* Khu vực chứa các Camera (Cái nhỏ ở dưới) */
+.camera-container {
+    display: flex;
+    flex-wrap: wrap; /* Tự động xuống dòng khi nhiều người */
+    justify-content: center;
+    align-content: flex-start;
+    gap: 15px;
+    width: 100%;
+    flex-grow: 1; /* Tự nở ra chiếm phần còn lại bên dưới */
+    padding-bottom: 20px;
+}
+
+/* Khung bọc từng Camera cá nhân */
+.video-wrapper {
+    position: relative;
+    width: 260px; /* Độ rộng tối ưu */
+    aspect-ratio: 16 / 9; /* Ép tỷ lệ chuẩn như Discord/Zoom */
+    background: #1e1f22;
+    border-radius: 12px;
+    overflow: hidden;
+    flex-shrink: 0; /* Ép cam không bị biến mất khi thiếu chỗ */
+    border: 2px solid #2f3136;
+}
+
+video { 
+    width: 100%; 
+    height: 100%; 
+    object-fit: cover; /* Cam người dùng thì nên lấp đầy khung */
+    background: #111; 
+}
+
+/* ============================================================
+   3. SIDEBAR & CHAT - FIX LỖI ĐẨY GIAO DIỆN
+   ============================================================ */
+#chat-sidebar {
+    width: 320px;
+    min-width: 320px;
+    background: #232428;
+    height: 100%;
+    border-left: 1px solid #3f4147;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    flex-direction: column;
+}
+
+/* Class khi ẩn chat */
+#chat-sidebar.chat-closed {
+    width: 0;
+    min-width: 0;
+    margin-right: -320px; /* Đẩy ra lề để video-grid tự giãn ra */
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* ============================================================
+   4. UI COMPONENTS & TRẠNG THÁI
+   ============================================================ */
+.username-label {
+    position: absolute;
+    bottom: 10px;
+    left: 10px;
+    background: rgba(0, 0, 0, 0.7);
+    color: #eee;
+    padding: 4px 10px;
+    border-radius: 5px;
+    font-size: 12px;
+    z-index: 5;
+    pointer-events: none;
+}
+
+.speaking { 
+    border: 2px solid #43b581 !important; 
+    box-shadow: 0 0 12px rgba(67, 181, 129, 0.4); 
+}
+
+/* Login Screen - Ép đè toàn màn hình */
+#login-screen { 
+    position: fixed;
+    inset: 0;
+    background: radial-gradient(circle, #2c2f33 0%, #000000 100%); 
+    z-index: 999;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Custom Scrollbar */
+#video-grid::-webkit-scrollbar,
+#chat-messages::-webkit-scrollbar {
+    width: 6px;
+}
+
+#video-grid::-webkit-scrollbar-thumb,
+#chat-messages::-webkit-scrollbar-thumb {
+    background: #5865f2;
+    border-radius: 10px;
+}
+
+/* Button & Progress */
+#cam-btn { width: 48px; height: 48px; border-radius: 50%; }
+#nprogress .bar { background: #5865F2 !important; height: 5px; z-index: 9999; }
+/* Tăng độ đậm cho spinner-icon */
+#nprogress .spinner-icon {
+  width: 24px;      /* Tăng nhẹ kích thước để cân đối với độ dày mới (mặc định là 18px) */
+  height: 24px;
+  
+  border-width: 4px; /* Tăng độ dày viền lên 4px (mặc định là 2px) */
+  border-top-color: #29d;
+  border-left-color: #29d;
+  
+  /* Thêm hiệu ứng đổ bóng nếu bạn muốn nó trông rực rỡ hơn (tùy chọn) */
+  box-shadow: 0 0 8px rgba(41, 157, 221, 0.5); 
+}
