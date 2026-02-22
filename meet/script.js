@@ -349,44 +349,59 @@ function adjustLayout() {
 }
 // ---------------- PING ----------------
 setInterval(async () => {
-    // Chỉ chạy nếu Room đã kết nối
-    if (!room || room.state !== "connected") return;
+    const iconEl = document.getElementById("ping-icon");
+    const textEl = document.getElementById("ping-value");
 
-    // URL trực tiếp của bạn
+    // 1. Trạng thái mặc định khi chưa có dữ liệu hoặc mất kết nối Room
+    if (!room || room.state !== "connected") {
+        if (iconEl) iconEl.style.color = "gray"; // Không có data: xám
+        if (textEl) textEl.innerText = "--";
+        return;
+    }
+
     const PING_URL = "https://abcsnoob-l5aam0b3.livekit.cloud";
 
     try {
-        const startTime = performance.now(); // Bắt đầu bấm giây
-        
+        const startTime = performance.now();
         NProgress.start();
 
-        // Sử dụng phương thức HEAD để tối ưu tốc độ và không cần parse JSON
         await fetch(PING_URL, {
             method: 'GET',
-            mode: 'no-cors', // Tránh lỗi CORS nếu server không cấu hình, vẫn nhận được phản hồi thô
+            mode: 'no-cors',
             cache: 'no-cache'
         });
 
-        const endTime = performance.now(); // Nhận được gói tin là dừng ngay
+        const endTime = performance.now();
         NProgress.done();
 
-        // Tính toán: (Tổng thời gian khứ hồi) / 2
         const pingValue = Math.round((endTime - startTime) / 2);
 
-        // Hiển thị lên giao diện
-        const el = document.getElementById("ping-value");
-        if (el) {
-            el.innerText = `${pingValue}`;
+        if (textEl) textEl.innerText = `${pingValue}`;
+
+        // 2. Logic đổi màu cho ID ping-icon
+        if (iconEl) {
+            let color = "";
+            if (pingValue <= 20) {
+                color = "#2ecc71"; // Xanh lá
+            } else if (pingValue <= 90) {
+                color = "#f1c40f"; // Vàng
+            } else if (pingValue <= 100) {
+                color = "#e67e22"; // Vàng ngả đỏ (Cam)
+            } else {
+                color = "#e74c3c"; // Đỏ lè lưỡi
+            }
+            
+            iconEl.style.color = color;
         }
 
     } catch (error) {
         NProgress.done();
         console.error("Lỗi kết nối khi Ping:", error);
         
-        const el = document.getElementById("ping-value");
-        if (el) el.innerText = "Error";
+        if (iconEl) iconEl.style.color = "#c0392b"; // Đỏ sẫm khi lỗi kết nối
+        if (textEl) textEl.innerText = "Error";
     }
-}, 10000); // 10 giây một lần
+}, 10000);
 // ---------------- TOGGLE CHAT ----------------
 const toggleChatBtn = document.getElementById('toggle-chat');
 const chatSidebar = document.getElementById('chat-sidebar');
