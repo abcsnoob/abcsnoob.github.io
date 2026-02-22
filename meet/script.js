@@ -345,7 +345,7 @@ setInterval(async () => {
         // Hiển thị lên giao diện
         const el = document.getElementById("ping-value");
         if (el) {
-            el.innerText = `${pingValue} ms`;
+            el.innerText = `${pingValue}`;
         }
 
     } catch (error) {
