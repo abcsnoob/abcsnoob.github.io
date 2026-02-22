@@ -62,6 +62,15 @@ document.getElementById('reg-btn').onclick = () => handleAuth('reg');
 async function connectToSFU(token, username) {
     try {
         await room.connect(LIVEKIT_WSS, token);
+        
+        // --- THÊM ĐOẠN NÀY ---
+        // Kích hoạt âm thanh ngay khi kết nối thành công
+        room.startAudio().then(() => {
+            console.log("Audio playback started");
+        }).catch(e => {
+            console.warn("Chưa thể phát âm thanh, chờ tương tác người dùng", e);
+        });
+        // ---------------------
 
         loginScreen.classList.add('d-none');
         mainApp.classList.remove('d-none');
@@ -161,35 +170,57 @@ function renderLocalScreen() {
     adjustLayout();
 }
 // ---------------- REMOTE TRACKS ----------------
-room.on(RoomEvent.TrackSubscribed, (track, publication, participant) => {
-    // 1. Nếu là Audio (bao gồm cả mic và âm thanh màn hình)
+room.on(RoomEvent.TrackSubscribed, async (track, publication, participant) => {
+    // 1. XỬ LÝ AUDIO (Microphone hoặc System Audio từ Screen Share)
     if (track.kind === Track.Kind.Audio) {
-        const audioEl = track.attach(); // Tạo element audio ẩn để phát tiếng
+        // Tạo element audio
+        const audioEl = track.attach();
+        audioEl.setAttribute('data-participant', participant.identity);
+        audioEl.setAttribute('data-source', track.source);
         document.body.appendChild(audioEl);
-        return; // Xử lý xong audio thì dừng, không chạy code render video bên dưới
+
+        // QUAN TRỌNG: Kích hoạt âm thanh (vượt rào cản Autoplay của trình duyệt)
+        try {
+            await room.startAudio();
+            console.log(`Đã phát âm thanh từ: ${participant.identity} (${track.source})`);
+        } catch (error) {
+            console.error("Trình duyệt chặn tự động phát âm thanh:", error);
+            // Có thể hiển thị một nút "Bật âm thanh" nhỏ nếu cần
+        }
+        return; 
     }
 
-    // 2. Nếu là Video (Camera hoặc Screen Share)
+    // 2. XỬ LÝ VIDEO (Camera hoặc Screen Share)
     if (track.kind === Track.Kind.Video) {
+        // Kiểm tra xem đã có wrapper cho track này chưa để tránh bị lặp
+        const existingWrapper = document.getElementById(`wrap-${participant.identity}-${track.source}`);
+        if (existingWrapper) return;
+
         const wrapper = document.createElement('div');
         wrapper.className = "video-wrapper";
+        wrapper.id = `wrap-${participant.identity}-${track.source}`;
+
+        // Nếu là chia sẻ màn hình, thêm class đặc biệt để làm to màn hình
         if (track.source === Track.Source.ScreenShare) {
             wrapper.classList.add("screen-share-video");
         }
 
-        wrapper.id = `wrap-${participant.identity}-${track.source}`;
         const video = track.attach();
-
+        
+        // Gán nhãn tên người dùng
         const label = document.createElement('div');
         label.className = "username-label";
-        label.innerText = participant.identity + (track.source === Track.Source.ScreenShare ? " (Sharing)" : "");
+        const sourceText = track.source === Track.Source.ScreenShare ? " (Đang chia sẻ)" : "";
+        label.innerText = `${participant.identity}${sourceText}`;
 
         wrapper.append(video, label);
 
-        if (track.source === Track.Source.ScreenShare)
+        // Thứ tự hiển thị: Screen Share lên đầu, Camera sau
+        if (track.source === Track.Source.ScreenShare) {
             videoGrid.prepend(wrapper);
-        else
+        } else {
             videoGrid.appendChild(wrapper);
+        }
 
         adjustLayout();
     }
