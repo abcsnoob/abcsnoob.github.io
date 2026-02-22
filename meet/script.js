@@ -352,11 +352,9 @@ setInterval(async () => {
     const iconEl = document.getElementById("ping-icon");
     const textEl = document.getElementById("ping-value");
 
-    // 1. Kiểm tra kết nối (Nếu không có data thì để màu xám)
+    // 1. Kiểm tra kết nối Room
     if (!room || room.state !== "connected") {
-        if (iconEl) {
-            iconEl.className = "bi bi-reception-4 text-secondary ping-icon";
-        }
+        if (iconEl) iconEl.className = "bi bi-reception-4 text-secondary ping-icon";
         if (textEl) textEl.innerText = "--";
         return;
     }
@@ -379,10 +377,9 @@ setInterval(async () => {
         const pingValue = Math.round((endTime - startTime) / 2);
         if (textEl) textEl.innerText = `${pingValue}`;
 
-        // 2. Logic đổi Class tại ID ping-icon theo mốc bạn chọn
+        // 2. Logic đổi Class tại ID ping-icon
         if (iconEl) {
             let colorClass = "";
-            
             if (pingValue <= 50) {
                 colorClass = "text-success"; // 0-50ms: Xanh
             } else if (pingValue <= 120) {
@@ -390,9 +387,19 @@ setInterval(async () => {
             } else {
                 colorClass = "text-danger";  // 120ms+: Đỏ
             }
-
-            // Cập nhật lại toàn bộ class để đảm bảo không bị dính class cũ
             iconEl.className = `bi bi-reception-4 ${colorClass} ping-icon`;
+        }
+
+        // 3. Cảnh báo Swal nếu Ping quá cao (> 500ms)
+        if (pingValue > 500) {
+            Swal.fire({
+                toast: true,
+                position: 'top-end',
+                icon: 'warning',
+                title: `Mạng của bạn không ổn định. Vui lòng kiểm tra lại mạng của bạn.`,
+                showConfirmButton: false,
+                timer: 5000
+            });
         }
 
     } catch (error) {
@@ -400,7 +407,7 @@ setInterval(async () => {
         if (iconEl) iconEl.className = "bi bi-reception-4 text-danger ping-icon";
         if (textEl) textEl.innerText = "Err";
     }
-}, 10000);
+}, 10000); // 10 giây check một lần
 // ---------------- TOGGLE CHAT ----------------
 const toggleChatBtn = document.getElementById('toggle-chat');
 const chatSidebar = document.getElementById('chat-sidebar');
