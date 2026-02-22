@@ -318,28 +318,44 @@ function adjustLayout() {
 }
 // ---------------- PING ----------------
 setInterval(async () => {
-    // Nếu bạn muốn chỉ ping khi đang trong phòng, giữ lại dòng này. 
-    // Nếu muốn ping liên tục kể cả khi chưa kết nối, có thể bỏ dòng if này.
+    // Chỉ chạy nếu Room đã kết nối
     if (!room || room.state !== "connected") return;
 
+    // URL trực tiếp của bạn
+    const PING_URL = "https://abcsnoob-l5aam0b3.livekit.cloud";
+
     try {
-        // Gọi tới route /ping của Worker
-        const response = await fetch(`${WORKER_URL}/ping`);
+        const startTime = performance.now(); // Bắt đầu bấm giây
+        
         NProgress.start();
-        if (response.ok) {
-            const data = await response.json();
-            const pingValue = data.ping;
-            NProgress.done();
-            // Cập nhật lên giao diện
-            const el = document.getElementById("ping-value");
-            if (el && typeof pingValue === "number") {
-                el.innerText = pingValue;
-            }
+
+        // Sử dụng phương thức HEAD để tối ưu tốc độ và không cần parse JSON
+        await fetch(PING_URL, {
+            method: 'GET',
+            mode: 'no-cors', // Tránh lỗi CORS nếu server không cấu hình, vẫn nhận được phản hồi thô
+            cache: 'no-cache'
+        });
+
+        const endTime = performance.now(); // Nhận được gói tin là dừng ngay
+        NProgress.done();
+
+        // Tính toán: (Tổng thời gian khứ hồi) / 2
+        const pingValue = Math.round((endTime - startTime) / 2);
+
+        // Hiển thị lên giao diện
+        const el = document.getElementById("ping-value");
+        if (el) {
+            el.innerText = `${pingValue} ms`;
         }
+
     } catch (error) {
-        console.error("Lỗi khi gọi Worker Ping:", error);
+        NProgress.done();
+        console.error("Lỗi kết nối khi Ping:", error);
+        
+        const el = document.getElementById("ping-value");
+        if (el) el.innerText = "Error";
     }
-}, 10000);
+}, 10000); // 10 giây một lần
 // ---------------- TOGGLE CHAT ----------------
 const toggleChatBtn = document.getElementById('toggle-chat');
 const chatSidebar = document.getElementById('chat-sidebar');
