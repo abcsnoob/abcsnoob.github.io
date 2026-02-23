@@ -409,6 +409,57 @@ setInterval(async () => {
         if (textEl) textEl.innerText = "Err";
     }
 }, 5000); // 10 giây check một lần
+
+setInterval(async () => {
+    const iconEl = document.getElementById("rtt-icon");
+    const textEl = document.getElementById("rtt-value");
+
+    // 1. Kiểm tra kết nối Room
+    if (!room || room.state !== "connected") {
+        if (iconEl) iconEl.className = "bi bi-reception-4 text-secondary ping-icon";
+        if (textEl) textEl.innerText = "--";
+        return;
+    }
+
+    const PING_URL = "https://abcsnoob-l5aam0b3.livekit.cloud";
+
+    try {
+        const startTime = performance.now();
+        NProgress.start();
+
+        await fetch(PING_URL, {
+            method: 'GET',
+            mode: 'no-cors',
+            cache: 'no-cache'
+        });
+
+        const endTime = performance.now();
+        NProgress.done();
+
+        const pingValue = Math.round((endTime - startTime) / 1);
+        if (textEl) textEl.innerText = `${pingValue}`;
+
+        // 2. Logic đổi Class tại ID ping-icon
+        if (iconEl) {
+            let colorClass = "";
+            if (pingValue <= 50) {
+                colorClass = "text-success"; // 0-50ms: Xanh
+            } else if (pingValue <= 120) {
+                colorClass = "text-warning"; // 51-120ms: Vàng
+            } else {
+                colorClass = "text-danger";  // 120ms+: Đỏ
+            }
+            iconEl.className = `bi bi-reception-4 ${colorClass} ping-icon`;
+        }
+
+        // 3. Cảnh báo Swal nếu Ping quá cao (> 500ms)
+
+    } catch (error) {
+        NProgress.done();
+        if (iconEl) iconEl.className = "bi bi-reception-4 text-danger ping-icon";
+        if (textEl) textEl.innerText = "Err";
+    }
+}, 7000); // 10 giây check một lần
 // ---------------- TOGGLE CHAT ----------------
 const toggleChatBtn = document.getElementById('toggle-chat');
 const chatSidebar = document.getElementById('chat-sidebar');
