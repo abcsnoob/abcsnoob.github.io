@@ -408,7 +408,7 @@ setInterval(async () => {
         if (iconEl) iconEl.className = "bi bi-reception-4 text-danger ping-icon";
         if (textEl) textEl.innerText = "Err";
     }
-}, 5000); // 10 giây check một lần
+}, 3000); // 10 giây check một lần
 
 setInterval(async () => {
     const iconEl = document.getElementById("rtt-icon");
@@ -459,7 +459,7 @@ setInterval(async () => {
         if (iconEl) iconEl.className = "bi bi-reception-4 text-danger rtt-icon";
         if (textEl) textEl.innerText = "Err";
     }
-}, 7000); // 10 giây check một lần
+}, 3000); // 10 giây check một lần
 // ---------------- TOGGLE CHAT ----------------
 const toggleChatBtn = document.getElementById('toggle-chat');
 const chatSidebar = document.getElementById('chat-sidebar');
