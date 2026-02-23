@@ -442,12 +442,12 @@ setInterval(async () => {
         // 2. Logic đổi Class tại ID ping-icon
         if (iconEl) {
             let colorClass = "";
-            if (pingValue <= 50) {
-                colorClass = "text-success"; // 0-50ms: Xanh
-            } else if (pingValue <= 120) {
-                colorClass = "text-warning"; // 51-120ms: Vàng
+            if (pingValue <= 100) {
+                colorClass = "text-success"; // 0-100ms: Xanh
+            } else if (pingValue <= 240) {
+                colorClass = "text-warning"; // 101-240ms: Vàng
             } else {
-                colorClass = "text-danger";  // 120ms+: Đỏ
+                colorClass = "text-danger";  // 240ms+: Đỏ
             }
             iconEl.className = `bi bi-reception-4 ${colorClass} ping-icon`;
         }
