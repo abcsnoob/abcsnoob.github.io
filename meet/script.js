@@ -416,7 +416,7 @@ setInterval(async () => {
 
     // 1. Kiểm tra kết nối Room
     if (!room || room.state !== "connected") {
-        if (iconEl) iconEl.className = "bi bi-reception-4 text-secondary ping-icon";
+        if (iconEl) iconEl.className = "bi bi-reception-4 text-secondary rtt-icon";
         if (textEl) textEl.innerText = "--";
         return;
     }
@@ -456,7 +456,7 @@ setInterval(async () => {
 
     } catch (error) {
         NProgress.done();
-        if (iconEl) iconEl.className = "bi bi-reception-4 text-danger ping-icon";
+        if (iconEl) iconEl.className = "bi bi-reception-4 text-danger rtt-icon";
         if (textEl) textEl.innerText = "Err";
     }
 }, 7000); // 10 giây check một lần
