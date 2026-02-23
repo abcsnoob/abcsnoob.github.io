@@ -394,11 +394,12 @@ setInterval(async () => {
         if (pingValue > 500) {
             Swal.fire({
                 toast: true,
-                position: 'top-end',
+                position: 'top',
                 icon: 'warning',
                 title: `Mạng của bạn không ổn định. Vui lòng kiểm tra lại mạng của bạn.`,
                 showConfirmButton: false,
-                timer: 5000
+                timer: 5000,
+                timerProgressBar: true,
             });
         }
 
@@ -407,7 +408,7 @@ setInterval(async () => {
         if (iconEl) iconEl.className = "bi bi-reception-4 text-danger ping-icon";
         if (textEl) textEl.innerText = "Err";
     }
-}, 3000); // 10 giây check một lần
+}, 5000); // 10 giây check một lần
 // ---------------- TOGGLE CHAT ----------------
 const toggleChatBtn = document.getElementById('toggle-chat');
 const chatSidebar = document.getElementById('chat-sidebar');
