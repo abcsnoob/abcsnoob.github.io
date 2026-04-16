@@ -12,7 +12,6 @@ const NoobEngine = {
         maxHistory: 30,
         dbName: 'noob_engine_v55',
         theme: 'material_dark',
-        maxTokensPerMin: 0, // Vô hạn
         maxTokens: 7000,
         resetTime: 3600000 // 1 giờ
     },
@@ -148,7 +147,7 @@ async handleSend() {
     }
 
     const inputTokens = this.countTokens(text);
-    if (this.state.tokensUsed + inputTokens > 30000) {
+    if (this.state.tokensUsed + inputTokens > 7000) {
         const waitMin = Math.ceil((3600000 - (now - this.state.lastTokenReset)) / 60000);
         return this.notifyError(`Hết hạn mức! Vui lòng đợi ${waitMin} phút để reset.`);
     }
@@ -456,7 +455,7 @@ countTokens(text) {
 
 // 2. Hàm cập nhật vòng tròn ở nút Gửi
 updateQuotaUI() {
-    const percent = Math.min(100, (this.state.tokensUsed / 30000) * 100);
+    const percent = Math.min(100, (this.state.tokensUsed / 7000) * 100);
     const color = percent > 90 ? '#ea4335' : (percent > 70 ? '#f4b400' : '#8ab4f8');
 
     // 1. Cập nhật vòng tròn ở nút Gửi
@@ -602,13 +601,13 @@ renderSidebar() {
     // 2. Cập nhật Quota và Settings vào #tokenquota
     const tokenQuotaArea = document.getElementById('tokenquota');
     if (tokenQuotaArea) {
-        const percent = Math.min(100, (this.state.tokensUsed / 30000) * 100);
+        const percent = Math.min(100, (this.state.tokensUsed / 7000) * 100);
         tokenQuotaArea.className = 'p-3 border-top border-secondary mt-auto';
         tokenQuotaArea.innerHTML = `
             <div class="quota-container mb-3 px-1">
                 <div class="d-flex justify-content-between mb-1" style="font-size: 10px; color: #8e918f; font-weight: 500;">
                     <span>HẠN MỨC (1H)</span>
-                    <span id="sidebar-quota-text">${this.state.tokensUsed.toLocaleString()} / 30,000</span>
+                    <span id="sidebar-quota-text">${this.state.tokensUsed.toLocaleString()} / 7,000</span>
                 </div>
                 <div class="progress" style="height: 5px; background: #333; border-radius: 10px; overflow: hidden; border: 1px solid #444;">
                     <div id="sidebar-quota-bar" class="progress-bar" 
