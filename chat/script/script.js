@@ -578,7 +578,6 @@ renderSidebar() {
     // 2. Thêm thanh Token Bar cố định ở dưới cùng
     
     const tokenWrapper = document.createElement('div');
-    tokenWrapper.innerHTML = tokenBarHTML;
     this.ui.list.appendChild(tokenWrapper);
     
     // Cập nhật lại trạng thái thanh ngay sau khi render
