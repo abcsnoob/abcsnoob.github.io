@@ -22,6 +22,7 @@ const NoobEngine = {
         isTyping: false,
         pendingImage: null,
         recognition: null,
+        isSkipping: false,
         abortController: null,
         isMicActive: false,
         tokensUsed: 0,
@@ -109,32 +110,39 @@ async processTypeQueue(element, sessionHistoryObj) {
 async handleSend() {
     const text = this.ui.input.value.trim();
     const image = this.state.pendingImage;
+    
+    // 1. Kiểm tra điều kiện chặn
     if ((!text && !image) || this.state.isTyping) return;
 
     const session = this.state.sessions[this.state.currentId];
     const userMsg = { role: 'user', timestamp: Date.now(), parts: [{ text: text }] };
     if (image) userMsg.parts.push({ inline_data: { mime_type: "image/jpeg", data: image.split(',')[1] } });
 
+    // 2. Render tin nhắn user và reset input
     session.history.push(userMsg);
     this.renderMessage(userMsg);
     this.clearInput();
 
+    // 3. Thiết lập trạng thái đang xử lý
     this.state.isTyping = true;
+    this.state.isSkipping = false; // Reset cờ skip cho phản hồi mới
+    this.state.abortController = new AbortController(); // Khởi tạo bộ ngắt
     this.setLoading(true);
 
-    // --- KHỞI TẠO BỘ ĐẾM ---
+    // 4. Khởi tạo bộ đếm thời gian
     const startTime = Date.now();
     let timerInterval = setInterval(() => {
         const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
-        // Cập nhật vào loader hoặc vào statsArea sau này
-        const timerTarget = document.getElementById('timer-counter') || document.getElementById('realtime-timer');
+        const timerTarget = document.getElementById('timer-counter');
         if (timerTarget) timerTarget.innerText = `${elapsed}s`;
     }, 100);
 
     try {
+        // 5. Gọi API với tín hiệu ngắt (signal)
         const response = await fetch(this.config.api, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
+            signal: this.state.abortController.signal,
             body: JSON.stringify({ 
                 messages: this.prepareHistory(session.history),
                 model: document.getElementById('modelSelect')?.value || "gemini-3-flash-preview"
@@ -144,23 +152,33 @@ async handleSend() {
         if (!response.ok) throw new Error("Server lỗi: " + response.status);
         const data = await response.json(); 
 
-        // Tắt loading nhưng giữ lại bộ đếm để chuyển sang botRow
-        this.setLoading(false); 
+        this.setLoading(false); // Ẩn loader (nút Stop cũng sẽ ẩn, nút Send hiện lại)
 
+        // 6. Tạo hàng tin nhắn cho Bot
         const botRow = this.createBotRow();
         const textContainer = botRow.querySelector('.text-content');
         const statsArea = botRow.querySelector('.stats-area');
         
-        // Chuyển bộ đếm sang dòng của Bot dưới dạng ID mới
+        // Thêm nút SKIP trực tiếp vào UI của Bot Row
+        const skipBtn = document.createElement('button');
+        skipBtn.className = 'skip-btn-ui'; // Thêm CSS cho nút này
+        skipBtn.innerHTML = '<span class="material-symbols-rounded">fast_forward</span> Skip';
+        skipBtn.onclick = () => { 
+            this.state.isSkipping = true; 
+            skipBtn.remove(); 
+        };
+        botRow.querySelector('.bubble').appendChild(skipBtn);
+
         statsArea.innerHTML = `<span id="realtime-timer">0.0s</span>`;
         if (data.model_display) botRow.querySelector('.bot-name-label').innerText = data.model_display;
 
-        // --- HIỆU ỨNG ĐÁNH MÁY ---
-        // Bộ đếm vẫn chạy vì interval chưa bị clear
+        // 7. Chạy hiệu ứng đánh máy (có hỗ trợ cờ isSkipping)
         await this.typeEffect(textContainer, data.text, data.thought);
 
-        // --- DỪNG ĐẾM VÀ CHỐT SỐ ---
+        // 8. Kết thúc và lưu dữ liệu
         clearInterval(timerInterval);
+        skipBtn.remove(); // Xóa nút skip nếu đánh máy xong
+        
         const finalTime = ((Date.now() - startTime) / 1000).toFixed(1);
         statsArea.innerHTML = `<span>Phản hồi: <b>${finalTime}s</b></span>`;
 
@@ -173,9 +191,14 @@ async handleSend() {
 
     } catch (err) {
         clearInterval(timerInterval);
-        this.notifyError(err.message);
+        if (err.name === 'AbortError') {
+            this.notifyInfo("Đã dừng tạo phản hồi.");
+        } else {
+            this.notifyError(err.message);
+        }
     } finally {
         this.state.isTyping = false;
+        this.state.abortController = null;
         this.setLoading(false);
     }
 },
@@ -213,7 +236,7 @@ finalizeSession(content, thinking, session) {
 
 stopGeneration() {
     if (this.state.abortController) {
-        this.state.abortController.abort();
+        this.state.abortController.abort(); // Ngắt kết nối fetch
         this.state.isTyping = false;
         this.setLoading(false);
     }
@@ -509,25 +532,22 @@ async typeEffect(element, text, thought) {
         element.parentElement.insertAdjacentHTML('afterbegin', thoughtHtml);
     }
 
-    // Tách văn bản thành mảng các từ
     const words = text.split(" ");
     let currentText = "";
     
-    // Điều chỉnh tốc độ: Nếu là từ, speed nên để khoảng 30-70ms để nhìn tự nhiên
-    const speed = text.length > 1000 ? 15 : this.config.typingSpeed * 2; 
-
     for (let i = 0; i < words.length; i++) {
-        // Thêm từ hiện tại và dấu cách (nếu không phải từ cuối cùng)
+        // KIỂM TRA CỜ SKIP
+        if (this.state.isSkipping) {
+            element.innerHTML = DOMPurify.sanitize(marked.parse(text));
+            this.ui.chat.scrollTop = this.ui.chat.scrollHeight;
+            return; // Thoát hàm sớm
+        }
+
         currentText += words[i] + (i < words.length - 1 ? " " : "");
-        
-        // Render Markdown
         element.innerHTML = DOMPurify.sanitize(marked.parse(currentText));
-        
-        // Cuộn xuống cuối
         this.ui.chat.scrollTop = this.ui.chat.scrollHeight;
         
-        // Chờ trước khi hiện từ tiếp theo
-        await new Promise(r => setTimeout(r, speed));
+        await new Promise(r => setTimeout(r, this.config.typingSpeed * 2));
     }
 },
 
@@ -591,12 +611,16 @@ renderSidebar() {
     },
 
 setLoading(isLoading) {
-    this.ui.sendBtn.disabled = isLoading;
+    const sendBtn = document.getElementById('sendBtn');
+    const stopBtn = document.getElementById('stopBtn');
+
     if (isLoading) {
+        sendBtn.style.display = 'none';
+        if (stopBtn) stopBtn.style.display = 'flex';
+        
         const loader = document.createElement('div');
         loader.id = "temp-loader";
         loader.className = "msg-row bot-row";
-        // Thêm ID timer-counter vào đây để hiện số cạnh dấu chấm
         loader.innerHTML = `
             <div class="bubble d-flex align-items-center gap-2">
                 <div class="loading-dots"><span>.</span><span>.</span><span>.</span></div>
@@ -604,6 +628,8 @@ setLoading(isLoading) {
             </div>`;
         this.ui.chat.appendChild(loader);
     } else {
+        sendBtn.style.display = 'flex';
+        if (stopBtn) stopBtn.style.display = 'none';
         document.getElementById('temp-loader')?.remove();
     }
 },
