@@ -60,6 +60,7 @@ async processTypeQueue(element, sessionHistoryObj) {
     // --- 3. INITIALIZATION ---
     async init() {
         console.info("Initializing Noob Engine V5.5...");
+        await this.loadSecureQuota();
         this.setupMarkdown();
         this.initVoice();
         
@@ -521,30 +522,21 @@ countTokens(text) {
 
 // 2. Hàm cập nhật vòng tròn ở nút Gửi
 updateQuotaUI() {
-    const percent = Math.min(100, (this.state.tokensUsed / 7000) * 100);
+    // Ép kiểu số để tránh lỗi logic
+    const used = Number(this.state.tokensUsed) || 0;
+    const percent = Math.min(100, (used / 7000) * 100);
     const color = percent > 90 ? '#ea4335' : (percent > 70 ? '#f4b400' : '#8ab4f8');
 
-    // 1. Cập nhật vòng tròn ở nút Gửi
-    const actions = document.querySelector('.input-actions');
-    if (actions) {
-        let circle = actions.querySelector('.quota-circle');
-        if (!circle) {
-            circle = document.createElement('div');
-            circle.className = 'quota-circle';
-            actions.prepend(circle);
-        }
-        circle.style.setProperty('--p', percent);
-        circle.style.setProperty('--quota-color', color);
-    }
+    // Cập nhật text trong Sidebar
+    const textElem = document.getElementById('sidebar-quota-text');
+    if (textElem) textElem.innerText = `${used.toLocaleString()} / 7,000`;
 
-    // 2. Cập nhật Sidebar (nếu đang hiển thị)
-    const bar = document.getElementById('sidebar-quota-bar');
-    const text = document.getElementById('sidebar-quota-text');
-    if (bar) {
-        bar.style.width = percent + '%';
-        bar.style.background = color;
+    // Cập nhật thanh Bar
+    const barElem = document.getElementById('sidebar-quota-bar');
+    if (barElem) {
+        barElem.style.width = percent + '%';
+        barElem.style.background = color;
     }
-    if (text) text.innerText = `${this.state.tokensUsed.toLocaleString()} / 7,000`;
 },
 
 countTokens(text) {
