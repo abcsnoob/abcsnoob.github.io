@@ -554,7 +554,7 @@ async typeEffect(element, text, thought) {
 
 renderSidebar() {
     // 1. Cập nhật danh sách Session vào #sessionlist
-    const sessionList = document.getElementById('sessionlist');
+    const sessionList = document.getElementById('session-list');
     if (sessionList) {
         sessionList.innerHTML = '';
         Object.values(this.state.sessions)
