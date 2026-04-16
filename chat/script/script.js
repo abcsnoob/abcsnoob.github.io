@@ -12,7 +12,7 @@ const NoobEngine = {
         maxHistory: 30,
         dbName: 'noob_engine_v55',
         theme: 'material_dark',
-        maxTokensPerMin: 9223372036854775807 // Vô hạn,
+        maxTokensPerMin: 0 // Vô hạn,
     },
 
     // --- 2. INTERNAL STATE ---
@@ -576,20 +576,6 @@ renderSidebar() {
     this.ui.list.appendChild(sessionContainer);
 
     // 2. Thêm thanh Token Bar cố định ở dưới cùng
-    const tokenBarHTML = `
-        <div class="token-limit-container p-3 border-top mt-auto" style="background: rgba(0,0,0,0.1); width: 100%;">
-            <div class="d-flex justify-content-between align-items-center mb-2" style="font-size: 11px; color: #8e918f;">
-                <span class="d-flex align-items-center gap-1">
-                    <i class="material-symbols-rounded" style="font-size: 14px;">toll</i>
-                    Tốc độ nạp (RPM)
-                </span>
-                <span id="token-count">${this.state.tokensUsed || 0}/3000 tokens</span>
-            </div>
-            <div class="progress" style="height: 4px; background: #333; border-radius: 10px; overflow: hidden;">
-                <div id="token-progress" class="progress-bar" style="width: 100%; transition: width 0.5s ease; background-color: #8ab4f8;"></div>
-            </div>
-        </div>
-    `;
     
     const tokenWrapper = document.createElement('div');
     tokenWrapper.innerHTML = tokenBarHTML;
