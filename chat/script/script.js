@@ -112,57 +112,35 @@ async processTypeQueue(element, sessionHistoryObj) {
 async handleSend() {
     const text = this.ui.input.value.trim();
     const image = this.state.pendingImage;
-    
-    // 1. Kiểm tra điều kiện chặn cơ bản
     if ((!text && !image) || this.state.isTyping) return;
 
-    // --- QUOTA & AUTO-RESET CHECK ---
+    // --- AUTO-RESET QUOTA ---
     const now = Date.now();
-    const oneHour = 3600000; // 1 giờ tính bằng ms
-
-    // Tự động Reset nếu đã quá 1 tiếng kể từ lần reset cuối
-    if (now - this.state.lastReset > oneHour) {
+    if (now - this.state.lastTokenReset > 3600000) {
         this.state.tokensUsed = 0;
-        this.state.lastReset = now;
-        console.log("Hệ thống: Đã tự động reset hạn mức Token hàng giờ.");
+        this.state.lastTokenReset = now;
     }
 
-    // Ước tính token cho tin nhắn hiện tại (Sử dụng hàm countTokens)
-    const currentInputTokens = this.countTokens(text);
-    
-    // Kiểm tra nếu tổng token vượt quá giới hạn 30,000
-    if (this.state.tokensUsed + currentInputTokens > 30000) {
-        const minutesLeft = Math.ceil((oneHour - (now - this.state.lastReset)) / 60000);
-        this.notifyError(`Hết hạn mức! Bạn cần đợi ${minutesLeft} phút nữa để reset.`);
-        return;
+    const inputTokens = this.countTokens(text);
+    if (this.state.tokensUsed + inputTokens > 30000) {
+        const waitMin = Math.ceil((3600000 - (now - this.state.lastTokenReset)) / 60000);
+        return this.notifyError(`Hết hạn mức! Vui lòng đợi ${waitMin} phút để reset.`);
     }
-    // --------------------------------
 
+    // --- LOGIC GỬI TIN NHẮN ---
     const session = this.state.sessions[this.state.currentId];
     const userMsg = { role: 'user', timestamp: Date.now(), parts: [{ text: text }] };
-    
-    // Xử lý ảnh nếu có
-    if (image) {
-        userMsg.parts.push({ 
-            inline_data: { 
-                mime_type: "image/jpeg", 
-                data: image.split(',')[1] 
-            } 
-        });
-    }
+    if (image) userMsg.parts.push({ inline_data: { mime_type: "image/jpeg", data: image.split(',')[1] } });
 
-    // 2. Render tin nhắn user và reset input
     session.history.push(userMsg);
     this.renderMessage(userMsg);
     this.clearInput();
 
-    // 3. Thiết lập trạng thái đang xử lý
     this.state.isTyping = true;
-    this.state.isSkipping = false; 
-    this.state.abortController = new AbortController(); 
+    this.state.isSkipping = false;
+    this.state.abortController = new AbortController();
     this.setLoading(true);
 
-    // 4. Khởi tạo bộ đếm thời gian phản hồi
     const startTime = Date.now();
     let timerInterval = setInterval(() => {
         const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
@@ -171,74 +149,51 @@ async handleSend() {
     }, 100);
 
     try {
-        // 5. Gọi API với tín hiệu ngắt (signal)
         const response = await fetch(this.config.api, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             signal: this.state.abortController.signal,
             body: JSON.stringify({ 
                 messages: this.prepareHistory(session.history),
-                model: document.getElementById('modelSelect')?.value || "gemini-3-flash-preview"
+                model: document.getElementById('modelSelect')?.value || "gemini-1.5-flash"
             })
         });
 
-        if (!response.ok) throw new Error("Server lỗi: " + response.status);
+        if (!response.ok) throw new Error("API Error");
         const data = await response.json(); 
 
-        this.setLoading(false); 
+        this.setLoading(false);
 
-        // --- CẬP NHẬT QUOTA SAU PHẢN HỒI ---
+        // Cập nhật Token sau khi có phản hồi
         const outputTokens = this.countTokens(data.text);
-        this.state.tokensUsed += (currentInputTokens + outputTokens);
-        
-        // Cập nhật vòng tròn tiến trình ở nút Gửi và Sidebar
-        this.updateQuotaUI(); 
-        this.save(); 
-        // ----------------------------------
+        this.state.tokensUsed += (inputTokens + outputTokens);
+        this.updateQuotaUI(); // Cập nhật cả nút bấm và sidebar
+        this.save();
 
-        // 6. Tạo hàng tin nhắn cho Bot
         const botRow = this.createBotRow();
         const textContainer = botRow.querySelector('.text-content');
-        const statsArea = botRow.querySelector('.stats-area');
         
-        // Thêm nút SKIP trực tiếp vào UI
+        // Nút Skip nhanh
         const skipBtn = document.createElement('button');
         skipBtn.className = 'skip-btn-ui'; 
-        skipBtn.innerHTML = '<span class="material-symbols-rounded">fast_forward</span> Skip';
-        skipBtn.onclick = () => { 
-            this.state.isSkipping = true; 
-            skipBtn.remove(); 
-        };
+        skipBtn.innerHTML = 'Skip';
+        skipBtn.onclick = () => { this.state.isSkipping = true; skipBtn.remove(); };
         botRow.querySelector('.bubble').appendChild(skipBtn);
 
-        statsArea.innerHTML = `<span id="realtime-timer">0.0s</span>`;
-        if (data.model_display) botRow.querySelector('.bot-name-label').innerText = data.model_display;
-
-        // 7. Chạy hiệu ứng đánh máy (có hỗ trợ cờ isSkipping)
         await this.typeEffect(textContainer, data.text, data.thought);
 
-        // 8. Kết thúc và lưu dữ liệu
         clearInterval(timerInterval);
-        skipBtn.remove(); 
-        
-        const finalTime = ((Date.now() - startTime) / 1000).toFixed(1);
-        statsArea.innerHTML = `<span>Phản hồi: <b>${finalTime}s</b></span>`;
-
+        skipBtn.remove();
         this.finalizeSession(data.text, data.thought, session);
 
     } catch (err) {
         clearInterval(timerInterval);
-        if (err.name === 'AbortError') {
-            this.notifyInfo("Đã dừng tạo phản hồi.");
-        } else {
-            this.notifyError(err.message);
-        }
+        if (err.name !== 'AbortError') this.notifyError(err.message);
     } finally {
         this.state.isTyping = false;
-        this.state.abortController = null;
         this.setLoading(false);
     }
-}
+},
 
 // Hàm hỗ trợ đóng gói và lưu dữ liệu
 /**
@@ -475,31 +430,37 @@ countTokens(text) {
 
 // 2. Hàm cập nhật vòng tròn ở nút Gửi
 updateQuotaUI() {
-    const percent = Math.min(100, (this.state.tokensUsed / this.config.maxTokens) * 100);
-    const actionsWrapper = document.querySelector('.input-actions');
-    
-    // Tạo vòng tròn nếu chưa có
-    let circle = actionsWrapper.querySelector('.quota-circle');
-    if (!circle) {
-        circle = document.createElement('div');
-        circle.className = 'quota-circle';
-        actionsWrapper.prepend(circle);
+    const percent = Math.min(100, (this.state.tokensUsed / 30000) * 100);
+    const color = percent > 90 ? '#ea4335' : (percent > 70 ? '#f4b400' : '#8ab4f8');
+
+    // 1. Cập nhật vòng tròn ở nút Gửi
+    const actions = document.querySelector('.input-actions');
+    if (actions) {
+        let circle = actions.querySelector('.quota-circle');
+        if (!circle) {
+            circle = document.createElement('div');
+            circle.className = 'quota-circle';
+            actions.prepend(circle);
+        }
+        circle.style.setProperty('--p', percent);
+        circle.style.setProperty('--quota-color', color);
     }
 
-    // Cập nhật màu sắc dựa trên mức độ sử dụng
-    let color = '#8ab4f8'; // Xanh mặc định
-    if (percent > 70) color = '#f4b400'; // Vàng (cảnh báo)
-    if (percent > 90) color = '#ea4335'; // Đỏ (sắp hết)
-
-    circle.style.setProperty('--p', percent);
-    circle.style.setProperty('--quota-color', color);
-
-    // Cập nhật text hiển thị trong phần Cài đặt (nếu đang mở hoặc hiển thị ở sidebar)
-    const settingsQuota = document.getElementById('settings-quota-info');
-    if (settingsQuota) {
-        settingsQuota.innerText = `${this.state.tokensUsed.toLocaleString()} / ${this.config.maxTokens.toLocaleString()} tokens`;
+    // 2. Cập nhật Sidebar (nếu đang hiển thị)
+    const bar = document.getElementById('sidebar-quota-bar');
+    const text = document.getElementById('sidebar-quota-text');
+    if (bar) {
+        bar.style.width = percent + '%';
+        bar.style.background = color;
     }
+    if (text) text.innerText = `${this.state.tokensUsed.toLocaleString()} / 30,000`;
 },
+
+countTokens(text) {
+    if (!text) return 0;
+    return Math.ceil(text.trim().split(/\s+/).length * 1.3);
+},
+    
     toggleMic() {
         if (!this.state.recognition) return this.notifyError("Trình duyệt không hỗ trợ Mic");
         if (this.state.isMicActive) {
@@ -592,12 +553,12 @@ async typeEffect(element, text, thought) {
 },
 
 renderSidebar() {
-    // 1. Render danh sách Session
     this.ui.list.innerHTML = '';
-    const sessionContainer = document.createElement('div');
-    sessionContainer.className = 'session-items-scroll';
-    sessionContainer.style.flex = '1';
-    sessionContainer.style.overflowY = 'auto';
+    
+    // 1. Danh sách Session
+    const scrollArea = document.createElement('div');
+    scrollArea.className = 'session-items-scroll flex-grow-1';
+    scrollArea.style.overflowY = 'auto';
 
     Object.values(this.state.sessions)
         .sort((a, b) => b.created - a.created)
@@ -607,35 +568,36 @@ renderSidebar() {
             item.innerHTML = `
                 <span class="material-symbols-rounded" style="font-size:18px">chat</span>
                 <span class="text-truncate" style="flex:1">${sess.title}</span>
-                <span class="material-symbols-rounded delete-btn" style="font-size:16px" onclick="event.stopPropagation(); NoobEngine.deleteSession('${sess.id}')">delete</span>
+                <span class="material-symbols-rounded delete-btn" style="font-size:16px" 
+                      onclick="event.stopPropagation(); NoobEngine.deleteSession('${sess.id}')">delete</span>
             `;
             item.onclick = () => this.switchSession(sess.id);
-            sessionContainer.appendChild(item);
+            scrollArea.appendChild(item);
         });
-    this.ui.list.appendChild(sessionContainer);
+    this.ui.list.appendChild(scrollArea);
 
-    // 2. Thêm khu vực Hạn mức (Quota) và Cài đặt
+    // 2. Khu vực Settings & Quota (Cuối Sidebar)
     const percent = Math.min(100, (this.state.tokensUsed / 30000) * 100);
-    const quotaWrapper = document.createElement('div');
-    quotaWrapper.className = 'p-3 border-top border-secondary mt-auto';
-    quotaWrapper.innerHTML = `
-        <div class="quota-section mb-3" style="padding: 0 10px;">
-            <div class="d-flex justify-content-between mb-1" style="font-size: 11px; color: #8e918f;">
-                <span>Hạn mức (1h)</span>
-                <span>${this.state.tokensUsed.toLocaleString()} / 30,000</span>
+    const settingsWrapper = document.createElement('div');
+    settingsWrapper.className = 'p-3 border-top border-secondary mt-auto';
+    settingsWrapper.innerHTML = `
+        <div class="quota-container mb-3 px-1">
+            <div class="d-flex justify-content-between mb-1" style="font-size: 10px; color: #aaa;">
+                <span>HẠN MỨC (1H)</span>
+                <span id="sidebar-quota-text">${this.state.tokensUsed.toLocaleString()} / 30,000</span>
             </div>
-            <div class="progress" style="height: 4px; background: #333; border-radius: 2px; overflow: hidden;">
-                <div class="progress-bar" style="width: ${percent}%; background: ${percent > 85 ? '#ea4335' : '#8ab4f8'}; transition: width 0.5s;"></div>
+            <div class="progress" style="height: 4px; background: #333; border-radius: 10px;">
+                <div id="sidebar-quota-bar" class="progress-bar" 
+                     style="width: ${percent}%; background: ${percent > 85 ? '#ea4335' : '#8ab4f8'}; transition: 0.5s"></div>
             </div>
         </div>
-        <div class="session-item m-0" onclick="NoobEngine.notifyInfo('Cài đặt đang được phát triển')">
+        <div class="session-item m-0" onclick="NoobEngine.notifyInfo('Cài đặt đang được cập nhật...')">
             <span class="material-symbols-rounded">settings</span> Cài đặt
         </div>
     `;
-    this.ui.list.appendChild(quotaWrapper);
-
-    // Cập nhật vòng tròn đồng bộ ở nút Gửi
-    this.updateQuotaUI();
+    this.ui.list.appendChild(settingsWrapper);
+    
+    this.updateQuotaUI(); // Đồng bộ vòng tròn nút gửi
 },
 
     // --- 9. SYSTEM CORE ---
