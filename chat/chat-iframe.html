@@ -48,7 +48,35 @@
     margin-top: 5px;
     display: inline-block;
 }
-.skip-btn:hover { background: rgba(255,255,255,0.2); }
+.skip-btn {
+  /* Cấu trúc cơ bản */
+  padding: 10px 24px;
+  border-radius: 50px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+  font-weight: 500;
+  cursor: pointer;
+  
+  /* Hiệu ứng mờ nền */
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  
+  /* Chuyển động mượt mà */
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  outline: none;
+}
+
+.skip-btn:hover {
+  background: rgba(255, 255, 255, 0.25);
+  border-color: rgba(255, 255, 255, 0.5);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.skip-btn:active {
+  transform: translateY(0);
+}
 #stopBtn { background-color: #ea4335 !important; color: white !important; }
         body {
             background: var(--surface);
