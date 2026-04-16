@@ -90,6 +90,7 @@ async processTypeQueue(element, sessionHistoryObj) {
         }
 
         this.renderSidebar();
+        this.updateQuotaUI();
     },
 
     bindGlobalEvents() {
@@ -107,65 +108,85 @@ async processTypeQueue(element, sessionHistoryObj) {
             }
         });
     },
+// --- Cập nhật trong phần CORE logic ---
+
 async saveSecureQuota() {
-        const data = {
-            used: this.state.tokensUsed,
-            lastReset: this.state.lastTokenReset
-        };
-        // Lưu vào IndexedDB qua localforage (Khó truy cập hơn localStorage)
-        await localforage.setItem('_sys_secure_quota', data);
-    },
+    const data = {
+        used: this.state.tokensUsed,
+        lastReset: this.state.lastReset // Sử dụng biến state.lastReset thống nhất
+    };
+    await localforage.setItem('_sys_secure_quota', data);
+    console.log("Quota đã được lưu:", data);
+},
 
-    async loadSecureQuota() {
-        const data = await localforage.getItem('_sys_secure_quota');
-        if (data) {
-            this.state.tokensUsed = data.used || 0;
-            this.state.lastTokenReset = data.lastReset || Date.now();
-        }
-        this.checkAutoReset();
-    },
+async loadSecureQuota() {
+    const data = await localforage.getItem('_sys_secure_quota');
+    if (data) {
+        this.state.tokensUsed = data.used || 0;
+        this.state.lastReset = data.lastReset || Date.now();
+    }
+    // Sau khi load, kiểm tra xem đã quá 1 tiếng chưa để reset ngay
+    this.checkAutoReset();
+},
 
-    checkAutoReset() {
-        const now = Date.now();
-        if (now - this.state.lastTokenReset > 3600000) { // 1 giờ
-            this.state.tokensUsed = 0;
-            this.state.lastTokenReset = now;
-            this.saveSecureQuota();
-        }
-    },
+checkAutoReset() {
+    const now = Date.now();
+    // Nếu thời gian hiện tại - thời gian reset cuối > 1 giờ (3600000ms)
+    if (now - this.state.lastReset > this.config.resetTime) {
+        this.state.tokensUsed = 0;
+        this.state.lastReset = now;
+        this.saveSecureQuota();
+        return true; // Đã reset
+    }
+    return false; // Chưa đến lúc reset
+},
     // --- 4. CORE CHAT LOGIC ---
 async handleSend() {
     const text = this.ui.input.value.trim();
     const image = this.state.pendingImage;
+    
+    // Chặn gửi nếu không có nội dung hoặc đang trong quá trình phản hồi
     if ((!text && !image) || this.state.isTyping) return;
 
-    // --- AUTO-RESET QUOTA ---
+    // --- 1. KIỂM TRA & TỰ ĐỘNG RESET QUOTA (HẠN MỨC 1 GIỜ) ---
+    const isReset = this.checkAutoReset(); 
     const now = Date.now();
-    if (now - this.state.lastTokenReset > 3600000) {
-        this.state.tokensUsed = 0;
-        this.state.lastTokenReset = now;
-    }
 
     const inputTokens = this.countTokens(text);
+    
+    // Kiểm tra xem lượt gửi này có vượt quá 7000 token không
     if (this.state.tokensUsed + inputTokens > 7000) {
-        const waitMin = Math.ceil((3600000 - (now - this.state.lastTokenReset)) / 60000);
+        const timeLeft = this.config.resetTime - (now - this.state.lastReset);
+        const waitMin = Math.ceil(timeLeft / 60000);
         return this.notifyError(`Hết hạn mức! Vui lòng đợi ${waitMin} phút để reset.`);
     }
 
-    // --- LOGIC GỬI TIN NHẮN ---
+    // --- 2. CHUẨN BỊ DỮ LIỆU TIN NHẮN ---
     const session = this.state.sessions[this.state.currentId];
-    const userMsg = { role: 'user', timestamp: Date.now(), parts: [{ text: text }] };
-    if (image) userMsg.parts.push({ inline_data: { mime_type: "image/jpeg", data: image.split(',')[1] } });
+    const userMsg = { 
+        role: 'user', 
+        timestamp: now, 
+        parts: [{ text: text }] 
+    };
+    
+    if (image) {
+        userMsg.parts.push({ 
+            inline_data: { mime_type: "image/jpeg", data: image.split(',')[1] } 
+        });
+    }
 
+    // Lưu vào lịch sử tạm thời và hiển thị lên UI
     session.history.push(userMsg);
     this.renderMessage(userMsg);
     this.clearInput();
 
+    // Thiết lập trạng thái loading
     this.state.isTyping = true;
     this.state.isSkipping = false;
     this.state.abortController = new AbortController();
     this.setLoading(true);
 
+    // Bắt đầu đếm thời gian phản hồi
     const startTime = Date.now();
     let timerInterval = setInterval(() => {
         const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
@@ -174,6 +195,7 @@ async handleSend() {
     }, 100);
 
     try {
+        // --- 3. GỌI API ---
         const response = await fetch(this.config.api, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -184,42 +206,85 @@ async handleSend() {
             })
         });
 
-        if (!response.ok) throw new Error("API Error");
+        if (!response.ok) throw new Error("Lỗi kết nối API");
         const data = await response.json(); 
 
         this.setLoading(false);
 
-        // Cập nhật Token sau khi có phản hồi
+        // --- 4. TÍNH TOÁN & LƯU TRỮ QUOTA CHÍNH XÁC ---
         const outputTokens = this.countTokens(data.text);
         this.state.tokensUsed += (inputTokens + outputTokens);
-        this.updateQuotaUI(); // Cập nhật cả nút bấm và sidebar
-        this.save();
+        
+        // Lưu cả Quota và Session vào Storage ngay lập tức
+        await this.saveSecureQuota(); 
+        this.save(); 
+        
+        this.updateQuotaUI(); // Cập nhật thanh tiến trình trên UI
 
+        // --- 5. HIỂN THỊ PHẢN HỒI ---
         const botRow = this.createBotRow();
         const textContainer = botRow.querySelector('.text-content');
         
-        // Nút Skip nhanh
+        // Nút Skip (để hiển thị toàn bộ chữ ngay lập tức)
         const skipBtn = document.createElement('button');
         skipBtn.className = 'skip-btn-ui'; 
         skipBtn.innerHTML = 'Skip';
         skipBtn.onclick = () => { this.state.isSkipping = true; skipBtn.remove(); };
         botRow.querySelector('.bubble').appendChild(skipBtn);
 
+        // Hiệu ứng đánh máy
         await this.typeEffect(textContainer, data.text, data.thought);
 
         clearInterval(timerInterval);
         skipBtn.remove();
+        
+        // Lưu tin nhắn của model vào lịch sử phiên
         this.finalizeSession(data.text, data.thought, session);
 
     } catch (err) {
         clearInterval(timerInterval);
-        if (err.name !== 'AbortError') this.notifyError(err.message);
+        if (err.name !== 'AbortError') {
+            this.notifyError(err.message);
+        }
     } finally {
         this.state.isTyping = false;
         this.setLoading(false);
     }
 },
+/**
+ * Chạy đồng hồ đếm ngược dựa trên mốc lastReset trong localforage
+ */
+async startQuotaCountdown() {
+    const countdownElement = document.getElementById('sidebar-reset-timer');
+    if (!countdownElement) return;
 
+    setInterval(async () => {
+        // 1. Lấy dữ liệu mới nhất từ storage
+        const quotaData = await localforage.getItem('_sys_secure_quota');
+        if (!quotaData || !quotaData.lastReset) {
+            countdownElement.innerText = "Sẵn sàng";
+            return;
+        }
+
+        const now = Date.now();
+        const elapsed = now - quotaData.lastReset;
+        const remaining = this.config.resetTime - elapsed;
+
+        if (remaining <= 0) {
+            // Đã đến lúc reset
+            this.state.tokensUsed = 0;
+            this.state.lastReset = now;
+            await this.saveSecureQuota();
+            this.updateQuotaUI();
+            countdownElement.innerText = "Đã reset";
+        } else {
+            // Tính toán phút và giây
+            const minutes = Math.floor(remaining / 60000);
+            const seconds = Math.floor((remaining % 60000) / 1000);
+            countdownElement.innerText = `Reset sau: ${minutes}p ${seconds}s`;
+        }
+    }, 1000);
+},
 // Hàm hỗ trợ đóng gói và lưu dữ liệu
 /**
  * Kết thúc phiên làm việc, lưu lịch sử và dọn dẹp trạng thái
@@ -271,6 +336,7 @@ stopGeneration() {
         };
         this.switchSession(id);
         this.renderSidebar();
+        this.updateQuotaUI();
         this.save();
     },
 
@@ -600,7 +666,7 @@ renderSidebar() {
 
     // 2. Cập nhật Quota và Settings vào #tokenquota
     const tokenQuotaArea = document.getElementById('tokenquota');
-    if (tokenQuotaArea) {
+if (tokenQuotaArea) {
         const percent = Math.min(100, (this.state.tokensUsed / 7000) * 100);
         tokenQuotaArea.className = 'p-3 border-top border-secondary mt-auto';
         tokenQuotaArea.innerHTML = `
@@ -609,16 +675,15 @@ renderSidebar() {
                     <span>HẠN MỨC (1H)</span>
                     <span id="sidebar-quota-text">${this.state.tokensUsed.toLocaleString()} / 7,000</span>
                 </div>
-                <div class="progress" style="height: 5px; background: #333; border-radius: 10px; overflow: hidden; border: 1px solid #444;">
+                <div class="progress" style="height: 5px; background: #333; border-radius: 10px; overflow: hidden; border: 1px solid #444; margin-bottom: 5px;">
                     <div id="sidebar-quota-bar" class="progress-bar" 
                          style="width: ${percent}%; background: ${percent > 90 ? '#ea4335' : '#8ab4f8'}; transition: 0.6s ease"></div>
                 </div>
+                <div id="sidebar-reset-timer" style="font-size: 9px; color: #666; text-align: right; font-family: monospace;">
+                    Đang tính toán...
+                </div>
             </div>
-            <div class="session-item m-0" style="cursor: pointer;" onclick="NoobEngine.openSettings()">
-                <span class="material-symbols-rounded">settings</span> 
-                <span>Cài đặt hệ thống</span>
-            </div>
-        `;
+            `;
     }
     
     // Đồng bộ vòng tròn ở nút Gửi
