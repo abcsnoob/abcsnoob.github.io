@@ -21,7 +21,35 @@
             --outline: #444746;
             --gemini-gradient: linear-gradient(70deg, #4285f4 0%, #9b72cb 30%, #d96570 100%);
         }
+/* Nút Skip nhỏ trong tin nhắn bot */
+/* Container nút gửi để giữ vị trí */
+.input-actions {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
 
+/* Nút Stop sẽ đè lên Send khi đang typing */
+#stopBtn {
+    display: none; /* Mặc định ẩn */
+    background-color: #ea4335; /* Màu đỏ */
+    color: white;
+}
+
+/* Nút Skip xuất hiện trong bong bóng chat của bot khi đang chạy hiệu ứng */
+.skip-btn {
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 4px;
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.2);
+    color: #8ab4f8;
+    cursor: pointer;
+    margin-top: 5px;
+    display: inline-block;
+}
+.skip-btn:hover { background: rgba(255,255,255,0.2); }
+#stopBtn { background-color: #ea4335 !important; color: white !important; }
         body {
             background: var(--surface);
             color: var(--on-surface);
@@ -210,6 +238,15 @@
                     <button class="btn btn-primary rounded-pill px-4 fw-bold" id="sendBtn" onclick="NoobEngine.handleSend()">
                         Gửi <span class="material-symbols-rounded ms-1" style="font-size: 18px;">send</span>
                     </button>
+                    <div class="input-actions">
+    <button id="sendBtn" onclick="NoobEngine.handleSend()" class="btn btn-primary">
+        <span class="material-symbols-rounded">send</span>
+    </button>
+    
+    <button id="stopBtn" onclick="NoobEngine.stopGeneration()" class="btn btn-danger" style="display:none">
+        <span class="material-symbols-rounded">stop</span>
+    </button>
+</div>
                 </div>
             </div>
         </div>
