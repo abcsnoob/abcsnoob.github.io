@@ -478,7 +478,7 @@ updateQuotaUI() {
         bar.style.width = percent + '%';
         bar.style.background = color;
     }
-    if (text) text.innerText = `${this.state.tokensUsed.toLocaleString()} / 30,000`;
+    if (text) text.innerText = `${this.state.tokensUsed.toLocaleString()} / 7,000`;
 },
 
 countTokens(text) {
