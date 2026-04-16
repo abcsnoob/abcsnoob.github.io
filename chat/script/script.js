@@ -553,51 +553,51 @@ async typeEffect(element, text, thought) {
 },
 
 renderSidebar() {
-    this.ui.list.innerHTML = '';
-    
-    // 1. Danh sách Session
-    const scrollArea = document.createElement('div');
-    scrollArea.className = 'session-items-scroll flex-grow-1';
-    scrollArea.style.overflowY = 'auto';
+    // 1. Cập nhật danh sách Session vào #sessionlist
+    const sessionList = document.getElementById('sessionlist');
+    if (sessionList) {
+        sessionList.innerHTML = '';
+        Object.values(this.state.sessions)
+            .sort((a, b) => b.created - a.created)
+            .forEach(sess => {
+                const item = document.createElement('div');
+                item.className = `session-item ${sess.id === this.state.currentId ? 'active' : ''}`;
+                item.innerHTML = `
+                    <span class="material-symbols-rounded" style="font-size:18px">chat</span>
+                    <span class="text-truncate" style="flex:1">${sess.title}</span>
+                    <span class="material-symbols-rounded delete-btn" style="font-size:16px" 
+                          onclick="event.stopPropagation(); NoobEngine.deleteSession('${sess.id}')">delete</span>
+                `;
+                item.onclick = () => this.switchSession(sess.id);
+                sessionList.appendChild(item);
+            });
+    }
 
-    Object.values(this.state.sessions)
-        .sort((a, b) => b.created - a.created)
-        .forEach(sess => {
-            const item = document.createElement('div');
-            item.className = `session-item ${sess.id === this.state.currentId ? 'active' : ''}`;
-            item.innerHTML = `
-                <span class="material-symbols-rounded" style="font-size:18px">chat</span>
-                <span class="text-truncate" style="flex:1">${sess.title}</span>
-                <span class="material-symbols-rounded delete-btn" style="font-size:16px" 
-                      onclick="event.stopPropagation(); NoobEngine.deleteSession('${sess.id}')">delete</span>
-            `;
-            item.onclick = () => this.switchSession(sess.id);
-            scrollArea.appendChild(item);
-        });
-    this.ui.list.appendChild(scrollArea);
-
-    // 2. Khu vực Settings & Quota (Cuối Sidebar)
-    const percent = Math.min(100, (this.state.tokensUsed / 30000) * 100);
-    const settingsWrapper = document.createElement('div');
-    settingsWrapper.className = 'p-3 border-top border-secondary mt-auto';
-    settingsWrapper.innerHTML = `
-        <div class="quota-container mb-3 px-1">
-            <div class="d-flex justify-content-between mb-1" style="font-size: 10px; color: #aaa;">
-                <span>HẠN MỨC (1H)</span>
-                <span id="sidebar-quota-text">${this.state.tokensUsed.toLocaleString()} / 30,000</span>
+    // 2. Cập nhật Quota và Settings vào #tokenquota
+    const tokenQuotaArea = document.getElementById('tokenquota');
+    if (tokenQuotaArea) {
+        const percent = Math.min(100, (this.state.tokensUsed / 30000) * 100);
+        tokenQuotaArea.className = 'p-3 border-top border-secondary mt-auto';
+        tokenQuotaArea.innerHTML = `
+            <div class="quota-container mb-3 px-1">
+                <div class="d-flex justify-content-between mb-1" style="font-size: 10px; color: #8e918f; font-weight: 500;">
+                    <span>HẠN MỨC (1H)</span>
+                    <span id="sidebar-quota-text">${this.state.tokensUsed.toLocaleString()} / 30,000</span>
+                </div>
+                <div class="progress" style="height: 5px; background: #333; border-radius: 10px; overflow: hidden; border: 1px solid #444;">
+                    <div id="sidebar-quota-bar" class="progress-bar" 
+                         style="width: ${percent}%; background: ${percent > 90 ? '#ea4335' : '#8ab4f8'}; transition: 0.6s ease"></div>
+                </div>
             </div>
-            <div class="progress" style="height: 4px; background: #333; border-radius: 10px;">
-                <div id="sidebar-quota-bar" class="progress-bar" 
-                     style="width: ${percent}%; background: ${percent > 85 ? '#ea4335' : '#8ab4f8'}; transition: 0.5s"></div>
+            <div class="session-item m-0" style="cursor: pointer;" onclick="NoobEngine.openSettings()">
+                <span class="material-symbols-rounded">settings</span> 
+                <span>Cài đặt hệ thống</span>
             </div>
-        </div>
-        <div class="session-item m-0" onclick="NoobEngine.notifyInfo('Cài đặt đang được cập nhật...')">
-            <span class="material-symbols-rounded">settings</span> Cài đặt
-        </div>
-    `;
-    this.ui.list.appendChild(settingsWrapper);
+        `;
+    }
     
-    this.updateQuotaUI(); // Đồng bộ vòng tròn nút gửi
+    // Đồng bộ vòng tròn ở nút Gửi
+    this.updateQuotaUI();
 },
 
     // --- 9. SYSTEM CORE ---
