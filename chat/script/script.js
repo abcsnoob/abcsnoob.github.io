@@ -13,7 +13,7 @@ const NoobEngine = {
         dbName: 'noob_engine_v55',
         theme: 'material_dark',
         maxTokensPerMin: 0, // Vô hạn
-        maxTokens: 30000,
+        maxTokens: 7000,
         resetTime: 3600000 // 1 giờ
     },
 
@@ -57,6 +57,7 @@ async processTypeQueue(element, sessionHistoryObj) {
 
     this.state.isProcessingQueue = false;
 },
+
     // --- 3. INITIALIZATION ---
     async init() {
         console.info("Initializing Noob Engine V5.5...");
@@ -107,7 +108,32 @@ async processTypeQueue(element, sessionHistoryObj) {
             }
         });
     },
+async saveSecureQuota() {
+        const data = {
+            used: this.state.tokensUsed,
+            lastReset: this.state.lastTokenReset
+        };
+        // Lưu vào IndexedDB qua localforage (Khó truy cập hơn localStorage)
+        await localforage.setItem('_sys_secure_quota', data);
+    },
 
+    async loadSecureQuota() {
+        const data = await localforage.getItem('_sys_secure_quota');
+        if (data) {
+            this.state.tokensUsed = data.used || 0;
+            this.state.lastTokenReset = data.lastReset || Date.now();
+        }
+        this.checkAutoReset();
+    },
+
+    checkAutoReset() {
+        const now = Date.now();
+        if (now - this.state.lastTokenReset > 3600000) { // 1 giờ
+            this.state.tokensUsed = 0;
+            this.state.lastTokenReset = now;
+            this.saveSecureQuota();
+        }
+    },
     // --- 4. CORE CHAT LOGIC ---
 async handleSend() {
     const text = this.ui.input.value.trim();
