@@ -241,36 +241,7 @@ stopGeneration() {
         this.setLoading(false);
     }
 },
-updateTokenUI(currentTotal) {
-    const now = Date.now();
-    // Reset mỗi 60 giây để tính theo Rate Limit (3000 tokens/phút)
-    if (now - this.state.lastTokenReset > 60000) {
-        this.state.tokensUsed = 0;
-        this.state.lastTokenReset = now;
-    }
 
-    // Cộng dồn token từ phản hồi mới nhất
-    this.state.tokensUsed += currentTotal;
-    
-    const percentage = Math.max(0, 100 - (this.state.tokensUsed / this.config.maxTokensPerMin * 100));
-    const bar = document.getElementById('token-progress');
-    const label = document.getElementById('token-count');
-    
-    if (bar) {
-        bar.style.width = `${percentage}%`;
-        // Đổi màu đỏ khi sắp hết (dưới 20%)
-        bar.style.backgroundColor = percentage < 20 ? '#ff4d4d' : '#8ab4f8';
-    }
-    
-    if (label) {
-        label.innerText = `${this.state.tokensUsed}/${this.config.maxTokensPerMin} tokens`;
-    }
-
-    // Cảnh báo nếu vượt ngưỡng
-    if (this.state.tokensUsed >= this.config.maxTokensPerMin) {
-        this.notifyInfo("Đã chạm giới hạn Token mỗi phút!");
-    }
-},
 
     // --- 5. SESSION MANAGEMENT ---
     createNewSession() {
@@ -580,8 +551,6 @@ renderSidebar() {
     const tokenWrapper = document.createElement('div');
     this.ui.list.appendChild(tokenWrapper);
     
-    // Cập nhật lại trạng thái thanh ngay sau khi render
-    this.updateTokenUI(0); 
 },
 
     // --- 9. SYSTEM CORE ---
