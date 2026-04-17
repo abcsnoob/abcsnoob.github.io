@@ -472,7 +472,7 @@ countTokens(text) {
     // [FIX] Chỉ còn 1 định nghĩa updateQuotaUI
     updateQuotaUI() {
         const used = Number(this.state.tokensUsed) || 0;
-        const percent = Math.min(100, (used / 7000) * 100);
+        const percent = Math.min(100, (used / 7000000) * 100);
         const color = percent > 90 ? '#ea4335' : (percent > 70 ? '#f4b400' : '#8ab4f8');
 
         const textElem = document.getElementById('sidebar-quota-text');
@@ -616,7 +616,7 @@ countTokens(text) {
 
         const tokenQuotaArea = document.getElementById('tokenquota');
         if (tokenQuotaArea) {
-            const percent = Math.min(100, (this.state.tokensUsed / 7000) * 100);
+            const percent = Math.min(100, (this.state.tokensUsed / 7000000) * 100);
             tokenQuotaArea.className = 'p-3 border-top border-secondary mt-auto';
             tokenQuotaArea.innerHTML = `
                 <div class="quota-container mb-3 px-1">
