@@ -13,7 +13,7 @@ const NoobEngine = {
         dbName: 'noob_engine_v55',
         theme: 'material_dark',
         maxTokens: 7000,
-        resetTime: 3600000 // 1 giờ
+        resetTime: 3600000, // 1 giờ
     },
 
     // --- 2. INTERNAL STATE ---
@@ -30,6 +30,7 @@ const NoobEngine = {
         lastReset: Date.now(),
         typeQueue: "",
         isProcessingQueue: false,
+        disabledModels: {},
     },
 /**
  * Tự động rút chữ từ hàng đợi và hiển thị lên UI
@@ -142,114 +143,100 @@ checkAutoReset() {
     return false; // Chưa đến lúc reset
 },
     // --- 4. CORE CHAT LOGIC ---
+/**
+ * Xử lý gửi tin nhắn - Noob Engine V5.5
+ * Tích hợp: Circuit Breaker (khóa model 50s), hiển thị Model Name, Quota Tracking
+ */
 async handleSend() {
-    const text = this.ui.input.value.trim();
-    const image = this.state.pendingImage;
-    
-    // Chặn gửi nếu không có nội dung hoặc đang trong quá trình phản hồi
-    if ((!text && !image) || this.state.isTyping) return;
-
-    // --- 1. KIỂM TRA & TỰ ĐỘNG RESET QUOTA (HẠN MỨC 1 GIỜ) ---
-    const isReset = this.checkAutoReset(); 
+    const modelSelect = document.getElementById('modelSelect');
+    const selectedModel = modelSelect?.value || "gemini-1.5-flash";
     const now = Date.now();
 
-    const inputTokens = this.countTokens(text);
-    
-    // Kiểm tra xem lượt gửi này có vượt quá 7000 token không
-    if (this.state.tokensUsed + inputTokens > 7000) {
-        const timeLeft = this.config.resetTime - (now - this.state.lastReset);
-        const waitMin = Math.ceil(timeLeft / 60000);
-        return this.notifyError(`Hết hạn mức! Vui lòng đợi ${waitMin} phút để reset.`);
+    // 1. KIỂM TRA KHÓA MÔ HÌNH (Circuit Breaker)
+    if (this.state.disabledModels && this.state.disabledModels[selectedModel] > now) {
+        const timeLeft = Math.ceil((this.state.disabledModels[selectedModel] - now) / 1000);
+        return this.notifyError(`Mô hình ${selectedModel} đang tạm khóa do lỗi API. Thử lại sau ${timeLeft} giây.`);
     }
 
-    // --- 2. CHUẨN BỊ DỮ LIỆU TIN NHẮN ---
+    const text = this.ui.input.value.trim();
+    const image = this.state.pendingImage;
+    if ((!text && !image) || this.state.isTyping) return;
+
+    // 2. CHUẨN BỊ DỮ LIỆU VÀ GIAO DIỆN
+    this.checkAutoReset();
+    const inputTokens = this.countTokens(text);
+    if (this.state.tokensUsed + inputTokens > this.config.maxTokens) {
+        return this.notifyError("Bạn đã hết hạn mức Token (7,000). Vui lòng đợi reset hoặc xóa lịch sử.");
+    }
+
     const session = this.state.sessions[this.state.currentId];
     const userMsg = { 
         role: 'user', 
         timestamp: now, 
-        parts: [{ text: text }] 
+        parts: [{ text }] 
     };
-    
+
     if (image) {
-        userMsg.parts.push({ 
-            inline_data: { mime_type: "image/jpeg", data: image.split(',')[1] } 
+        userMsg.parts.push({
+            inline_data: { mime_type: "image/jpeg", data: image.split(',')[1] }
         });
     }
 
-    // Lưu vào lịch sử tạm thời và hiển thị lên UI
+    // Hiển thị tin nhắn người dùng
     session.history.push(userMsg);
     this.renderMessage(userMsg);
     this.clearInput();
-
-    // Thiết lập trạng thái loading
-    this.state.isTyping = true;
-    this.state.isSkipping = false;
-    this.state.abortController = new AbortController();
     this.setLoading(true);
 
-    // Bắt đầu đếm thời gian phản hồi
-    const startTime = Date.now();
-    let timerInterval = setInterval(() => {
-        const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
-        const timerTarget = document.getElementById('timer-counter');
-        if (timerTarget) timerTarget.innerText = `${elapsed}s`;
-    }, 100);
-
     try {
-        // --- 3. GỌI API ---
+        // 3. GỌI API WORKER
+        this.state.abortController = new AbortController();
         const response = await fetch(this.config.api, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             signal: this.state.abortController.signal,
             body: JSON.stringify({ 
                 messages: this.prepareHistory(session.history),
-                model: document.getElementById('modelSelect')?.value || "gemini-1.5-flash"
+                model: selectedModel 
             })
         });
 
-        if (!response.ok) throw new Error("Lỗi kết nối API");
-        const data = await response.json(); 
+        if (!response.ok) throw new Error("API_CONNECT_FAIL");
 
+        const data = await response.json();
+        if (data.error) throw new Error(data.details || "API_LOGIC_FAIL");
+
+        // 4. CẬP NHẬT HẠN MỨC & HIỂN THỊ PHẢN HỒI
         this.setLoading(false);
-
-        // --- 4. TÍNH TOÁN & LƯU TRỮ QUOTA CHÍNH XÁC ---
-        const outputTokens = this.countTokens(data.text);
+        const outputTokens = data.tokens_used || this.countTokens(data.text);
         this.state.tokensUsed += (inputTokens + outputTokens);
         
-        // Lưu cả Quota và Session vào Storage ngay lập tức
         await this.saveSecureQuota(); 
-        this.save(); 
-        
-        this.updateQuotaUI(); // Cập nhật thanh tiến trình trên UI
+        this.updateQuotaUI();
 
-        // --- 5. HIỂN THỊ PHẢN HỒI ---
-        const botRow = this.createBotRow();
+        // Tạo bong bóng chat của bot với tên mô hình cụ thể
+        const botRow = this.createBotRow(data.model_display || selectedModel);
         const textContainer = botRow.querySelector('.text-content');
-        
-        // Nút Skip (để hiển thị toàn bộ chữ ngay lập tức)
-        const skipBtn = document.createElement('button');
-        skipBtn.className = 'skip-btn-ui'; 
-        skipBtn.innerHTML = 'Skip';
-        skipBtn.onclick = () => { this.state.isSkipping = true; skipBtn.remove(); };
-        botRow.querySelector('.bubble').appendChild(skipBtn);
 
-        // Hiệu ứng đánh máy
+        // Chạy hiệu ứng đánh máy (Type Effect)
         await this.typeEffect(textContainer, data.text, data.thought);
 
-        clearInterval(timerInterval);
-        skipBtn.remove();
-        
-        // Lưu tin nhắn của model vào lịch sử phiên
-        this.finalizeSession(data.text, data.thought, session);
+        // 5. LƯU VÀO LỊCH SỬ (Finalize)
+        this.finalizeSession(data.text, data.thought, session, data.model_display || selectedModel);
 
     } catch (err) {
-        clearInterval(timerInterval);
-        if (err.name !== 'AbortError') {
-            this.notifyError(err.message);
-        }
-    } finally {
-        this.state.isTyping = false;
         this.setLoading(false);
+        
+        if (err.name === 'AbortError') {
+            console.log("Đã dừng tạo phản hồi.");
+        } else {
+            // KÍCH HOẠT KHÓA MÔ HÌNH TRONG 50 GIÂY NẾU LỖI
+            if (!this.state.disabledModels) this.state.disabledModels = {};
+            this.state.disabledModels[selectedModel] = Date.now() + 50000;
+            
+            this.notifyError(`Lỗi: ${err.message}. Mô hình này đã bị tạm khóa 50s.`);
+            if (typeof this.updateModelDropdownUI === 'function') this.updateModelDropdownUI();
+        }
     }
 },
 /**
@@ -290,31 +277,49 @@ async startQuotaCountdown() {
 /**
  * Kết thúc phiên làm việc, lưu lịch sử và dọn dẹp trạng thái
  */
-finalizeSession(content, thinking, session) {
-    // Chỉ lưu nếu có nội dung thực tế
-    if (content.trim() || thinking.trim()) {
+/**
+ * Lưu trữ phản hồi của AI vào lịch sử phiên (Session History)
+ * @param {string} content - Nội dung văn bản AI trả về
+ * @param {string} thinking - Nội dung suy luận (nếu có)
+ * @param {Object} session - Đối tượng session hiện tại
+ * @param {string} modelName - Tên mô hình hiển thị (ví dụ: "Gemini 2.5 Flash")
+ */
+finalizeSession(content, thinking, session, modelName) {
+    // 1. Chỉ lưu nếu có nội dung thực tế để tránh lưu rác
+    if (content && content.trim()) {
         const modelMsg = {
             role: 'model',
             timestamp: Date.now(),
-            parts: [{ 
-                text: content, 
-                thought: thinking 
-            }]
+            // Quan trọng: Lưu tên mô hình cụ thể đã trả lời tin nhắn này
+            modelName: modelName || "AI Assistant",
+            parts: [
+                { text: content }
+            ]
         };
 
-        // Đẩy vào lịch sử phiên hiện tại
+        // 2. Nếu có nội dung suy luận (thinking/thought), lưu vào parts
+        if (thinking && thinking.trim()) {
+            modelMsg.parts[0].thought = thinking;
+        }
+
+        // 3. Đưa vào lịch sử và giới hạn độ dài lịch sử theo config
         session.history.push(modelMsg);
-        
-        // LƯU TỨC THÌ VÀO MÁY TÍNH QUA LOCALFORAGE
-        this.save(); 
-        
-        console.log("Hệ thống: Đã lưu bài viết dài vào bộ nhớ trình duyệt.");
+        if (session.history.length > this.config.maxHistory) {
+            session.history = session.history.slice(-this.config.maxHistory);
+        }
+
+        // 4. Lưu toàn bộ trạng thái vào LocalForage (IndexedDB)
+        this.save();
     }
 
-    // Cập nhật trạng thái UI
+    // 5. Giải phóng trạng thái hệ thống
     this.state.isTyping = false;
     this.state.abortController = null;
-    this.setLoading(false);
+    
+    // Cập nhật lại thanh cuộn để đảm bảo người dùng thấy dòng cuối cùng
+    if (this.ui.chat) {
+        this.ui.chat.scrollTop = this.ui.chat.scrollHeight;
+    }
 },
 
 stopGeneration() {
@@ -556,46 +561,152 @@ countTokens(text) {
     },
 
     // --- 8. UI RENDERING ENGINE ---
+/**
+ * Hiển thị tin nhắn lên giao diện người dùng (UI)
+ * @param {Object} msg - Đối tượng tin nhắn từ lịch sử (history)
+ */
 renderMessage(msg) {
-    const container = document.getElementById('chat-scroller');
+    const container = this.ui.chat;
     const div = document.createElement('div');
-    div.className = `msg-row ${msg.role === 'user' ? 'user-row' : 'bot-row'}`;
     
-    let combinedContent = "";
-    let imageHTML = "";
+    // 1. Phân loại Row dựa trên vai trò
+    const isModel = msg.role === 'model' || msg.role === 'assistant';
+    div.className = `msg-row ${isModel ? 'bot-row' : 'user-row'}`;
+    
+    // 2. Trích xuất dữ liệu từ Parts
+    let textContent = "";
+    let thoughtContent = "";
+    let imagesHTML = "";
 
-    // Duyệt qua mảng parts để bóc tách dữ liệu
-    if (msg.parts && Array.isArray(msg.parts)) {
-        msg.parts.forEach(part => {
-            if (part.text) {
-                // Nếu là văn bản, chúng ta lọc bỏ phần suy luận nếu cần
-                combinedContent += part.text;
-            }
-            if (part.inline_data) {
-                // Nếu có ảnh trong parts (dạng base64)
-                imageHTML += `<div class="mt-2"><img src="data:${part.inline_data.mime_type};base64,${part.inline_data.data}" style="max-width:250px; border-radius:12px; border:1px solid var(--outline);"></div>`;
+    if (msg.parts) {
+        msg.parts.forEach(p => {
+            if (p.text) textContent += p.text;
+            if (p.thought) thoughtContent += p.thought;
+            if (p.inline_data) {
+                imagesHTML += `
+                    <div class="message-image-container mt-2">
+                        <img src="data:${p.inline_data.mime_type};base64,${p.inline_data.data}" 
+                             class="img-fluid rounded-3 border border-secondary shadow-sm" 
+                             style="max-width: 300px; cursor: pointer;"
+                             onclick="window.open(this.src)">
+                    </div>`;
             }
         });
     }
 
-    // Lọc bỏ phần suy luận (Thinking) của AI nếu nó nằm trong cùng một chuỗi text
-    // Thường AI sẽ trả về kết quả cuối sau cùng, hoặc trong một định dạng nhất định
-    let finalDisplayArea = combinedContent;
-    if (msg.role === 'model') {
-        finalDisplayArea = this.filterThinkingProcess(combinedContent);
-    }
+    // 3. Xử lý nhãn tên (Model Name hoặc "Bạn")
+    const displayName = isModel ? (msg.modelName || "AI Assistant") : "Bạn";
+    const nameLabelHTML = `
+        <div class="name-label mb-1" style="font-size: 11px; font-weight: 700; color: #9aa0a6; text-transform: uppercase; letter-spacing: 0.5px;">
+            ${displayName}
+        </div>`;
 
-    const sanitizedBody = DOMPurify.sanitize(marked.parse(finalDisplayArea));
-    
+    // 4. Xử lý khối suy luận (Thinking Block) - Thường dùng cho các model DeepThink
+    const thinkingHTML = thoughtContent ? `
+        <details class="thinking-block mb-2" style="background: rgba(255,255,255,0.05); border-radius: 8px; border: 1px dashed #444;">
+            <summary style="padding: 8px; font-size: 12px; color: #8ab4f8; cursor: pointer; font-weight: 500;">
+                <span class="material-symbols-rounded" style="font-size: 14px; vertical-align: middle;">psychology</span> Đã suy luận
+            </summary>
+            <div class="thinking-content p-2 pt-0" style="font-size: 13px; color: #bdc1c6; font-style: italic; line-height: 1.5;">
+                ${DOMPurify.sanitize(marked.parse(thoughtContent))}
+            </div>
+        </details>` : '';
+
+    // 5. Render nội dung chính bằng Markdown
+    const mainTextHTML = textContent ? `
+        <div class="text-content" style="line-height: 1.6;">
+            ${DOMPurify.sanitize(marked.parse(textContent))}
+        </div>` : '';
+
+    // 6. Ráp nối vào Bubble
     div.innerHTML = `
-        <div class="bubble">
-            ${imageHTML}
-            <div class="text-content">${sanitizedBody}</div>
+        ${nameLabelHTML}
+        <div class="bubble p-3 shadow-sm" style="position: relative; max-width: 85%;">
+            ${imagesHTML}
+            ${thinkingHTML}
+            ${mainTextHTML}
+            <div class="msg-meta mt-1" style="font-size: 10px; color: #5f6368; text-align: right;">
+                ${new Date(msg.timestamp || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+            </div>
         </div>
     `;
-    
+
+    // 7. Đẩy vào UI và cuộn xuống cuối
     container.appendChild(div);
     container.scrollTop = container.scrollHeight;
+
+    // Highlight code blocks nếu bạn có sử dụng Prism.js hoặc Highlight.js
+    if (window.Prism) Prism.highlightAllUnder(div);
+},
+    /**
+ * Khóa một mô hình cụ thể trong 50 giây khi phát hiện lỗi API
+ * @param {string} modelId - ID của mô hình (ví dụ: 'gemini-2.5-flash')
+ */
+lockModel(modelId) {
+    if (!modelId) return;
+
+    // 1. Thiết lập thời điểm mở khóa (Hiện tại + 50,000ms)
+    const unlockTime = Date.now() + 50000;
+    
+    if (!this.state.disabledModels) this.state.disabledModels = {};
+    this.state.disabledModels[modelId] = unlockTime;
+
+    // 2. Cập nhật giao diện ngay lập tức
+    this.updateModelDropdownUI();
+
+    // 3. Đặt lịch tự động cập nhật lại UI khi hết thời gian khóa
+    setTimeout(() => {
+        this.updateModelDropdownUI();
+    }, 50100); 
+    
+    console.warn(`[Circuit Breaker] Đã khóa mô hình ${modelId} trong 50s.`);
+},
+    /**
+ * Cập nhật trạng thái hiển thị của Dropdown chọn mô hình
+ */
+updateModelDropdownUI() {
+    const select = document.getElementById('modelSelect');
+    if (!select) return;
+
+    const now = Date.now();
+    const disabledList = this.state.disabledModels || {};
+
+    Array.from(select.options).forEach(opt => {
+        const modelId = opt.value;
+        const unlockTime = disabledList[modelId];
+
+        if (unlockTime && unlockTime > now) {
+            // TRƯỜNG HỢP: Model đang bị khóa
+            const secondsLeft = Math.ceil((unlockTime - now) / 1000);
+            
+            opt.disabled = true;
+            // Hiển thị tên kèm đồng hồ đếm ngược
+            const originalName = modelNameMap[modelId] || modelId;
+            opt.innerText = `⚠️ ${originalName} (Lỗi - ${secondsLeft}s)`;
+            
+            // Nếu người dùng đang chọn đúng model này, đổi sang model khác (nếu có)
+            if (select.value === modelId) {
+                this.switchToFirstAvailableModel(select);
+            }
+        } else {
+            // TRƯỜNG HỢP: Model hoạt động bình thường
+            opt.disabled = false;
+            opt.innerText = modelNameMap[modelId] || modelId;
+            
+            // Xóa khỏi danh sách theo dõi nếu đã hết hạn khóa
+            if (unlockTime) delete this.state.disabledModels[modelId];
+        }
+    });
+},
+
+/**
+ * Hàm phụ trợ: Tự động nhảy sang model khác nếu model hiện tại bị khóa
+ */
+switchToFirstAvailableModel(selectEl) {
+    const availableOpt = Array.from(selectEl.options).find(opt => !opt.disabled);
+    if (availableOpt) {
+        selectEl.value = availableOpt.value;
+    }
 },
 filterThinkingProcess(text) {
     // Nếu AI có trả về phần "Draft:" hoặc câu chốt ở cuối sau các dấu sao phân tích
