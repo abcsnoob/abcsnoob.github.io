@@ -211,10 +211,22 @@
         .preview-img { width: 60px; height: 60px; border-radius: 12px; object-fit: cover; border: 1px solid var(--outline); }
 
         /* Utility */
-        .loading-dots span { animation: blink 1.4s infinite both; font-size: 24px; }
-        .loading-dots span:nth-child(2) { animation-delay: 0.2s; }
-        .loading-dots span:nth-child(3) { animation-delay: 0.4s; }
-        @keyframes blink { 0% { opacity: .2; } 20% { opacity: 1; } 100% { opacity: .2; } }
+/* Thiết lập chung cho tất cả 6 dấu chấm */
+.loading-dots span { 
+    animation: blink 1.4s infinite both; 
+    font-size: 24px; 
+    display: inline-block; /* Đảm bảo animation hoạt động tốt trên các phần tử text */
+}
+.loading-dots span:nth-child(2) { animation-delay: 0.2s; }
+.loading-dots span:nth-child(3) { animation-delay: 0.4s; }
+.loading-dots span:nth-child(4) { animation-delay: 0.6s; }
+.loading-dots span:nth-child(5) { animation-delay: 0.8s; }
+.loading-dots span:nth-child(6) { animation-delay: 1.0s;
+@keyframes blink {
+  0% { opacity: 0; }      /* Đen xì (không nhìn thấy gì) */
+  50% { opacity: 1; }     /* Rõ nét nhất */
+  100% { opacity: 0; }    /* Quay lại đen xì */
+}
         /* Container cho nút Gửi và Vòng tròn Quota */
 .input-actions {
     position: relative;
