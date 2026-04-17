@@ -176,7 +176,7 @@ const NoobEngine = {
         this.checkAutoReset();
         const inputTokens = this.countTokens(text);
         if (this.state.tokensUsed + inputTokens > this.config.maxTokens) {
-            return this.notifyError("Bạn đã hết hạn mức Token (7,000). Vui lòng đợi reset hoặc xóa lịch sử.");
+            return this.notifyError("Bạn đã hết hạn mức Token (7.000.000). Vui lòng đợi reset hoặc xóa lịch sử.");
         }
 
         const session = this.state.sessions[this.state.currentId];
@@ -476,7 +476,7 @@ countTokens(text) {
         const color = percent > 90 ? '#ea4335' : (percent > 70 ? '#f4b400' : '#8ab4f8');
 
         const textElem = document.getElementById('sidebar-quota-text');
-        if (textElem) textElem.innerText = `${used.toLocaleString()} / 7,000`;
+        if (textElem) textElem.innerText = `${used.toLocaleString()} / 7.000.000`;
 
         const barElem = document.getElementById('sidebar-quota-bar');
         if (barElem) {
