@@ -154,6 +154,9 @@ const NoobEngine = {
      * Xử lý gửi tin nhắn - Noob Engine V5.5
      * Tích hợp: Circuit Breaker (khóa model 50s), hiển thị Model Name, Quota Tracking
      */
+/**
+     * Xử lý gửi tin nhắn - Noob Engine V5.5 (Updated with Thought Tag Support)
+     */
     async handleSend() {
         const modelSelect = document.getElementById('modelSelect');
         const selectedModel = modelSelect?.value || "gemini-2.5-flash";
@@ -169,7 +172,7 @@ const NoobEngine = {
         const image = this.state.pendingImage;
         if ((!text && !image) || this.state.isTyping) return;
 
-        // 2. CHUẨN BỊ DỮ LIỆU VÀ GIAO DIỆN
+        // 2. CHUẨN BỊ DỮ LIỆU
         this.checkAutoReset();
         const inputTokens = this.countTokens(text);
         if (this.state.tokensUsed + inputTokens > this.config.maxTokens) {
@@ -212,31 +215,36 @@ const NoobEngine = {
             const data = await response.json();
             if (data.error) throw new Error(data.details || "API_LOGIC_FAIL");
 
-            // 4. CẬP NHẬT HẠN MỨC & HIỂN THỊ PHẢN HỒI
             this.setLoading(false);
+
+            // --- [NEW LOGIC] XỬ LÝ THẺ [/Though] ---
+            const processed = this.filterThinkingProcess(data.text);
+            const finalContent = processed.cleanText;
+            const finalThought = processed.thought || data.thought; 
+            // ---------------------------------------
+
             const outputTokens = data.tokens_used || this.countTokens(data.text);
             this.state.tokensUsed += (inputTokens + outputTokens);
 
             await this.saveSecureQuota();
             this.updateQuotaUI();
 
-            // [FIX] Truyền tên model vào createBotRow
             const botRow = this.createBotRow(data.model_display || selectedModel);
             const textContainer = botRow.querySelector('.text-content');
 
-            await this.typeEffect(textContainer, data.text, data.thought);
+            // Sử dụng nội dung đã lọc sạch để chạy hiệu ứng đánh máy
+            await this.typeEffect(textContainer, finalContent, finalThought);
 
-            this.finalizeSession(data.text, data.thought, session, data.model_display || selectedModel);
+            // Lưu vào session với dữ liệu đã tách biệt
+            this.finalizeSession(finalContent, finalThought, session, data.model_display || selectedModel);
 
         } catch (err) {
             this.setLoading(false);
-
             if (err.name === 'AbortError') {
                 console.log("Đã dừng tạo phản hồi.");
             } else {
                 if (!this.state.disabledModels) this.state.disabledModels = {};
                 this.state.disabledModels[selectedModel] = Date.now() + 50000;
-
                 this.notifyError(`Lỗi: ${err.message}. Mô hình này đã bị tạm khóa 50s.`);
                 if (typeof this.updateModelDropdownUI === 'function') this.updateModelDropdownUI();
             }
@@ -626,12 +634,26 @@ const NoobEngine = {
         })).slice(-this.config.maxHistory);
     },
 
-    filterThinkingProcess(text) {
-        if (text.includes("Draft:")) {
-            return text.split("Draft:").pop().trim();
-        }
-        return text;
-    },
+/* Tìm và thay thế hàm cũ trong script.js */
+filterThinkingProcess(text) {
+    const thoughtRegex = /\[\/Though\]([\s\S]*?)\[Though\/\]/g;
+    let match;
+    let thoughts = [];
+    let cleanText = text;
+
+    // Trích xuất tất cả nội dung nằm giữa các thẻ suy nghĩ
+    while ((match = thoughtRegex.exec(text)) !== null) {
+        thoughts.push(match[1].trim());
+    }
+
+    // Xóa bỏ các thẻ và nội dung suy nghĩ khỏi văn bản hiển thị chính
+    cleanText = text.replace(thoughtRegex, '').trim();
+
+    return {
+        cleanText: cleanText,
+        thought: thoughts.join('\n---\n') // Gộp các block suy nghĩ nếu có nhiều
+    };
+},
 
     async typeEffect(element, text, thought) {
         if (thought) {
