@@ -449,10 +449,25 @@ const NoobEngine = {
     },
 
     // [FIX] Chỉ còn 1 định nghĩa countTokens
-    countTokens(text) {
-        if (!text) return 0;
-        return Math.ceil(text.trim().split(/\s+/).length * 1.3);
-    },
+countTokens(text) {
+    if (!text) return 0;
+
+    // 1. Loại bỏ các khối suy nghĩ [THOUGHT]...[/THOUGHT] hoặc [/Though]...[Though/]
+    // Chúng ta dùng Regex tương tự như lúc bóc tách để đảm bảo đồng bộ
+    const thoughtRegex = /\[(?:\/)?(?:THOUGHT|Though)\]([\s\S]*?)\[(?:\/)?(?:THOUGHT|Though)\/?\]/gi;
+    const orphanRegex = /\[(?:\/)?(?:THOUGHT|Though)\]([\s\S]*)$/i;
+
+    let cleanText = text.replace(thoughtRegex, "");
+    cleanText = cleanText.replace(orphanRegex, ""); // Loại bỏ cả thẻ mở dở dang
+
+    // 2. Thuật toán đếm token xấp xỉ cho tiếng Việt
+    // Quy tắc: 1 token ≈ 1.5 ký tự (tiếng Việt nhiều dấu) hoặc ~0.75 từ
+    const words = cleanText.trim().split(/\s+/).length;
+    const chars = cleanText.length;
+    
+    // Lấy giá trị lớn hơn giữa (từ * 1.3) và (ký tự / 3) để ra con số an toàn
+    return Math.max(Math.ceil(words * 1.3), Math.ceil(chars / 3));
+},
 
     // [FIX] Chỉ còn 1 định nghĩa updateQuotaUI
     updateQuotaUI() {
