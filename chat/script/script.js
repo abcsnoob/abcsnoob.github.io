@@ -25,7 +25,7 @@ const NoobEngine = {
         maxHistory: 30,
         dbName: 'noob_engine_v55',
         theme: 'material_dark',
-        maxTokens: 7000,
+        maxTokens: 7000000,
         resetTime: 3600000, // 1 giờ
     },
 
