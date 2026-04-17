@@ -706,7 +706,7 @@ setLoading(isLoading) {
         loader.className = "msg-row bot-row";
         loader.innerHTML = `
             <div class="bubble d-flex align-items-center gap-2">
-                <div class="loading-dots"><span>.</span><span>.</span><span>.</span></div>
+                <div class="loading-dots"><span>.</span><span>.</span><span>.</span><span>.</span><span>.</span><span>.</span></div>
                 <span id="timer-counter" style="font-family:monospace; font-size:12px; color:#8ab4f8; margin-left:5px">0.0s</span>
             </div>`;
         this.ui.chat.appendChild(loader);
