@@ -217,11 +217,14 @@ const NoobEngine = {
 
             this.setLoading(false);
 
-            // --- [NEW LOGIC] XỬ LÝ THẺ [/Though] ---
-            const processed = this.filterThinkingProcess(data.text);
-            const finalContent = processed.cleanText;
-            const finalThought = processed.thought || data.thought; 
-            // ---------------------------------------
+            // --- [FIX v5.5] XỬ LÝ THẺ THOUGHT - đồng bộ regex với Worker ---
+            const processed = this.filterThinkingProcess(data.text || "");
+            // Ưu tiên: thought từ Worker (native Gemini thinking) > thought từ tag trong text
+            const finalThought = (data.thought && data.thought.trim()) ? data.thought : processed.thought;
+            // Nếu cleanText rỗng nhưng data.text có nội dung thật → dùng data.text (an toàn)
+            const finalContent = processed.cleanText || (data.text !== "..." ? data.text : "") || "";
+            if (!finalContent) throw new Error("Phản hồi trống từ API");
+            // -------------------------------------------------------------------
 
             const outputTokens = data.tokens_used || this.countTokens(data.text);
             this.state.tokensUsed += (inputTokens + outputTokens);
@@ -649,24 +652,35 @@ countTokens(text) {
         })).slice(-this.config.maxHistory);
     },
 
-/* Tìm và thay thế hàm cũ trong script.js */
+// [FIX v5.5] Regex đồng bộ với Worker - match tất cả biến thể [/THOUGHT], [/Though], v.v.
 filterThinkingProcess(text) {
-    const thoughtRegex = /\[\/Though\]([\s\S]*?)\[Though\/\]/g;
-    let match;
+    if (!text) return { cleanText: "", thought: "" };
+
+    // Match: [/THOUGHT]...[THOUGHT/] hoặc [/Though]...[Though/] (case-insensitive)
+    const thoughtRegex = /\[(?:\/)?(?:THOUGHT|Though)\]([\s\S]*?)\[(?:\/)?(?:THOUGHT|Though)\/?\]/gi;
+    // Match thẻ mở dở dang không có thẻ đóng (orphan)
+    const orphanRegex = /\[(?:\/)?(?:THOUGHT|Though)\]([\s\S]*)$/i;
+
     let thoughts = [];
     let cleanText = text;
 
-    // Trích xuất tất cả nội dung nằm giữa các thẻ suy nghĩ
-    while ((match = thoughtRegex.exec(text)) !== null) {
-        thoughts.push(match[1].trim());
+    const matches = [...text.matchAll(thoughtRegex)];
+    if (matches.length > 0) {
+        thoughts = matches.map(m => m[1].trim()).filter(t => t.length > 0);
+        cleanText = text.replace(thoughtRegex, '').trim();
     }
 
-    // Xóa bỏ các thẻ và nội dung suy nghĩ khỏi văn bản hiển thị chính
-    cleanText = text.replace(thoughtRegex, '').trim();
+    // Xử lý thẻ mở dở dang
+    const orphanMatch = cleanText.match(orphanRegex);
+    if (orphanMatch) {
+        const orphanContent = orphanMatch[1].trim();
+        if (orphanContent) thoughts.push(orphanContent);
+        cleanText = cleanText.replace(orphanRegex, '').trim();
+    }
 
     return {
         cleanText: cleanText,
-        thought: thoughts.join('\n---\n') // Gộp các block suy nghĩ nếu có nhiều
+        thought: thoughts.join('\n---\n')
     };
 },
 
