@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head> 
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ImaGen Loading | AbcsNoob.ai</title>
+
+    <!-- Font đẹp hơn -->
+    <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --surface: #131314;
+            --on-surface: #e3e3e3;
+            --gemini-gradient: linear-gradient(70deg, #4285f4 0%, #9b72cb 30%, #d96570 100%);
+        }
+
+        body {
+            margin: 0;
+            height: 100vh;
+            background: var(--surface);
+            color: var(--on-surface);
+            font-family: 'Google Sans', sans-serif;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .text {
+            font-size: 20px;
+            font-weight: 500;
+            text-align: center;
+            max-width: 500px;
+            line-height: 1.6;
+
+            /* Gradient chữ kiểu Gemini */
+            background: var(--gemini-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+
+            animation: fadeIn 0.8s ease;
+        }
+
+        /* Nhẹ nhàng fade in */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Hiệu ứng dấu "..." nhấp nháy */
+        .dots::after {
+            content: "...";
+            animation: dots 1.5s infinite;
+        }
+
+        @keyframes dots {
+            0% { content: ""; }
+            33% { content: "."; }
+            66% { content: ".."; }
+            100% { content: "..."; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="text">
+        Mình đang làm ImaGen cho bạn, đừng lo lắng, sẽ có ngay thôi<span class="dots"></span>
+    </div>
+
+</body>
+</html>
