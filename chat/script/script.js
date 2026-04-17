@@ -622,7 +622,7 @@ countTokens(text) {
                 <div class="quota-container mb-3 px-1">
                     <div class="d-flex justify-content-between mb-1" style="font-size: 10px; color: #8e918f; font-weight: 500;">
                         <span>HẠN MỨC (1H)</span>
-                        <span id="sidebar-quota-text">${this.state.tokensUsed.toLocaleString()} / 7,000</span>
+                        <span id="sidebar-quota-text">${this.state.tokensUsed.toLocaleString()} / 7.000.000</span>
                     </div>
                     <div class="progress" style="height: 5px; background: #333; border-radius: 10px; overflow: hidden; border: 1px solid #444; margin-bottom: 5px;">
                         <div id="sidebar-quota-bar" class="progress-bar"
