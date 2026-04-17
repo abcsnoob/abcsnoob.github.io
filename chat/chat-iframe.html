@@ -269,6 +269,31 @@
             justify-content: center;
             border-radius: 50% !important;
         }
+        .imagen-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+
+    padding: 10px 16px;
+    border-radius: 12px;
+
+    background: linear-gradient(135deg, #6a5cff, #00d4ff);
+    color: white;
+    font-weight: 500;
+    text-decoration: none;
+
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+.imagen-btn .material-symbols-outlined {
+    font-size: 20px;
+}
+
+.imagen-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(0,0,0,0.3);
+}
     </style>
 </head>
 <body>
@@ -291,6 +316,10 @@
 
         <div class="p-3 border-top border-secondary">
             <div class="session-item" id="tokenquota"></div>
+<a href="./imagen.html" class="imagen-btn">
+    <span class="material-symbols-outlined">auto_awesome</span>
+    Abcsnoob.ai ImaGen
+</a>
         </div>
     </aside>
 
@@ -316,15 +345,23 @@
                 </div>
             </div>
 
-            <div class="input-group">
-                <textarea id="userInput" class="form-control bg-dark text-light border-secondary" placeholder="hỏi cái éo gì cũng được"></textarea>
-                <button id="sendBtn" class="btn btn-primary" onclick="NoobEngine.handleSend()">
-                    <span class="material-symbols-rounded">send</span>
-                </button>
-                <button id="stopBtn" class="btn btn-danger" style="display:none;" onclick="NoobEngine.stopGeneration()">
-                    <span class="material-symbols-rounded">stop</span>
-                </button>
-            </div>
+<div class="input-group">
+
+    <!-- Nút Upload Image -->
+    <button class="btn btn-outline-light" onclick="document.getElementById('fileInput').click()">
+        <span class="material-symbols-rounded">image</span>
+    </button>
+
+    <textarea id="userInput" class="form-control bg-dark text-light border-secondary" placeholder="hỏi cái éo gì cũng được"></textarea>
+
+    <button id="sendBtn" class="btn btn-primary" onclick="NoobEngine.handleSend()">
+        <span class="material-symbols-rounded">send</span>
+    </button>
+
+    <button id="stopBtn" class="btn btn-danger" style="display:none;" onclick="NoobEngine.stopGeneration()">
+        <span class="material-symbols-rounded">stop</span>
+    </button>
+</div>
         </div>
     </main>
 
