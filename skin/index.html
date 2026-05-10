@@ -245,6 +245,16 @@
                 NProgress.start();
         </script>
         <script src="https://cdn.jsdelivr.net/npm/stats.js@0.17.0/build/stats.min.js"></script>
+        <script>
+                const statsPanels = [new Stats(), new Stats(), new Stats()],
+                statsContainer = document.createElement("div");
+            (statsContainer.style.cssText =
+                "position:absolute;top:0;left:0;display:grid;grid-template-columns:1fr;gap:0"),
+                statsPanels.forEach((e, n) => {
+                    e.showPanel(n), (e.dom.style.position = "static"), statsContainer.appendChild(e.dom);
+                }),
+                container.appendChild(statsContainer);
+        </script>
         <script src="https://cdn.jsdelivr.net/npm/skinview3d@3.4.2/bundles/skinview3d.bundle.min.js"></script>
         <script src="moreanimation.js"></script>
         <script>
@@ -323,14 +333,6 @@
                     (skinViewer.animation = ANIMATIONS[e]?.() ?? ANIMATIONS.idle()),
                     setTimeout(stopLoading, 300);
             });
-            const statsPanels = [new Stats(), new Stats(), new Stats()],
-                statsContainer = document.createElement("div");
-            (statsContainer.style.cssText =
-                "position:absolute;top:0;left:0;display:grid;grid-template-columns:1fr;gap:0"),
-                statsPanels.forEach((e, n) => {
-                    e.showPanel(n), (e.dom.style.position = "static"), statsContainer.appendChild(e.dom);
-                }),
-                container.appendChild(statsContainer);
             const originalRender = skinViewer.render.bind(skinViewer);
             skinViewer.render = () => {
                 statsPanels.forEach((e) => e.begin()), originalRender(), statsPanels.forEach((e) => e.end());
