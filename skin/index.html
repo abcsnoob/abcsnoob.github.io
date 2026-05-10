@@ -4,7 +4,56 @@
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width,initial-scale=1" />
         <title>Minecraft 3D Skin Viewer - Animated Select</title>
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/nprogress/0.2.0/nprogress.min.css" />
+    </head>
+    <body>
+        <div id="custom-spinner" class="material-spinner">
+            <svg viewBox="0 0 50 50">
+                <circle class="path" cx="25" cy="25" r="20" fill="none" stroke-width="5"></circle>
+            </svg>
+        </div>
+        <div class="controls">
+            <div class="control-group">
+                <a href="javascript:history.back()" class="back-btn"
+                    ><svg
+                        width="20"
+                        height="20"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                    >
+                        <line x1="19" y1="12" x2="5" y2="12"></line>
+                        <polyline points="12 19 5 12 12 5"></polyline>
+                    </svg>
+                    Quay lại</a
+                >
+            </div>
+            <div class="control-group">
+                <label>Skin:</label>
+                <div class="custom-select" id="skin-select-custom">
+                    <div class="select-trigger"><span class="current-val">Normal</span></div>
+                    <div class="options-menu" id="skin-options"></div>
+                </div>
+            </div>
+            <div class="control-group">
+                <label>Động tác:</label>
+                <div class="custom-select" id="anim-select-custom">
+                    <div class="select-trigger"><span class="current-val">Đứng yên</span></div>
+                    <div class="options-menu">
+                        <div class="option" data-value="idle">Đứng yên</div>
+                        <div class="option" data-value="walk">Đi bộ</div>
+                        <div class="option" data-value="run">Chạy</div>
+                        <div class="option" data-value="fly">Bay</div>
+                        <div class="option" data-value="idle">Mình sẽ thêm động tác mới sau :)</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="viewer-container"></div>
+        <div class="info">Chuột trái: Xoay | Cuộn: Zoom</div>
+                <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/nprogress/0.2.0/nprogress.min.css" />
         <style>
             body {
                 margin: 0;
@@ -185,55 +234,6 @@
                 }
             }
         </style>
-    </head>
-    <body>
-        <div id="custom-spinner" class="material-spinner">
-            <svg viewBox="0 0 50 50">
-                <circle class="path" cx="25" cy="25" r="20" fill="none" stroke-width="5"></circle>
-            </svg>
-        </div>
-        <div class="controls">
-            <div class="control-group">
-                <a href="javascript:history.back()" class="back-btn"
-                    ><svg
-                        width="20"
-                        height="20"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="2"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                    >
-                        <line x1="19" y1="12" x2="5" y2="12"></line>
-                        <polyline points="12 19 5 12 12 5"></polyline>
-                    </svg>
-                    Quay lại</a
-                >
-            </div>
-            <div class="control-group">
-                <label>Skin:</label>
-                <div class="custom-select" id="skin-select-custom">
-                    <div class="select-trigger"><span class="current-val">Normal</span></div>
-                    <div class="options-menu" id="skin-options"></div>
-                </div>
-            </div>
-            <div class="control-group">
-                <label>Động tác:</label>
-                <div class="custom-select" id="anim-select-custom">
-                    <div class="select-trigger"><span class="current-val">Đứng yên</span></div>
-                    <div class="options-menu">
-                        <div class="option" data-value="idle">Đứng yên</div>
-                        <div class="option" data-value="walk">Đi bộ</div>
-                        <div class="option" data-value="run">Chạy</div>
-                        <div class="option" data-value="fly">Bay</div>
-                        <div class="option" data-value="idle">Mình sẽ thêm động tác mới sau :)</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div id="viewer-container"></div>
-        <div class="info">Chuột trái: Xoay | Cuộn: Zoom</div>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/nprogress/0.2.0/nprogress.min.js"></script>
         <script>
             NProgress.configure({
@@ -245,9 +245,6 @@
                 NProgress.start();
         </script>
         <script src="https://cdn.jsdelivr.net/npm/stats.js@0.17.0/build/stats.min.js"></script>
-        <script>
-
-        </script>
         <script src="https://cdn.jsdelivr.net/npm/skinview3d@3.4.2/bundles/skinview3d.bundle.min.js"></script>
         <script src="moreanimation.js"></script>
         <script>
