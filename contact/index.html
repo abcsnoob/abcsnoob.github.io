@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-      <!-- Cấu hình mã hóa, viewport --> 
+    <!-- Cấu hình mã hóa, viewport --> 
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <!-- Cấu hình meta tags -->
@@ -37,11 +37,22 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous" defer></script>
     <script defer src="https://cloud.umami.is/script.js" data-website-id="c4ef9b7d-4dd6-4301-9bcc-5eaf4c5fe439"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+    <style>
+        /* Tùy chỉnh màu sắc cho các icon đặc thù */
+        .btn-github { background-color: #24292e; color: white; }
+        .btn-github:hover { background-color: #444; color: white; }
+        .btn-docker { background-color: #0db7ed; color: white; }
+        .btn-docker:hover { background-color: #0091ca; color: white; }
+        .btn-npm { background-color: #cb3837; color: white; }
+        .btn-npm:hover { background-color: #a92d2c; color: white; }
+        .btn-roblox { background-color: #000000; color: white; opacity: 0.7; } /* Mờ hơn vì không còn hoạt động */
+        .btn-polytoria { background-color: #5d48b9; color: white; }
+    </style>
 </head>
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
         <div class="container">
-            <a id="notranslate" class="navbar-brand" href="../"><img class="logo" src="../assets/image/abcsnoob.webp"></img>Abc's Noob</a>
+            <a id="notranslate" class="navbar-brand" href="../"><img class="logo" src="../assets/image/abcsnoob.webp" alt="Logo">Abc's Noob</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
@@ -57,6 +68,7 @@
             </div>
         </div>
     </nav>
+
 <div class="container text-center mt-5">
     <h1 class="mb-4">Liên hệ mình qua</h1>
     
@@ -66,15 +78,28 @@
         </a>
     </div>
 
-    <p>Hoặc qua các mạng xã hội:</p>
-    
-    <div class="d-flex justify-content-center gap-3 flex-wrap">
+    <p>Mạng xã hội & Cộng đồng:</p>
+    <div class="d-flex justify-content-center gap-3 flex-wrap mb-4">
         <a href="https://www.facebook.com/abcsnoob" class="btn btn-primary"><i class="fa-brands fa-facebook me-2"></i>Facebook</a>
         <a href="https://twitter.com/abcsnoob" class="btn btn-info text-white"><i class="fa-brands fa-twitter me-2"></i>Twitter</a>
         <a href="https://www.youtube.com/@AbcsNoob" class="btn btn-danger"><i class="fa-brands fa-youtube me-2"></i>YouTube</a>
         <a href="https://discord.com/users/1297845961376141393" class="btn btn-secondary"><i class="fa-brands fa-discord me-2"></i>Discord</a>
     </div>
+
+    <p>Dành cho Developer:</p>
+    <div class="d-flex justify-content-center gap-3 flex-wrap mb-4">
+        <a href="https://github.com/abcsnoob" class="btn btn-github"><i class="fa-brands fa-github me-2"></i>GitHub</a>
+        <a href="https://hub.docker.com/repositories/abcsnoob" class="btn btn-docker"><i class="fa-brands fa-docker me-2"></i>Docker Hub</a>
+        <a href="https://www.npmjs.com/~abcsnoob" class="btn btn-npm"><i class="fa-brands fa-npm me-2"></i>NPM</a>
+    </div>
+
+    <p>Game Profiles:</p>
+    <div class="d-flex justify-content-center gap-3 flex-wrap">
+        <a href="https://polytoria.com/u/abcsonpoly" class="btn btn-polytoria"><i class="fa-solid fa-gamepad me-2"></i>Polytoria</a>
+        <a href="https://www.roblox.com/vi/users/7989191917/" class="btn btn-roblox"><i class="fa-solid fa-ghost me-2"></i>Roblox (Inactive)</a>
+    </div>
 </div>
+
 <script type="module" src="../assets/js/warn.js"></script>
 <script src="/assets/js/translate.js"></script>
 </body>
