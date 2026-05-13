@@ -37,66 +37,118 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous" defer></script>
     <script defer src="https://cloud.umami.is/script.js" data-website-id="c4ef9b7d-4dd6-4301-9bcc-5eaf4c5fe439"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
-    <style>
-        /* Tùy chỉnh màu sắc cho các icon đặc thù */
-        .btn-github { background-color: #24292e; color: white; }
-        .btn-github:hover { background-color: #444; color: white; }
-        .btn-docker { background-color: #0db7ed; color: white; }
-        .btn-docker:hover { background-color: #0091ca; color: white; }
-        .btn-npm { background-color: #cb3837; color: white; }
-        .btn-npm:hover { background-color: #a92d2c; color: white; }
-        .btn-roblox { background-color: #000000; color: white; opacity: 0.7; } /* Mờ hơn vì không còn hoạt động */
-        .btn-polytoria { background-color: #5d48b9; color: white; }
-    </style>
+<style>
+    /* Tổng thể */
+    body {
+        background-color: #f8f9fa;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    /* Tùy chỉnh các nút liên hệ */
+    .contact-btn {
+        transition: all 0.3s ease;
+        border-radius: 12px; /* Bo góc hiện đại */
+        padding: 10px 20px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 500;
+        border: none;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+
+    .contact-btn:hover {
+        transform: translateY(-3px); /* Nhảy nhẹ lên khi di chuột */
+        box-shadow: 0 8px 15px rgba(0,0,0,0.15);
+        filter: brightness(1.1);
+    }
+
+    .contact-btn i, .contact-btn img {
+        margin-right: 10px;
+    }
+
+    /* Màu sắc đặc thù */
+    .btn-github { background-color: #24292e; color: white !important; }
+    .btn-docker { background-color: #0db7ed; color: white !important; }
+    .btn-npm { background-color: #cb3837; color: white !important; }
+    .btn-polytoria { background-color: #5d48b9; color: white !important; }
+    .btn-roblox { background-color: #555; color: white !important; opacity: 0.6; cursor: not-allowed; }
+    
+    /* Icon Roblox & Polytoria */
+    .btn-polytoria img, .btn-roblox img {
+        width: 20px;
+        height: 20px;
+        filter: brightness(0) invert(1); /* Chuyển icon sang trắng */
+    }
+
+    /* Tiêu đề nhóm */
+    .section-title {
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+        color: #6c757d;
+        margin-top: 2rem;
+        margin-bottom: 1rem;
+        font-weight: bold;
+    }
+</style>
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
-        <div class="container">
-            <a id="notranslate" class="navbar-brand" href="../"><img class="logo" src="../assets/image/abcsnoob.webp" alt="Logo">Abc's Noob</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item"><a class="nav-link" href="../">Trang chủ</a></li>
-                    <li class="nav-item"><a class="nav-link" href="../blogs">Blog</a></li>
-                    <li class="nav-item"><a class="nav-link" href="../apps">Ứng dụng</a></li>
-                    <li class="nav-item"><a class="nav-link active" href="../contact">Liên hệ</a></li>
-                    <li class="nav-item"><a class="nav-link" href="../donate">Donate</a></li>
-                    <li class="nav-item"><a class="nav-link" href="../chat">Chat</a></li>
-                </ul>
-            </div>
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
+    <div class="container">
+        <a id="notranslate" class="navbar-brand" href="../">
+            <img class="logo" src="../assets/image/abcsnoob.webp" alt="Logo" style="width: 30px; height: 30px; margin-right: 10px; border-radius: 50%;">
+            Abc's Noob
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto">
+                <li class="nav-item"><a class="nav-link" href="../">Trang chủ</a></li>
+                <li class="nav-item"><a class="nav-link" href="../blogs">Blog</a></li>
+                <li class="nav-item"><a class="nav-link" href="../apps">Ứng dụng</a></li>
+                <li class="nav-item"><a class="nav-link active" href="../contact">Liên hệ</a></li>
+                <li class="nav-item"><a class="nav-link" href="../donate">Donate</a></li>
+                <li class="nav-item"><a class="nav-link" href="../chat">Chat</a></li>
+            </ul>
         </div>
-    </nav>
+    </div>
+</nav>
 
-<div class="container text-center mt-5">
-    <h1 class="mb-4">Liên hệ mình qua</h1>
+<div class="container text-center mt-5 mb-5">
+    <h1 class="fw-bold mb-2">Kết nối với mình</h1>
+    <p class="text-muted">Bạn có câu hỏi hay muốn hợp tác? Hãy chọn một nền tảng bên dưới!</p>
     
-    <div class="mb-4">
-        <a href="mailto:abcsspprt@gmail.com" class="btn btn-outline-primary">
-            <i class="fa-solid fa-envelope me-2"></i>abcsspprt@gmail.com
+    <div class="mt-4 mb-5">
+        <a href="mailto:abcsspprt@gmail.com" class="btn btn-outline-primary contact-btn px-4">
+            <i class="fa-solid fa-envelope"></i> abcsspprt@gmail.com
         </a>
     </div>
 
-    <p>Mạng xã hội & Cộng đồng:</p>
-    <div class="d-flex justify-content-center gap-3 flex-wrap mb-4">
-        <a href="https://www.facebook.com/abcsnoob" class="btn btn-primary"><i class="fa-brands fa-facebook me-2"></i>Facebook</a>
-        <a href="https://twitter.com/abcsnoob" class="btn btn-info text-white"><i class="fa-brands fa-twitter me-2"></i>Twitter</a>
-        <a href="https://www.youtube.com/@AbcsNoob" class="btn btn-danger"><i class="fa-brands fa-youtube me-2"></i>YouTube</a>
-        <a href="https://discord.com/users/1297845961376141393" class="btn btn-secondary"><i class="fa-brands fa-discord me-2"></i>Discord</a>
-    </div>
-
-    <p>Dành cho Developer:</p>
-    <div class="d-flex justify-content-center gap-3 flex-wrap mb-4">
-        <a href="https://github.com/abcsnoob" class="btn btn-github"><i class="fa-brands fa-github me-2"></i>GitHub</a>
-        <a href="https://hub.docker.com/repositories/abcsnoob" class="btn btn-docker"><i class="fa-brands fa-docker me-2"></i>Docker Hub</a>
-        <a href="https://www.npmjs.com/~abcsnoob" class="btn btn-npm"><i class="fa-brands fa-npm me-2"></i>NPM</a>
-    </div>
-
-    <p>Game Profiles:</p>
+    <div class="section-title">Mạng xã hội & Cộng đồng</div>
     <div class="d-flex justify-content-center gap-3 flex-wrap">
-        <a href="https://polytoria.com/u/abcsonpoly" class="btn btn-polytoria"><i class="fa-solid fa-gamepad me-2"></i>Polytoria</a>
-        <a href="https://www.roblox.com/vi/users/7989191917/" class="btn btn-roblox"><i class="fa-solid fa-ghost me-2"></i>Roblox (Inactive)</a>
+        <a href="https://www.facebook.com/abcsnoob" target="_blank" rel="noopener" class="btn btn-primary contact-btn"><i class="fa-brands fa-facebook"></i>Facebook</a>
+        <a href="https://twitter.com/abcsnoob" target="_blank" rel="noopener" class="btn btn-info text-white contact-btn"><i class="fa-brands fa-twitter"></i>Twitter</a>
+        <a href="https://www.youtube.com/@AbcsNoob" target="_blank" rel="noopener" class="btn btn-danger contact-btn"><i class="fa-brands fa-youtube"></i>YouTube</a>
+        <a href="https://discord.com/users/1297845961376141393" target="_blank" rel="noopener" class="btn btn-secondary contact-btn"><i class="fa-brands fa-discord"></i>Discord</a>
+    </div>
+
+    <div class="section-title">Dành cho Developer</div>
+    <div class="d-flex justify-content-center gap-3 flex-wrap">
+        <a href="https://github.com/abcsnoob" target="_blank" rel="noopener" class="btn btn-github contact-btn"><i class="fa-brands fa-github"></i>GitHub</a>
+        <a href="https://hub.docker.com/repositories/abcsnoob" target="_blank" rel="noopener" class="btn btn-docker contact-btn"><i class="fa-brands fa-docker"></i>Docker Hub</a>
+        <a href="https://www.npmjs.com/~abcsnoob" target="_blank" rel="noopener" class="btn btn-npm contact-btn"><i class="fa-brands fa-npm"></i>NPM</a>
+    </div>
+
+    <div class="section-title">Game Profiles</div>
+    <div class="d-flex justify-content-center gap-3 flex-wrap">
+        <a href="https://polytoria.com/u/abcsonpoly" target="_blank" rel="noopener" class="btn btn-polytoria contact-btn">
+            <img src="https://cdn.polytoria.com/static/icon-B17Jdbl0.svg" alt="Polytoria">Polytoria
+        </a>
+        <a href="https://www.roblox.com/vi/users/7989191917/profile" target="_blank" rel="noopener" class="btn btn-roblox contact-btn">
+            <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI1NiIgaGVpZ2h0PSI1NiIgZmlsbD0ibm9uZSIgdmlld0JveD0iMCAwIDU2IDU2Ij48cGF0aCBmaWxsPSIjMzkzYjNkIiBkPSJNMTEuNjc2IDAgMCA0NC4xNjYgNDMuNTc3IDU2bDExLjY3Ni00NC4xNjZ6bTIwLjQwOSAzNS44MjctMTIuMTc3LTMuMzA4IDMuMjY0LTEyLjM0MiAxMi4xODIgMy4zMDh6Ii8+PC9zdmc+">Roblox (Ngừng hoạt động)
+        </a>
     </div>
 </div>
 
