@@ -1,3 +1,4 @@
+
 <!doctype html>
 <html lang="vi">
     <head>
@@ -82,12 +83,13 @@
                     0 === loadingCount && (NProgress.done(), spinner.classList.add("hidden"));
             }
             const skins = {
-                    Normal: "img/og.png",
-                    "No Head Outer Layer": "img/no_cap.png",
-                    "No Jacket": "img/no_jacket.png",
-                    "No Pants Outer Layer": "img/no_out_pants.png",
-                    "No Outer Layer": "img/no_2_layer.png",
-                    "just inner layer pants": "img/raw.png",
+                    "Normal": "img/original.png",
+                    "No Head Outer Layer": "img/nohat.png",
+                    "No Pants Outer Layer": "img/nolegs.png",
+                    "No Arm Outer Layer": "img/nosleeve.png",
+                    "Just Hat":"/img/justhat.png",
+                    "No Outer Layer": "img/inner.png",
+                    "just inner layer pants": "img/simple.png",
                 },
                 skinOptionsContainer = document.getElementById("skin-options");
             Object.entries(skins).forEach(([e, n]) => {
