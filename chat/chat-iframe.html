@@ -9,7 +9,12 @@
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200">
-   
+<!-- THÊM: HighlightJS để tô màu cú pháp code block giống VS Code -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+
+<!-- THÊM: Thư viện tạo nút Copy nhanh vào Clipboard mà không bị lỗi bảo mật -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.11/clipboard.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/localforage/1.10.0/localforage.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.8/purify.min.js"></script>
@@ -89,20 +94,86 @@ details[open] summary ~ * { animation: softFadeIn 0.35s cubic-bezier(0.16, 1, 0.
     animation: blobMorph 9s ease-in-out infinite, logoRotate 2s linear infinite !important;
 }
 /* Markdown */
-.markdown-content p { margin-bottom: 0.8rem; color: var(--ink); line-height: 1.65; }
-.markdown-content p:last-child { margin-bottom: 0; }
-.markdown-content ul { list-style-type: disc; margin-left: 1.4rem; margin-bottom: 0.8rem; color: var(--ink); }
-.markdown-content ol { list-style-type: decimal; margin-left: 1.4rem; margin-bottom: 0.8rem; color: var(--ink); }
-.markdown-content code { background-color: #0e0b0c; padding: 0.18rem 0.4rem; border-radius: 0.4rem; font-family: 'JetBrains Mono', monospace; font-size: 0.85em; color: var(--mint); border: 1px solid var(--border); }
-.markdown-content pre { background-color: #0a0809; padding: 1rem; border-radius: 0.85rem; overflow-x: auto; margin: 0.6rem 0 0.8rem; border: 1px solid var(--border); }
-.markdown-content pre code { background: transparent; padding: 0; border: none; color: #f1eaea; }
-.markdown-content h1, .markdown-content h2, .markdown-content h3 { font-family: 'Outfit', sans-serif; font-weight: 700; color: var(--ink); margin: 0.9rem 0 0.45rem; }
-.markdown-content h1 { font-size: 1.4rem; } .markdown-content h2 { font-size: 1.2rem; } .markdown-content h3 { font-size: 1.05rem; }
-.markdown-content strong { font-weight: 700; color: var(--ink); }
-.markdown-content blockquote { border-left: 3px solid var(--rose); padding: 0.3rem 1rem; color: var(--dust); font-style: italic; margin-bottom: 0.8rem; background: rgba(205,122,123,0.06); border-radius: 0 0.5rem 0.5rem 0; }
-.thought-markdown p, .thought-markdown ul, .thought-markdown ol { color: var(--dust); margin-bottom: 0.55rem; }
-.thought-markdown strong { color: var(--ink); }
+/* ============================================================
+   NÂNG CẤP MARKDOWN: TABLE, CODE BLOCK & COPY BUTTON
+   ============================================================ */
 
+/* Định dạng Code Block có thanh Toolbar phía trên */
+.code-block-wrapper {
+    position: relative;
+    margin: 0.8rem 0;
+    border-radius: 0.85rem;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    background-color: #0a0809;
+}
+.code-block-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.45rem 1rem;
+    background: #141012;
+    border-bottom: 1px solid var(--border-soft);
+    font-size: 11px;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--dust-dim);
+}
+.copy-code-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+.copy-code-btn:hover {
+    color: var(--ink);
+}
+
+/* Ghi đè lại class pre cũ */
+.markdown-content pre { 
+    margin: 0 !important; 
+    padding: 1rem !important; 
+    background: transparent !important; 
+    border: none !important;
+    overflow-x: auto; 
+}
+.markdown-content pre code { 
+    background: transparent !important; 
+    padding: 0 !important; 
+    border: none !important; 
+    color: #f1eaea !important;
+    font-size: 0.85rem;
+}
+
+/* Định dạng Bảng biểu (Table) - Thứ mà Marked.js mặc định hiển thị rất xấu */
+.markdown-content table {
+    width: 100%;
+    margin-bottom: 1rem;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+    color: var(--ink);
+    border: 1px solid var(--border-soft);
+    border-radius: 0.5rem;
+    overflow: hidden;
+}
+.markdown-content th {
+    background-color: var(--bg-panel-raised);
+    font-family: 'Outfit', sans-serif;
+    font-weight: 600;
+    text-align: left;
+    padding: 0.6rem 0.8rem;
+    border-bottom: 2px solid var(--border);
+}
+.markdown-content td {
+    padding: 0.6rem 0.8rem;
+    border-bottom: 1px solid var(--border-soft);
+}
+.markdown-content tr:last-child td {
+    border-bottom: none;
+}
+.markdown-content tr:hover td {
+    background-color: rgba(254,254,254,0.02);
+}
 @media (prefers-reduced-motion: reduce) {
     * { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
 }
@@ -448,7 +519,47 @@ const MAX_IMAGES_PER_MESSAGE_CLIENT = 4;
 const MAX_IMAGE_BYTES_CLIENT = 6 * 1024 * 1024;
 const YOUTUBE_URL_REGEX_CLIENT = /(https?:\/\/)?(www\.)?(youtube\.com\/watch\?v=[\w-]+|youtu\.be\/[\w-]+|youtube\.com\/shorts\/[\w-]+)/gi;
 
-marked.setOptions({ breaks: true });
+// CẤU HÌNH MARKED: Hỗ trợ tự động Highlight Code bằng Highlight.js
+marked.setOptions({ 
+    breaks: true,
+    gfm: true, // Kích hoạt GitHub Flavored Markdown để render Bảng (Table)
+    highlight: function(code, lang) {
+        const language = hljs.getLanguage(lang) ? lang : 'plaintext';
+        return hljs.highlight(code, { language }).value;
+    }
+});
+
+// THÊM: Custom lại hàm render Code của Marked để tự chèn thanh Header và nút Copy
+const renderer = new marked.Renderer();
+renderer.code = function(code, infostring, escaped) {
+    const lang = infostring || 'code';
+    // Chống lỗi hiển thị ký tự đặc biệt khi render HTML dạng chuỗi
+    const validCode = escaped ? code : code.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    const highlighted = m_highlight(validCode, lang); // Gọi hàm highlight bảo vệ
+
+    return `
+        <div class="code-block-wrapper">
+            <div class="code-block-header">
+                <span>${lang.toUpperCase()}</span>
+                <span class="copy-code-btn" data-clipboard-text="${code.replace(/"/g, '&quot;')}">
+                    <i class="fa-regular fa-copy"></i> Sao chép
+                </span>
+            </div>
+            <pre><code class="hljs language-${lang}">${highlighted}</code></pre>
+        </div>
+    `;
+};
+marked.use({ renderer });
+
+// Hàm bổ trợ phòng trường hợp highlight lỗi
+function m_highlight(code, lang) {
+    try {
+        if (lang && hljs.getLanguage(lang)) {
+            return hljs.highlight(code, { language: lang }).value;
+        }
+    } catch (@@) {}
+    return code;
+}
 
 function triggerLatexRender(element) {
     if (typeof renderMathInElement === "function") {
@@ -1064,9 +1175,20 @@ wrapper.innerHTML = `
             messagesEl.scrollTop = messagesEl.scrollHeight;
             requestAnimationFrame(processTypingMain);
         } else {
-            isTypingMain = false;
-            const cur = document.getElementById(`${bubbleId}-cursor`);
-            if (cur) cur.remove();
+// ... đoạn code cũ trong nhánh else của processTypingMain() ...
+isTypingMain = false;
+const cur = document.getElementById(`${bubbleId}-cursor`);
+if (cur) cur.remove();
+
+// THÊM VÀO ĐÂY: Kích hoạt tính năng Copy Code nhanh
+const clipboard = new ClipboardJS('.copy-code-btn');
+clipboard.on('success', function(e) {
+    // Hiệu ứng đổi chữ "Sao chép" -> "Đã chép!" trong 2 giây giống ChatGPT
+    const originalHTML = e.trigger.innerHTML;
+    e.trigger.innerHTML = `<i class="fa-solid fa-check" style="color: var(--mint);"></i> <span style="color: var(--mint);">Đã chép!</span>`;
+    setTimeout(() => { e.trigger.innerHTML = originalHTML; }, 2000);
+    e.clearSelection();
+});
         }
     }
 
