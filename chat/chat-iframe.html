@@ -1,1355 +1,1222 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Giao diện AI Chatbot Cao Cấp (SPA)</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/localforage/1.10.0/localforage.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.8/purify.min.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Abc's Noob AI</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-    <!-- Tích hợp KaTeX phục vụ Render công thức toán học LaTeX -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/localforage/1.10.0/localforage.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.8/purify.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
 
-    <style>
-        /* Tùy chỉnh thanh cuộn UI siêu mềm mại */
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: #0b0f19; }
-        ::-webkit-scrollbar-thumb { background: #222533; border-radius: 9999px; }
-        ::-webkit-scrollbar-thumb:hover { background: #31364c; }
-        
-        /* Hiệu ứng chuyển động mượt mà toàn diện */
-        .transition-all { transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); }
-
-        /* Khử marker mặc định của details/summary cho khung suy nghĩ */
-        details > summary { list-style: none; }
-        details > summary::-webkit-details-marker { display: none; }
-        details[open] summary ~ * { animation: softFadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
-
-        /* Hoạt ảnh mềm mại độc quyền */
-        @keyframes softFadeIn { 
-            from { opacity: 0; transform: translateY(-8px); filter: blur(4px); } 
-            to { opacity: 1; transform: translateY(0); filter: blur(0); } 
-        }
-        @keyframes messageAppear {
-            from { opacity: 0; transform: translateY(16px); filter: blur(6px); }
-            to { opacity: 1; transform: translateY(0); filter: blur(0); }
-        }
-        .animate-message { animation: messageAppear 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
-
-        /* ĐỊNH DẠNG HIỂN THỊ MARKDOWN NÂNG CAO CÓ ĐỘ TƯƠNG PHẢN ĐẠT CHUẨN WCAG */
-        .markdown-content p { margin-bottom: 0.85rem; color: #e2e8f0; }
-        .markdown-content p:last-child { margin-bottom: 0; }
-        .markdown-content ul { list-style-type: disc; margin-left: 1.5rem; margin-bottom: 0.85rem; color: #e2e8f0; }
-        .markdown-content ol { list-style-type: decimal; margin-left: 1.5rem; margin-bottom: 0.85rem; color: #e2e8f0; }
-        .markdown-content code {
-            background-color: #0d111c;
-            padding: 0.2rem 0.4rem;
-            border-radius: 0.375rem;
-            font-family: monospace;
-            font-size: 0.875em;
-            color: #f1f5f9;
-            border: 1px solid #2e354f;
-        }
-        .markdown-content pre {
-            background-color: #05070f;
-            padding: 1rem;
-            border-radius: 0.75rem;
-            overflow-x: auto;
-            margin-top: 0.6rem;
-            margin-bottom: 0.85rem;
-            border: 1px solid #1e293b;
-            box-shadow: inset 0 2px 4px rgba(0,0,0,0.4);
-        }
-        .markdown-content pre code { background-color: transparent; padding: 0; border: none; color: #f8fafc; }
-        .markdown-content h1, .markdown-content h2, .markdown-content h3 { font-weight: 700; color: #ffffff; margin-top: 1rem; margin-bottom: 0.5rem; }
-        .markdown-content h1 { font-size: 1.5rem; }
-        .markdown-content h2 { font-size: 1.25rem; }
-        .markdown-content h3 { font-size: 1.1rem; }
-        .markdown-content strong { font-weight: 700; color: #ffffff; }
-        .markdown-content blockquote {
-            border-left: 4px solid #818cf8;
-            padding-left: 1rem;
-            color: #cbd5e1;
-            font-style: italic;
-            margin-bottom: 0.85rem;
-            background: rgba(129, 140, 248, 0.05);
-            border-radius: 0 0.5rem 0.5rem 0;
-            padding-top: 0.25rem;
-            padding-bottom: 0.25rem;
-        }
-
-        /* Định dạng nội dung Markdown trong Khung Suy Nghĩ */
-        .thought-markdown p { color: #cbd5e1; margin-bottom: 0.6rem; }
-        .thought-markdown p:last-child { margin-bottom: 0; }
-        .thought-markdown ul, .thought-markdown ol { color: #cbd5e1; margin-bottom: 0.6rem; }
-        .thought-markdown h1, .thought-markdown h2, .thought-markdown h3 { color: #f1f5f9; }
-        .thought-markdown strong { color: #ffffff; }
-
-        /* Nút lựa chọn cấp độ suy nghĩ (segmented control) */
-        .thinking-level-btn {
-            flex: 1;
-            text-align: center;
-            padding: 0.4rem 0.25rem;
-            font-size: 10px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.03em;
-            border-radius: 0.65rem;
-            color: #8b93a7;
-            transition: all 0.2s ease;
-            cursor: pointer;
-            user-select: none;
-        }
-        .thinking-level-btn:hover { color: #c7d2fe; background: rgba(99, 102, 241, 0.08); }
-        .thinking-level-btn.active {
-            background: linear-gradient(to right, #6366f1, #9333ea);
-            color: #ffffff;
-            box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
-        }
-
-        /* Preview ảnh đính kèm trước khi gửi */
-        .image-preview-thumb {
-            position: relative;
-            width: 56px;
-            height: 56px;
-            border-radius: 0.75rem;
-            overflow: hidden;
-            border: 1px solid #1e293b;
-            flex-shrink: 0;
-        }
-        .image-preview-thumb img { width: 100%; height: 100%; object-fit: cover; }
-        .image-preview-remove {
-            position: absolute;
-            top: 2px;
-            right: 2px;
-            width: 16px;
-            height: 16px;
-            background: rgba(0,0,0,0.7);
-            border-radius: 9999px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 9px;
-            color: #fca5a5;
-            cursor: pointer;
-        }
-        .image-preview-remove:hover { background: rgba(220, 38, 38, 0.8); color: #fff; }
-
-        /* Ảnh & video YouTube hiển thị trong bong bóng tin nhắn người dùng */
-        .msg-attached-image {
-            width: 90px;
-            height: 90px;
-            border-radius: 0.75rem;
-            object-fit: cover;
-            border: 1px solid rgba(255,255,255,0.15);
-        }
-        .msg-youtube-chip {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.35rem;
-            font-size: 10px;
-            font-weight: 700;
-            padding: 0.3rem 0.6rem;
-            border-radius: 0.6rem;
-            background: rgba(0,0,0,0.2);
-            border: 1px solid rgba(255,255,255,0.15);
-            color: #fecaca;
-            max-width: 220px;
-        }
-        .msg-youtube-chip span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-
-        /* TUÂN THỦ WCAG 2.1: Hỗ trợ loại bỏ chuyển động đối với người dùng nhạy cảm */
-        @media (prefers-reduced-motion: reduce) {
-            * {
-                animation-duration: 0.01ms !important;
-                animation-iteration-count: 1 !important;
-                transition-duration: 0.01ms !important;
-                scroll-behavior: auto !important;
-            }
-            .animate-pulse, .animate-bounce, .animate-spin {
-                animation: none !important;
-            }
-        }
-    </style>
-</head>
-<body class="bg-[#070a13] text-gray-100 font-sans h-screen flex flex-col overflow-hidden selection:bg-indigo-500/30 selection:text-indigo-200">
-
-    <script>
-        // URL kết nối tới Cloudflare Worker
-        const WORKER_URL = "https://ai-gateway.abcsnoob.workers.dev";
-    </script>
-
-    <!-- Khung tải chính trực quan -->
-    <div id="main-loading" class="fixed inset-0 bg-[#090d1a]/95 z-50 flex flex-col items-center justify-center transition-all hidden" role="dialog" aria-modal="true" aria-label="Đang tải hệ thống">
-        <div class="relative w-24 h-24 mb-4">
-            <div class="absolute inset-0 rounded-full border-4 border-t-indigo-500 border-r-transparent border-b-purple-500 border-l-transparent animate-spin"></div>
-            <i class="fa-solid fa-robot text-3xl text-indigo-400 absolute inset-0 flex items-center justify-center animate-pulse" aria-hidden="true"></i>
-        </div>
-        <p id="main-loading-text" class="text-indigo-300 font-medium tracking-widest text-xs uppercase">Đang tải...</p>
-    </div>
-
-    <div id="toast-container" class="fixed top-4 right-4 z-50 flex flex-col gap-2 pointer-events-none"></div>
-
-    <!-- MÀN HÌNH ĐĂNG NHẬP -->
-    <div id="auth-screen" class="min-h-screen flex items-center justify-center bg-[#070a13] p-4 transition-all duration-500">
-        <div class="w-full max-w-md bg-[#0f1424] border border-gray-800/80 rounded-3xl shadow-2xl p-8 relative overflow-hidden shadow-indigo-950/20">
-            <div class="text-center mb-8">
-                <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white text-3xl mb-4 shadow-xl shadow-indigo-500/20">
-                    <i class="fa-solid fa-brain" aria-hidden="true"></i>
-                </div>
-                <h2 id="auth-title" class="text-3xl font-extrabold tracking-tight text-white">Đăng Nhập</h2>
-                <p id="auth-subtitle" class="text-gray-400 text-sm mt-2"></p>
-            </div>
-
-            <form id="auth-form" onsubmit="handleAuthSubmit(event)" class="space-y-5">
-                <div>
-                    <label for="auth-username" class="block text-xs font-semibold text-gray-300 uppercase tracking-wider mb-2">Tên tài khoản</label>
-                    <div class="relative">
-                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400"><i class="fa-solid fa-user" aria-hidden="true"></i></span>
-                        <input id="auth-username" type="text" required autocomplete="username" class="w-full pl-10 pr-4 py-3 bg-[#070a13] border border-gray-800 rounded-xl text-gray-200 text-sm transition-all focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus-visible:ring-indigo-500" placeholder="Nhập username...">
-                    </div>
-                </div>
-
-                <div>
-                    <label class="block text-xs font-semibold text-gray-300 uppercase tracking-wider mb-2">Mật khẩu</label>
-                    <div class="relative">
-                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400"><i class="fa-solid fa-lock" aria-hidden="true"></i></span>
-                        <input id="auth-password" type="password" required autocomplete="current-password" class="w-full pl-10 pr-10 py-3 bg-[#070a13] border border-gray-800 rounded-xl text-gray-200 text-sm transition-all focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus-visible:ring-indigo-500" placeholder="••••••••">
-                        <button type="button" onclick="togglePasswordVisibility()" aria-label="Hiển thị mật khẩu" class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-200 transition-all focus:outline-none focus-visible:text-indigo-400">
-                            <i id="password-toggle-icon" class="fa-solid fa-eye" aria-hidden="true"></i>
-                        </button>
-                    </div>
-                </div>
-
-                <button id="auth-submit-btn" type="submit" class="w-full py-3 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white font-medium rounded-xl shadow-lg hover:shadow-indigo-500/20 transition-all active:scale-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 flex items-center justify-center gap-2">
-                    <span id="auth-btn-text">Xác nhận Đăng nhập</span>
-                    <i id="auth-btn-spinner" class="fa-solid fa-circle-notch animate-spin hidden" aria-hidden="true"></i>
-                </button>
-            </form>
-
-            <div class="mt-6 text-center text-sm">
-                <p id="auth-toggle-text" class="text-gray-400">
-                    Chưa có tài khoản? 
-                    <button type="button" onclick="switchAuthMode(true)" class="text-indigo-400 font-semibold hover:text-indigo-300 hover:underline bg-transparent focus:outline-none focus-visible:ring-1 focus-visible:ring-indigo-400 rounded-sm">Đăng ký ngay</button>
-                </p>
-            </div>
-        </div>
-    </div>
-
-    <!-- MÀN HÌNH CHAT CHÍNH -->
-    <div id="chat-screen" class="hidden flex-1 flex overflow-hidden bg-[#070a13]">
-        <div id="sidebar-overlay" class="fixed inset-0 bg-black/60 z-10 hidden md:hidden backdrop-blur-sm transition-all" onclick="toggleSidebar()"></div>
-        
-        <!-- THANH SIDEBAR -->
-        <aside id="sidebar" class="w-80 bg-[#0b0f19] border-r border-gray-900 flex flex-col justify-between hidden md:flex shrink-0 transition-all duration-300 z-20 fixed md:relative inset-y-0 left-0 h-full md:h-auto">
-            <div class="p-4 flex flex-col flex-1 overflow-hidden space-y-4">
-                <div class="clock-container">
-                    <div id="clock">Thời gian: loading...</div>
-                </div>
-                <!-- Profile Người dùng -->
-                <div class="p-3 bg-[#0f1424] border border-gray-800/60 rounded-2xl flex items-center gap-3 shrink-0 shadow-sm shadow-black/10">
-                    <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-white font-bold text-sm relative shadow-md">
-                        <span id="user-avatar-char">U</span>
-                        <span class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 border-2 border-[#0f1424] rounded-full"></span>
-                    </div>
-                    <div class="flex-1 min-w-0">
-                        <p id="user-profile-name" class="font-bold text-xs text-gray-200 truncate">Đang tải...</p>
-                        <p class="text-[11px] text-gray-400 truncate flex items-center gap-1"><i class="fa-solid fa-ticket text-amber-500" aria-hidden="true"></i> <span id="user-profile-tokens" class="font-mono text-amber-400 font-semibold">0</span> / <span id="user-profile-token-max" class="font-mono text-gray-500">∞</span> <span class="text-gray-500">t/h</span></p>
-                    </div>
-                    <button type="button" onclick="fetchUserProfile()" aria-label="Làm mới token hồ sơ" class="text-gray-400 hover:text-indigo-400 focus:text-indigo-400 p-1.5 rounded-lg hover:bg-[#1a2035] transition-all focus:outline-none"><i id="profile-refresh-icon" class="fa-solid fa-arrows-rotate" aria-hidden="true"></i></button>
-                </div>
-
-                <!-- Tạo cuộc hội thoại mới -->
-                <button type="button" onclick="startNewSession()" class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-1.5 shrink-0 shadow-md hover:shadow-indigo-600/20 active:scale-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400">
-                    <i class="fa-solid fa-plus" aria-hidden="true"></i> Cuộc trò chuyện mới
-                </button>
-
-                <!-- Trạng thái phiên -->
-                <div id="session-title-container" class="p-3 bg-[#070a13] border border-gray-800/80 rounded-2xl shrink-0">
-                    <div class="text-[10px] font-bold text-gray-400 uppercase tracking-wider flex items-center justify-between mb-1">
-                        <span class="flex items-center gap-1"><i class="fa-solid fa-hashtag text-indigo-400" aria-hidden="true"></i> Trạng thái phiên</span>
-                        <i id="title-spinner" class="fa-solid fa-circle-notch animate-spin text-indigo-400 text-xs hidden" aria-hidden="true"></i>
-                    </div>
-                    <div id="title-text-box" class="text-xs text-gray-300 font-medium line-clamp-1 italic">
-                        Sẵn sàng trò chuyện...
-                    </div>
-                    <div id="title-skeleton" class="space-y-1.5 hidden animate-pulse py-1" aria-hidden="true">
-                        <div class="h-2 bg-gray-800 rounded w-full"></div>
-                        <div class="h-2 bg-gray-800 rounded w-2/3"></div>
-                    </div>
-                </div>
-
-                <!-- Danh sách lịch sử -->
-                <div class="flex-1 flex flex-col overflow-hidden min-h-0">
-                    <h3 class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2 flex items-center gap-1 shrink-0">
-                        <i class="fa-solid fa-clock-rotate-left" aria-hidden="true"></i> Cuộc trò chuyện gần đây
-                    </h3>
-                    <div id="sessions-list-container" class="flex-1 overflow-y-auto space-y-1.5 pr-1" role="navigation" aria-label="Lịch sử chat"></div>
-                </div>
-
-                <!-- Cài đặt bổ sung -->
-                <div class="space-y-3 pt-2 border-t border-gray-900 shrink-0">
-                    <div class="space-y-1">
-                        <label for="cfg-system" class="block text-[11px] font-semibold text-gray-300">System Instruction</label>
-                        <textarea id="cfg-system" rows="2" class="w-full p-2 bg-[#070a13] border border-gray-800 rounded-xl text-xs text-gray-200 focus:outline-none focus:border-indigo-500 transition-all focus:ring-2 focus:ring-indigo-500/10 placeholder-gray-600" placeholder="Chỉ thị hệ thống..."></textarea>
-                    </div>
-                    <div class="flex justify-between items-center text-[11px]">
-                        <label for="cfg-temperature" class="text-gray-300 font-semibold">Temperature: <span id="cfg-temp-val" class="text-indigo-400 font-mono">0.7</span></label>
-                        <input id="cfg-temperature" type="range" min="0" max="2" step="0.1" value="0.7" oninput="document.getElementById('cfg-temp-val').innerText = this.value" class="w-24 accent-indigo-500 bg-gray-800 h-1.5 rounded-lg cursor-pointer focus:outline-none">
-                    </div>
-
-                    <!-- CẤU HÌNH CẤP ĐỘ SUY NGHĨ (thinking_level) — chỉnh trực tiếp trong UI -->
-                    <div class="space-y-1.5">
-                        <label class="flex items-center justify-between text-[11px] font-semibold text-gray-300">
-                            <span class="flex items-center gap-1.5"><i class="fa-solid fa-brain text-indigo-400" aria-hidden="true"></i> Cấp độ suy nghĩ</span>
-                            <span id="cfg-thinking-current" class="text-indigo-400 font-mono text-[10px] uppercase">Medium</span>
-                        </label>
-                        <div class="flex gap-1 p-1 bg-[#070a13] border border-gray-800 rounded-xl" role="radiogroup" aria-label="Chọn cấp độ suy nghĩ">
-                            <div class="thinking-level-btn" data-level="low" onclick="setThinkingLevel('low')" role="radio" tabindex="0" aria-checked="false">Low</div>
-                            <div class="thinking-level-btn active" data-level="medium" onclick="setThinkingLevel('medium')" role="radio" tabindex="0" aria-checked="true">Medium</div>
-                            <div class="thinking-level-btn" data-level="high" onclick="setThinkingLevel('high')" role="radio" tabindex="0" aria-checked="false">High</div>
-                        </div>
-                        <p class="text-[10px] text-gray-500 leading-snug">Áp dụng cho các model Gemini hỗ trợ suy nghĩ (Gemini 2.5 / 3.x). Mức cao hơn = suy luận sâu hơn nhưng chậm và tốn token hơn.</p>
-                    </div>
-                </div>
-            </div>
-
-            <div class="p-4 border-t border-gray-900 shrink-0">
-                <button type="button" onclick="logout()" class="w-full py-2 bg-[#070a13] hover:bg-red-950/20 border border-gray-800 hover:border-red-900/40 text-gray-300 hover:text-red-400 text-xs font-semibold rounded-xl transition-all flex items-center justify-center gap-1.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500">
-                    <i class="fa-solid fa-right-from-bracket" aria-hidden="true"></i> Đăng xuất an toàn
-                </button>
-            </div>
-        </aside>
-
-        <!-- KHUNG CHÁT CHÍNH -->
-        <main class="flex-1 flex flex-col justify-between bg-[#070a13] relative overflow-hidden">
-            
-            <!-- HEADER CHAT -->
-            <header class="h-14 border-b border-gray-900 bg-[#0b0f19]/80 backdrop-blur-md flex items-center justify-between px-4 z-10 shrink-0 shadow-sm shadow-black/5">
-                <div class="flex items-center gap-3 min-w-0 flex-1">
-                    <button type="button" onclick="toggleSidebar()" aria-label="Mở hoặc đóng thanh menu" class="w-8 h-8 rounded-xl flex items-center justify-center text-gray-300 hover:text-indigo-400 hover:bg-[#151926] focus:bg-[#151926] focus:text-indigo-400 transition-all focus:outline-none">
-                        <i class="fa-solid fa-bars text-sm" aria-hidden="true"></i>
-                    </button>
-                    <div class="md:hidden w-8 h-8 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-white text-xs font-bold shrink-0 shadow" id="mobile-avatar" aria-hidden="true">U</div>
-                    <div class="min-w-0 flex-1">
-                        <h1 id="chat-header-title" class="font-bold text-sm text-white truncate">Hệ Thống Trợ Lý AI</h1>
-                        <p class="text-[10px] text-gray-400 flex items-center gap-1 font-medium">
-                            <span class="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" aria-hidden="true"></span> Cloudflare Edge
-                        </p>
-                    </div>
-                </div>
-                
-                <!-- KHU VỰC CÁC NÚT ĐIỀU HƯỚNG BỔ SUNG (CHỨA NÚT OPEN VISUALS) -->
-                <div class="flex items-center gap-2 shrink-0">
-                    <!-- Nút Frame Down (Open Visuals) được thiết kế mềm mại, chuẩn WCAG -->
-                    <button id="btn-open-visuals" type="button" onclick="toggleVisualsFrame()" aria-label="Mở khung nhân vật Visuals" class="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-purple-600/10 to-indigo-600/10 hover:from-purple-600/20 hover:to-indigo-600/20 border border-indigo-500/30 hover:border-indigo-500/50 text-indigo-300 hover:text-indigo-200 text-xs font-bold rounded-xl transition-all shadow-md hover:shadow-indigo-500/5 active:scale-[0.96] focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400">
-                        <i class="fa-solid fa-wand-magic-sparkles text-[11px]" aria-hidden="true"></i>
-                        <span class="hidden sm:inline">Open Visuals</span>
-                    </button>
-                    
-                    <button type="button" onclick="startNewSession()" aria-label="Tạo cuộc hội thoại mới nhanh" class="md:hidden w-8 h-8 flex items-center justify-center text-indigo-400 border border-indigo-900/40 rounded-xl bg-indigo-950/20 hover:bg-indigo-950/40 transition-all focus:outline-none"><i class="fa-solid fa-plus" aria-hidden="true"></i></button>
-                </div>
-            </header>
-
-            <!-- VÙNG HIỂN THỊ TIN NHẮN -->
-            <div id="chat-messages" class="flex-1 overflow-y-auto p-4 space-y-4" role="log" aria-label="Nội dung hội thoại"></div>
-
-            <!-- CHỈ BÁO AI ĐANG LÀM VIỆC -->
-            <div id="ai-loading-indicator" class="px-4 py-2.5 bg-[#0b0f19]/30 border-t border-gray-900/60 flex items-center gap-3 hidden shrink-0 backdrop-blur-sm">
-                <div class="w-6 h-6 rounded-lg bg-indigo-600 flex items-center justify-center text-white text-xs shrink-0 animate-spin"><i class="fa-solid fa-circle-notch" aria-hidden="true"></i></div>
-                <div class="flex gap-1 items-center text-xs text-indigo-300 italic font-medium">
-                    <span class="w-1.5 h-1.5 bg-indigo-400 rounded-full animate-bounce" style="animation-delay: 0ms" aria-hidden="true"></span>
-                    <span class="w-1.5 h-1.5 bg-indigo-400 rounded-full animate-bounce" style="animation-delay: 150ms" aria-hidden="true"></span>
-                    <span class="w-1.5 h-1.5 bg-indigo-400 rounded-full animate-bounce" style="animation-delay: 300ms" aria-hidden="true"></span>
-                    <span class="ml-1" id="ai-loading-status-text">Đang thiết lập kết nối...</span>
-                </div>
-            </div>
-
-            <!-- KHUNG INPUT TIN NHẮN -->
-            <footer class="p-3 border-t border-gray-900 bg-[#0b0f19]/20 shrink-0">
-                <div class="max-w-4xl mx-auto">
-
-                    <!-- Preview ảnh đính kèm (hiện khi có ảnh chờ gửi) -->
-                    <div id="image-preview-bar" class="hidden flex-wrap gap-2 mb-2 px-1"></div>
-
-                    <!-- Chip URL YouTube phát hiện được trong nội dung nhập -->
-                    <div id="youtube-detected-bar" class="hidden flex-wrap gap-2 mb-2 px-1"></div>
-
-                    <form id="chat-form" onsubmit="handleChatSubmit(event)" class="flex gap-2 relative items-end">
-                        <input id="image-file-input" type="file" accept="image/png,image/jpeg,image/webp,image/heic,image/heif" multiple class="hidden" onchange="handleImageFilesSelected(event)">
-
-                        <button type="button" onclick="document.getElementById('image-file-input').click()" aria-label="Đính kèm ảnh" class="w-10 h-10 rounded-xl flex items-center justify-center text-gray-400 hover:text-indigo-400 hover:bg-[#151926] border border-gray-800/80 transition-all shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400">
-                            <i class="fa-regular fa-image text-sm" aria-hidden="true"></i>
-                        </button>
-
-                        <textarea id="chat-input" rows="1" autocomplete="off" aria-label="Nội dung tin nhắn gửi tới trợ lý AI" class="w-full bg-[#0b0f19] border border-gray-800/80 focus:border-indigo-500 rounded-2xl pl-4 pr-12 py-3 text-sm text-gray-100 placeholder-gray-500 focus:outline-none transition-all focus:ring-2 focus:ring-indigo-500/20 shadow-inner resize-none overflow-hidden" placeholder="Hỏi bất cứ điều gì, dán link YouTube hoặc đính kèm ảnh... (Shift+Enter để xuống dòng)" style="max-height: 200px;" oninput="handleChatInputChange(event)"></textarea>
-                        
-                        <button id="chat-send-btn" type="submit" aria-label="Gửi tin nhắn" class="bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 disabled:from-gray-800 disabled:to-gray-800 disabled:text-gray-600 text-white w-10 h-10 rounded-xl flex items-center justify-center shadow-md hover:shadow-indigo-500/10 active:scale-95 transition-all shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 absolute right-2 bottom-2">
-                            <i id="chat-btn-icon" class="fa-solid fa-paper-plane text-xs" aria-hidden="true"></i>
-                        </button>
-                    </form>
-                </div>
-            </footer>
-        </main>
-    </div>
-
-    <script>
-        let appToken = localStorage.getItem("chat_token") || "";
-        let isRegisterMode = false;
-        let currentUsername = "";       
-        let currentSessionId = null;    
-        let sessionsList = [];          
-        let currentChatHistory = [];    
-
-        // ── Trạng thái cấp độ suy nghĩ (mặc định: medium) ──────────────
-        let currentThinkingLevel = localStorage.getItem("chat_thinking_level") || "medium";
-
-        // ── Trạng thái ảnh đính kèm đang chờ gửi: [{ data, mimeType, previewUrl, fileName }] ──
-        let pendingImages = [];
-
-        // ── URL YouTube nhận diện được trong nội dung đang nhập ────────
-        let detectedYoutubeUrls = [];
-
-        const MAX_IMAGES_PER_MESSAGE_CLIENT = 4;
-        const MAX_IMAGE_BYTES_CLIENT = 6 * 1024 * 1024; // 6MB / ảnh, khớp với giới hạn server
-        const YOUTUBE_URL_REGEX_CLIENT = /(https?:\/\/)?(www\.)?(youtube\.com\/watch\?v=[\w-]+|youtu\.be\/[\w-]+|youtube\.com\/shorts\/[\w-]+)/gi;
-
-        marked.setOptions({ breaks: true });
-
-        // Khởi động KaTeX biên dịch tự động
-        function triggerLatexRender(element) {
-            if (typeof renderMathInElement === "function") {
-                renderMathInElement(element, {
-                    delimiters: [
-                        {left: '$$', right: '$$', display: true},
-                        {left: '$', right: '$', display: false},
-                        {left: '\\(', right: '\\)', display: false},
-                        {left: '\\[', right: '\\]', display: true}
-                    ],
-                    throwOnError: false
-                });
-            }
-        }
-function updateClock() {
-    const now = new Date();
-    
-    // Lấy giờ, phút, giây và mili giây
-    let hours = now.getHours().toString().padStart(2, '0');
-    let minutes = now.getMinutes().toString().padStart(2, '0');
-    let seconds = now.getSeconds().toString().padStart(2, '0');
-    let milliseconds = now.getMilliseconds().toString().padStart(3, '0'); // Mili giây có 3 chữ số
-    
-    // Lấy ngày, tháng, năm
-    let day = now.getDate().toString().padStart(2, '0');
-    let month = (now.getMonth() + 1).toString().padStart(2, '0'); // Tháng trong JS bắt đầu từ 0 nên phải +1
-    let year = now.getFullYear();
-    
-    // Hiển thị lên màn hình (Định dạng: HH:MM:SS.mmm - DD/MM/YYYY)
-    document.getElementById('clock').textContent = `Thời gian hiện tại: ${hours}:${minutes}:${seconds}.${milliseconds} - ${day}/${month}/${year}`;
+<style>
+/* ============================================================
+   ABC'S NOOB AI — DESIGN TOKENS
+   Bg:    #120e10 nền chính ấm tối / #1a1416 panel
+   Rose:  #cd7a7b  (accent chính)
+   Mint:  #9edbab  (accent phụ / trạng thái / online)
+   White: #fefefe  (text chính)
+   Dust:  #d4c4c7  (text phụ / viền)
+   ============================================================ */
+:root {
+    --bg-app: #120e10;
+    --bg-panel: #1a1416;
+    --bg-panel-raised: #211a1d;
+    --bg-input: #1e1718;
+    --rose: #cd7a7b;
+    --rose-dim: #a86263;
+    --mint: #9edbab;
+    --ink: #fefefe;
+    --dust: #d4c4c7;
+    --dust-dim: #8a787b;
+    --border: #2c2326;
+    --border-soft: #251d20;
 }
 
-// Cập nhật mỗi giây
-setInterval(updateClock, 1);
+* { font-family: 'Inter', sans-serif; }
+.font-display { font-family: 'Outfit', sans-serif; }
+.font-mono { font-family: 'JetBrains Mono', monospace; }
 
-// Gọi hàm ngay khi load trang
-updateClock();
-        // HÀM HOOK DÀNH CHO NÚT "OPEN VISUALS" (Người dùng tự thêm logic xử lý khung nhân vật sau)
-        function toggleVisualsFrame() {
-            showToast("Nút 'Open Visuals' đã được kích hoạt. Bạn có thể chèn logic xử lý khung nhân vật của mình tại hàm toggleVisualsFrame().", "info");
-            console.log("Visuals Frame Button Clicked - Hook trigger ready.");
-        }
+html, body { background: var(--bg-app); }
 
-        // ============================================================
-        // KHỐI CẤU HÌNH: CẤP ĐỘ SUY NGHĨ (thinking_level)
-        // ============================================================
-        function setThinkingLevel(level) {
-            currentThinkingLevel = level;
-            localStorage.setItem("chat_thinking_level", level);
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #332a2d; border-radius: 9999px; }
+::-webkit-scrollbar-thumb:hover { background: #45393d; }
 
-            document.querySelectorAll(".thinking-level-btn").forEach(btn => {
-                const isActive = btn.dataset.level === level;
-                btn.classList.toggle("active", isActive);
-                btn.setAttribute("aria-checked", isActive ? "true" : "false");
-            });
+.transition-soft { transition: all 0.22s cubic-bezier(0.25, 0.8, 0.25, 1); }
 
-            const labelMap = { low: "Low", medium: "Medium", high: "High" };
-            document.getElementById("cfg-thinking-current").innerText = labelMap[level] || level;
-        }
+details > summary { list-style: none; }
+details > summary::-webkit-details-marker { display: none; }
+details[open] summary ~ * { animation: softFadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1); }
 
-        // Cho phép chọn bằng phím Enter/Space để đạt chuẩn tiếp cận WCAG
-        document.addEventListener("DOMContentLoaded", () => {
-            document.querySelectorAll(".thinking-level-btn").forEach(btn => {
-                btn.addEventListener("keydown", (e) => {
-                    if (e.key === "Enter" || e.key === " ") {
-                        e.preventDefault();
-                        setThinkingLevel(btn.dataset.level);
-                    }
-                });
-            });
-            setThinkingLevel(currentThinkingLevel);
-        });
+@keyframes softFadeIn {
+    from { opacity: 0; transform: translateY(-6px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+@keyframes messageAppear {
+    from { opacity: 0; transform: translateY(14px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+@keyframes blobMorph {
+    0%, 100% { border-radius: 42% 58% 64% 36% / 45% 41% 59% 55%; }
+    50% { border-radius: 58% 42% 38% 62% / 55% 60% 40% 45%; }
+}
+@keyframes dotPulse {
+    0%, 80%, 100% { opacity: 0.25; transform: scale(0.8); }
+    40% { opacity: 1; transform: scale(1); }
+}
+.animate-message { animation: messageAppear 0.38s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+.brand-blob { animation: blobMorph 9s ease-in-out infinite; }
 
-        // ============================================================
-        // KHỐI TẢI ẢNH LÊN: chọn file, validate, preview, xóa
-        // ============================================================
-        function fileToBase64(file) {
-            return new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onload = () => {
-                    // reader.result dạng "data:image/png;base64,XXXX" -> tách phần base64
-                    const result = reader.result;
-                    const base64Data = result.substring(result.indexOf(",") + 1);
-                    resolve(base64Data);
-                };
-                reader.onerror = () => reject(new Error("Không thể đọc tệp ảnh."));
-                reader.readAsDataURL(file);
-            });
-        }
+.loading-dot { display:inline-block; width:5px; height:5px; border-radius:9999px; background: var(--dust); animation: dotPulse 1.2s infinite; }
+.loading-dot:nth-child(2) { animation-delay: 0.15s; }
+.loading-dot:nth-child(3) { animation-delay: 0.3s; }
 
-        async function handleImageFilesSelected(event) {
-            const files = Array.from(event.target.files || []);
-            event.target.value = ""; // reset input để chọn lại được cùng file nếu cần
+/* Markdown */
+.markdown-content p { margin-bottom: 0.8rem; color: var(--ink); line-height: 1.65; }
+.markdown-content p:last-child { margin-bottom: 0; }
+.markdown-content ul { list-style-type: disc; margin-left: 1.4rem; margin-bottom: 0.8rem; color: var(--ink); }
+.markdown-content ol { list-style-type: decimal; margin-left: 1.4rem; margin-bottom: 0.8rem; color: var(--ink); }
+.markdown-content code { background-color: #0e0b0c; padding: 0.18rem 0.4rem; border-radius: 0.4rem; font-family: 'JetBrains Mono', monospace; font-size: 0.85em; color: var(--mint); border: 1px solid var(--border); }
+.markdown-content pre { background-color: #0a0809; padding: 1rem; border-radius: 0.85rem; overflow-x: auto; margin: 0.6rem 0 0.8rem; border: 1px solid var(--border); }
+.markdown-content pre code { background: transparent; padding: 0; border: none; color: #f1eaea; }
+.markdown-content h1, .markdown-content h2, .markdown-content h3 { font-family: 'Outfit', sans-serif; font-weight: 700; color: var(--ink); margin: 0.9rem 0 0.45rem; }
+.markdown-content h1 { font-size: 1.4rem; } .markdown-content h2 { font-size: 1.2rem; } .markdown-content h3 { font-size: 1.05rem; }
+.markdown-content strong { font-weight: 700; color: var(--ink); }
+.markdown-content blockquote { border-left: 3px solid var(--rose); padding: 0.3rem 1rem; color: var(--dust); font-style: italic; margin-bottom: 0.8rem; background: rgba(205,122,123,0.06); border-radius: 0 0.5rem 0.5rem 0; }
+.thought-markdown p, .thought-markdown ul, .thought-markdown ol { color: var(--dust); margin-bottom: 0.55rem; }
+.thought-markdown strong { color: var(--ink); }
 
-            if (files.length === 0) return;
+@media (prefers-reduced-motion: reduce) {
+    * { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
+}
 
-            if (pendingImages.length + files.length > MAX_IMAGES_PER_MESSAGE_CLIENT) {
-                showToast(`Chỉ được đính kèm tối đa ${MAX_IMAGES_PER_MESSAGE_CLIENT} ảnh mỗi tin nhắn.`, "error");
-                return;
-            }
+/* Sidebar nav item */
+.nav-item { display:flex; align-items:center; gap:0.65rem; padding: 0.55rem 0.8rem; border-radius: 0.85rem; font-size: 0.83rem; font-weight: 500; color: var(--dust); cursor:pointer; }
+.nav-item:hover { background: var(--bg-panel-raised); color: var(--ink); }
+.nav-item.primary { background: var(--bg-panel-raised); color: var(--ink); font-weight:600; }
 
-            for (const file of files) {
-                if (!file.type.startsWith("image/")) {
-                    showToast(`Tệp "${file.name}" không phải ảnh hợp lệ.`, "error");
-                    continue;
-                }
-                if (file.size > MAX_IMAGE_BYTES_CLIENT) {
-                    showToast(`Ảnh "${file.name}" vượt quá giới hạn ${(MAX_IMAGE_BYTES_CLIENT / (1024*1024)).toFixed(0)}MB.`, "error");
-                    continue;
-                }
+.session-item { display:flex; align-items:center; justify-content:space-between; padding: 0.5rem 0.7rem; border-radius: 0.75rem; font-size: 0.78rem; font-weight:500; color: var(--dust-dim); cursor:pointer; }
+.session-item:hover { background: var(--bg-panel-raised); color: var(--ink); }
+.session-item.active { background: rgba(205,122,123,0.12); color: var(--rose); }
 
-                try {
-                    const base64Data = await fileToBase64(file);
-                    const previewUrl = URL.createObjectURL(file);
-                    pendingImages.push({
-                        data: base64Data,
-                        mimeType: file.type,
-                        previewUrl,
-                        fileName: file.name
-                    });
-                } catch (err) {
-                    showToast(`Lỗi đọc ảnh "${file.name}": ${err.message}`, "error");
-                }
-            }
+/* Input pill */
+.composer-shell { background: var(--bg-input); border: 1px solid var(--border); border-radius: 1.75rem; }
+.composer-shell:focus-within { border-color: var(--rose-dim); box-shadow: 0 0 0 3px rgba(205,122,123,0.12); }
 
-            renderImagePreviewBar();
-        }
+/* Model selector dropdown */
+.model-pill { display:flex; align-items:center; gap:0.4rem; padding: 0.4rem 0.7rem; border-radius:9999px; background: var(--bg-panel-raised); border: 1px solid var(--border); font-size:0.76rem; font-weight:600; color: var(--ink); cursor:pointer; }
+.model-pill:hover { border-color: var(--rose-dim); }
 
-        function removePendingImage(index) {
-            const removed = pendingImages.splice(index, 1);
-            if (removed[0] && removed[0].previewUrl) URL.revokeObjectURL(removed[0].previewUrl);
-            renderImagePreviewBar();
-        }
+.dropdown-panel { background: var(--bg-panel-raised); border: 1px solid var(--border); border-radius: 1rem; box-shadow: 0 18px 40px -10px rgba(0,0,0,0.55); }
+.model-option { display:flex; align-items:flex-start; justify-content:space-between; gap: 0.75rem; padding: 0.65rem 0.85rem; border-radius: 0.7rem; cursor:pointer; }
+.model-option:hover { background: rgba(254,254,254,0.04); }
+.model-option .opt-title { font-size: 0.82rem; font-weight: 600; color: var(--ink); }
+.model-option .opt-desc { font-size: 0.7rem; color: var(--dust-dim); margin-top: 1px; }
 
-        function renderImagePreviewBar() {
-            const bar = document.getElementById("image-preview-bar");
-            if (pendingImages.length === 0) {
-                bar.classList.add("hidden");
-                bar.classList.remove("flex");
-                bar.innerHTML = "";
-                return;
-            }
-            bar.classList.remove("hidden");
-            bar.classList.add("flex");
-            bar.innerHTML = pendingImages.map((img, idx) => `
-                <div class="image-preview-thumb" title="${img.fileName}">
-                    <img src="${img.previewUrl}" alt="Xem trước ${img.fileName}">
-                    <div class="image-preview-remove" role="button" tabindex="0" aria-label="Xóa ảnh ${img.fileName}" onclick="removePendingImage(${idx})" onkeydown="if(event.key==='Enter')removePendingImage(${idx})">
-                        <i class="fa-solid fa-xmark" aria-hidden="true"></i>
-                    </div>
+.thinking-row { display:flex; align-items:flex-start; justify-content:space-between; gap: 0.75rem; padding: 0.65rem 0.85rem; border-radius: 0.7rem; cursor:pointer; }
+.thinking-row:hover { background: rgba(254,254,254,0.04); }
+
+/* Composer plus menu */
+.plus-menu-item { display:flex; align-items:center; gap: 0.65rem; padding: 0.6rem 0.85rem; border-radius: 0.7rem; cursor:pointer; font-size: 0.82rem; font-weight: 500; color: var(--ink); }
+.plus-menu-item:hover { background: rgba(254,254,254,0.05); }
+
+/* user message pill */
+.user-bubble { background: linear-gradient(135deg, var(--rose) 0%, var(--rose-dim) 100%); color: #1f1213; }
+
+.attach-thumb { position:relative; width:58px; height:58px; border-radius:0.85rem; overflow:hidden; border:1px solid var(--border); flex-shrink:0; }
+.attach-thumb img { width:100%; height:100%; object-fit:cover; }
+.attach-remove { position:absolute; top:2px; right:2px; width:16px; height:16px; background:rgba(0,0,0,0.65); border-radius:9999px; display:flex; align-items:center; justify-content:center; font-size:9px; color:#fca5a5; cursor:pointer; }
+.attach-remove:hover { background:#7a2222; color:#fff; }
+
+.yt-chip { display:inline-flex; align-items:center; gap:0.4rem; font-size:11px; font-weight:600; padding:0.4rem 0.7rem; border-radius:0.7rem; background: var(--bg-panel-raised); border:1px solid var(--border); color: var(--dust); max-width: 280px; }
+.yt-chip span { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.msg-attached-image { width: 92px; height: 92px; border-radius: 0.85rem; object-fit: cover; border: 1px solid rgba(254,254,254,0.15); }
+
+.icon-btn { width: 2.2rem; height: 2.2rem; border-radius: 9999px; display:flex; align-items:center; justify-content:center; color: var(--dust); }
+.icon-btn:hover { background: var(--bg-panel-raised); color: var(--ink); }
+
+.thinking-toggle-row { display:flex; gap:0.4rem; }
+.thinking-toggle-btn { flex:1; text-align:center; padding:0.35rem 0.2rem; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.03em; border-radius:0.6rem; color: var(--dust-dim); cursor:pointer; }
+.thinking-toggle-btn.active { background: linear-gradient(135deg, var(--rose), var(--rose-dim)); color:#1f1213; }
+
+input[type="range"].accent-rose { accent-color: var(--rose); }
+</style>
+</head>
+<body class="h-screen flex flex-col overflow-hidden" style="background: var(--bg-app); color: var(--ink);">
+
+<script>
+    const WORKER_URL = "https://ai-gateway.abcsnoob.workers.dev";
+</script>
+
+<!-- LOADING TOÀN MÀN HÌNH -->
+<div id="main-loading" class="fixed inset-0 z-50 flex flex-col items-center justify-center hidden transition-soft" style="background: rgba(18,14,16,0.96);" role="dialog" aria-modal="true" aria-label="Đang tải hệ thống">
+    <div class="w-16 h-16 mb-4 brand-blob flex items-center justify-center" style="background: linear-gradient(135deg, var(--rose), var(--mint));">
+        <i class="fa-solid fa-feather-pointed text-xl" style="color:#1a1416;" aria-hidden="true"></i>
+    </div>
+    <p id="main-loading-text" class="font-display text-xs uppercase tracking-widest" style="color: var(--dust);">Đang tải...</p>
+</div>
+
+<div id="toast-container" class="fixed top-4 right-4 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+<!-- ============================================================
+     MÀN HÌNH ĐĂNG NHẬP
+     ============================================================ -->
+<div id="auth-screen" class="min-h-screen flex items-center justify-center p-4" style="background: var(--bg-app);">
+    <div class="w-full max-w-md rounded-3xl p-8 relative" style="background: var(--bg-panel); border:1px solid var(--border-soft);">
+        <div class="text-center mb-8">
+            <div class="inline-flex items-center justify-center w-16 h-16 brand-blob mb-4" style="background: linear-gradient(135deg, var(--rose), var(--mint));">
+                <i class="fa-solid fa-feather-pointed text-2xl" style="color:#1a1416;" aria-hidden="true"></i>
+            </div>
+            <h2 id="auth-title" class="font-display text-3xl font-bold tracking-tight" style="color: var(--ink);">Đăng nhập</h2>
+            <p class="text-sm mt-2" style="color: var(--dust-dim);">Abc's Noob AI — trợ lý của riêng bạn</p>
+        </div>
+
+        <form id="auth-form" onsubmit="handleAuthSubmit(event)" class="space-y-5">
+            <div>
+                <label for="auth-username" class="block text-xs font-semibold uppercase tracking-wider mb-2" style="color: var(--dust);">Tên tài khoản</label>
+                <div class="relative">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3" style="color: var(--dust-dim);"><i class="fa-solid fa-user" aria-hidden="true"></i></span>
+                    <input id="auth-username" type="text" required autocomplete="username" class="w-full pl-10 pr-4 py-3 rounded-xl text-sm focus:outline-none transition-soft" style="background: var(--bg-input); border:1px solid var(--border); color: var(--ink);" placeholder="Nhập username...">
                 </div>
-            `).join("");
-        }
-
-        function clearPendingImages() {
-            pendingImages.forEach(img => { if (img.previewUrl) URL.revokeObjectURL(img.previewUrl); });
-            pendingImages = [];
-            renderImagePreviewBar();
-        }
-
-        // ============================================================
-        // KHỐI NHẬN DIỆN URL YOUTUBE TRONG Ô NHẬP
-        // ============================================================
-        function handleChatInputChange(event) {
-            const inputEl = event.target;
-            inputEl.style.height = "auto";
-            inputEl.style.height = Math.min(inputEl.scrollHeight, 200) + "px";
-
-            const text = inputEl.value;
-            const matches = text.match(YOUTUBE_URL_REGEX_CLIENT) || [];
-            // Khử trùng lặp và chuẩn hóa (thêm https:// nếu thiếu)
-            const uniqueUrls = [...new Set(matches.map(u => u.startsWith("http") ? u : `https://${u}`))].slice(0, 2);
-            detectedYoutubeUrls = uniqueUrls;
-            renderYoutubeDetectedBar();
-        }
-
-        function renderYoutubeDetectedBar() {
-            const bar = document.getElementById("youtube-detected-bar");
-            if (detectedYoutubeUrls.length === 0) {
-                bar.classList.add("hidden");
-                bar.classList.remove("flex");
-                bar.innerHTML = "";
-                return;
-            }
-            bar.classList.remove("hidden");
-            bar.classList.add("flex");
-            bar.innerHTML = detectedYoutubeUrls.map(url => `
-                <div class="msg-youtube-chip">
-                    <i class="fa-brands fa-youtube text-red-500" aria-hidden="true"></i>
-                    <span>${url}</span>
+            </div>
+            <div>
+                <label class="block text-xs font-semibold uppercase tracking-wider mb-2" style="color: var(--dust);">Mật khẩu</label>
+                <div class="relative">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3" style="color: var(--dust-dim);"><i class="fa-solid fa-lock" aria-hidden="true"></i></span>
+                    <input id="auth-password" type="password" required autocomplete="current-password" class="w-full pl-10 pr-10 py-3 rounded-xl text-sm focus:outline-none transition-soft" style="background: var(--bg-input); border:1px solid var(--border); color: var(--ink);" placeholder="••••••••">
+                    <button type="button" onclick="togglePasswordVisibility()" aria-label="Hiển thị mật khẩu" class="absolute inset-y-0 right-0 flex items-center pr-3" style="color: var(--dust-dim);">
+                        <i id="password-toggle-icon" class="fa-solid fa-eye" aria-hidden="true"></i>
+                    </button>
                 </div>
-            `).join("");
-        }
+            </div>
 
-        // KHỐI QUẢN LÝ GIAO DIỆN VÀ TRẠNG THÁI
-        function checkApplicationState() {
-            const authScreen = document.getElementById("auth-screen");
-            const chatScreen = document.getElementById("chat-screen");
-            if (appToken) {
-                authScreen.classList.add("hidden");
-                chatScreen.classList.remove("hidden");
-                fetchUserProfile();
-            } else {
-                authScreen.classList.remove("hidden");
-                chatScreen.classList.add("hidden");
-            }
-        }
+            <button id="auth-submit-btn" type="submit" class="w-full py-3 font-semibold rounded-xl transition-soft active:scale-[0.98] flex items-center justify-center gap-2" style="background: linear-gradient(135deg, var(--rose), var(--rose-dim)); color:#1f1213;">
+                <span id="auth-btn-text">Xác nhận đăng nhập</span>
+                <i id="auth-btn-spinner" class="fa-solid fa-circle-notch animate-spin hidden" aria-hidden="true"></i>
+            </button>
+        </form>
 
-        function showMainLoading(show, text = "Đang xử lý dữ liệu...") {
-            const loader = document.getElementById("main-loading");
-            if(!loader) return;
-            document.getElementById("main-loading-text").innerText = text;
-            if (show) loader.classList.remove("hidden"); else loader.classList.add("hidden");
-        }
+        <div class="mt-6 text-center text-sm">
+            <p id="auth-toggle-text" style="color: var(--dust-dim);">
+                Chưa có tài khoản?
+                <button type="button" onclick="switchAuthMode(true)" class="font-semibold hover:underline" style="color: var(--rose);">Đăng ký ngay</button>
+            </p>
+        </div>
+    </div>
+</div>
 
-        function showToast(message, type = "info") {
-            const container = document.getElementById("toast-container");
-            const toast = document.createElement("div");
-            toast.className = `p-3.5 rounded-2xl text-xs font-bold shadow-2xl border transition-all transform translate-y-2 opacity-0 flex items-center gap-2.5 pointer-events-auto min-w-[240px] max-w-sm `;
-            if (type === "success") { toast.className += "bg-green-950/90 border-green-800 text-green-300"; toast.innerHTML = `<i class="fa-solid fa-circle-check text-green-400 text-sm"></i> <span>${message}</span>`; }
-            else if (type === "error") { toast.className += "bg-red-950/90 border-red-800 text-red-300"; toast.innerHTML = `<i class="fa-solid fa-circle-exclamation text-red-400 text-sm"></i> <span>${message}</span>`; }
-            else { toast.className += "bg-indigo-950/90 border-indigo-900 text-indigo-200"; toast.innerHTML = `<i class="fa-solid fa-circle-info text-indigo-400 text-sm"></i> <span>${message}</span>`; }
-            container.appendChild(toast);
-            setTimeout(() => toast.classList.remove("translate-y-2", "opacity-0"), 10);
-            setTimeout(() => { toast.classList.add("opacity-0", "-translate-y-2"); setTimeout(() => toast.remove(), 300); }, 4000);
-        }
+<!-- ============================================================
+     MÀN HÌNH CHAT CHÍNH
+     ============================================================ -->
+<div id="chat-screen" class="hidden flex-1 flex overflow-hidden" style="background: var(--bg-app);">
+    <div id="sidebar-overlay" class="fixed inset-0 bg-black/60 z-10 hidden md:hidden backdrop-blur-sm" onclick="toggleSidebar()"></div>
 
-        function toggleSidebar() {
-            const sidebar = document.getElementById("sidebar");
-            const overlay = document.getElementById("sidebar-overlay");
-            const isOpen = sidebar.classList.contains("flex");
-            if (isOpen) {
-                sidebar.classList.remove("flex"); sidebar.classList.add("hidden"); overlay.classList.add("hidden");
-            } else {
-                sidebar.classList.remove("hidden"); sidebar.classList.add("flex");
-                if (window.innerWidth < 768) overlay.classList.remove("hidden");
-            }
-        }
+    <!-- SIDEBAR -->
+    <aside id="sidebar" class="w-72 flex flex-col justify-between hidden md:flex shrink-0 transition-soft z-20 fixed md:relative inset-y-0 left-0 h-full md:h-auto" style="background: var(--bg-panel); border-right: 1px solid var(--border-soft);">
+        <div class="flex flex-col flex-1 overflow-hidden">
 
-        window.addEventListener("resize", () => {
-            const sidebar = document.getElementById("sidebar");
-            const overlay = document.getElementById("sidebar-overlay");
-            if (window.innerWidth >= 768) { sidebar.classList.remove("hidden"); sidebar.classList.add("flex"); overlay.classList.add("hidden"); }
-        });
+            <!-- Brand row -->
+            <div class="flex items-center justify-between px-4 pt-4 pb-2 shrink-0">
+                <div class="flex items-center gap-2">
+                    <div class="w-7 h-7 brand-blob shrink-0" style="background: linear-gradient(135deg, var(--rose), var(--mint));"></div>
+                    <span class="font-display font-bold text-[15px]" style="color: var(--ink);">Abc's Noob AI</span>
+                </div>
+                <button type="button" onclick="toggleSidebar()" aria-label="Đóng menu" class="icon-btn transition-soft"><i class="fa-solid fa-table-columns text-sm" aria-hidden="true"></i></button>
+            </div>
 
-        function switchAuthMode(toRegister) {
-            isRegisterMode = toRegister;
-            const title = document.getElementById("auth-title");
-            const btnText = document.getElementById("auth-btn-text");
-            const toggleText = document.getElementById("auth-toggle-text");
-            if (isRegisterMode) {
-                title.innerText = "Đăng Ký"; btnText.innerText = "Tiến hành Đăng ký";
-                toggleText.innerHTML = `Đã có tài khoản? <button type="button" onclick="switchAuthMode(false)" class="text-indigo-400 font-semibold hover:text-indigo-300 hover:underline bg-transparent focus:outline-none">Đăng nhập</button>`;
-            } else {
-                title.innerText = "Đăng Nhập"; btnText.innerText = "Xác nhận Đăng nhập";
-                toggleText.innerHTML = `Chưa có tài khoản? <button type="button" onclick="switchAuthMode(true)" class="text-indigo-400 font-semibold hover:text-indigo-300 hover:underline bg-transparent focus:outline-none">Đăng ký ngay</button>`;
-            }
-        }
+            <!-- Nav -->
+            <div class="px-3 pt-2 space-y-1 shrink-0">
+                <div class="nav-item primary transition-soft" onclick="startNewSession()" role="button" tabindex="0">
+                    <i class="fa-solid fa-pen-to-square" aria-hidden="true"></i> Cuộc trò chuyện mới
+                </div>
+                <div class="nav-item transition-soft" onclick="showToast('Tìm kiếm cuộc trò chuyện sẽ sớm ra mắt.', 'info')" role="button" tabindex="0">
+                    <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i> Tìm kiếm trong các cuộc trò chuyện
+                </div>
+            </div>
 
-        function togglePasswordVisibility() {
-            const passInput = document.getElementById("auth-password");
-            const toggleIcon = document.getElementById("password-toggle-icon");
-            if (passInput.type === "password") { passInput.type = "text"; toggleIcon.className = "fa-solid fa-eye-slash"; }
-            else { passInput.type = "password"; toggleIcon.className = "fa-solid fa-eye"; }
-        }
+            <!-- Sessions -->
+            <div class="flex-1 flex flex-col overflow-hidden min-h-0 mt-4 px-3">
+                <h3 class="text-[11px] font-bold uppercase tracking-wider mb-1.5 px-1 shrink-0" style="color: var(--dust-dim);">Gần đây</h3>
+                <div id="sessions-list-container" class="flex-1 overflow-y-auto space-y-0.5 pr-1" role="navigation" aria-label="Lịch sử chat"></div>
+            </div>
+        </div>
 
-        // KHỐI XỬ LÝ AUTHENTICATION
-        async function handleAuthSubmit(event) {
-            event.preventDefault(); 
-            const usernameInput = document.getElementById("auth-username").value.trim();
-            const passwordInput = document.getElementById("auth-password").value;
-            const spinner = document.getElementById("auth-btn-spinner");
-            const submitBtn = document.getElementById("auth-submit-btn");
+        <!-- Profile footer -->
+        <div class="p-3 shrink-0" style="border-top: 1px solid var(--border-soft);">
+            <div class="flex items-center gap-2.5 p-2 rounded-xl transition-soft cursor-pointer" style="background: var(--bg-panel-raised);" onclick="toggleSettingsMenu()" role="button" tabindex="0" aria-label="Mở cài đặt">
+                <div class="w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs relative shrink-0" style="background: linear-gradient(135deg, var(--rose), var(--mint)); color:#1a1416;">
+                    <span id="user-avatar-char">U</span>
+                    <span class="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2" style="background: var(--mint); border-color: var(--bg-panel-raised);"></span>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <p id="user-profile-name" class="font-semibold text-xs truncate" style="color: var(--ink);">Đang tải...</p>
+                    <p class="text-[10px] truncate flex items-center gap-1 font-mono" style="color: var(--dust-dim);">
+                        <span id="user-profile-tokens" style="color: var(--mint);">0</span>/<span id="user-profile-token-max">12k</span> t/h
+                    </p>
+                </div>
+                <i class="fa-solid fa-gear text-xs" style="color: var(--dust-dim);" aria-hidden="true"></i>
+            </div>
+        </div>
+    </aside>
 
-            spinner.classList.remove("hidden");
-            submitBtn.disabled = true;
+    <!-- KHUNG CHAT CHÍNH -->
+    <main class="flex-1 flex flex-col justify-between relative overflow-hidden">
 
-            const endpoint = isRegisterMode ? "/register" : "/login";
-            try {
-                const response = await fetch(`${WORKER_URL}${endpoint}`, {
-                    method: "POST", headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ username: usernameInput, password: passwordInput })
-                });
-                const data = await response.json();
-                if (!response.ok) throw new Error(data.error || "Gặp sự cố kết nối máy chủ.");
+        <!-- HEADER -->
+        <header class="h-14 flex items-center justify-between px-4 z-10 shrink-0" style="border-bottom: 1px solid var(--border-soft);">
+            <div class="flex items-center gap-2">
+                <button type="button" onclick="toggleSidebar()" aria-label="Mở hoặc đóng thanh menu" class="icon-btn transition-soft"><i class="fa-solid fa-table-columns text-sm" aria-hidden="true"></i></button>
+                <span class="font-display font-semibold text-sm hidden sm:inline" style="color: var(--ink);">Abc's Noob AI</span>
+            </div>
 
-                if (isRegisterMode) {
-                    showToast("Đăng ký thành công! Hãy đăng nhập.", "success");
-                    switchAuthMode(false);
-                } else {
-                    appToken = data.token; localStorage.setItem("chat_token", appToken);
-                    showToast("Đăng nhập thành công!", "success"); checkApplicationState(); 
-                }
-            } catch (err) { showToast(err.message, "error"); } 
-            finally { spinner.classList.add("hidden"); submitBtn.disabled = false; }
-        }
+            <div class="flex items-center gap-2 shrink-0 relative">
+                <button type="button" class="px-4 py-1.5 rounded-full text-xs font-bold transition-soft" style="background: linear-gradient(135deg, var(--rose), var(--mint)); color:#1a1416;" onclick="showToast('Bạn đang dùng bản miễn phí. Các gói nâng cấp sẽ sớm ra mắt!', 'info')">
+                    <i class="fa-solid fa-wand-magic-sparkles mr-1" aria-hidden="true"></i>Nâng cấp
+                </button>
 
-        async function fetchUserProfile() {
-            if (!appToken) return;
-            const refreshIcon = document.getElementById("profile-refresh-icon");
-            refreshIcon.classList.add("animate-spin");
-            try {
-                const response = await fetch(`${WORKER_URL}/me`, { method: "GET", headers: { "Authorization": `Bearer ${appToken}` } });
-                if (response.status === 401) { logout(); return; }
-                if (!response.ok) throw new Error();
+                <button type="button" onclick="toggleSettingsMenu()" aria-label="Menu thêm" class="icon-btn transition-soft"><i class="fa-solid fa-ellipsis-vertical text-sm" aria-hidden="true"></i></button>
 
-                const userData = await response.json();
-                document.getElementById("user-profile-name").innerText = userData.username;
-                document.getElementById("user-profile-tokens").innerText = Number(userData.token_hour || 0).toLocaleString('vi-VN');
-                document.getElementById("user-profile-token-max").innerText = Number(userData.token_max || 12000).toLocaleString('vi-VN');
-                
-                const initialChar = userData.username.charAt(0).toUpperCase();
-                document.getElementById("user-avatar-char").innerText = initialChar;
-                if(document.getElementById("mobile-avatar")) document.getElementById("mobile-avatar").innerText = initialChar;
-
-                if (currentUsername !== userData.username) {
-                    currentUsername = userData.username; await initUserSessions();
-                }
-            } catch (err) { showToast("Không thể tải thông tin.", "error"); } 
-            finally { setTimeout(() => refreshIcon.classList.remove("animate-spin"), 300); }
-        }
-
-        // KHỐI QUẢN LÝ ĐA PHIÊN 
-        async function initUserSessions() {
-            if (!currentUsername) return;
-            const savedSessions = await localforage.getItem(`sessions_list_${currentUsername}`);
-            sessionsList = (savedSessions && Array.isArray(savedSessions)) ? savedSessions : [];
-            renderSessionsSidebar();
-            if (sessionsList.length > 0) { await switchSession(sessionsList[0].id); } 
-            else { startNewSession(); }
-        }
-
-        function renderSessionsSidebar() {
-            const container = document.getElementById("sessions-list-container");
-            container.innerHTML = "";
-            if (sessionsList.length === 0) { container.innerHTML = `<div class="text-[11px] text-gray-500 italic p-2 text-center">Chưa có lịch sử chat</div>`; return; }
-
-            sessionsList.forEach(session => {
-                const isActive = session.id === currentSessionId;
-                const item = document.createElement("div");
-                item.className = `group flex items-center justify-between p-2.5 rounded-xl text-xs font-bold cursor-pointer transition-all ${isActive ? 'bg-indigo-600/10 border border-indigo-500/30 text-indigo-300' : 'hover:bg-[#151926] text-gray-400 hover:text-gray-200'}`;
-                item.setAttribute("onclick", `switchSession('${session.id}')`);
-                item.setAttribute("tabindex", "0");
-                item.setAttribute("role", "button");
-                item.setAttribute("aria-label", `Cuộc trò chuyện: ${session.title}`);
-                item.innerHTML = `
-                    <div class="flex items-center gap-2 truncate flex-1 pr-1">
-                        <i class="fa-regular fa-comments shrink-0 ${isActive ? 'text-indigo-400' : 'text-gray-500'}" aria-hidden="true"></i>
-                        <span class="truncate">${session.title}</span>
+                <!-- MENU 3-DOT: System Instruction / Temperature / Token / Đăng xuất -->
+                <div id="settings-menu" class="hidden absolute top-12 right-0 w-80 dropdown-panel p-4 space-y-4">
+                    <div class="flex items-center justify-between">
+                        <span class="font-display font-semibold text-sm" style="color: var(--ink);">Cài đặt</span>
+                        <button type="button" onclick="toggleSettingsMenu()" aria-label="Đóng" class="icon-btn"><i class="fa-solid fa-xmark text-xs" aria-hidden="true"></i></button>
                     </div>
-                    <button type="button" onclick="deleteSession(event, '${session.id}')" aria-label="Xóa cuộc trò chuyện này" class="opacity-0 group-hover:opacity-100 p-1 text-gray-500 hover:text-red-400 focus:opacity-100 focus:outline-none transition-all shrink-0"><i class="fa-regular fa-trash-can" aria-hidden="true"></i></button>
-                `;
-                // Cho phép kích hoạt bằng phím Enter theo chuẩn tiếp cận WCAG
-                item.onkeydown = (e) => { if (e.key === 'Enter') switchSession(session.id); };
-                container.appendChild(item);
-            });
-        }
 
-        async function switchSession(sessionId) {
-            currentSessionId = sessionId; renderSessionsSidebar(); 
-            const savedMessages = await localforage.getItem(`chat_messages_${currentUsername}_${sessionId}`);
-            currentChatHistory = Array.isArray(savedMessages) ? savedMessages : [];
-            
-            const found = sessionsList.find(s => s.id === sessionId);
-            const title = found ? found.title : "Cuộc trò chuyện mới";
-            document.getElementById("chat-header-title").innerText = title;
-            const titleTextBox = document.getElementById("title-text-box");
-            titleTextBox.innerText = title; titleTextBox.classList.remove("italic");
-            renderAllMessages();
-        }
-
-        function startNewSession() {
-            currentSessionId = null; currentChatHistory = [];
-            document.getElementById("chat-header-title").innerText = "Hệ Thống Trợ Lý AI";
-            const titleTextBox = document.getElementById("title-text-box");
-            titleTextBox.innerText = "Sẵn sàng tạo hội thoại mới..."; titleTextBox.classList.add("italic");
-            renderSessionsSidebar(); resetChatToDefaultGreeting();
-            clearPendingImages();
-        }
-
-        async function deleteSession(event, sessionId) {
-            event.stopPropagation(); 
-            if (!confirm("Xóa vĩnh viễn cuộc trò chuyện này?")) return;
-            sessionsList = sessionsList.filter(s => s.id !== sessionId);
-            await localforage.setItem(`sessions_list_${currentUsername}`, sessionsList);
-            await localforage.removeItem(`chat_messages_${currentUsername}_${sessionId}`);
-            showToast("Đã xóa cuộc trò chuyện.", "info");
-            if (currentSessionId === sessionId) { if (sessionsList.length > 0) { await switchSession(sessionsList[0].id); } else { startNewSession(); } } 
-            else { renderSessionsSidebar(); }
-        }
-
-        // KHỐI RENDER TIN NHẮN LỊCH SỬ (Hỗ trợ Markdown + LaTeX + Ảnh + YouTube cho cả Phản hồi và Suy nghĩ)
-        function renderAllMessages() {
-            const container = document.getElementById("chat-messages");
-            container.innerHTML = "";
-            if (currentChatHistory.length === 0) { resetChatToDefaultGreeting(); return; }
-            currentChatHistory.forEach(msg => {
-                appendMessage(msg.sender, msg.text, msg.modelName, msg.tokens, false, msg.thoughtText, msg.attachedImages, msg.attachedYoutubeUrls);
-            });
-        }
-
-        function resetChatToDefaultGreeting() {
-            const container = document.getElementById("chat-messages");
-            container.innerHTML = "";
-            appendMessage("system-welcome", "Xin chào! Tôi có khả năng hiển thị luồng suy nghĩ, kết xuất biểu thức toán học LaTeX, đọc ảnh bạn đính kèm và phân tích video YouTube. Hãy đặt câu hỏi hóc búa cho tôi!", "", 0, false);
-        }
-
-        // Tạo HTML cho các ảnh / chip YouTube đính kèm hiển thị trong bong bóng tin nhắn
-        function renderAttachmentsHtml(attachedImages, attachedYoutubeUrls) {
-            let html = "";
-            if (attachedImages && attachedImages.length > 0) {
-                html += `<div class="flex flex-wrap gap-2 mb-2 justify-end">`;
-                attachedImages.forEach(img => {
-                    const src = img.previewUrl || `data:${img.mimeType};base64,${img.data}`;
-                    html += `<img src="${src}" class="msg-attached-image" alt="Ảnh đính kèm">`;
-                });
-                html += `</div>`;
-            }
-            if (attachedYoutubeUrls && attachedYoutubeUrls.length > 0) {
-                html += `<div class="flex flex-wrap gap-2 mb-2 justify-end">`;
-                attachedYoutubeUrls.forEach(url => {
-                    html += `<div class="msg-youtube-chip"><i class="fa-brands fa-youtube text-red-500" aria-hidden="true"></i><span>${url}</span></div>`;
-                });
-                html += `</div>`;
-            }
-            return html;
-        }
-
-        function appendMessage(sender, text, modelName = "", tokens = 0, saveToDb = true, thoughtText = "", attachedImages = null, attachedYoutubeUrls = null) {
-            const container = document.getElementById("chat-messages");
-            const wrapper = document.createElement("div");
-            wrapper.className = "w-full opacity-0 animate-message";
-            
-            let parsedHtml = "";
-            if (sender === "user" || sender === "ai") {
-                parsedHtml = DOMPurify.sanitize(marked.parse(text));
-            }
-
-            if (sender === "user") {
-                const attachmentsHtml = renderAttachmentsHtml(attachedImages, attachedYoutubeUrls);
-                wrapper.innerHTML = `
-                    <div class="flex items-start gap-3 max-w-3xl ml-auto justify-end w-full">
-                        <div class="space-y-1 text-right max-w-full">
-                            ${attachmentsHtml}
-                            <div class="bg-indigo-600 text-white px-4 py-2.5 rounded-3xl rounded-tr-none text-sm leading-relaxed text-left markdown-content shadow-md shadow-indigo-950/10">${parsedHtml}</div>
-                            <span class="text-[9px] font-bold text-gray-500 pr-1 block">Bạn</span>
+                    <div class="flex items-center gap-2.5 p-2.5 rounded-xl" style="background: var(--bg-input);">
+                        <div class="w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs shrink-0" style="background: linear-gradient(135deg, var(--rose), var(--mint)); color:#1a1416;">
+                            <span id="user-avatar-char-menu">U</span>
                         </div>
+                        <div class="flex-1 min-w-0">
+                            <p id="user-profile-name-menu" class="font-semibold text-xs truncate" style="color: var(--ink);">—</p>
+                            <p class="text-[10px] font-mono" style="color: var(--dust-dim);">
+                                <span id="user-profile-tokens-menu" style="color: var(--mint);">0</span> / <span id="user-profile-token-max-menu">12.000</span> token mỗi giờ
+                            </p>
+                        </div>
+                        <button type="button" onclick="fetchUserProfile()" aria-label="Làm mới" class="icon-btn"><i id="profile-refresh-icon" class="fa-solid fa-arrows-rotate text-xs" aria-hidden="true"></i></button>
                     </div>
-                `;
-            } else if (sender === "ai") {
-                let thoughtHtml = "";
-                if (thoughtText) {
-                    let parsedThoughtHtml = DOMPurify.sanitize(marked.parse(thoughtText));
-                    thoughtHtml = `
-                        <div class="mb-2.5 w-full">
-                            <details class="bg-[#0f1424]/40 border border-gray-800/80 rounded-2xl group transition-all duration-300">
-                                <summary class="cursor-pointer px-4 py-2.5 text-[11px] font-bold text-gray-400 hover:text-gray-200 flex items-center gap-2 select-none focus:outline-none focus-visible:text-indigo-400">
-                                    <i class="fa-solid fa-brain" aria-hidden="true"></i>
-                                    <span>Quá trình suy nghĩ</span>
-                                    <i class="fa-solid fa-chevron-down ml-auto transition-transform group-open:rotate-180 text-[10px]" aria-hidden="true"></i>
-                                </summary>
-                                <div class="px-4 pb-4 text-gray-300 text-xs border-t border-gray-800/60 mt-1 pt-3.5 break-words markdown-content thought-markdown">${parsedThoughtHtml}</div>
-                            </details>
-                        </div>
-                    `;
-                }
 
-                wrapper.innerHTML = `
-                    <div class="flex items-start gap-3 max-w-3xl mr-auto w-full">
-                        <div class="w-8 h-8 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white text-xs shrink-0 shadow-md shadow-indigo-950/20" aria-hidden="true"><i class="fa-solid fa-robot"></i></div>
-                        <div class="space-y-1.5 flex-1 min-w-0">
-                            ${thoughtHtml}
-                            <div class="bg-[#0b0f19] border border-gray-800/80 text-gray-200 px-4 py-3 rounded-3xl rounded-tl-none text-sm leading-relaxed markdown-content shadow-sm">${parsedHtml}</div>
-                            <div class="flex items-center gap-1.5 text-[9px] font-bold text-gray-500 pl-1" aria-label="Siêu dữ liệu phản hồi">
-                                <span class="bg-[#070a13] border border-gray-800/60 text-indigo-400 px-1.5 py-0.5 rounded font-mono">${modelName}</span>
-                                <span class="bg-[#070a13] border border-gray-800/60 text-amber-400 px-1.5 py-0.5 rounded font-mono">+${tokens} tokens</span>
+                    <div class="space-y-1.5">
+                        <label for="cfg-system" class="block text-[11px] font-semibold" style="color: var(--dust);">Chỉ thị hệ thống (System Instruction)</label>
+                        <textarea id="cfg-system" rows="2" class="w-full p-2.5 rounded-xl text-xs focus:outline-none transition-soft resize-none" style="background: var(--bg-input); border:1px solid var(--border); color: var(--ink);" placeholder="Ví dụ: Trả lời ngắn gọn, dùng tiếng Việt..."></textarea>
+                    </div>
+
+                    <div class="space-y-1.5">
+                        <div class="flex justify-between items-center text-[11px]">
+                            <label for="cfg-temperature" class="font-semibold" style="color: var(--dust);">Độ sáng tạo (Temperature)</label>
+                            <span id="cfg-temp-val" class="font-mono text-xs" style="color: var(--rose);">0.7</span>
+                        </div>
+                        <input id="cfg-temperature" type="range" min="0" max="2" step="0.1" value="0.7" oninput="document.getElementById('cfg-temp-val').innerText = this.value" class="w-full accent-rose h-1.5 rounded-lg cursor-pointer">
+                    </div>
+
+                    <button type="button" onclick="logout()" class="w-full py-2 rounded-xl text-xs font-semibold transition-soft flex items-center justify-center gap-1.5" style="background: var(--bg-input); border:1px solid var(--border); color: #e69a9a;">
+                        <i class="fa-solid fa-right-from-bracket" aria-hidden="true"></i> Đăng xuất an toàn
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- VÙNG HIỂN THỊ TIN NHẮN -->
+        <div id="chat-messages" class="flex-1 overflow-y-auto px-4 py-6 space-y-5" role="log" aria-label="Nội dung hội thoại"></div>
+
+        <!-- TRẠNG THÁI AI ĐANG XỬ LÝ (kết nối YouTube / suy nghĩ ...) -->
+        <div id="ai-loading-indicator" class="px-5 pb-2 hidden shrink-0">
+            <div class="flex items-center gap-2.5 text-xs font-medium" style="color: var(--dust);">
+                <span class="loading-dot"></span><span class="loading-dot"></span><span class="loading-dot"></span>
+                <span id="ai-loading-status-text">Đang kết nối...</span>
+            </div>
+        </div>
+
+        <!-- KHUNG SOẠN TIN -->
+        <footer class="px-4 pb-4 pt-1 shrink-0">
+            <div class="max-w-3xl mx-auto">
+
+                <div id="image-preview-bar" class="hidden flex-wrap gap-2 mb-2 px-1"></div>
+                <div id="youtube-detected-bar" class="hidden flex-wrap gap-2 mb-2 px-1"></div>
+
+                <form id="chat-form" onsubmit="handleChatSubmit(event)" class="composer-shell transition-soft flex flex-col gap-2 p-2.5 relative">
+                    <textarea id="chat-input" rows="1" autocomplete="off" aria-label="Nội dung tin nhắn" class="w-full bg-transparent px-2.5 pt-1.5 text-sm focus:outline-none resize-none overflow-hidden" style="color: var(--ink); max-height: 200px;" placeholder="Hỏi Abc's Noob AI..." oninput="handleChatInputChange(event)"></textarea>
+
+                    <div class="flex items-center justify-between px-1">
+                        <div class="flex items-center gap-1.5 relative">
+                            <!-- NÚT "+" DUY NHẤT — MỞ MENU ĐÍNH KÈM -->
+                            <button type="button" onclick="togglePlusMenu()" aria-label="Đính kèm nội dung" class="icon-btn transition-soft" style="border:1px solid var(--border);">
+                                <i class="fa-solid fa-plus text-xs" aria-hidden="true"></i>
+                            </button>
+                            <input id="image-file-input" type="file" accept="image/png,image/jpeg,image/webp,image/heic,image/heif" multiple class="hidden" onchange="handleImageFilesSelected(event)">
+
+                            <div id="plus-menu" class="hidden absolute bottom-12 left-0 w-56 dropdown-panel p-1.5">
+                                <div class="plus-menu-item transition-soft" onclick="document.getElementById('image-file-input').click(); togglePlusMenu(false)">
+                                    <i class="fa-regular fa-image" style="color: var(--rose);" aria-hidden="true"></i> Tải ảnh lên
+                                </div>
+                                <div class="plus-menu-item transition-soft" onclick="promptYoutubeLink()">
+                                    <i class="fa-brands fa-youtube" style="color: #e05757;" aria-hidden="true"></i> Dán liên kết YouTube
+                                </div>
+                            </div>
+
+                            <!-- MODEL SELECTOR -->
+                            <div class="relative">
+                                <button type="button" onclick="toggleModelMenu()" class="model-pill transition-soft">
+                                    <span id="model-pill-label">Auto</span>
+                                    <i class="fa-solid fa-chevron-down text-[9px]" aria-hidden="true"></i>
+                                </button>
+
+                                <div id="model-menu" class="hidden absolute bottom-12 left-0 w-72 dropdown-panel p-1.5 flex">
+                                    <div class="flex-1 py-0.5">
+                                        <div class="model-option transition-soft" data-model="gemini-3.1-flash-lite" onclick="selectModelOption(this)">
+                                            <div><div class="opt-title">Auto</div><div class="opt-desc">Câu trả lời nhanh nhất</div></div>
+                                            <i class="fa-solid fa-check text-xs hidden check-icon" style="color: var(--mint);" aria-hidden="true"></i>
+                                        </div>
+
+                                        <div class="my-1.5" style="border-top:1px solid var(--border);"></div>
+
+                                        <div class="thinking-row transition-soft" onmouseenter="showThinkingSubmenu(true)" onclick="showThinkingSubmenu(true)">
+                                            <div><div class="opt-title">Cấp độ tư duy</div><div class="opt-desc" id="thinking-current-label">Mở rộng</div></div>
+                                            <i class="fa-solid fa-chevron-right text-[10px]" style="color: var(--dust-dim);" aria-hidden="true"></i>
+                                        </div>
+                                    </div>
+
+                                    <!-- SUBMENU CẤP ĐỘ TƯ DUY -->
+                                    <div id="thinking-submenu" class="hidden absolute bottom-0 left-full ml-1.5 w-60 dropdown-panel p-1.5">
+                                        <div class="thinking-row transition-soft" data-level="low" onclick="selectThinkingOption(this)">
+                                            <div><div class="opt-title">Tiêu chuẩn</div><div class="opt-desc">Phù hợp nhất cho hầu hết các câu hỏi</div></div>
+                                            <i class="fa-solid fa-check text-xs hidden check-icon" style="color: var(--mint);" aria-hidden="true"></i>
+                                        </div>
+                                        <div class="thinking-row transition-soft" data-level="high" onclick="selectThinkingOption(this)">
+                                            <div><div class="opt-title">Mở rộng</div><div class="opt-desc">Giải quyết vấn đề phức tạp</div></div>
+                                            <i class="fa-solid fa-check text-xs check-icon" style="color: var(--mint);" aria-hidden="true"></i>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
+
+                        <div class="flex items-center gap-2">
+                            <button id="mic-btn" type="button" aria-label="Nhập bằng giọng nói" class="icon-btn transition-soft" onclick="showToast('Chức năng giọng nói sẽ sớm ra mắt.', 'info')">
+                                <i class="fa-solid fa-microphone text-xs" aria-hidden="true"></i>
+                            </button>
+                            <button id="chat-send-btn" type="submit" aria-label="Gửi tin nhắn" class="w-9 h-9 rounded-full flex items-center justify-center transition-soft active:scale-95 disabled:opacity-40" style="background: var(--rose); color:#1a1416;">
+                                <i id="chat-btn-icon" class="fa-solid fa-arrow-up text-xs" aria-hidden="true"></i>
+                            </button>
+                        </div>
                     </div>
-                `;
-            } else if (sender === "system-welcome") {
-                wrapper.innerHTML = `
-                    <div class="flex items-start gap-3 max-w-2xl mr-auto w-full">
-                        <div class="w-8 h-8 rounded-xl bg-gray-900 border border-gray-800 flex items-center justify-center text-gray-400 text-xs shrink-0" aria-hidden="true"><i class="fa-solid fa-robot"></i></div>
-                        <div class="bg-[#0b0f19] border border-gray-800/80 text-gray-300 px-4 py-3 rounded-3xl rounded-tl-none text-xs leading-relaxed shadow-sm">${text}</div>
-                    </div>
-                `;
-            } else if (sender === "system-error") {
-                wrapper.innerHTML = `<div class="flex justify-center my-1 w-full"><div class="bg-red-950/20 border border-red-900/30 text-red-300 px-4 py-2 rounded-2xl text-xs flex items-center gap-2 max-w-md shadow-sm"><i class="fa-solid fa-triangle-exclamation text-sm text-red-400" aria-hidden="true"></i> <span>${text}</span></div></div>`;
-            }
+                </form>
 
-            container.appendChild(wrapper);
-            triggerLatexRender(wrapper);
-            container.scrollTop = container.scrollHeight;
+                <p class="text-center text-[10px] mt-2.5" style="color: var(--dust-dim);">Abc's Noob AI là AI và có thể mắc sai sót.</p>
+            </div>
+        </footer>
+    </main>
+</div>
 
-            if (saveToDb && currentSessionId && (sender === "user" || sender === "ai")) {
-                currentChatHistory.push({ sender, text, modelName, tokens, thoughtText, attachedImages, attachedYoutubeUrls });
-                localforage.setItem(`chat_messages_${currentUsername}_${currentSessionId}`, currentChatHistory);
-            }
-        }
+<script>
+let appToken = localStorage.getItem("chat_token") || "";
+let isRegisterMode = false;
+let currentUsername = "";
+let currentSessionId = null;
+let sessionsList = [];
+let currentChatHistory = [];
 
-        // HÀM TẠO TIÊU ĐỀ: Đã chuyển sang đọc luồng Stream SSE, sửa lỗi không lưu tiêu đề
-        async function generateChatTitle(sessionId) {
-            if (!appToken || !sessionId || currentChatHistory.length === 0) return;
-            const titleTextBox = document.getElementById("title-text-box");
-            const titleSkeleton = document.getElementById("title-skeleton");
-            const titleSpinner = document.getElementById("title-spinner");
+// ── Model & thinking level ──────────────────────────────────────
+const MODEL_LABELS = {
+    "gemini-3.1-flash-lite": "Flash-Lite",
+    "gemini-3.5-flash": "Flash Mở rộng",
+    "gemini-3.1-pro-preview": "Pro"
+};
+let currentModelChoice = localStorage.getItem("chat_model_choice") || "gemini-3.5-flash";
+let currentThinkingLevel = localStorage.getItem("chat_thinking_level") || "high";
 
-            if (titleTextBox) titleTextBox.classList.add("hidden");
-            if (titleSkeleton) titleSkeleton.classList.remove("hidden");
-            if (titleSpinner) titleSpinner.classList.remove("hidden");
+// ── Ảnh đính kèm & YouTube ───────────────────────────────────────
+let pendingImages = [];
+let detectedYoutubeUrls = [];
+const MAX_IMAGES_PER_MESSAGE_CLIENT = 4;
+const MAX_IMAGE_BYTES_CLIENT = 6 * 1024 * 1024;
+const YOUTUBE_URL_REGEX_CLIENT = /(https?:\/\/)?(www\.)?(youtube\.com\/watch\?v=[\w-]+|youtu\.be\/[\w-]+|youtube\.com\/shorts\/[\w-]+)/gi;
 
-            const chatContext = currentChatHistory
-                .filter(msg => msg.sender === "user" || msg.sender === "ai")
-                .map(msg => ({ role: msg.sender === "user" ? "user" : "model", content: msg.text }));
+marked.setOptions({ breaks: true });
 
-            try {
-                const response = await fetch(`${WORKER_URL}/chat`, {
-                    method: "POST", headers: { "Authorization": `Bearer ${appToken}`, "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        prompt: `Tạo một tiêu đề ngắn gọn (tối đa 8 từ, không dấu ngoặc kép, không chấm cuối) phản ánh chủ đề:\n\n${chatContext.map(m => `${m.role}: ${m.content}`).join('\n').substring(0, 800)}`,
-                        temperature: 0.3
-                    })
-                });
+function triggerLatexRender(element) {
+    if (typeof renderMathInElement === "function") {
+        renderMathInElement(element, {
+            delimiters: [
+                {left: '$$', right: '$$', display: true},
+                {left: '$', right: '$', display: false},
+                {left: '\\(', right: '\\)', display: false},
+                {left: '\\[', right: '\\]', display: true}
+            ],
+            throwOnError: false
+        });
+    }
+}
 
-                if (!response.ok) return;
+// ============================================================
+// MENU TOGGLES (settings / plus / model / thinking submenu)
+// ============================================================
+function closeAllMenus(except) {
+    ["settings-menu", "plus-menu", "model-menu", "thinking-submenu"].forEach(id => {
+        if (id !== except) document.getElementById(id).classList.add("hidden");
+    });
+}
+function toggleSettingsMenu() {
+    const menu = document.getElementById("settings-menu");
+    const willOpen = menu.classList.contains("hidden");
+    closeAllMenus(willOpen ? "settings-menu" : null);
+    menu.classList.toggle("hidden");
+}
+function togglePlusMenu(forceState) {
+    const menu = document.getElementById("plus-menu");
+    const willOpen = forceState !== undefined ? forceState : menu.classList.contains("hidden");
+    closeAllMenus(willOpen ? "plus-menu" : null);
+    menu.classList.toggle("hidden", !willOpen);
+}
+function toggleModelMenu() {
+    const menu = document.getElementById("model-menu");
+    const willOpen = menu.classList.contains("hidden");
+    closeAllMenus(willOpen ? "model-menu" : null);
+    menu.classList.toggle("hidden");
+    if (!willOpen) document.getElementById("thinking-submenu").classList.add("hidden");
+}
+function showThinkingSubmenu(open) {
+    document.getElementById("thinking-submenu").classList.toggle("hidden", !open);
+}
 
-                const reader = response.body.getReader();
-                const dec = new TextDecoder();
-                let buf = "";
-                let generatedTitle = "";
-                let currentEvent = "message";
+document.addEventListener("click", (e) => {
+    const isInsideMenu = e.target.closest("#settings-menu, #plus-menu, #model-menu, #thinking-submenu");
+    const isMenuTrigger = e.target.closest("[onclick*='toggleSettingsMenu'], [onclick*='togglePlusMenu'], [onclick*='toggleModelMenu']");
+    if (!isInsideMenu && !isMenuTrigger) closeAllMenus(null);
+});
 
-                while (true) {
-                    const { done, value } = await reader.read();
-                    if (done) break;
-                    buf += dec.decode(value, { stream: true });
-                    const lines = buf.split("\n");
-                    buf = lines.pop();
+function selectModelOption(el) {
+    document.querySelectorAll(".model-option .check-icon").forEach(i => i.classList.add("hidden"));
+    el.querySelector(".check-icon").classList.remove("hidden");
+    currentModelChoice = el.dataset.model;
+    localStorage.setItem("chat_model_choice", currentModelChoice);
+    document.getElementById("model-pill-label").innerText = MODEL_LABELS[currentModelChoice] || "Tùy chỉnh";
+    closeAllMenus(null);
+}
 
-                    for (const line of lines) {
-                        if (line.startsWith("event:")) {
-                            currentEvent = line.substring(6).trim();
-                            continue;
-                        }
-                        if (!line.startsWith("data:")) continue;
-                        const jsonStr = line.slice(5).trim();
-                        if (!jsonStr) continue;
+function selectThinkingOption(el) {
+    document.querySelectorAll("#thinking-submenu .check-icon").forEach(i => i.classList.add("hidden"));
+    el.querySelector(".check-icon").classList.remove("hidden");
+    currentThinkingLevel = el.dataset.level;
+    localStorage.setItem("chat_thinking_level", currentThinkingLevel);
+    const labelMap = { low: "Tiêu chuẩn", high: "Mở rộng" };
+    document.getElementById("thinking-current-label").innerText = labelMap[currentThinkingLevel] || currentThinkingLevel;
+    closeAllMenus(null);
+}
 
-                        try {
-                            const parsed = JSON.parse(jsonStr);
-                            if (currentEvent === "chunk" && parsed.text) {
-                                generatedTitle += parsed.text;
-                            }
-                        } catch(e) {}
-                    }
-                }
+function initModelAndThinkingUI() {
+    document.getElementById("model-pill-label").innerText = MODEL_LABELS[currentModelChoice] || "Tùy chỉnh";
+    document.querySelectorAll(".model-option").forEach(el => {
+        el.querySelector(".check-icon").classList.toggle("hidden", el.dataset.model !== currentModelChoice);
+    });
+    const labelMap = { low: "Tiêu chuẩn", high: "Mở rộng" };
+    document.getElementById("thinking-current-label").innerText = labelMap[currentThinkingLevel] || currentThinkingLevel;
+    document.querySelectorAll("#thinking-submenu .thinking-row").forEach(el => {
+        el.querySelector(".check-icon").classList.toggle("hidden", el.dataset.level !== currentThinkingLevel);
+    });
+}
 
-                if (generatedTitle) {
-                    let cleanedTitle = generatedTitle.replace(/^["'«»""。.,]+|["'«»""。.,]+$/g, '').trim();
-                    if (cleanedTitle.length > 45) cleanedTitle = cleanedTitle.substring(0, 45).trimEnd() + "…";
-                    
-                    sessionsList = sessionsList.map(s => { 
-                        if (s.id === sessionId && (s.title.startsWith("Cuộc trò chuyện mới") || s.title === "")) {
-                            return { ...s, title: cleanedTitle }; 
-                        }
-                        return s; 
-                    });
-                    
-                    await localforage.setItem(`sessions_list_${currentUsername}`, sessionsList);
-                    if (currentSessionId === sessionId) {
-                        document.getElementById("chat-header-title").innerText = cleanedTitle;
-                        if (titleTextBox) { titleTextBox.innerText = cleanedTitle; titleTextBox.classList.remove("italic"); }
-                    }
-                    renderSessionsSidebar();
-                }
-            } catch (err) {
-                console.error("Lỗi tạo tiêu đề tự động:", err);
-            } finally {
-                if (titleTextBox) titleTextBox.classList.remove("hidden");
-                if (titleSkeleton) titleSkeleton.classList.add("hidden");
-                if (titleSpinner) titleSpinner.classList.add("hidden");
-            }
-        }
+function promptYoutubeLink() {
+    togglePlusMenu(false);
+    const inputEl = document.getElementById("chat-input");
+    inputEl.focus();
+    showToast("Dán liên kết YouTube vào ô nhập tin nhắn, hệ thống sẽ tự nhận diện.", "info");
+}
 
-        // TÁC VỤ GỬI YÊU CẦU API — Hỗ trợ Markdown + LaTeX thời gian thực, Cấp độ suy nghĩ, Ảnh & YouTube
-        async function handleChatSubmit(event) {
-            event.preventDefault();
-            const inputEl = document.getElementById("chat-input");
-            const promptText = inputEl.value.trim();
+// ============================================================
+// TẢI ẢNH LÊN
+// ============================================================
+function fileToBase64(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result.substring(reader.result.indexOf(",") + 1));
+        reader.onerror = () => reject(new Error("Không thể đọc tệp ảnh."));
+        reader.readAsDataURL(file);
+    });
+}
 
-            // Cho phép gửi nếu có ảnh đính kèm dù không nhập chữ (ví dụ chỉ gửi ảnh để hỏi "đây là gì?")
-            const hasAttachments = pendingImages.length > 0 || detectedYoutubeUrls.length > 0;
-            if (!promptText && !hasAttachments) return;
+async function handleImageFilesSelected(event) {
+    const files = Array.from(event.target.files || []);
+    event.target.value = "";
+    if (files.length === 0) return;
 
-            const finalPromptText = promptText || "Hãy mô tả nội dung được đính kèm.";
+    if (pendingImages.length + files.length > MAX_IMAGES_PER_MESSAGE_CLIENT) {
+        showToast(`Chỉ được đính kèm tối đa ${MAX_IMAGES_PER_MESSAGE_CLIENT} ảnh mỗi tin nhắn.`, "error");
+        return;
+    }
 
-            const systemInstructionText = document.getElementById("cfg-system").value.trim();
-            const temperatureVal = parseFloat(document.getElementById("cfg-temperature").value);
+    for (const file of files) {
+        if (!file.type.startsWith("image/")) { showToast(`Tệp "${file.name}" không phải ảnh hợp lệ.`, "error"); continue; }
+        if (file.size > MAX_IMAGE_BYTES_CLIENT) { showToast(`Ảnh "${file.name}" vượt quá ${(MAX_IMAGE_BYTES_CLIENT/(1024*1024)).toFixed(0)}MB.`, "error"); continue; }
+        try {
+            const base64Data = await fileToBase64(file);
+            const previewUrl = URL.createObjectURL(file);
+            pendingImages.push({ data: base64Data, mimeType: file.type, previewUrl, fileName: file.name });
+        } catch (err) { showToast(`Lỗi đọc ảnh "${file.name}": ${err.message}`, "error"); }
+    }
+    renderImagePreviewBar();
+}
 
-            // Chụp lại ảnh & URL YouTube của lượt gửi này, sau đó dọn dẹp khu vực soạn tin
-            const imagesForRequest = pendingImages.map(img => ({ data: img.data, mimeType: img.mimeType }));
-            const imagesForDisplay = pendingImages.map(img => ({ data: img.data, mimeType: img.mimeType, previewUrl: img.previewUrl }));
-            const youtubeUrlsForRequest = [...detectedYoutubeUrls];
+function removePendingImage(index) {
+    const removed = pendingImages.splice(index, 1);
+    if (removed[0] && removed[0].previewUrl) URL.revokeObjectURL(removed[0].previewUrl);
+    renderImagePreviewBar();
+}
 
-            let isNewSessionCreated = false;
-            if (!currentSessionId) {
-                currentSessionId = "sess_" + Date.now();
-                sessionsList.unshift({ id: currentSessionId, title: `Cuộc trò chuyện mới (${finalPromptText.substring(0, 15)}...)`, timestamp: Date.now() });
-                await localforage.setItem(`sessions_list_${currentUsername}`, sessionsList);
-                isNewSessionCreated = true;
-            }
+function renderImagePreviewBar() {
+    const bar = document.getElementById("image-preview-bar");
+    if (pendingImages.length === 0) { bar.classList.add("hidden"); bar.classList.remove("flex"); bar.innerHTML = ""; return; }
+    bar.classList.remove("hidden"); bar.classList.add("flex");
+    bar.innerHTML = pendingImages.map((img, idx) => `
+        <div class="attach-thumb" title="${img.fileName}">
+            <img src="${img.previewUrl}" alt="Xem trước ${img.fileName}">
+            <div class="attach-remove" role="button" tabindex="0" aria-label="Xóa ảnh ${img.fileName}" onclick="removePendingImage(${idx})" onkeydown="if(event.key==='Enter')removePendingImage(${idx})">
+                <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+            </div>
+        </div>
+    `).join("");
+}
 
-            appendMessage("user", finalPromptText, "", 0, true, "", imagesForDisplay, youtubeUrlsForRequest);
-            inputEl.value = ""; inputEl.style.height = "auto";
+function clearPendingImages() {
+    pendingImages.forEach(img => { if (img.previewUrl) URL.revokeObjectURL(img.previewUrl); });
+    pendingImages = [];
+    renderImagePreviewBar();
+}
 
-            // Dọn dẹp khu soạn tin (giữ nguyên ảnh preview trong tin nhắn đã gửi, không revoke ngay)
-            pendingImages = [];
-            renderImagePreviewBar();
-            detectedYoutubeUrls = [];
-            renderYoutubeDetectedBar();
+// ============================================================
+// NHẬN DIỆN URL YOUTUBE
+// ============================================================
+function handleChatInputChange(event) {
+    const inputEl = event.target;
+    inputEl.style.height = "auto";
+    inputEl.style.height = Math.min(inputEl.scrollHeight, 200) + "px";
 
-            const aiLoading = document.getElementById("ai-loading-indicator");
-            const sendBtn = document.getElementById("chat-send-btn");
-            const btnIcon = document.getElementById("chat-btn-icon");
+    const matches = inputEl.value.match(YOUTUBE_URL_REGEX_CLIENT) || [];
+    const uniqueUrls = [...new Set(matches.map(u => u.startsWith("http") ? u : `https://${u}`))].slice(0, 2);
+    detectedYoutubeUrls = uniqueUrls;
+    renderYoutubeDetectedBar();
+}
 
-            aiLoading.classList.remove("hidden");
-            sendBtn.disabled = true;
-            btnIcon.className = "fa-solid fa-circle-notch animate-spin text-xs";
+function renderYoutubeDetectedBar() {
+    const bar = document.getElementById("youtube-detected-bar");
+    if (detectedYoutubeUrls.length === 0) { bar.classList.add("hidden"); bar.classList.remove("flex"); bar.innerHTML = ""; return; }
+    bar.classList.remove("hidden"); bar.classList.add("flex");
+    bar.innerHTML = detectedYoutubeUrls.map(url => `
+        <div class="yt-chip"><i class="fa-brands fa-youtube" style="color:#e05757;" aria-hidden="true"></i><span>${url}</span></div>
+    `).join("");
+}
 
-            const messagesEl = document.getElementById("chat-messages");
-            messagesEl.scrollTop = messagesEl.scrollHeight;
+// ============================================================
+// TRẠNG THÁI ỨNG DỤNG
+// ============================================================
+function checkApplicationState() {
+    const authScreen = document.getElementById("auth-screen");
+    const chatScreen = document.getElementById("chat-screen");
+    if (appToken) {
+        authScreen.classList.add("hidden");
+        chatScreen.classList.remove("hidden");
+        fetchUserProfile();
+    } else {
+        authScreen.classList.remove("hidden");
+        chatScreen.classList.add("hidden");
+    }
+}
 
-            const chatContext = currentChatHistory
-                .filter(msg => msg.sender === "user" || msg.sender === "ai")
-                .map(msg => ({ role: msg.sender === "user" ? "user" : "model", content: msg.text }));
+function showMainLoading(show, text = "Đang xử lý dữ liệu...") {
+    const loader = document.getElementById("main-loading");
+    if (!loader) return;
+    document.getElementById("main-loading-text").innerText = text;
+    loader.classList.toggle("hidden", !show);
+}
 
-            // Tạo bubble AI HTML mềm mại
-            const bubbleId = "ai-bubble-" + Date.now();
-            const wrapper = document.createElement("div");
-            wrapper.className = "flex items-start gap-3 max-w-3xl mr-auto w-full opacity-0 animate-message";
-            wrapper.id = bubbleId;
-            wrapper.innerHTML = `
-                <div class="w-8 h-8 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white text-xs shrink-0 shadow-md" aria-hidden="true"><i class="fa-solid fa-robot"></i></div>
-                <div class="space-y-1.5 flex-1 min-w-0">
-                    
-                    <div id="${bubbleId}-thought-container" class="hidden mb-2.5 w-full">
-                        <details class="bg-[#0f1424]/40 border border-gray-800/80 rounded-2xl group transition-all" open>
-                            <summary class="cursor-pointer px-4 py-2.5 text-[11px] font-bold text-gray-400 hover:text-gray-200 flex items-center gap-2 select-none focus:outline-none focus-visible:text-indigo-400">
-                                <i id="${bubbleId}-thought-icon" class="fa-solid fa-brain animate-pulse text-indigo-400"></i> 
-                                <span id="${bubbleId}-thought-status">Đang suy nghĩ...</span>
-                                <i class="fa-solid fa-chevron-down ml-auto transition-transform group-open:rotate-180 text-[10px]" aria-hidden="true"></i>
-                            </summary>
-                            <div id="${bubbleId}-thought-content" class="px-4 pb-4 text-gray-300 text-xs border-t border-gray-800/60 mt-1 pt-3.5 break-words markdown-content thought-markdown"></div>
-                        </details>
-                    </div>
+function showToast(message, type = "info") {
+    const container = document.getElementById("toast-container");
+    const toast = document.createElement("div");
+    const colorMap = {
+        success: { bg: "rgba(158,219,171,0.12)", border: "var(--mint)", text: "var(--mint)", icon: "fa-circle-check" },
+        error:   { bg: "rgba(205,122,123,0.14)", border: "var(--rose)", text: "#f0a9a9", icon: "fa-circle-exclamation" },
+        info:    { bg: "var(--bg-panel-raised)", border: "var(--border)", text: "var(--dust)", icon: "fa-circle-info" }
+    };
+    const c = colorMap[type] || colorMap.info;
+    toast.className = "p-3.5 rounded-2xl text-xs font-semibold shadow-2xl transition-soft transform translate-y-2 opacity-0 flex items-center gap-2.5 pointer-events-auto min-w-[240px] max-w-sm";
+    toast.style.background = c.bg; toast.style.border = `1px solid ${c.border}`; toast.style.color = c.text;
+    toast.innerHTML = `<i class="fa-solid ${c.icon}" aria-hidden="true"></i><span>${message}</span>`;
+    container.appendChild(toast);
+    setTimeout(() => toast.classList.remove("translate-y-2", "opacity-0"), 10);
+    setTimeout(() => { toast.classList.add("opacity-0"); setTimeout(() => toast.remove(), 300); }, 4000);
+}
 
-                    <div id="${bubbleId}-content" class="bg-[#0b0f19] border border-gray-800/80 text-gray-200 px-4 py-3 rounded-3xl rounded-tl-none text-sm leading-relaxed markdown-content shadow-sm"></div>
-                    
-                    <div id="${bubbleId}-meta" class="flex items-center gap-1.5 text-[9px] font-bold text-gray-500 pl-1 hidden">
-                        <span id="${bubbleId}-model" class="bg-[#070a13] border border-gray-800/60 text-indigo-400 px-1.5 py-0.5 rounded font-mono"></span>
-                        <span id="${bubbleId}-tokens" class="bg-[#070a13] border border-gray-800/60 text-amber-400 px-1.5 py-0.5 rounded font-mono"></span>
-                    </div>
+function toggleSidebar() {
+    const sidebar = document.getElementById("sidebar");
+    const overlay = document.getElementById("sidebar-overlay");
+    const isOpen = sidebar.classList.contains("flex");
+    if (isOpen) { sidebar.classList.remove("flex"); sidebar.classList.add("hidden"); overlay.classList.add("hidden"); }
+    else { sidebar.classList.remove("hidden"); sidebar.classList.add("flex"); if (window.innerWidth < 768) overlay.classList.remove("hidden"); }
+}
+window.addEventListener("resize", () => {
+    const sidebar = document.getElementById("sidebar");
+    const overlay = document.getElementById("sidebar-overlay");
+    if (window.innerWidth >= 768) { sidebar.classList.remove("hidden"); sidebar.classList.add("flex"); overlay.classList.add("hidden"); }
+});
+
+function switchAuthMode(toRegister) {
+    isRegisterMode = toRegister;
+    const title = document.getElementById("auth-title");
+    const btnText = document.getElementById("auth-btn-text");
+    const toggleText = document.getElementById("auth-toggle-text");
+    if (isRegisterMode) {
+        title.innerText = "Đăng ký"; btnText.innerText = "Tiến hành đăng ký";
+        toggleText.innerHTML = `Đã có tài khoản? <button type="button" onclick="switchAuthMode(false)" class="font-semibold hover:underline" style="color: var(--rose);">Đăng nhập</button>`;
+    } else {
+        title.innerText = "Đăng nhập"; btnText.innerText = "Xác nhận đăng nhập";
+        toggleText.innerHTML = `Chưa có tài khoản? <button type="button" onclick="switchAuthMode(true)" class="font-semibold hover:underline" style="color: var(--rose);">Đăng ký ngay</button>`;
+    }
+}
+
+function togglePasswordVisibility() {
+    const passInput = document.getElementById("auth-password");
+    const toggleIcon = document.getElementById("password-toggle-icon");
+    if (passInput.type === "password") { passInput.type = "text"; toggleIcon.className = "fa-solid fa-eye-slash"; }
+    else { passInput.type = "password"; toggleIcon.className = "fa-solid fa-eye"; }
+}
+
+async function handleAuthSubmit(event) {
+    event.preventDefault();
+    const usernameInput = document.getElementById("auth-username").value.trim();
+    const passwordInput = document.getElementById("auth-password").value;
+    const spinner = document.getElementById("auth-btn-spinner");
+    const submitBtn = document.getElementById("auth-submit-btn");
+    spinner.classList.remove("hidden"); submitBtn.disabled = true;
+
+    const endpoint = isRegisterMode ? "/register" : "/login";
+    try {
+        const response = await fetch(`${WORKER_URL}${endpoint}`, {
+            method: "POST", headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ username: usernameInput, password: passwordInput })
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || "Gặp sự cố kết nối máy chủ.");
+
+        if (isRegisterMode) { showToast("Đăng ký thành công! Hãy đăng nhập.", "success"); switchAuthMode(false); }
+        else { appToken = data.token; localStorage.setItem("chat_token", appToken); showToast("Đăng nhập thành công!", "success"); checkApplicationState(); }
+    } catch (err) { showToast(err.message, "error"); }
+    finally { spinner.classList.add("hidden"); submitBtn.disabled = false; }
+}
+
+async function fetchUserProfile() {
+    if (!appToken) return;
+    const refreshIcon = document.getElementById("profile-refresh-icon");
+    if (refreshIcon) refreshIcon.classList.add("animate-spin");
+    try {
+        const response = await fetch(`${WORKER_URL}/me`, { method: "GET", headers: { "Authorization": `Bearer ${appToken}` } });
+        if (response.status === 401) { logout(); return; }
+        if (!response.ok) throw new Error();
+
+        const userData = await response.json();
+        const tokensStr = Number(userData.token_hour || 0).toLocaleString('vi-VN');
+        const maxStr = Number(userData.token_max || 12000).toLocaleString('vi-VN');
+
+        document.getElementById("user-profile-name").innerText = userData.username;
+        document.getElementById("user-profile-tokens").innerText = tokensStr;
+        document.getElementById("user-profile-token-max").innerText = maxStr;
+        document.getElementById("user-profile-name-menu").innerText = userData.username;
+        document.getElementById("user-profile-tokens-menu").innerText = tokensStr;
+        document.getElementById("user-profile-token-max-menu").innerText = maxStr;
+
+        const initialChar = userData.username.charAt(0).toUpperCase();
+        document.getElementById("user-avatar-char").innerText = initialChar;
+        document.getElementById("user-avatar-char-menu").innerText = initialChar;
+
+        if (currentUsername !== userData.username) { currentUsername = userData.username; await initUserSessions(); }
+    } catch (err) { showToast("Không thể tải thông tin.", "error"); }
+    finally { setTimeout(() => { if (refreshIcon) refreshIcon.classList.remove("animate-spin"); }, 300); }
+}
+
+async function initUserSessions() {
+    if (!currentUsername) return;
+    const savedSessions = await localforage.getItem(`sessions_list_${currentUsername}`);
+    sessionsList = (savedSessions && Array.isArray(savedSessions)) ? savedSessions : [];
+    renderSessionsSidebar();
+    if (sessionsList.length > 0) { await switchSession(sessionsList[0].id); } else { startNewSession(); }
+}
+
+function renderSessionsSidebar() {
+    const container = document.getElementById("sessions-list-container");
+    container.innerHTML = "";
+    if (sessionsList.length === 0) { container.innerHTML = `<div class="text-[11px] italic p-2 text-center" style="color: var(--dust-dim);">Chưa có lịch sử chat</div>`; return; }
+
+    sessionsList.forEach(session => {
+        const isActive = session.id === currentSessionId;
+        const item = document.createElement("div");
+        item.className = `session-item transition-soft ${isActive ? 'active' : ''}`;
+        item.setAttribute("onclick", `switchSession('${session.id}')`);
+        item.setAttribute("tabindex", "0"); item.setAttribute("role", "button");
+        item.setAttribute("aria-label", `Cuộc trò chuyện: ${session.title}`);
+        item.innerHTML = `
+            <div class="flex items-center gap-2 truncate flex-1 pr-1">
+                <i class="fa-regular fa-comment shrink-0" aria-hidden="true"></i>
+                <span class="truncate">${session.title}</span>
+            </div>
+            <button type="button" onclick="deleteSession(event, '${session.id}')" aria-label="Xóa cuộc trò chuyện này" class="opacity-0 group-hover:opacity-100 hover:opacity-100 p-1 focus:outline-none transition-soft shrink-0" style="color: var(--dust-dim);"><i class="fa-regular fa-trash-can text-[11px]" aria-hidden="true"></i></button>
+        `;
+        item.onkeydown = (e) => { if (e.key === 'Enter') switchSession(session.id); };
+        container.appendChild(item);
+    });
+}
+
+async function switchSession(sessionId) {
+    currentSessionId = sessionId; renderSessionsSidebar();
+    const savedMessages = await localforage.getItem(`chat_messages_${currentUsername}_${sessionId}`);
+    currentChatHistory = Array.isArray(savedMessages) ? savedMessages : [];
+    renderAllMessages();
+}
+
+function startNewSession() {
+    currentSessionId = null; currentChatHistory = [];
+    renderSessionsSidebar(); resetChatToDefaultGreeting();
+    clearPendingImages();
+    if (window.innerWidth < 768) toggleSidebar();
+}
+
+async function deleteSession(event, sessionId) {
+    event.stopPropagation();
+    if (!confirm("Xóa vĩnh viễn cuộc trò chuyện này?")) return;
+    sessionsList = sessionsList.filter(s => s.id !== sessionId);
+    await localforage.setItem(`sessions_list_${currentUsername}`, sessionsList);
+    await localforage.removeItem(`chat_messages_${currentUsername}_${sessionId}`);
+    showToast("Đã xóa cuộc trò chuyện.", "info");
+    if (currentSessionId === sessionId) { if (sessionsList.length > 0) await switchSession(sessionsList[0].id); else startNewSession(); }
+    else { renderSessionsSidebar(); }
+}
+
+function renderAllMessages() {
+    const container = document.getElementById("chat-messages");
+    container.innerHTML = "";
+    if (currentChatHistory.length === 0) { resetChatToDefaultGreeting(); return; }
+    currentChatHistory.forEach(msg => {
+        appendMessage(msg.sender, msg.text, msg.modelName, msg.tokens, false, msg.thoughtText, msg.attachedImages, msg.attachedYoutubeUrls);
+    });
+}
+
+function resetChatToDefaultGreeting() {
+    const container = document.getElementById("chat-messages");
+    container.innerHTML = `
+        <div class="h-full flex items-center justify-center">
+            <p class="font-display text-2xl sm:text-3xl font-semibold text-center max-w-lg px-4" style="color: var(--dust);">
+                Bạn có ý tưởng mới nào muốn khám phá không?
+            </p>
+        </div>
+    `;
+}
+
+function renderAttachmentsHtml(attachedImages, attachedYoutubeUrls) {
+    let html = "";
+    if (attachedImages && attachedImages.length > 0) {
+        html += `<div class="flex flex-wrap gap-2 mb-2 justify-end">`;
+        attachedImages.forEach(img => {
+            const src = img.previewUrl || `data:${img.mimeType};base64,${img.data}`;
+            html += `<img src="${src}" class="msg-attached-image" alt="Ảnh đính kèm">`;
+        });
+        html += `</div>`;
+    }
+    if (attachedYoutubeUrls && attachedYoutubeUrls.length > 0) {
+        html += `<div class="flex flex-wrap gap-2 mb-2 justify-end">`;
+        attachedYoutubeUrls.forEach(url => {
+            html += `<div class="yt-chip"><i class="fa-brands fa-youtube" style="color:#e05757;" aria-hidden="true"></i><span>${url}</span></div>`;
+        });
+        html += `</div>`;
+    }
+    return html;
+}
+
+function appendMessage(sender, text, modelName = "", tokens = 0, saveToDb = true, thoughtText = "", attachedImages = null, attachedYoutubeUrls = null) {
+    const container = document.getElementById("chat-messages");
+    if (container.querySelector(".h-full")) container.innerHTML = "";
+
+    const wrapper = document.createElement("div");
+    wrapper.className = "w-full opacity-0 animate-message";
+
+    let parsedHtml = "";
+    if (sender === "user" || sender === "ai") parsedHtml = DOMPurify.sanitize(marked.parse(text));
+
+    if (sender === "user") {
+        const attachmentsHtml = renderAttachmentsHtml(attachedImages, attachedYoutubeUrls);
+        wrapper.innerHTML = `
+            <div class="flex items-start max-w-2xl ml-auto justify-end w-full">
+                <div class="space-y-1 text-right max-w-full">
+                    ${attachmentsHtml}
+                    <div class="user-bubble px-4 py-2.5 rounded-3xl text-sm leading-relaxed text-left markdown-content shadow-sm" style="border-bottom-right-radius: 0.4rem;">${parsedHtml}</div>
+                </div>
+            </div>
+        `;
+    } else if (sender === "ai") {
+        let thoughtHtml = "";
+        if (thoughtText) {
+            const parsedThoughtHtml = DOMPurify.sanitize(marked.parse(thoughtText));
+            thoughtHtml = `
+                <div class="mb-2.5 w-full">
+                    <details class="rounded-2xl group transition-soft" style="background: var(--bg-panel-raised); border:1px solid var(--border-soft);">
+                        <summary class="cursor-pointer px-4 py-2.5 text-[11px] font-bold flex items-center gap-2 select-none" style="color: var(--dust);">
+                            <i class="fa-solid fa-brain" style="color: var(--rose);" aria-hidden="true"></i>
+                            <span>Quá trình suy nghĩ</span>
+                            <i class="fa-solid fa-chevron-down ml-auto transition-transform group-open:rotate-180 text-[10px]" aria-hidden="true"></i>
+                        </summary>
+                        <div class="px-4 pb-4 text-xs border-t mt-1 pt-3.5 break-words markdown-content thought-markdown" style="border-color: var(--border-soft);">${parsedThoughtHtml}</div>
+                    </details>
                 </div>
             `;
-            messagesEl.appendChild(wrapper);
-
-            const contentEl = document.getElementById(`${bubbleId}-content`);
-            const thoughtContentEl = document.getElementById(`${bubbleId}-thought-content`);
-            
-            const cursor = document.createElement("span");
-            cursor.id = `${bubbleId}-cursor`;
-            cursor.className = "inline-block w-0.5 h-4 bg-indigo-400 ml-0.5 align-middle animate-pulse";
-            contentEl.appendChild(cursor);
-
-            // Các biến phục vụ hàng đợi Typing Effect mượt mà
-            let rawText = "";       
-            let rawThoughtText = ""; 
-            let currentModel = "";
-            let isThinking = false; 
-
-            let targetText = "";
-            let displayedText = "";
-            let targetThoughtText = "";
-            let displayedThoughtText = "";
-            let isTypingMain = false;
-            let isTypingThought = false;
-
-            // Tiến trình chạy Typing Effect từng chữ một cho Nội dung Phản hồi chính
-            function processTypingMain() {
-                if (displayedText.length < targetText.length) {
-                    // Áp dụng logic tính step tự động dựa trên độ dài còn lại để tạo cảm giác gõ nhanh dần hoặc mượt mà
-                    const step = Math.max(1, Math.floor((targetText.length - displayedText.length) / 8));
-
-                    displayedText += targetText.substring(displayedText.length, displayedText.length + step);
-                    rawText = displayedText;
-
-                    contentEl.innerHTML = DOMPurify.sanitize(marked.parse(displayedText));
-                    triggerLatexRender(contentEl);
-
-                    // Giữ nguyên logic quản lý con trỏ (cursor)
-                    let cur = document.getElementById(`${bubbleId}-cursor`);
-                    if (!cur) {
-                        cur = document.createElement("span");
-                        cur.id = `${bubbleId}-cursor`;
-                        cur.className = "inline-block w-0.5 h-4 bg-indigo-400 ml-0.5 align-middle animate-pulse";
-                    }
-                    contentEl.appendChild(cur);
-
-                    messagesEl.scrollTop = messagesEl.scrollHeight;
-
-                    // Chuyển từ setTimeout sang requestAnimationFrame để hiệu năng mượt mà hơn
-                    requestAnimationFrame(processTypingMain);
-                } else {
-                    isTypingMain = false;
-                    // Tùy chọn: Xóa con trỏ khi gõ xong
-                    const cur = document.getElementById(`${bubbleId}-cursor`);
-                    if (cur) cur.remove();
-                }
-            }
-
-            // Tiến trình chạy Typing Effect mượt mà cho Khung Suy Nghĩ (Chain of Thought)
-            function processTypingThought() {
-                if (displayedThoughtText.length < targetThoughtText.length) {
-                    const step = Math.max(1, Math.floor((targetThoughtText.length - displayedThoughtText.length) / 8));
-                    displayedThoughtText += targetThoughtText.substring(displayedThoughtText.length, displayedThoughtText.length + step);
-                    rawThoughtText = displayedThoughtText;
-
-                    thoughtContentEl.innerHTML = DOMPurify.sanitize(marked.parse(displayedThoughtText));
-                    triggerLatexRender(thoughtContentEl);
-
-                    messagesEl.scrollTop = messagesEl.scrollHeight;
-                    requestAnimationFrame(processTypingThought);
-                } else {
-                    isTypingThought = false;
-                }
-            }
-
-            try {
-                const response = await fetch(`${WORKER_URL}/chat`, {
-                    method: "POST", headers: { "Authorization": `Bearer ${appToken}`, "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        prompt: finalPromptText,
-                        history: chatContext,
-                        systemInstruction: systemInstructionText || undefined,
-                        temperature: temperatureVal,
-                        thinkingLevel: currentThinkingLevel,
-                        images: imagesForRequest.length > 0 ? imagesForRequest : undefined,
-                        youtubeUrls: youtubeUrlsForRequest.length > 0 ? youtubeUrlsForRequest : undefined
-                    })
-                });
-
-                if (!response.ok) {
-                    const errData = await response.json().catch(() => ({})); throw new Error(errData.error || `HTTP ${response.status}`);
-                }
-
-                const reader = response.body.getReader();
-                const dec = new TextDecoder();
-                let buf = "";
-                let currentEvent = "message"; 
-
-                while (true) {
-                    const { done, value } = await reader.read();
-                    if (done) break;
-                    buf += dec.decode(value, { stream: true });
-
-                    const lines = buf.split("\n");
-                    buf = lines.pop(); 
-
-                    for (const line of lines) {
-                        if (line.startsWith("event:")) {
-                            currentEvent = line.substring(6).trim();
-                            continue;
-                        }
-
-                        if (!line.startsWith("data:")) continue;
-                        const jsonStr = line.slice(5).trim();
-                        if (!jsonStr) continue;
-
-                        let parsed;
-                        try { parsed = JSON.parse(jsonStr); } catch { continue; }
-
-                        if (currentEvent === "meta") {
-                            currentModel = parsed.model || "";
-                        } 
-                        else if (currentEvent === "grounding") {
-                            appendGrounding(parsed.metadata, bubbleId);
-                        }
-                        else if (currentEvent === "thought_start") {
-                            isThinking = true;
-                            document.getElementById(`${bubbleId}-thought-container`).classList.remove("hidden");
-                            document.getElementById("ai-loading-status-text").innerText = "Đang suy nghĩ (Chain of Thought)...";
-                        } 
-                        else if (currentEvent === "thought_chunk") {
-                            if (!isThinking) {
-                                isThinking = true;
-                                document.getElementById(`${bubbleId}-thought-container`).classList.remove("hidden");
-                                document.getElementById("ai-loading-status-text").innerText = "Đang suy nghĩ (Chain of Thought)...";
-                            }
-                            targetThoughtText += parsed.text;
-                            if (!isTypingThought) {
-                                isTypingThought = true;
-                                requestAnimationFrame(processTypingThought);
-                            }
-                        } 
-                        else if (currentEvent === "thought_end") {
-                            isThinking = false;
-                            
-                            displayedThoughtText = targetThoughtText;
-                            rawThoughtText = targetThoughtText;
-                            thoughtContentEl.innerHTML = DOMPurify.sanitize(marked.parse(rawThoughtText));
-                            triggerLatexRender(thoughtContentEl);
-
-                            const iconEl = document.getElementById(`${bubbleId}-thought-icon`);
-                            const statusEl = document.getElementById(`${bubbleId}-thought-status`);
-                            if (iconEl) iconEl.classList.remove("animate-pulse");
-                            if (statusEl) statusEl.innerText = "Quá trình suy nghĩ";
-                            
-                            const detailsEl = document.querySelector(`#${bubbleId}-thought-container details`);
-                            if (detailsEl) detailsEl.removeAttribute("open");
-                            document.getElementById("ai-loading-status-text").innerText = "Đang soạn phản hồi...";
-                        } 
-                        else if (currentEvent === "chunk") {
-                            if (isThinking) {
-                                isThinking = false;
-                                const iconEl = document.getElementById(`${bubbleId}-thought-icon`);
-                                if (iconEl) iconEl.classList.remove("animate-pulse");
-                                const detailsEl = document.querySelector(`#${bubbleId}-thought-container details`);
-                                if (detailsEl) detailsEl.removeAttribute("open");
-                                document.getElementById("ai-loading-status-text").innerText = "Đang soạn phản hồi...";
-                            }
-                            targetText += parsed.text;
-                            if (!isTypingMain) {
-                                isTypingMain = true;
-                                requestAnimationFrame(processTypingMain);
-                            }
-                        } 
-                        else if (currentEvent === "done") {
-                            if (isThinking) {
-                                const iconEl = document.getElementById(`${bubbleId}-thought-icon`);
-                                if (iconEl) iconEl.classList.remove("animate-pulse");
-                            }
-
-                            // KHÔNG GÁN ĐÈ displayedText = targetText Ở ĐÂY.
-                            // Hãy để hàm processTypingMain tự chạy cho đến khi hết targetText.
-                            // Chúng ta chỉ cập nhật meta dữ liệu:
-
-                            document.getElementById(`${bubbleId}-model`).textContent = currentModel;
-                            document.getElementById(`${bubbleId}-tokens`).textContent = `+${parsed.tokens_consumed} tokens`;
-                            document.getElementById(`${bubbleId}-meta`).classList.remove("hidden");
-
-                            // Vẫn lưu vào DB như cũ
-                            currentChatHistory.push({ sender: "ai", text: targetText, modelName: currentModel, tokens: parsed.tokens_consumed, thoughtText: rawThoughtText });
-                            localforage.setItem(`chat_messages_${currentUsername}_${currentSessionId}`, currentChatHistory);
-
-                            fetchUserProfile();
-                            if (isNewSessionCreated) await generateChatTitle(currentSessionId);
-                            else renderSessionsSidebar();
-                        } 
-                        else if (currentEvent === "error") {
-                            throw new Error(parsed.message);
-                        }
-                    }
-                }
-
-                if (rawText && document.getElementById(`${bubbleId}-meta`).classList.contains("hidden")) {
-                    contentEl.innerHTML = DOMPurify.sanitize(marked.parse(rawText));
-                    triggerLatexRender(contentEl);
-                }
-
-            } catch (err) {
-                showToast(err.message, "error");
-                if (!rawText && !rawThoughtText) { wrapper.remove(); appendMessage("system-error", `Lỗi: ${err.message}`); } 
-                else { const cur = document.getElementById(`${bubbleId}-cursor`); if (cur) cur.remove(); }
-            } finally {
-                aiLoading.classList.add("hidden"); sendBtn.disabled = false; btnIcon.className = "fa-solid fa-paper-plane text-xs";
-                messagesEl.scrollTop = messagesEl.scrollHeight;
-            }
         }
+        wrapper.innerHTML = `
+            <div class="flex items-start gap-3 max-w-2xl mr-auto w-full">
+                <div class="w-7 h-7 brand-blob shrink-0 mt-0.5" style="background: linear-gradient(135deg, var(--rose), var(--mint));" aria-hidden="true"></div>
+                <div class="space-y-1.5 flex-1 min-w-0">
+                    ${thoughtHtml}
+                    <div class="text-sm leading-relaxed markdown-content" style="color: var(--ink);">${parsedHtml}</div>
+                    <div class="flex items-center gap-1.5 text-[9px] font-bold pl-0.5 font-mono" aria-label="Siêu dữ liệu phản hồi">
+                        <span class="px-1.5 py-0.5 rounded" style="background: var(--bg-panel-raised); color: var(--rose);">${modelName}</span>
+                        <span class="px-1.5 py-0.5 rounded" style="background: var(--bg-panel-raised); color: var(--mint);">+${tokens} tokens</span>
+                    </div>
+                </div>
+            </div>
+        `;
+    } else if (sender === "system-error") {
+        wrapper.innerHTML = `<div class="flex justify-center my-1 w-full"><div class="px-4 py-2 rounded-2xl text-xs flex items-center gap-2 max-w-md shadow-sm" style="background: rgba(205,122,123,0.12); border:1px solid var(--rose); color:#f0b9b9;"><i class="fa-solid fa-triangle-exclamation text-sm" aria-hidden="true"></i><span>${text}</span></div></div>`;
+    }
 
-        function appendGrounding(metadata, bubbleId) {
-            if (!metadata || !metadata.groundingChunks) return;
-            
-            const container = document.getElementById(`${bubbleId}-content`).parentElement;
-            const div = document.createElement("div");
-            div.className = "mt-2";
-            
-            // Tạo danh sách các nguồn
-            const links = metadata.groundingChunks
-                .filter(c => c.web)
-                .map(c => `<li><a href="${c.web.uri}" target="_blank" class="text-indigo-400 hover:underline break-all">${c.web.title || c.web.uri}</a></li>`)
-                .join('');
+    container.appendChild(wrapper);
+    triggerLatexRender(wrapper);
+    container.scrollTop = container.scrollHeight;
 
-            div.innerHTML = `
-                <details class="bg-[#0b0f19] border border-indigo-900/40 rounded-xl group overflow-hidden">
-                    <summary class="cursor-pointer px-3 py-2 text-[10px] font-bold text-indigo-300 hover:text-indigo-200 flex items-center gap-2 select-none outline-none">
-                        <i class="fa-solid fa-globe"></i> <span>Searched on the Internet</span>
-                        <i class="fa-solid fa-chevron-down ml-auto group-open:rotate-180 transition-transform"></i>
-                    </summary>
-                    <ul class="px-4 pb-3 text-xs text-gray-400 space-y-1 list-disc">${links}</ul>
-                </details>
-            `;
-            container.appendChild(div);
-        }
+    if (saveToDb && currentSessionId && (sender === "user" || sender === "ai")) {
+        currentChatHistory.push({ sender, text, modelName, tokens, thoughtText, attachedImages, attachedYoutubeUrls });
+        localforage.setItem(`chat_messages_${currentUsername}_${currentSessionId}`, currentChatHistory);
+    }
+}
 
-        // CHỨC NĂNG ĐĂNG XUẤT 
-        function logout() {
-            showMainLoading(true, "Đang đăng xuất an toàn...");
-            setTimeout(() => {
-                appToken = ""; currentUsername = ""; currentSessionId = null; sessionsList = []; currentChatHistory = [];
-                localStorage.removeItem("chat_token");
-                clearPendingImages();
-                detectedYoutubeUrls = []; renderYoutubeDetectedBar();
-                document.getElementById("auth-username").value = ""; document.getElementById("auth-password").value = "";
-                document.getElementById("chat-messages").innerHTML = "";
-                showMainLoading(false); checkApplicationState(); showToast("Đã đăng xuất tài khoản.", "info");
-            }, 500);
-        }
+async function generateChatTitle(sessionId) {
+    if (!appToken || !sessionId || currentChatHistory.length === 0) return;
+    const chatContext = currentChatHistory
+        .filter(msg => msg.sender === "user" || msg.sender === "ai")
+        .map(msg => ({ role: msg.sender === "user" ? "user" : "model", content: msg.text }));
 
-        window.addEventListener("DOMContentLoaded", () => {
-            checkApplicationState();
-            const chatInput = document.getElementById("chat-input");
-            if (chatInput) {
-                chatInput.addEventListener("keydown", function(e) {
-                    if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); document.getElementById("chat-form").dispatchEvent(new Event("submit", { cancelable: true })); }
-                });
-            }
+    try {
+        const response = await fetch(`${WORKER_URL}/chat`, {
+            method: "POST", headers: { "Authorization": `Bearer ${appToken}`, "Content-Type": "application/json" },
+            body: JSON.stringify({
+                prompt: `Tạo một tiêu đề ngắn gọn (tối đa 8 từ, không dấu ngoặc kép, không chấm cuối) phản ánh chủ đề:\n\n${chatContext.map(m => `${m.role}: ${m.content}`).join('\n').substring(0, 800)}`,
+                temperature: 0.3
+            })
         });
-    </script>
+        if (!response.ok) return;
+
+        const reader = response.body.getReader();
+        const dec = new TextDecoder();
+        let buf = "", generatedTitle = "", currentEvent = "message";
+
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            buf += dec.decode(value, { stream: true });
+            const lines = buf.split("\n");
+            buf = lines.pop();
+            for (const line of lines) {
+                if (line.startsWith("event:")) { currentEvent = line.substring(6).trim(); continue; }
+                if (!line.startsWith("data:")) continue;
+                const jsonStr = line.slice(5).trim();
+                if (!jsonStr) continue;
+                try {
+                    const parsed = JSON.parse(jsonStr);
+                    if (currentEvent === "chunk" && parsed.text) generatedTitle += parsed.text;
+                } catch(e) {}
+            }
+        }
+
+        if (generatedTitle) {
+            let cleanedTitle = generatedTitle.replace(/^["'«»""。.,]+|["'«»""。.,]+$/g, '').trim();
+            if (cleanedTitle.length > 45) cleanedTitle = cleanedTitle.substring(0, 45).trimEnd() + "…";
+            sessionsList = sessionsList.map(s => (s.id === sessionId && s.title.startsWith("Cuộc trò chuyện mới")) ? { ...s, title: cleanedTitle } : s);
+            await localforage.setItem(`sessions_list_${currentUsername}`, sessionsList);
+            renderSessionsSidebar();
+        }
+    } catch (err) { console.error("Lỗi tạo tiêu đề tự động:", err); }
+}
+
+// ============================================================
+// GỬI TIN NHẮN
+// ============================================================
+async function handleChatSubmit(event) {
+    event.preventDefault();
+    const inputEl = document.getElementById("chat-input");
+    const promptText = inputEl.value.trim();
+    const hasAttachments = pendingImages.length > 0 || detectedYoutubeUrls.length > 0;
+    if (!promptText && !hasAttachments) return;
+
+    const finalPromptText = promptText || "Hãy mô tả nội dung được đính kèm.";
+    const systemInstructionText = document.getElementById("cfg-system").value.trim();
+    const temperatureVal = parseFloat(document.getElementById("cfg-temperature").value);
+
+    const imagesForRequest = pendingImages.map(img => ({ data: img.data, mimeType: img.mimeType }));
+    const imagesForDisplay = pendingImages.map(img => ({ data: img.data, mimeType: img.mimeType, previewUrl: img.previewUrl }));
+    const youtubeUrlsForRequest = [...detectedYoutubeUrls];
+    const hasYoutube = youtubeUrlsForRequest.length > 0;
+
+    let isNewSessionCreated = false;
+    if (!currentSessionId) {
+        currentSessionId = "sess_" + Date.now();
+        sessionsList.unshift({ id: currentSessionId, title: `Cuộc trò chuyện mới (${finalPromptText.substring(0, 15)}...)`, timestamp: Date.now() });
+        await localforage.setItem(`sessions_list_${currentUsername}`, sessionsList);
+        isNewSessionCreated = true;
+    }
+
+    appendMessage("user", finalPromptText, "", 0, true, "", imagesForDisplay, youtubeUrlsForRequest);
+    inputEl.value = ""; inputEl.style.height = "auto";
+
+    pendingImages = []; renderImagePreviewBar();
+    detectedYoutubeUrls = []; renderYoutubeDetectedBar();
+
+    const aiLoading = document.getElementById("ai-loading-indicator");
+    const sendBtn = document.getElementById("chat-send-btn");
+    const btnIcon = document.getElementById("chat-btn-icon");
+
+    aiLoading.classList.remove("hidden");
+    document.getElementById("ai-loading-status-text").innerText = hasYoutube ? "Đang kết nối với YouTube..." : "Đang thiết lập kết nối...";
+    sendBtn.disabled = true;
+    btnIcon.className = "fa-solid fa-circle-notch animate-spin text-xs";
+
+    const messagesEl = document.getElementById("chat-messages");
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+
+    const chatContext = currentChatHistory
+        .filter(msg => msg.sender === "user" || msg.sender === "ai")
+        .map(msg => ({ role: msg.sender === "user" ? "user" : "model", content: msg.text }));
+
+    const bubbleId = "ai-bubble-" + Date.now();
+    const wrapper = document.createElement("div");
+    wrapper.className = "flex items-start gap-3 max-w-2xl mr-auto w-full opacity-0 animate-message";
+    wrapper.id = bubbleId;
+    wrapper.innerHTML = `
+        <div class="w-7 h-7 brand-blob shrink-0 mt-0.5" style="background: linear-gradient(135deg, var(--rose), var(--mint));" aria-hidden="true"></div>
+        <div class="space-y-1.5 flex-1 min-w-0">
+            <div id="${bubbleId}-thought-container" class="hidden mb-2.5 w-full">
+                <details class="rounded-2xl group transition-soft" style="background: var(--bg-panel-raised); border:1px solid var(--border-soft);" open>
+                    <summary class="cursor-pointer px-4 py-2.5 text-[11px] font-bold flex items-center gap-2 select-none" style="color: var(--dust);">
+                        <i id="${bubbleId}-thought-icon" class="fa-solid fa-brain animate-pulse" style="color: var(--rose);"></i>
+                        <span id="${bubbleId}-thought-status">Đang suy nghĩ...</span>
+                        <i class="fa-solid fa-chevron-down ml-auto transition-transform group-open:rotate-180 text-[10px]" aria-hidden="true"></i>
+                    </summary>
+                    <div id="${bubbleId}-thought-content" class="px-4 pb-4 text-xs border-t mt-1 pt-3.5 break-words markdown-content thought-markdown" style="border-color: var(--border-soft);"></div>
+                </details>
+            </div>
+            <div id="${bubbleId}-content" class="text-sm leading-relaxed markdown-content" style="color: var(--ink);"></div>
+            <div id="${bubbleId}-meta" class="flex items-center gap-1.5 text-[9px] font-bold pl-0.5 hidden font-mono">
+                <span id="${bubbleId}-model" class="px-1.5 py-0.5 rounded" style="background: var(--bg-panel-raised); color: var(--rose);"></span>
+                <span id="${bubbleId}-tokens" class="px-1.5 py-0.5 rounded" style="background: var(--bg-panel-raised); color: var(--mint);"></span>
+            </div>
+        </div>
+    `;
+    messagesEl.appendChild(wrapper);
+
+    const contentEl = document.getElementById(`${bubbleId}-content`);
+    const thoughtContentEl = document.getElementById(`${bubbleId}-thought-content`);
+
+    const cursor = document.createElement("span");
+    cursor.id = `${bubbleId}-cursor`;
+    cursor.className = "inline-block w-0.5 h-4 ml-0.5 align-middle animate-pulse";
+    cursor.style.background = "var(--rose)";
+    contentEl.appendChild(cursor);
+
+    let rawText = "", rawThoughtText = "", currentModel = "", isThinking = false;
+    let targetText = "", displayedText = "", targetThoughtText = "", displayedThoughtText = "";
+    let isTypingMain = false, isTypingThought = false;
+
+    function processTypingMain() {
+        if (displayedText.length < targetText.length) {
+            const step = Math.max(1, Math.floor((targetText.length - displayedText.length) / 8));
+            displayedText += targetText.substring(displayedText.length, displayedText.length + step);
+            rawText = displayedText;
+            contentEl.innerHTML = DOMPurify.sanitize(marked.parse(displayedText));
+            triggerLatexRender(contentEl);
+            let cur = document.getElementById(`${bubbleId}-cursor`);
+            if (!cur) { cur = document.createElement("span"); cur.id = `${bubbleId}-cursor`; cur.className = "inline-block w-0.5 h-4 ml-0.5 align-middle animate-pulse"; cur.style.background = "var(--rose)"; }
+            contentEl.appendChild(cur);
+            messagesEl.scrollTop = messagesEl.scrollHeight;
+            requestAnimationFrame(processTypingMain);
+        } else {
+            isTypingMain = false;
+            const cur = document.getElementById(`${bubbleId}-cursor`);
+            if (cur) cur.remove();
+        }
+    }
+
+    function processTypingThought() {
+        if (displayedThoughtText.length < targetThoughtText.length) {
+            const step = Math.max(1, Math.floor((targetThoughtText.length - displayedThoughtText.length) / 8));
+            displayedThoughtText += targetThoughtText.substring(displayedThoughtText.length, displayedThoughtText.length + step);
+            rawThoughtText = displayedThoughtText;
+            thoughtContentEl.innerHTML = DOMPurify.sanitize(marked.parse(displayedThoughtText));
+            triggerLatexRender(thoughtContentEl);
+            messagesEl.scrollTop = messagesEl.scrollHeight;
+            requestAnimationFrame(processTypingThought);
+        } else { isTypingThought = false; }
+    }
+
+    try {
+        const response = await fetch(`${WORKER_URL}/chat`, {
+            method: "POST", headers: { "Authorization": `Bearer ${appToken}`, "Content-Type": "application/json" },
+            body: JSON.stringify({
+                prompt: finalPromptText,
+                history: chatContext,
+                systemInstruction: systemInstructionText || undefined,
+                temperature: temperatureVal,
+                modelChoice: currentModelChoice,
+                thinkingLevel: currentThinkingLevel,
+                images: imagesForRequest.length > 0 ? imagesForRequest : undefined,
+                youtubeUrls: youtubeUrlsForRequest.length > 0 ? youtubeUrlsForRequest : undefined
+            })
+        });
+
+        if (!response.ok) { const errData = await response.json().catch(() => ({})); throw new Error(errData.error || `HTTP ${response.status}`); }
+
+        const reader = response.body.getReader();
+        const dec = new TextDecoder();
+        let buf = "", currentEvent = "message";
+
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            buf += dec.decode(value, { stream: true });
+            const lines = buf.split("\n");
+            buf = lines.pop();
+
+            for (const line of lines) {
+                if (line.startsWith("event:")) { currentEvent = line.substring(6).trim(); continue; }
+                if (!line.startsWith("data:")) continue;
+                const jsonStr = line.slice(5).trim();
+                if (!jsonStr) continue;
+                let parsed;
+                try { parsed = JSON.parse(jsonStr); } catch { continue; }
+
+                if (currentEvent === "meta") {
+                    currentModel = parsed.model || "";
+                    document.getElementById("ai-loading-status-text").innerText = "Đang soạn phản hồi...";
+                }
+                else if (currentEvent === "grounding") { appendGrounding(parsed.metadata, bubbleId); }
+                else if (currentEvent === "thought_start") {
+                    isThinking = true;
+                    document.getElementById(`${bubbleId}-thought-container`).classList.remove("hidden");
+                    document.getElementById("ai-loading-status-text").innerText = "Đang suy nghĩ...";
+                }
+                else if (currentEvent === "thought_chunk") {
+                    if (!isThinking) { isThinking = true; document.getElementById(`${bubbleId}-thought-container`).classList.remove("hidden"); document.getElementById("ai-loading-status-text").innerText = "Đang suy nghĩ..."; }
+                    targetThoughtText += parsed.text;
+                    if (!isTypingThought) { isTypingThought = true; requestAnimationFrame(processTypingThought); }
+                }
+                else if (currentEvent === "thought_end") {
+                    isThinking = false;
+                    displayedThoughtText = targetThoughtText; rawThoughtText = targetThoughtText;
+                    thoughtContentEl.innerHTML = DOMPurify.sanitize(marked.parse(rawThoughtText));
+                    triggerLatexRender(thoughtContentEl);
+                    const iconEl = document.getElementById(`${bubbleId}-thought-icon`);
+                    if (iconEl) iconEl.classList.remove("animate-pulse");
+                    const statusEl = document.getElementById(`${bubbleId}-thought-status`);
+                    if (statusEl) statusEl.innerText = "Quá trình suy nghĩ";
+                    const detailsEl = document.querySelector(`#${bubbleId}-thought-container details`);
+                    if (detailsEl) detailsEl.removeAttribute("open");
+                    document.getElementById("ai-loading-status-text").innerText = "Đang soạn phản hồi...";
+                }
+                else if (currentEvent === "chunk") {
+                    if (isThinking) {
+                        isThinking = false;
+                        const iconEl = document.getElementById(`${bubbleId}-thought-icon`);
+                        if (iconEl) iconEl.classList.remove("animate-pulse");
+                        const detailsEl = document.querySelector(`#${bubbleId}-thought-container details`);
+                        if (detailsEl) detailsEl.removeAttribute("open");
+                        document.getElementById("ai-loading-status-text").innerText = "Đang soạn phản hồi...";
+                    }
+                    targetText += parsed.text;
+                    if (!isTypingMain) { isTypingMain = true; requestAnimationFrame(processTypingMain); }
+                }
+                else if (currentEvent === "done") {
+                    document.getElementById(`${bubbleId}-model`).textContent = currentModel;
+                    document.getElementById(`${bubbleId}-tokens`).textContent = `+${parsed.tokens_consumed} tokens`;
+                    document.getElementById(`${bubbleId}-meta`).classList.remove("hidden");
+                    currentChatHistory.push({ sender: "ai", text: targetText, modelName: currentModel, tokens: parsed.tokens_consumed, thoughtText: rawThoughtText });
+                    localforage.setItem(`chat_messages_${currentUsername}_${currentSessionId}`, currentChatHistory);
+                    fetchUserProfile();
+                    if (isNewSessionCreated) await generateChatTitle(currentSessionId);
+                    else renderSessionsSidebar();
+                }
+                else if (currentEvent === "error") { throw new Error(parsed.message); }
+            }
+        }
+
+        if (rawText && document.getElementById(`${bubbleId}-meta`).classList.contains("hidden")) {
+            contentEl.innerHTML = DOMPurify.sanitize(marked.parse(rawText));
+            triggerLatexRender(contentEl);
+        }
+    } catch (err) {
+        showToast(err.message, "error");
+        if (!rawText && !rawThoughtText) { wrapper.remove(); appendMessage("system-error", `Lỗi: ${err.message}`); }
+        else { const cur = document.getElementById(`${bubbleId}-cursor`); if (cur) cur.remove(); }
+    } finally {
+        aiLoading.classList.add("hidden"); sendBtn.disabled = false; btnIcon.className = "fa-solid fa-arrow-up text-xs";
+        messagesEl.scrollTop = messagesEl.scrollHeight;
+    }
+}
+
+function appendGrounding(metadata, bubbleId) {
+    if (!metadata || !metadata.groundingChunks) return;
+    const container = document.getElementById(`${bubbleId}-content`).parentElement;
+    const div = document.createElement("div");
+    div.className = "mt-2";
+    const links = metadata.groundingChunks.filter(c => c.web)
+        .map(c => `<li><a href="${c.web.uri}" target="_blank" style="color: var(--rose);" class="hover:underline break-all">${c.web.title || c.web.uri}</a></li>`)
+        .join('');
+    div.innerHTML = `
+        <details class="rounded-xl group overflow-hidden" style="background: var(--bg-panel-raised); border:1px solid var(--border-soft);">
+            <summary class="cursor-pointer px-3 py-2 text-[10px] font-bold flex items-center gap-2 select-none" style="color: var(--rose);">
+                <i class="fa-solid fa-globe"></i><span>Đã tìm kiếm trên Internet</span>
+                <i class="fa-solid fa-chevron-down ml-auto group-open:rotate-180 transition-transform"></i>
+            </summary>
+            <ul class="px-4 pb-3 text-xs space-y-1 list-disc" style="color: var(--dust);">${links}</ul>
+        </details>
+    `;
+    container.appendChild(div);
+}
+
+function logout() {
+    closeAllMenus(null);
+    showMainLoading(true, "Đang đăng xuất an toàn...");
+    setTimeout(() => {
+        appToken = ""; currentUsername = ""; currentSessionId = null; sessionsList = []; currentChatHistory = [];
+        localStorage.removeItem("chat_token");
+        clearPendingImages();
+        detectedYoutubeUrls = []; renderYoutubeDetectedBar();
+        document.getElementById("auth-username").value = ""; document.getElementById("auth-password").value = "";
+        document.getElementById("chat-messages").innerHTML = "";
+        showMainLoading(false); checkApplicationState(); showToast("Đã đăng xuất tài khoản.", "info");
+    }, 500);
+}
+
+window.addEventListener("DOMContentLoaded", () => {
+    checkApplicationState();
+    initModelAndThinkingUI();
+    const chatInput = document.getElementById("chat-input");
+    if (chatInput) {
+        chatInput.addEventListener("keydown", function(e) {
+            if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); document.getElementById("chat-form").dispatchEvent(new Event("submit", { cancelable: true })); }
+        });
+    }
+});
+</script>
 </body>
 </html>
