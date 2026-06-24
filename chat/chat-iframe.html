@@ -557,7 +557,9 @@ function m_highlight(code, lang) {
         if (lang && hljs.getLanguage(lang)) {
             return hljs.highlight(code, { language: lang }).value;
         }
-    } catch (@@) {}
+    } catch (e) {
+        // Bỏ trống nếu bạn muốn nuốt lỗi (ignore error)
+    }
     return code;
 }
 
