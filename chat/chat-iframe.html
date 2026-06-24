@@ -79,7 +79,13 @@ details[open] summary ~ * { animation: softFadeIn 0.35s cubic-bezier(0.16, 1, 0.
 .loading-dot { display:inline-block; width:5px; height:5px; border-radius:9999px; background: var(--dust); animation: dotPulse 1.2s infinite; }
 .loading-dot:nth-child(2) { animation-delay: 0.15s; }
 .loading-dot:nth-child(3) { animation-delay: 0.3s; }
-
+@keyframes logoRotate {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+.animate-logo-spin {
+    animation: logoRotate 2s linear infinite;
+}
 /* Markdown */
 .markdown-content p { margin-bottom: 0.8rem; color: var(--ink); line-height: 1.65; }
 .markdown-content p:last-child { margin-bottom: 0; }
@@ -329,12 +335,13 @@ input[type="range"].accent-rose { accent-color: var(--rose); }
         <div id="chat-messages" class="flex-1 overflow-y-auto px-4 py-6 space-y-5" role="log" aria-label="Nội dung hội thoại"></div>
 
         <!-- TRẠNG THÁI AI ĐANG XỬ LÝ (kết nối YouTube / suy nghĩ ...) -->
-        <div id="ai-loading-indicator" class="px-5 pb-2 hidden shrink-0">
-            <div class="flex items-center gap-2.5 text-xs font-medium" style="color: var(--dust);">
-                <span class="loading-dot"></span><span class="loading-dot"></span><span class="loading-dot"></span>
-                <span id="ai-loading-status-text">Đang kết nối...</span>
-            </div>
-        </div>
+<!-- TRẠNG THÁI AI ĐANG XỬ LÝ -->
+<div id="ai-loading-indicator" class="px-5 pb-2 hidden shrink-0">
+    <div class="flex items-center gap-2.5 text-xs font-medium" style="color: var(--dust);">
+        <!-- Đã bỏ các thẻ loading-dot ở đây -->
+        <span id="ai-loading-status-text">Đang kết nối...</span>
+    </div>
+</div>
 
         <!-- KHUNG SOẠN TIN -->
         <footer class="px-4 pb-4 pt-1 shrink-0">
@@ -1001,26 +1008,26 @@ async function handleChatSubmit(event) {
     const wrapper = document.createElement("div");
     wrapper.className = "flex items-start gap-3 max-w-2xl mr-auto w-full opacity-0 animate-message";
     wrapper.id = bubbleId;
-    wrapper.innerHTML = `
-        <div class="w-7 h-7 brand-blob shrink-0 mt-0.5" style="background: linear-gradient(135deg, var(--rose), var(--mint));" aria-hidden="true"></div>
-        <div class="space-y-1.5 flex-1 min-w-0">
-            <div id="${bubbleId}-thought-container" class="hidden mb-2.5 w-full">
-                <details class="rounded-2xl group transition-soft" style="background: var(--bg-panel-raised); border:1px solid var(--border-soft);" open>
-                    <summary class="cursor-pointer px-4 py-2.5 text-[11px] font-bold flex items-center gap-2 select-none" style="color: var(--dust);">
-                        <i id="${bubbleId}-thought-icon" class="fa-solid fa-brain animate-pulse" style="color: var(--rose);"></i>
-                        <span id="${bubbleId}-thought-status">Đang suy nghĩ...</span>
-                        <i class="fa-solid fa-chevron-down ml-auto transition-transform group-open:rotate-180 text-[10px]" aria-hidden="true"></i>
-                    </summary>
-                    <div id="${bubbleId}-thought-content" class="px-4 pb-4 text-xs border-t mt-1 pt-3.5 break-words markdown-content thought-markdown" style="border-color: var(--border-soft);"></div>
-                </details>
-            </div>
-            <div id="${bubbleId}-content" class="text-sm leading-relaxed markdown-content" style="color: var(--ink);"></div>
-            <div id="${bubbleId}-meta" class="flex items-center gap-1.5 text-[9px] font-bold pl-0.5 hidden font-mono">
-                <span id="${bubbleId}-model" class="px-1.5 py-0.5 rounded" style="background: var(--bg-panel-raised); color: var(--rose);"></span>
-                <span id="${bubbleId}-tokens" class="px-1.5 py-0.5 rounded" style="background: var(--bg-panel-raised); color: var(--mint);"></span>
-            </div>
+wrapper.innerHTML = `
+    <div id="${bubbleId}-logo" class="w-7 h-7 brand-blob animate-logo-spin shrink-0 mt-0.5" style="background: linear-gradient(135deg, var(--rose), var(--mint));" aria-hidden="true"></div>
+    <div class="space-y-1.5 flex-1 min-w-0">
+        <div id="${bubbleId}-thought-container" class="hidden mb-2.5 w-full">
+            <details class="rounded-2xl group transition-soft" style="background: var(--bg-panel-raised); border:1px solid var(--border-soft);" open>
+                <summary class="cursor-pointer px-4 py-2.5 text-[11px] font-bold flex items-center gap-2 select-none" style="color: var(--dust);">
+                    <i id="${bubbleId}-thought-icon" class="fa-solid fa-brain animate-pulse" style="color: var(--rose);"></i>
+                    <span id="${bubbleId}-thought-status">Đang suy nghĩ...</span>
+                    <i class="fa-solid fa-chevron-down ml-auto transition-transform group-open:rotate-180 text-[10px]" aria-hidden="true"></i>
+                </summary>
+                <div id="${bubbleId}-thought-content" class="px-4 pb-4 text-xs border-t mt-1 pt-3.5 break-words markdown-content thought-markdown" style="border-color: var(--border-soft);"></div>
+            </details>
         </div>
-    `;
+        <div id="${bubbleId}-content" class="text-sm leading-relaxed markdown-content" style="color: var(--ink);"></div>
+        <div id="${bubbleId}-meta" class="flex items-center gap-1.5 text-[9px] font-bold pl-0.5 hidden font-mono">
+            <span id="${bubbleId}-model" class="px-1.5 py-0.5 rounded" style="background: var(--bg-panel-raised); color: var(--rose);"></span>
+            <span id="${bubbleId}-tokens" class="px-1.5 py-0.5 rounded" style="background: var(--bg-panel-raised); color: var(--mint);"></span>
+        </div>
+    </div>
+`;
     messagesEl.appendChild(wrapper);
 
     const contentEl = document.getElementById(`${bubbleId}-content`);
