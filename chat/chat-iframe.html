@@ -84,7 +84,8 @@ details[open] summary ~ * { animation: softFadeIn 0.35s cubic-bezier(0.16, 1, 0.
     to { transform: rotate(360deg); }
 }
 .animate-logo-spin {
-    animation: logoRotate 2s linear infinite;
+    /* Chạy đồng thời cả hiệu ứng tạo hình Blob và hiệu ứng xoay tròn */
+    animation: blobMorph 9s ease-in-out infinite, logoRotate 2s linear infinite !important;
 }
 /* Markdown */
 .markdown-content p { margin-bottom: 0.8rem; color: var(--ink); line-height: 1.65; }
@@ -1151,6 +1152,8 @@ wrapper.innerHTML = `
                     if (!isTypingMain) { isTypingMain = true; requestAnimationFrame(processTypingMain); }
                 }
                 else if (currentEvent === "done") {
+                    const logoEl = document.getElementById(`${bubbleId}-logo`);
+                    if (logoEl) logoEl.classList.remove("animate-logo-spin");
                     document.getElementById(`${bubbleId}-model`).textContent = currentModel;
                     document.getElementById(`${bubbleId}-tokens`).textContent = `+${parsed.tokens_consumed} tokens`;
                     document.getElementById(`${bubbleId}-meta`).classList.remove("hidden");
@@ -1169,6 +1172,8 @@ wrapper.innerHTML = `
             triggerLatexRender(contentEl);
         }
     } catch (err) {
+        const logoEl = document.getElementById(`${bubbleId}-logo`);
+        if (logoEl) logoEl.classList.remove("animate-logo-spin");
         showToast(err.message, "error");
         if (!rawText && !rawThoughtText) { wrapper.remove(); appendMessage("system-error", `Lỗi: ${err.message}`); }
         else { const cur = document.getElementById(`${bubbleId}-cursor`); if (cur) cur.remove(); }
