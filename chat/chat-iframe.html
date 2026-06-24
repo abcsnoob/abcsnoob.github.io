@@ -372,7 +372,7 @@ input[type="range"].accent-rose { accent-color: var(--rose); }
 
                                 <div id="model-menu" class="hidden absolute bottom-12 left-0 w-72 dropdown-panel p-1.5 flex">
                                     <div class="flex-1 py-0.5">
-                                        <div class="model-option transition-soft" data-model="gemini-3.1-flash-lite" onclick="selectModelOption(this)">
+                                        <div class="model-option transition-soft" data-model="auto" onclick="selectModelOption(this)">
                                             <div><div class="opt-title">Auto</div><div class="opt-desc">Câu trả lời nhanh nhất</div></div>
                                             <i class="fa-solid fa-check text-xs hidden check-icon" style="color: var(--mint);" aria-hidden="true"></i>
                                         </div>
@@ -427,11 +427,9 @@ let currentChatHistory = [];
 
 // ── Model & thinking level ──────────────────────────────────────
 const MODEL_LABELS = {
-    "gemini-3.1-flash-lite": "Flash-Lite",
-    "gemini-3.5-flash": "Flash Mở rộng",
-    "gemini-3.1-pro-preview": "Pro"
+    "auto": "Tự động",
 };
-let currentModelChoice = localStorage.getItem("chat_model_choice") || "gemini-3.5-flash";
+let currentModelChoice = localStorage.getItem("chat_model_choice") || "auto";
 let currentThinkingLevel = localStorage.getItem("chat_thinking_level") || "high";
 
 // ── Ảnh đính kèm & YouTube ───────────────────────────────────────
