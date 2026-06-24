@@ -8,7 +8,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200">
+   
 <script src="https://cdnjs.cloudflare.com/ajax/libs/localforage/1.10.0/localforage.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.8/purify.min.js"></script>
@@ -201,14 +202,14 @@ input[type="range"].accent-rose { accent-color: var(--rose); }
                     <span class="absolute inset-y-0 left-0 flex items-center pl-3" style="color: var(--dust-dim);"><i class="fa-solid fa-lock" aria-hidden="true"></i></span>
                     <input id="auth-password" type="password" required autocomplete="current-password" class="w-full pl-10 pr-10 py-3 rounded-xl text-sm focus:outline-none transition-soft" style="background: var(--bg-input); border:1px solid var(--border); color: var(--ink);" placeholder="••••••••">
                     <button type="button" onclick="togglePasswordVisibility()" aria-label="Hiển thị mật khẩu" class="absolute inset-y-0 right-0 flex items-center pr-3" style="color: var(--dust-dim);">
-                        <i id="password-toggle-icon" class="fa-solid fa-eye" aria-hidden="true"></i>
+                        <span id="password-toggle-icon" class="material-symbols-rounded notranslate" aria-hidden="true">visibility</span>
                     </button>
                 </div>
             </div>
 
             <button id="auth-submit-btn" type="submit" class="w-full py-3 font-semibold rounded-xl transition-soft active:scale-[0.98] flex items-center justify-center gap-2" style="background: linear-gradient(135deg, var(--rose), var(--rose-dim)); color:#1f1213;">
                 <span id="auth-btn-text">Xác nhận đăng nhập</span>
-                <i id="auth-btn-spinner" class="fa-solid fa-circle-notch animate-spin hidden" aria-hidden="true"></i>
+                <span id="auth-btn-spinner" class="material-symbols-rounded notranslate animate-spin hidden">progress_activity</span>
             </button>
         </form>
 
@@ -237,16 +238,16 @@ input[type="range"].accent-rose { accent-color: var(--rose); }
                     <div class="w-7 h-7 brand-blob shrink-0" style="background: linear-gradient(135deg, var(--rose), var(--mint));"></div>
                     <span class="font-display font-bold text-[15px]" style="color: var(--ink);">Abc's Noob AI</span>
                 </div>
-                <button type="button" onclick="toggleSidebar()" aria-label="Đóng menu" class="icon-btn transition-soft"><i class="fa-solid fa-table-columns text-sm" aria-hidden="true"></i></button>
+                <button type="button" onclick="toggleSidebar()" aria-label="Đóng menu" class="icon-btn transition-soft"><span class="material-symbols-rounded notranslate">menu_open</span></button>
             </div>
 
             <!-- Nav -->
             <div class="px-3 pt-2 space-y-1 shrink-0">
                 <div class="nav-item primary transition-soft" onclick="startNewSession()" role="button" tabindex="0">
-                    <i class="fa-solid fa-pen-to-square" aria-hidden="true"></i> Cuộc trò chuyện mới
+                    <span class="material-symbols-rounded notranslate">edit_square</span> Cuộc trò chuyện mới
                 </div>
                 <div class="nav-item transition-soft" onclick="showToast('Tìm kiếm cuộc trò chuyện sẽ sớm ra mắt.', 'info')" role="button" tabindex="0">
-                    <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i> Tìm kiếm trong các cuộc trò chuyện
+                    <span class="material-symbols-rounded notranslate">search</span> Tìm kiếm trong các cuộc trò chuyện
                 </div>
             </div>
 
@@ -267,10 +268,10 @@ input[type="range"].accent-rose { accent-color: var(--rose); }
                 <div class="flex-1 min-w-0">
                     <p id="user-profile-name" class="font-semibold text-xs truncate" style="color: var(--ink);">Đang tải...</p>
                     <p class="text-[10px] truncate flex items-center gap-1 font-mono" style="color: var(--dust-dim);">
-                        <span id="user-profile-tokens" style="color: var(--mint);">0</span>/<span id="user-profile-token-max">12k</span> t/h
+                        <span class="material-symbols-rounded notranslate">token</span><span id="user-profile-tokens" style="color: var(--mint);">0</span>/<span id="user-profile-token-max">12k</span> t/h
                     </p>
                 </div>
-                <i class="fa-solid fa-gear text-xs" style="color: var(--dust-dim);" aria-hidden="true"></i>
+                <span class="material-symbols-rounded notranslate" style="color: var(--dust-dim);" aria-hidden="true">settings</span>
             </div>
         </div>
     </aside>
@@ -281,16 +282,16 @@ input[type="range"].accent-rose { accent-color: var(--rose); }
         <!-- HEADER -->
         <header class="h-14 flex items-center justify-between px-4 z-10 shrink-0" style="border-bottom: 1px solid var(--border-soft);">
             <div class="flex items-center gap-2">
-                <button type="button" onclick="toggleSidebar()" aria-label="Mở hoặc đóng thanh menu" class="icon-btn transition-soft"><i class="fa-solid fa-table-columns text-sm" aria-hidden="true"></i></button>
+                <button type="button" onclick="toggleSidebar()" aria-label="Mở hoặc đóng thanh menu" class="icon-btn transition-soft"><span class="material-symbols-rounded notranslate">menu</span></button>
                 <span class="font-display font-semibold text-sm hidden sm:inline" style="color: var(--ink);">Abc's Noob AI</span>
             </div>
 
             <div class="flex items-center gap-2 shrink-0 relative">
                 <button type="button" class="px-4 py-1.5 rounded-full text-xs font-bold transition-soft" style="background: linear-gradient(135deg, var(--rose), var(--mint)); color:#1a1416;" onclick="showToast('Bạn đang dùng bản miễn phí. Các gói nâng cấp sẽ sớm ra mắt!', 'info')">
-                    <i class="fa-solid fa-wand-magic-sparkles mr-1" aria-hidden="true"></i>Nâng cấp
+                    <span class="material-symbols-rounded notranslate">upgrade</span>Nâng cấp
                 </button>
 
-                <button type="button" onclick="toggleSettingsMenu()" aria-label="Menu thêm" class="icon-btn transition-soft"><i class="fa-solid fa-ellipsis-vertical text-sm" aria-hidden="true"></i></button>
+                <button type="button" onclick="toggleSettingsMenu()" aria-label="Menu thêm" class="icon-btn transition-soft"><span class="material-symbols-rounded notranslate">more_vert</span></button>
 
                 <!-- MENU 3-DOT: System Instruction / Temperature / Token / Đăng xuất -->
                 <div id="settings-menu" class="hidden absolute top-12 right-0 w-80 dropdown-panel p-4 space-y-4">
@@ -309,7 +310,7 @@ input[type="range"].accent-rose { accent-color: var(--rose); }
                                 <span id="user-profile-tokens-menu" style="color: var(--mint);">0</span> / <span id="user-profile-token-max-menu">12.000</span> token mỗi giờ
                             </p>
                         </div>
-                        <button type="button" onclick="fetchUserProfile()" aria-label="Làm mới" class="icon-btn"><i id="profile-refresh-icon" class="fa-solid fa-arrows-rotate text-xs" aria-hidden="true"></i></button>
+                        <button type="button" onclick="fetchUserProfile()" aria-label="Làm mới" class="icon-btn"><span class="material-symbols-rounded notranslate">restart_alt</span></button>
                     </div>
 
                     <div class="space-y-1.5">
@@ -358,13 +359,13 @@ input[type="range"].accent-rose { accent-color: var(--rose); }
                         <div class="flex items-center gap-1.5 relative">
                             <!-- NÚT "+" DUY NHẤT — MỞ MENU ĐÍNH KÈM -->
                             <button type="button" onclick="togglePlusMenu()" aria-label="Đính kèm nội dung" class="icon-btn transition-soft" style="border:1px solid var(--border);">
-                                <i class="fa-solid fa-plus text-xs" aria-hidden="true"></i>
+                                <span class="material-symbols-rounded notranslate">attach_file_add</span>
                             </button>
                             <input id="image-file-input" type="file" accept="image/png,image/jpeg,image/webp,image/heic,image/heif" multiple class="hidden" onchange="handleImageFilesSelected(event)">
 
                             <div id="plus-menu" class="hidden absolute bottom-12 left-0 w-56 dropdown-panel p-1.5">
                                 <div class="plus-menu-item transition-soft" onclick="document.getElementById('image-file-input').click(); togglePlusMenu(false)">
-                                    <i class="fa-regular fa-image" style="color: var(--rose);" aria-hidden="true"></i> Tải ảnh lên
+                                    <span class="material-symbols-rounded notranslate">image</span> Tải ảnh lên
                                 </div>
                                 <div class="plus-menu-item transition-soft" onclick="promptYoutubeLink()">
                                     <i class="fa-brands fa-youtube" style="color: #e05757;" aria-hidden="true"></i> Dán liên kết YouTube
@@ -691,8 +692,14 @@ function switchAuthMode(toRegister) {
 function togglePasswordVisibility() {
     const passInput = document.getElementById("auth-password");
     const toggleIcon = document.getElementById("password-toggle-icon");
-    if (passInput.type === "password") { passInput.type = "text"; toggleIcon.className = "fa-solid fa-eye-slash"; }
-    else { passInput.type = "password"; toggleIcon.className = "fa-solid fa-eye"; }
+    
+    if (passInput.type === "password") { 
+        passInput.type = "text"; 
+        toggleIcon.textContent = "visibility_off"; // Đổi chữ bên trong thành mắt gạch chéo
+    } else { 
+        passInput.type = "password"; 
+        toggleIcon.textContent = "visibility";     // Đổi chữ bên trong thành mắt thường
+    }
 }
 
 async function handleAuthSubmit(event) {
