@@ -91,6 +91,79 @@
         .thought-markdown h1, .thought-markdown h2, .thought-markdown h3 { color: #f1f5f9; }
         .thought-markdown strong { color: #ffffff; }
 
+        /* Nút lựa chọn cấp độ suy nghĩ (segmented control) */
+        .thinking-level-btn {
+            flex: 1;
+            text-align: center;
+            padding: 0.4rem 0.25rem;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            border-radius: 0.65rem;
+            color: #8b93a7;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            user-select: none;
+        }
+        .thinking-level-btn:hover { color: #c7d2fe; background: rgba(99, 102, 241, 0.08); }
+        .thinking-level-btn.active {
+            background: linear-gradient(to right, #6366f1, #9333ea);
+            color: #ffffff;
+            box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
+        }
+
+        /* Preview ảnh đính kèm trước khi gửi */
+        .image-preview-thumb {
+            position: relative;
+            width: 56px;
+            height: 56px;
+            border-radius: 0.75rem;
+            overflow: hidden;
+            border: 1px solid #1e293b;
+            flex-shrink: 0;
+        }
+        .image-preview-thumb img { width: 100%; height: 100%; object-fit: cover; }
+        .image-preview-remove {
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            width: 16px;
+            height: 16px;
+            background: rgba(0,0,0,0.7);
+            border-radius: 9999px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 9px;
+            color: #fca5a5;
+            cursor: pointer;
+        }
+        .image-preview-remove:hover { background: rgba(220, 38, 38, 0.8); color: #fff; }
+
+        /* Ảnh & video YouTube hiển thị trong bong bóng tin nhắn người dùng */
+        .msg-attached-image {
+            width: 90px;
+            height: 90px;
+            border-radius: 0.75rem;
+            object-fit: cover;
+            border: 1px solid rgba(255,255,255,0.15);
+        }
+        .msg-youtube-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            font-size: 10px;
+            font-weight: 700;
+            padding: 0.3rem 0.6rem;
+            border-radius: 0.6rem;
+            background: rgba(0,0,0,0.2);
+            border: 1px solid rgba(255,255,255,0.15);
+            color: #fecaca;
+            max-width: 220px;
+        }
+        .msg-youtube-chip span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
         /* TUÂN THỦ WCAG 2.1: Hỗ trợ loại bỏ chuyển động đối với người dùng nhạy cảm */
         @media (prefers-reduced-motion: reduce) {
             * {
@@ -230,6 +303,20 @@
                         <label for="cfg-temperature" class="text-gray-300 font-semibold">Temperature: <span id="cfg-temp-val" class="text-indigo-400 font-mono">0.7</span></label>
                         <input id="cfg-temperature" type="range" min="0" max="2" step="0.1" value="0.7" oninput="document.getElementById('cfg-temp-val').innerText = this.value" class="w-24 accent-indigo-500 bg-gray-800 h-1.5 rounded-lg cursor-pointer focus:outline-none">
                     </div>
+
+                    <!-- CẤU HÌNH CẤP ĐỘ SUY NGHĨ (thinking_level) — chỉnh trực tiếp trong UI -->
+                    <div class="space-y-1.5">
+                        <label class="flex items-center justify-between text-[11px] font-semibold text-gray-300">
+                            <span class="flex items-center gap-1.5"><i class="fa-solid fa-brain text-indigo-400" aria-hidden="true"></i> Cấp độ suy nghĩ</span>
+                            <span id="cfg-thinking-current" class="text-indigo-400 font-mono text-[10px] uppercase">Medium</span>
+                        </label>
+                        <div class="flex gap-1 p-1 bg-[#070a13] border border-gray-800 rounded-xl" role="radiogroup" aria-label="Chọn cấp độ suy nghĩ">
+                            <div class="thinking-level-btn" data-level="low" onclick="setThinkingLevel('low')" role="radio" tabindex="0" aria-checked="false">Low</div>
+                            <div class="thinking-level-btn active" data-level="medium" onclick="setThinkingLevel('medium')" role="radio" tabindex="0" aria-checked="true">Medium</div>
+                            <div class="thinking-level-btn" data-level="high" onclick="setThinkingLevel('high')" role="radio" tabindex="0" aria-checked="false">High</div>
+                        </div>
+                        <p class="text-[10px] text-gray-500 leading-snug">Áp dụng cho các model Gemini hỗ trợ suy nghĩ (Gemini 2.5 / 3.x). Mức cao hơn = suy luận sâu hơn nhưng chậm và tốn token hơn.</p>
+                    </div>
                 </div>
             </div>
 
@@ -286,13 +373,28 @@
 
             <!-- KHUNG INPUT TIN NHẮN -->
             <footer class="p-3 border-t border-gray-900 bg-[#0b0f19]/20 shrink-0">
-                <form id="chat-form" onsubmit="handleChatSubmit(event)" class="max-w-4xl mx-auto flex gap-2 relative items-end">
-                    <textarea id="chat-input" rows="1" autocomplete="off" aria-label="Nội dung tin nhắn gửi tới trợ lý AI" class="w-full bg-[#0b0f19] border border-gray-800/80 focus:border-indigo-500 rounded-2xl pl-4 pr-12 py-3 text-sm text-gray-100 placeholder-gray-500 focus:outline-none transition-all focus:ring-2 focus:ring-indigo-500/20 shadow-inner resize-none overflow-hidden" placeholder="Hỏi bất cứ điều gì... (Shift+Enter để xuống dòng)" style="max-height: 200px;"></textarea>
-                    
-                    <button id="chat-send-btn" type="submit" aria-label="Gửi tin nhắn" class="bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 disabled:from-gray-800 disabled:to-gray-800 disabled:text-gray-600 text-white w-10 h-10 rounded-xl flex items-center justify-center shadow-md hover:shadow-indigo-500/10 active:scale-95 transition-all shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 absolute right-2 bottom-2">
-                        <i id="chat-btn-icon" class="fa-solid fa-paper-plane text-xs" aria-hidden="true"></i>
-                    </button>
-                </form>
+                <div class="max-w-4xl mx-auto">
+
+                    <!-- Preview ảnh đính kèm (hiện khi có ảnh chờ gửi) -->
+                    <div id="image-preview-bar" class="hidden flex-wrap gap-2 mb-2 px-1"></div>
+
+                    <!-- Chip URL YouTube phát hiện được trong nội dung nhập -->
+                    <div id="youtube-detected-bar" class="hidden flex-wrap gap-2 mb-2 px-1"></div>
+
+                    <form id="chat-form" onsubmit="handleChatSubmit(event)" class="flex gap-2 relative items-end">
+                        <input id="image-file-input" type="file" accept="image/png,image/jpeg,image/webp,image/heic,image/heif" multiple class="hidden" onchange="handleImageFilesSelected(event)">
+
+                        <button type="button" onclick="document.getElementById('image-file-input').click()" aria-label="Đính kèm ảnh" class="w-10 h-10 rounded-xl flex items-center justify-center text-gray-400 hover:text-indigo-400 hover:bg-[#151926] border border-gray-800/80 transition-all shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400">
+                            <i class="fa-regular fa-image text-sm" aria-hidden="true"></i>
+                        </button>
+
+                        <textarea id="chat-input" rows="1" autocomplete="off" aria-label="Nội dung tin nhắn gửi tới trợ lý AI" class="w-full bg-[#0b0f19] border border-gray-800/80 focus:border-indigo-500 rounded-2xl pl-4 pr-12 py-3 text-sm text-gray-100 placeholder-gray-500 focus:outline-none transition-all focus:ring-2 focus:ring-indigo-500/20 shadow-inner resize-none overflow-hidden" placeholder="Hỏi bất cứ điều gì, dán link YouTube hoặc đính kèm ảnh... (Shift+Enter để xuống dòng)" style="max-height: 200px;" oninput="handleChatInputChange(event)"></textarea>
+                        
+                        <button id="chat-send-btn" type="submit" aria-label="Gửi tin nhắn" class="bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 disabled:from-gray-800 disabled:to-gray-800 disabled:text-gray-600 text-white w-10 h-10 rounded-xl flex items-center justify-center shadow-md hover:shadow-indigo-500/10 active:scale-95 transition-all shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 absolute right-2 bottom-2">
+                            <i id="chat-btn-icon" class="fa-solid fa-paper-plane text-xs" aria-hidden="true"></i>
+                        </button>
+                    </form>
+                </div>
             </footer>
         </main>
     </div>
@@ -304,6 +406,19 @@
         let currentSessionId = null;    
         let sessionsList = [];          
         let currentChatHistory = [];    
+
+        // ── Trạng thái cấp độ suy nghĩ (mặc định: medium) ──────────────
+        let currentThinkingLevel = localStorage.getItem("chat_thinking_level") || "medium";
+
+        // ── Trạng thái ảnh đính kèm đang chờ gửi: [{ data, mimeType, previewUrl, fileName }] ──
+        let pendingImages = [];
+
+        // ── URL YouTube nhận diện được trong nội dung đang nhập ────────
+        let detectedYoutubeUrls = [];
+
+        const MAX_IMAGES_PER_MESSAGE_CLIENT = 4;
+        const MAX_IMAGE_BYTES_CLIENT = 6 * 1024 * 1024; // 6MB / ảnh, khớp với giới hạn server
+        const YOUTUBE_URL_REGEX_CLIENT = /(https?:\/\/)?(www\.)?(youtube\.com\/watch\?v=[\w-]+|youtu\.be\/[\w-]+|youtube\.com\/shorts\/[\w-]+)/gi;
 
         marked.setOptions({ breaks: true });
 
@@ -348,6 +463,157 @@ updateClock();
         function toggleVisualsFrame() {
             showToast("Nút 'Open Visuals' đã được kích hoạt. Bạn có thể chèn logic xử lý khung nhân vật của mình tại hàm toggleVisualsFrame().", "info");
             console.log("Visuals Frame Button Clicked - Hook trigger ready.");
+        }
+
+        // ============================================================
+        // KHỐI CẤU HÌNH: CẤP ĐỘ SUY NGHĨ (thinking_level)
+        // ============================================================
+        function setThinkingLevel(level) {
+            currentThinkingLevel = level;
+            localStorage.setItem("chat_thinking_level", level);
+
+            document.querySelectorAll(".thinking-level-btn").forEach(btn => {
+                const isActive = btn.dataset.level === level;
+                btn.classList.toggle("active", isActive);
+                btn.setAttribute("aria-checked", isActive ? "true" : "false");
+            });
+
+            const labelMap = { low: "Low", medium: "Medium", high: "High" };
+            document.getElementById("cfg-thinking-current").innerText = labelMap[level] || level;
+        }
+
+        // Cho phép chọn bằng phím Enter/Space để đạt chuẩn tiếp cận WCAG
+        document.addEventListener("DOMContentLoaded", () => {
+            document.querySelectorAll(".thinking-level-btn").forEach(btn => {
+                btn.addEventListener("keydown", (e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        setThinkingLevel(btn.dataset.level);
+                    }
+                });
+            });
+            setThinkingLevel(currentThinkingLevel);
+        });
+
+        // ============================================================
+        // KHỐI TẢI ẢNH LÊN: chọn file, validate, preview, xóa
+        // ============================================================
+        function fileToBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => {
+                    // reader.result dạng "data:image/png;base64,XXXX" -> tách phần base64
+                    const result = reader.result;
+                    const base64Data = result.substring(result.indexOf(",") + 1);
+                    resolve(base64Data);
+                };
+                reader.onerror = () => reject(new Error("Không thể đọc tệp ảnh."));
+                reader.readAsDataURL(file);
+            });
+        }
+
+        async function handleImageFilesSelected(event) {
+            const files = Array.from(event.target.files || []);
+            event.target.value = ""; // reset input để chọn lại được cùng file nếu cần
+
+            if (files.length === 0) return;
+
+            if (pendingImages.length + files.length > MAX_IMAGES_PER_MESSAGE_CLIENT) {
+                showToast(`Chỉ được đính kèm tối đa ${MAX_IMAGES_PER_MESSAGE_CLIENT} ảnh mỗi tin nhắn.`, "error");
+                return;
+            }
+
+            for (const file of files) {
+                if (!file.type.startsWith("image/")) {
+                    showToast(`Tệp "${file.name}" không phải ảnh hợp lệ.`, "error");
+                    continue;
+                }
+                if (file.size > MAX_IMAGE_BYTES_CLIENT) {
+                    showToast(`Ảnh "${file.name}" vượt quá giới hạn ${(MAX_IMAGE_BYTES_CLIENT / (1024*1024)).toFixed(0)}MB.`, "error");
+                    continue;
+                }
+
+                try {
+                    const base64Data = await fileToBase64(file);
+                    const previewUrl = URL.createObjectURL(file);
+                    pendingImages.push({
+                        data: base64Data,
+                        mimeType: file.type,
+                        previewUrl,
+                        fileName: file.name
+                    });
+                } catch (err) {
+                    showToast(`Lỗi đọc ảnh "${file.name}": ${err.message}`, "error");
+                }
+            }
+
+            renderImagePreviewBar();
+        }
+
+        function removePendingImage(index) {
+            const removed = pendingImages.splice(index, 1);
+            if (removed[0] && removed[0].previewUrl) URL.revokeObjectURL(removed[0].previewUrl);
+            renderImagePreviewBar();
+        }
+
+        function renderImagePreviewBar() {
+            const bar = document.getElementById("image-preview-bar");
+            if (pendingImages.length === 0) {
+                bar.classList.add("hidden");
+                bar.classList.remove("flex");
+                bar.innerHTML = "";
+                return;
+            }
+            bar.classList.remove("hidden");
+            bar.classList.add("flex");
+            bar.innerHTML = pendingImages.map((img, idx) => `
+                <div class="image-preview-thumb" title="${img.fileName}">
+                    <img src="${img.previewUrl}" alt="Xem trước ${img.fileName}">
+                    <div class="image-preview-remove" role="button" tabindex="0" aria-label="Xóa ảnh ${img.fileName}" onclick="removePendingImage(${idx})" onkeydown="if(event.key==='Enter')removePendingImage(${idx})">
+                        <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+                    </div>
+                </div>
+            `).join("");
+        }
+
+        function clearPendingImages() {
+            pendingImages.forEach(img => { if (img.previewUrl) URL.revokeObjectURL(img.previewUrl); });
+            pendingImages = [];
+            renderImagePreviewBar();
+        }
+
+        // ============================================================
+        // KHỐI NHẬN DIỆN URL YOUTUBE TRONG Ô NHẬP
+        // ============================================================
+        function handleChatInputChange(event) {
+            const inputEl = event.target;
+            inputEl.style.height = "auto";
+            inputEl.style.height = Math.min(inputEl.scrollHeight, 200) + "px";
+
+            const text = inputEl.value;
+            const matches = text.match(YOUTUBE_URL_REGEX_CLIENT) || [];
+            // Khử trùng lặp và chuẩn hóa (thêm https:// nếu thiếu)
+            const uniqueUrls = [...new Set(matches.map(u => u.startsWith("http") ? u : `https://${u}`))].slice(0, 2);
+            detectedYoutubeUrls = uniqueUrls;
+            renderYoutubeDetectedBar();
+        }
+
+        function renderYoutubeDetectedBar() {
+            const bar = document.getElementById("youtube-detected-bar");
+            if (detectedYoutubeUrls.length === 0) {
+                bar.classList.add("hidden");
+                bar.classList.remove("flex");
+                bar.innerHTML = "";
+                return;
+            }
+            bar.classList.remove("hidden");
+            bar.classList.add("flex");
+            bar.innerHTML = detectedYoutubeUrls.map(url => `
+                <div class="msg-youtube-chip">
+                    <i class="fa-brands fa-youtube text-red-500" aria-hidden="true"></i>
+                    <span>${url}</span>
+                </div>
+            `).join("");
         }
 
         // KHỐI QUẢN LÝ GIAO DIỆN VÀ TRẠNG THÁI
@@ -533,6 +799,7 @@ updateClock();
             const titleTextBox = document.getElementById("title-text-box");
             titleTextBox.innerText = "Sẵn sàng tạo hội thoại mới..."; titleTextBox.classList.add("italic");
             renderSessionsSidebar(); resetChatToDefaultGreeting();
+            clearPendingImages();
         }
 
         async function deleteSession(event, sessionId) {
@@ -546,23 +813,44 @@ updateClock();
             else { renderSessionsSidebar(); }
         }
 
-        // KHỐI RENDER TIN NHẮN LỊCH SỬ (Hỗ trợ Markdown + LaTeX cho cả Phản hồi và Suy nghĩ)
+        // KHỐI RENDER TIN NHẮN LỊCH SỬ (Hỗ trợ Markdown + LaTeX + Ảnh + YouTube cho cả Phản hồi và Suy nghĩ)
         function renderAllMessages() {
             const container = document.getElementById("chat-messages");
             container.innerHTML = "";
             if (currentChatHistory.length === 0) { resetChatToDefaultGreeting(); return; }
             currentChatHistory.forEach(msg => {
-                appendMessage(msg.sender, msg.text, msg.modelName, msg.tokens, false, msg.thoughtText);
+                appendMessage(msg.sender, msg.text, msg.modelName, msg.tokens, false, msg.thoughtText, msg.attachedImages, msg.attachedYoutubeUrls);
             });
         }
 
         function resetChatToDefaultGreeting() {
             const container = document.getElementById("chat-messages");
             container.innerHTML = "";
-            appendMessage("system-welcome", "Xin chào! Tôi có khả năng hiển thị luồng suy nghĩ và kết xuất biểu thức toán học LaTeX. Hãy đặt câu hỏi hóc búa cho tôi!", "", 0, false);
+            appendMessage("system-welcome", "Xin chào! Tôi có khả năng hiển thị luồng suy nghĩ, kết xuất biểu thức toán học LaTeX, đọc ảnh bạn đính kèm và phân tích video YouTube. Hãy đặt câu hỏi hóc búa cho tôi!", "", 0, false);
         }
 
-        function appendMessage(sender, text, modelName = "", tokens = 0, saveToDb = true, thoughtText = "") {
+        // Tạo HTML cho các ảnh / chip YouTube đính kèm hiển thị trong bong bóng tin nhắn
+        function renderAttachmentsHtml(attachedImages, attachedYoutubeUrls) {
+            let html = "";
+            if (attachedImages && attachedImages.length > 0) {
+                html += `<div class="flex flex-wrap gap-2 mb-2 justify-end">`;
+                attachedImages.forEach(img => {
+                    const src = img.previewUrl || `data:${img.mimeType};base64,${img.data}`;
+                    html += `<img src="${src}" class="msg-attached-image" alt="Ảnh đính kèm">`;
+                });
+                html += `</div>`;
+            }
+            if (attachedYoutubeUrls && attachedYoutubeUrls.length > 0) {
+                html += `<div class="flex flex-wrap gap-2 mb-2 justify-end">`;
+                attachedYoutubeUrls.forEach(url => {
+                    html += `<div class="msg-youtube-chip"><i class="fa-brands fa-youtube text-red-500" aria-hidden="true"></i><span>${url}</span></div>`;
+                });
+                html += `</div>`;
+            }
+            return html;
+        }
+
+        function appendMessage(sender, text, modelName = "", tokens = 0, saveToDb = true, thoughtText = "", attachedImages = null, attachedYoutubeUrls = null) {
             const container = document.getElementById("chat-messages");
             const wrapper = document.createElement("div");
             wrapper.className = "w-full opacity-0 animate-message";
@@ -573,9 +861,11 @@ updateClock();
             }
 
             if (sender === "user") {
+                const attachmentsHtml = renderAttachmentsHtml(attachedImages, attachedYoutubeUrls);
                 wrapper.innerHTML = `
                     <div class="flex items-start gap-3 max-w-3xl ml-auto justify-end w-full">
                         <div class="space-y-1 text-right max-w-full">
+                            ${attachmentsHtml}
                             <div class="bg-indigo-600 text-white px-4 py-2.5 rounded-3xl rounded-tr-none text-sm leading-relaxed text-left markdown-content shadow-md shadow-indigo-950/10">${parsedHtml}</div>
                             <span class="text-[9px] font-bold text-gray-500 pr-1 block">Bạn</span>
                         </div>
@@ -628,7 +918,7 @@ updateClock();
             container.scrollTop = container.scrollHeight;
 
             if (saveToDb && currentSessionId && (sender === "user" || sender === "ai")) {
-                currentChatHistory.push({ sender, text, modelName, tokens, thoughtText });
+                currentChatHistory.push({ sender, text, modelName, tokens, thoughtText, attachedImages, attachedYoutubeUrls });
                 localforage.setItem(`chat_messages_${currentUsername}_${currentSessionId}`, currentChatHistory);
             }
         }
@@ -673,13 +963,6 @@ updateClock();
                     buf = lines.pop();
 
                     for (const line of lines) {
-if (currentEvent === "grounding") {
-    try {
-        const groundingData = JSON.parse(line.slice(5).trim());
-        // Gọi hàm render, truyền thêm bubbleId để gắn vào đúng tin nhắn
-        appendGrounding(groundingData.metadata, bubbleId); 
-    } catch(e) { console.error("Lỗi parse grounding:", e); }
-}
                         if (line.startsWith("event:")) {
                             currentEvent = line.substring(6).trim();
                             continue;
@@ -724,26 +1007,42 @@ if (currentEvent === "grounding") {
             }
         }
 
-        // TÁC VỤ GỬI YÊU CẦU API — ĐÃ SỬA TYPING EFFECT, MARKDOWN + LATEX THỜI GIAN THỰC CHO CẢ HAI KHUNG
+        // TÁC VỤ GỬI YÊU CẦU API — Hỗ trợ Markdown + LaTeX thời gian thực, Cấp độ suy nghĩ, Ảnh & YouTube
         async function handleChatSubmit(event) {
             event.preventDefault();
             const inputEl = document.getElementById("chat-input");
             const promptText = inputEl.value.trim();
-            if (!promptText) return;
+
+            // Cho phép gửi nếu có ảnh đính kèm dù không nhập chữ (ví dụ chỉ gửi ảnh để hỏi "đây là gì?")
+            const hasAttachments = pendingImages.length > 0 || detectedYoutubeUrls.length > 0;
+            if (!promptText && !hasAttachments) return;
+
+            const finalPromptText = promptText || "Hãy mô tả nội dung được đính kèm.";
 
             const systemInstructionText = document.getElementById("cfg-system").value.trim();
             const temperatureVal = parseFloat(document.getElementById("cfg-temperature").value);
 
+            // Chụp lại ảnh & URL YouTube của lượt gửi này, sau đó dọn dẹp khu vực soạn tin
+            const imagesForRequest = pendingImages.map(img => ({ data: img.data, mimeType: img.mimeType }));
+            const imagesForDisplay = pendingImages.map(img => ({ data: img.data, mimeType: img.mimeType, previewUrl: img.previewUrl }));
+            const youtubeUrlsForRequest = [...detectedYoutubeUrls];
+
             let isNewSessionCreated = false;
             if (!currentSessionId) {
                 currentSessionId = "sess_" + Date.now();
-                sessionsList.unshift({ id: currentSessionId, title: `Cuộc trò chuyện mới (${promptText.substring(0, 15)}...)`, timestamp: Date.now() });
+                sessionsList.unshift({ id: currentSessionId, title: `Cuộc trò chuyện mới (${finalPromptText.substring(0, 15)}...)`, timestamp: Date.now() });
                 await localforage.setItem(`sessions_list_${currentUsername}`, sessionsList);
                 isNewSessionCreated = true;
             }
 
-            appendMessage("user", promptText, "", 0, true);
+            appendMessage("user", finalPromptText, "", 0, true, "", imagesForDisplay, youtubeUrlsForRequest);
             inputEl.value = ""; inputEl.style.height = "auto";
+
+            // Dọn dẹp khu soạn tin (giữ nguyên ảnh preview trong tin nhắn đã gửi, không revoke ngay)
+            pendingImages = [];
+            renderImagePreviewBar();
+            detectedYoutubeUrls = [];
+            renderYoutubeDetectedBar();
 
             const aiLoading = document.getElementById("ai-loading-indicator");
             const sendBtn = document.getElementById("chat-send-btn");
@@ -812,38 +1111,37 @@ if (currentEvent === "grounding") {
             let isTypingThought = false;
 
             // Tiến trình chạy Typing Effect từng chữ một cho Nội dung Phản hồi chính
-// Tiến trình chạy Typing Effect từng chữ một cho Nội dung Phản hồi chính
-function processTypingMain() {
-    if (displayedText.length < targetText.length) {
-        // Áp dụng logic tính step tự động dựa trên độ dài còn lại để tạo cảm giác gõ nhanh dần hoặc mượt mà
-        const step = Math.max(1, Math.floor((targetText.length - displayedText.length) / 8));
-        
-        displayedText += targetText.substring(displayedText.length, displayedText.length + step);
-        rawText = displayedText;
+            function processTypingMain() {
+                if (displayedText.length < targetText.length) {
+                    // Áp dụng logic tính step tự động dựa trên độ dài còn lại để tạo cảm giác gõ nhanh dần hoặc mượt mà
+                    const step = Math.max(1, Math.floor((targetText.length - displayedText.length) / 8));
 
-        contentEl.innerHTML = DOMPurify.sanitize(marked.parse(displayedText));
-        triggerLatexRender(contentEl);
+                    displayedText += targetText.substring(displayedText.length, displayedText.length + step);
+                    rawText = displayedText;
 
-        // Giữ nguyên logic quản lý con trỏ (cursor)
-        let cur = document.getElementById(`${bubbleId}-cursor`);
-        if (!cur) {
-            cur = document.createElement("span");
-            cur.id = `${bubbleId}-cursor`;
-            cur.className = "inline-block w-0.5 h-4 bg-indigo-400 ml-0.5 align-middle animate-pulse";
-        }
-        contentEl.appendChild(cur);
+                    contentEl.innerHTML = DOMPurify.sanitize(marked.parse(displayedText));
+                    triggerLatexRender(contentEl);
 
-        messagesEl.scrollTop = messagesEl.scrollHeight;
+                    // Giữ nguyên logic quản lý con trỏ (cursor)
+                    let cur = document.getElementById(`${bubbleId}-cursor`);
+                    if (!cur) {
+                        cur = document.createElement("span");
+                        cur.id = `${bubbleId}-cursor`;
+                        cur.className = "inline-block w-0.5 h-4 bg-indigo-400 ml-0.5 align-middle animate-pulse";
+                    }
+                    contentEl.appendChild(cur);
 
-        // Chuyển từ setTimeout sang requestAnimationFrame để hiệu năng mượt mà hơn
-        requestAnimationFrame(processTypingMain);
-    } else {
-        isTypingMain = false;
-        // Tùy chọn: Xóa con trỏ khi gõ xong
-        const cur = document.getElementById(`${bubbleId}-cursor`);
-        if (cur) cur.remove();
-    }
-}
+                    messagesEl.scrollTop = messagesEl.scrollHeight;
+
+                    // Chuyển từ setTimeout sang requestAnimationFrame để hiệu năng mượt mà hơn
+                    requestAnimationFrame(processTypingMain);
+                } else {
+                    isTypingMain = false;
+                    // Tùy chọn: Xóa con trỏ khi gõ xong
+                    const cur = document.getElementById(`${bubbleId}-cursor`);
+                    if (cur) cur.remove();
+                }
+            }
 
             // Tiến trình chạy Typing Effect mượt mà cho Khung Suy Nghĩ (Chain of Thought)
             function processTypingThought() {
@@ -865,7 +1163,15 @@ function processTypingMain() {
             try {
                 const response = await fetch(`${WORKER_URL}/chat`, {
                     method: "POST", headers: { "Authorization": `Bearer ${appToken}`, "Content-Type": "application/json" },
-                    body: JSON.stringify({ prompt: promptText, history: chatContext, systemInstruction: systemInstructionText || undefined, temperature: temperatureVal })
+                    body: JSON.stringify({
+                        prompt: finalPromptText,
+                        history: chatContext,
+                        systemInstruction: systemInstructionText || undefined,
+                        temperature: temperatureVal,
+                        thinkingLevel: currentThinkingLevel,
+                        images: imagesForRequest.length > 0 ? imagesForRequest : undefined,
+                        youtubeUrls: youtubeUrlsForRequest.length > 0 ? youtubeUrlsForRequest : undefined
+                    })
                 });
 
                 if (!response.ok) {
@@ -901,6 +1207,9 @@ function processTypingMain() {
                         if (currentEvent === "meta") {
                             currentModel = parsed.model || "";
                         } 
+                        else if (currentEvent === "grounding") {
+                            appendGrounding(parsed.metadata, bubbleId);
+                        }
                         else if (currentEvent === "thought_start") {
                             isThinking = true;
                             document.getElementById(`${bubbleId}-thought-container`).classList.remove("hidden");
@@ -950,27 +1259,27 @@ function processTypingMain() {
                                 requestAnimationFrame(processTypingMain);
                             }
                         } 
-else if (currentEvent === "done") {
-    if (isThinking) {
-        const iconEl = document.getElementById(`${bubbleId}-thought-icon`);
-        if (iconEl) iconEl.classList.remove("animate-pulse");
-    }
+                        else if (currentEvent === "done") {
+                            if (isThinking) {
+                                const iconEl = document.getElementById(`${bubbleId}-thought-icon`);
+                                if (iconEl) iconEl.classList.remove("animate-pulse");
+                            }
 
-    // KHÔNG GÁN ĐÈ displayedText = targetText Ở ĐÂY.
-    // Hãy để hàm processTypingMain tự chạy cho đến khi hết targetText.
-    // Chúng ta chỉ cập nhật meta dữ liệu:
-    
-    document.getElementById(`${bubbleId}-model`).textContent = currentModel;
-    document.getElementById(`${bubbleId}-tokens`).textContent = `+${parsed.tokens_consumed} tokens`;
-    document.getElementById(`${bubbleId}-meta`).classList.remove("hidden");
+                            // KHÔNG GÁN ĐÈ displayedText = targetText Ở ĐÂY.
+                            // Hãy để hàm processTypingMain tự chạy cho đến khi hết targetText.
+                            // Chúng ta chỉ cập nhật meta dữ liệu:
 
-    // Vẫn lưu vào DB như cũ
-    currentChatHistory.push({ sender: "ai", text: targetText, modelName: currentModel, tokens: parsed.tokens_consumed, thoughtText: rawThoughtText });
-    localforage.setItem(`chat_messages_${currentUsername}_${currentSessionId}`, currentChatHistory);
+                            document.getElementById(`${bubbleId}-model`).textContent = currentModel;
+                            document.getElementById(`${bubbleId}-tokens`).textContent = `+${parsed.tokens_consumed} tokens`;
+                            document.getElementById(`${bubbleId}-meta`).classList.remove("hidden");
 
-    fetchUserProfile();
-    if (isNewSessionCreated) await generateChatTitle(currentSessionId);
-    else renderSessionsSidebar();
+                            // Vẫn lưu vào DB như cũ
+                            currentChatHistory.push({ sender: "ai", text: targetText, modelName: currentModel, tokens: parsed.tokens_consumed, thoughtText: rawThoughtText });
+                            localforage.setItem(`chat_messages_${currentUsername}_${currentSessionId}`, currentChatHistory);
+
+                            fetchUserProfile();
+                            if (isNewSessionCreated) await generateChatTitle(currentSessionId);
+                            else renderSessionsSidebar();
                         } 
                         else if (currentEvent === "error") {
                             throw new Error(parsed.message);
@@ -992,36 +1301,40 @@ else if (currentEvent === "done") {
                 messagesEl.scrollTop = messagesEl.scrollHeight;
             }
         }
-function appendGrounding(metadata, bubbleId) {
-    if (!metadata || !metadata.groundingChunks) return;
-    
-    const container = document.getElementById(`${bubbleId}-content`).parentElement;
-    const div = document.createElement("div");
-    div.className = "mt-2";
-    
-    // Tạo danh sách các nguồn
-    const links = metadata.groundingChunks
-        .filter(c => c.web)
-        .map(c => `<li><a href="${c.web.uri}" target="_blank" class="text-indigo-400 hover:underline break-all">${c.web.title || c.web.uri}</a></li>`)
-        .join('');
 
-    div.innerHTML = `
-        <details class="bg-[#0b0f19] border border-indigo-900/40 rounded-xl group overflow-hidden">
-            <summary class="cursor-pointer px-3 py-2 text-[10px] font-bold text-indigo-300 hover:text-indigo-200 flex items-center gap-2 select-none outline-none">
-                <i class="fa-solid fa-globe"></i> <span>Searched on the Internet</span>
-                <i class="fa-solid fa-chevron-down ml-auto group-open:rotate-180 transition-transform"></i>
-            </summary>
-            <ul class="px-4 pb-3 text-xs text-gray-400 space-y-1 list-disc">${links}</ul>
-        </details>
-    `;
-    container.appendChild(div);
-}
+        function appendGrounding(metadata, bubbleId) {
+            if (!metadata || !metadata.groundingChunks) return;
+            
+            const container = document.getElementById(`${bubbleId}-content`).parentElement;
+            const div = document.createElement("div");
+            div.className = "mt-2";
+            
+            // Tạo danh sách các nguồn
+            const links = metadata.groundingChunks
+                .filter(c => c.web)
+                .map(c => `<li><a href="${c.web.uri}" target="_blank" class="text-indigo-400 hover:underline break-all">${c.web.title || c.web.uri}</a></li>`)
+                .join('');
+
+            div.innerHTML = `
+                <details class="bg-[#0b0f19] border border-indigo-900/40 rounded-xl group overflow-hidden">
+                    <summary class="cursor-pointer px-3 py-2 text-[10px] font-bold text-indigo-300 hover:text-indigo-200 flex items-center gap-2 select-none outline-none">
+                        <i class="fa-solid fa-globe"></i> <span>Searched on the Internet</span>
+                        <i class="fa-solid fa-chevron-down ml-auto group-open:rotate-180 transition-transform"></i>
+                    </summary>
+                    <ul class="px-4 pb-3 text-xs text-gray-400 space-y-1 list-disc">${links}</ul>
+                </details>
+            `;
+            container.appendChild(div);
+        }
+
         // CHỨC NĂNG ĐĂNG XUẤT 
         function logout() {
             showMainLoading(true, "Đang đăng xuất an toàn...");
             setTimeout(() => {
                 appToken = ""; currentUsername = ""; currentSessionId = null; sessionsList = []; currentChatHistory = [];
                 localStorage.removeItem("chat_token");
+                clearPendingImages();
+                detectedYoutubeUrls = []; renderYoutubeDetectedBar();
                 document.getElementById("auth-username").value = ""; document.getElementById("auth-password").value = "";
                 document.getElementById("chat-messages").innerHTML = "";
                 showMainLoading(false); checkApplicationState(); showToast("Đã đăng xuất tài khoản.", "info");
@@ -1035,7 +1348,6 @@ function appendGrounding(metadata, bubbleId) {
                 chatInput.addEventListener("keydown", function(e) {
                     if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); document.getElementById("chat-form").dispatchEvent(new Event("submit", { cancelable: true })); }
                 });
-                chatInput.addEventListener("input", function() { this.style.height = "auto"; this.style.height = Math.min(this.scrollHeight, 200) + "px"; });
             }
         });
     </script>
