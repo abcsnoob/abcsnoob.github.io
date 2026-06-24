@@ -27,8 +27,7 @@ body { background: #0f172a; color: white; font-family: 'Segoe UI', Tahoma, Genev
 </div>
 
 <div id="download-cards" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 w-full max-w-6xl mb-12">
-    <!-- Cards sẽ được JS tạo ra -->
-</div>
+    </div>
 <div class="mt-6 flex gap-4 justify-center">
     <a href="https://abcsnoob.github.io/chat/" class="bg-emerald-600 hover:bg-emerald-500 text-white px-6 py-2 rounded-full font-bold transition flex items-center gap-2">
         <i class="fas fa-globe"></i> Dùng bản Web (Không cần cài đặt)
@@ -39,23 +38,21 @@ body { background: #0f172a; color: white; font-family: 'Segoe UI', Tahoma, Genev
 const platforms = [
   { name: 'Windows', icon: 'fab fa-windows', key: 'windows', ext: '.zip', info: 'Windows 8/10/11 (Đã test)' },
   { name: 'MacOS', icon: 'fab fa-apple', key: 'macos', ext: '.zip', info: 'Intel & Apple Silicon (Beta)' },
-  // Đổi Debian Compatible thành Universal để người dùng bớt lo
   { name: 'Linux', icon: 'fab fa-linux', key: 'linux', ext: '.tar.gz', info: 'Bản thực thi đa nền tảng (Beta)' }, 
   { name: 'Android', icon: 'fab fa-android', key: 'android', ext: '.apk', info: 'Android 5.1 - 15 (Đã test)' }
 ];
 
-const jsonUrl = 'https://raw.githubusercontent.com/abcsnoob/abcsnoobytb/refs/heads/main/aiapp-release.json'; // file JSON của bạn
+const jsonUrl = 'https://raw.githubusercontent.com/abcsnoob/abcsnoobytb/refs/heads/main/aiapp-release.json';
 
 let versionData = null;
 
-// Render thẻ download dựa trên object version
 function renderDownloads(versionObj) {
   const container = document.getElementById('download-cards');
   container.innerHTML = '';
 
   platforms.forEach(p => {
     const url = versionObj.downloads[p.key];
-    if(!url) return; // nếu không có URL, bỏ qua
+    if(!url) return; 
     const card = document.createElement('div');
     card.className = 'card bg-slate-800 p-6 rounded-2xl border border-slate-700 text-center';
     card.innerHTML = `
@@ -69,6 +66,11 @@ function renderDownloads(versionObj) {
     `;
     container.appendChild(card);
   });
+}
+
+// Hàm lấy thông tin hash hiện tại trên URL (bỏ ký tự '#')
+function getVersionFromHash() {
+  return window.location.hash ? window.location.hash.substring(1) : null;
 }
 
 // Load JSON
@@ -86,16 +88,43 @@ fetch(jsonUrl)
         select.appendChild(opt);
       });
 
-      // Render lần đầu là latest (mặc định chọn version đầu tiên)
-      const initialVersion = data.versions[0];
-      select.value = initialVersion.version;
-      renderDownloads(initialVersion);
+      // --- PHẦN XỬ LÝ URL TỰ ĐỘNG ---
+      const hashVersion = getVersionFromHash();
+      // Tìm xem version trong hash có tồn tại trong danh sách JSON không
+      const matchedVersion = data.versions.find(v => v.version === hashVersion);
+      
+      // Nếu khớp thì chọn version theo URL, nếu không thì lấy mặc định bản mới nhất (bản đầu tiên)
+      const currentVersion = matchedVersion || data.versions[0];
+      
+      select.value = currentVersion.version;
+      renderDownloads(currentVersion);
 
-      // Khi đổi version
+      // Nếu không có hash hoặc hash sai, cập nhật lại hash chuẩn cho URL
+      if (!matchedVersion) {
+        window.history.replaceState(null, null, '#' + currentVersion.version);
+      }
+      // -------------------------------
+
+      // Khi đổi version thủ công
       select.addEventListener('change', e => {
         const selected = data.versions.find(v => v.version === e.target.value);
-        if(selected) renderDownloads(selected);
+        if(selected) {
+          renderDownloads(selected);
+          // Cập nhật lại hash trên thanh địa chỉ mà không reload trang
+          window.history.pushState(null, null, '#' + selected.version);
+        }
       });
+      
+      // Lắng nghe sự kiện nếu user bấm nút Back/Forward của trình duyệt thì cập nhật theo URL
+      window.addEventListener('hashchange', () => {
+        const newHash = getVersionFromHash();
+        const selected = data.versions.find(v => v.version === newHash);
+        if (selected && select.value !== newHash) {
+          select.value = selected.version;
+          renderDownloads(selected);
+        }
+      });
+
     } else {
       select.style.display = 'none';
     }
