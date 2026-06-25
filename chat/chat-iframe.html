@@ -127,6 +127,21 @@ input[type="range"].accent-rose { accent-color: var(--rose); }
 #mic-btn.mic-listening { background: rgba(205,122,123,0.16); color: var(--rose); }
 @keyframes micPulseRing { 0% { box-shadow: 0 0 0 0 rgba(205,122,123,0.45); } 100% { box-shadow: 0 0 0 9px rgba(205,122,123,0); } }
 #mic-btn.mic-listening { animation: micPulseRing 1.5s ease-out infinite; }
+
+/* Image Lightbox */
+.msg-attached-image { cursor: zoom-in; transition: filter 0.15s ease; }
+.msg-attached-image:hover { filter: brightness(1.08); }
+.lightbox-overlay { position: fixed; inset: 0; z-index: 50; background: rgba(8,6,7,0.92); backdrop-filter: blur(6px); display:flex; align-items:center; justify-content:center; padding: 4vh 4vw; animation: lightboxFadeIn 0.18s ease-out; }
+@keyframes lightboxFadeIn { from { opacity: 0; } to { opacity: 1; } }
+.lightbox-img-wrap { position:relative; max-width: 92vw; max-height: 90vh; animation: lightboxZoomIn 0.22s cubic-bezier(0.16, 1, 0.3, 1); }
+@keyframes lightboxZoomIn { from { opacity: 0; transform: scale(0.94); } to { opacity: 1; transform: scale(1); } }
+.lightbox-img-wrap img { max-width: 92vw; max-height: 90vh; border-radius: 0.85rem; box-shadow: 0 30px 80px -10px rgba(0,0,0,0.7); display:block; object-fit: contain; }
+.lightbox-close-btn { position:absolute; top:-0.9rem; right:-0.9rem; width: 2.3rem; height: 2.3rem; border-radius: 9999px; display:flex; align-items:center; justify-content:center; background: var(--bg-panel-raised); border:1px solid var(--border); color: var(--ink); cursor:pointer; box-shadow: 0 8px 20px -4px rgba(0,0,0,0.5); transition: all 0.15s ease; }
+.lightbox-close-btn:hover { background: var(--rose); color:#1a1416; }
+.lightbox-actions { position:absolute; bottom:-3rem; left:50%; transform: translateX(-50%); display:flex; gap:0.5rem; }
+.lightbox-action-btn { display:flex; align-items:center; gap:0.4rem; padding: 0.5rem 1rem; border-radius: 9999px; background: var(--bg-panel-raised); border:1px solid var(--border); color: var(--ink); font-size:0.75rem; font-weight:600; cursor:pointer; transition: all 0.15s ease; }
+.lightbox-action-btn:hover { background: var(--bg-input); border-color: var(--rose-dim); }
+@media (max-width: 640px) { .lightbox-close-btn { top:-0.5rem; right:0; } .lightbox-actions { bottom:-2.8rem; } }
 </style>
 </head>
 <body class="h-screen flex flex-col overflow-hidden" style="background: var(--bg-app); color: var(--ink);">
@@ -192,6 +207,9 @@ input[type="range"].accent-rose { accent-color: var(--rose); }
             'toast.mic_unsupported': 'Trình duyệt này không hỗ trợ nhận diện giọng nói.',
             'toast.mic_denied': 'Vui lòng cho phép quyền truy cập micro.',
             'toast.mic_error': 'Có lỗi xảy ra khi ghi âm.',
+            'toast.popup_blocked': 'Trình duyệt đã chặn cửa sổ popup. Vui lòng cho phép popup để mở tab mới.',
+            'lightbox.download': 'Tải xuống',
+            'lightbox.open_tab': 'Mở tab mới',
         }
     };
     function fallbackT(key) {
@@ -269,6 +287,18 @@ input[type="range"].accent-rose { accent-color: var(--rose); }
             <button type="button" onclick="closeSearchModal()" class="icon-btn transition-soft" style="width:1.8rem;height:1.8rem;"><span class="material-symbols-rounded notranslate" style="font-size:16px;">close</span></button>
         </div>
         <div id="search-results" class="search-results"></div>
+    </div>
+</div>
+
+<!-- IMAGE LIGHTBOX -->
+<div id="lightbox-overlay" class="lightbox-overlay hidden" onclick="if(event.target===this) closeLightbox()">
+    <div class="lightbox-img-wrap" onclick="event.stopPropagation()">
+        <img id="lightbox-img" src="" alt="image preview">
+        <button type="button" class="lightbox-close-btn" onclick="closeLightbox()"><span class="material-symbols-rounded notranslate" style="font-size:18px;">close</span></button>
+        <div class="lightbox-actions">
+            <a id="lightbox-download-btn" class="lightbox-action-btn" download="image.png"><span class="material-symbols-rounded notranslate" style="font-size:15px;">download</span><span data-i18n="lightbox.download">Tải xuống</span></a>
+            <button type="button" class="lightbox-action-btn" onclick="openLightboxInNewTab()"><span class="material-symbols-rounded notranslate" style="font-size:15px;">open_in_new</span><span data-i18n="lightbox.open_tab">Mở tab mới</span></button>
+        </div>
     </div>
 </div>
 
@@ -880,12 +910,39 @@ async function runSearch(q) {
 }
 async function selectSearchResult(sessionId) { closeSearchModal(); await switchSession(sessionId); }
 
+/* ---------------- IMAGE LIGHTBOX ---------------- */
+let lightboxCurrentSrc = "";
+function openLightbox(src) {
+    if (!src) return;
+    lightboxCurrentSrc = src;
+    const overlay = document.getElementById("lightbox-overlay");
+    document.getElementById("lightbox-img").src = src;
+    const dlBtn = document.getElementById("lightbox-download-btn");
+    dlBtn.href = src;
+    const ext = (src.match(/^data:image\/(\w+);/) || [])[1] || "png";
+    dlBtn.download = `image_${Date.now()}.${ext === "jpeg" ? "jpg" : ext}`;
+    overlay.classList.remove("hidden");
+    document.addEventListener("keydown", lightboxEscHandler);
+}
+function closeLightbox() {
+    document.getElementById("lightbox-overlay").classList.add("hidden");
+    document.getElementById("lightbox-img").src = "";
+    document.removeEventListener("keydown", lightboxEscHandler);
+}
+function lightboxEscHandler(e) { if (e.key === "Escape") closeLightbox(); }
+function openLightboxInNewTab() {
+    if (!lightboxCurrentSrc) return;
+    const w = window.open();
+    if (w) { w.document.write(`<title>Image</title><body style="margin:0;background:#0a0809;display:flex;align-items:center;justify-content:center;min-height:100vh;"><img src="${lightboxCurrentSrc}" style="max-width:100%;max-height:100vh;"></body>`); }
+    else { showToast(t("toast.popup_blocked"), "error"); }
+}
+
 function renderAllMessages() { const c = document.getElementById("chat-messages"); c.innerHTML = ""; if (currentChatHistory.length === 0) { resetChatToDefaultGreeting(); return; } currentChatHistory.forEach((msg, idx) => { appendMessage(msg.sender, msg.text, msg.modelName, msg.tokens, false, msg.thoughtText, msg.attachedImages, msg.attachedYoutubeUrls, idx); }); }
 function resetChatToDefaultGreeting() { document.getElementById("chat-messages").innerHTML = `<div class="h-full flex items-center justify-center"><p class="font-display text-2xl sm:text-3xl font-semibold text-center max-w-lg px-4" style="color: var(--dust);">${t("chat.default_greeting")}</p></div>`; }
 
 function renderAttachmentsHtml(imgs, yts) {
     let html = "";
-    if (imgs?.length) { html += `<div class="flex flex-wrap gap-2 mb-2 justify-end">${imgs.map(img => `<img src="${img.data ? `data:${img.mimeType};base64,${img.data}` : (img.previewUrl || '')}" class="msg-attached-image" loading="lazy" alt="attachment">`).join('')}</div>`; }
+    if (imgs?.length) { html += `<div class="flex flex-wrap gap-2 mb-2 justify-end">${imgs.map(img => { const src = img.data ? `data:${img.mimeType};base64,${img.data}` : (img.previewUrl || ''); return `<img src="${src}" class="msg-attached-image" loading="lazy" alt="attachment" onclick="openLightbox('${src}')">`; }).join('')}</div>`; }
     if (yts?.length) { html += `<div class="flex flex-wrap gap-2 mb-2 justify-end">${yts.map(url => `<div class="yt-chip"><span class="material-symbols-rounded notranslate" style="font-size:14px;color:#e05757;">smart_display</span><span>${url}</span></div>`).join('')}</div>`; }
     return html;
 }
