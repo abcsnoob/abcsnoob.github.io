@@ -142,6 +142,106 @@ input[type="range"].accent-rose { accent-color: var(--rose); }
 .lightbox-action-btn { display:flex; align-items:center; gap:0.4rem; padding: 0.5rem 1rem; border-radius: 9999px; background: var(--bg-panel-raised); border:1px solid var(--border); color: var(--ink); font-size:0.75rem; font-weight:600; cursor:pointer; transition: all 0.15s ease; }
 .lightbox-action-btn:hover { background: var(--bg-input); border-color: var(--rose-dim); }
 @media (max-width: 640px) { .lightbox-close-btn { top:-0.5rem; right:0; } .lightbox-actions { bottom:-2.8rem; } }
+
+/* ============================================================
+   GLOBAL MICRO-INTERACTIONS — hiệu ứng cho mọi thứ trong trang
+   ============================================================ */
+
+/* Mặc định: mọi thứ chuyển động êm, trừ khi có animation riêng đang chạy */
+* { transition: background-color 0.2s cubic-bezier(0.25,0.8,0.25,1), border-color 0.2s cubic-bezier(0.25,0.8,0.25,1), color 0.2s cubic-bezier(0.25,0.8,0.25,1), opacity 0.2s ease, transform 0.18s cubic-bezier(0.25,0.8,0.25,1), box-shadow 0.2s cubic-bezier(0.25,0.8,0.25,1), filter 0.2s ease; }
+*:where(svg, path, img) { transition: transform 0.18s cubic-bezier(0.25,0.8,0.25,1), filter 0.2s ease, opacity 0.2s ease; }
+
+html { scroll-behavior: smooth; }
+
+/* Trang vừa load: nội dung body trồi nhẹ vào */
+@keyframes pageFadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+body { animation: pageFadeIn 0.45s cubic-bezier(0.16, 1, 0.3, 1); }
+
+/* --- Nút bấm & icon buttons: nhấc nhẹ khi hover, lún khi click --- */
+button, .icon-btn, .nav-item, .plus-menu-item, .msg-action-btn, .msg-action-menu-item,
+.model-pill, .session-del-btn, .lightbox-close-btn, .lightbox-action-btn,
+.copy-code-btn, .search-result-item, .session-item-row, [onclick], [role="button"] {
+    will-change: transform;
+}
+button:hover, .icon-btn:hover, .model-pill:hover, .lightbox-action-btn:hover, .copy-code-btn:hover {
+    transform: translateY(-1px);
+}
+button:active, .icon-btn:active, .nav-item:active, .plus-menu-item:active, .msg-action-btn:active,
+.msg-action-menu-item:active, .model-pill:active, .session-item-row:active, .lightbox-action-btn:active,
+.copy-code-btn:active, .search-result-item:active {
+    transform: scale(0.96) translateY(0);
+}
+.lightbox-close-btn:hover { transform: rotate(90deg) scale(1.06); }
+
+/* Nav item / menu item / session row: trượt nhẹ sang phải khi hover */
+.nav-item:hover, .plus-menu-item:hover, .msg-action-menu-item:hover, .model-option:hover, .thinking-row:hover {
+    transform: translateX(2px);
+}
+.session-item-row:hover { transform: translateX(2px); }
+.session-item-row.active { transform: translateX(1px); }
+
+/* Search result item: nhấc nhẹ + đổ bóng */
+.search-result-item:hover {
+    transform: translateX(2px);
+    box-shadow: 0 6px 18px -6px rgba(0,0,0,0.45);
+}
+
+/* --- Dropdown / panel: hiệu ứng mở mượt hơn --- */
+@keyframes panelPopIn { from { opacity: 0; transform: translateY(-6px) scale(0.97); } to { opacity: 1; transform: translateY(0) scale(1); } }
+.dropdown-panel { animation: panelPopIn 0.18s cubic-bezier(0.16, 1, 0.3, 1); transform-origin: top center; }
+.msg-action-menu { animation: panelPopIn 0.16s cubic-bezier(0.16, 1, 0.3, 1); }
+
+/* --- Composer (khung nhập chat): nhấc nhẹ khi focus --- */
+.composer-shell { transition: border-color 0.25s ease, box-shadow 0.3s ease, transform 0.2s ease; }
+.composer-shell:focus-within { transform: translateY(-1px); }
+
+/* --- Attach thumbnails & ảnh đính kèm --- */
+.attach-thumb { transition: transform 0.18s cubic-bezier(0.34,1.56,0.64,1); }
+.attach-thumb:hover { transform: translateY(-3px) scale(1.03); box-shadow: 0 10px 22px -8px rgba(0,0,0,0.5); }
+.attach-remove { transition: transform 0.15s ease, background-color 0.15s ease; }
+.attach-remove:hover { transform: scale(1.15); background: rgba(220,38,38,0.85); }
+.yt-chip { transition: border-color 0.2s ease, transform 0.18s ease; }
+.yt-chip:hover { transform: translateY(-1px); border-color: var(--rose-dim); }
+.msg-attached-image { transition: filter 0.18s ease, transform 0.22s cubic-bezier(0.34,1.56,0.64,1); }
+.msg-attached-image:hover { transform: scale(1.015); }
+
+/* --- Mic button: phồng nhẹ khi hover lúc không listening --- */
+#mic-btn:not(.mic-listening):hover { transform: scale(1.06); }
+
+/* --- AI disclaimer bar & history label: fade-in nhẹ --- */
+.ai-disclaimer-bar { animation: softFadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+.history-group-label { animation: softFadeIn 0.3s ease; }
+
+/* --- Toast (nếu có) hiệu ứng trượt vào --- */
+@keyframes toastSlideIn { from { opacity: 0; transform: translateY(10px) scale(0.97); } to { opacity: 1; transform: translateY(0) scale(1); } }
+#toast-container > div, .toast { animation: toastSlideIn 0.25s cubic-bezier(0.34, 1.56, 0.64, 1); }
+
+/* --- Logo blob: hover phồng nhẹ khi không spin --- */
+.brand-blob:not(.animate-logo-spin):hover { transform: scale(1.05); }
+
+/* --- Scrollbar thumb: chuyển màu mượt hơn --- */
+::-webkit-scrollbar-thumb { transition: background-color 0.2s ease; }
+
+/* --- Links trong markdown / search: gạch chân trượt vào --- */
+.markdown-content a, .search-result-title a {
+    background-image: linear-gradient(currentColor, currentColor);
+    background-size: 0% 1px;
+    background-repeat: no-repeat;
+    background-position: 0 100%;
+    transition: background-size 0.25s ease, color 0.2s ease;
+}
+.markdown-content a:hover, .search-result-title a:hover { background-size: 100% 1px; }
+
+/* --- Input range (slider) & checkbox/radio --- */
+input[type="range"] { transition: filter 0.15s ease; }
+input[type="range"]:hover { filter: brightness(1.1); }
+input[type="checkbox"], input[type="radio"] { transition: transform 0.15s ease, box-shadow 0.15s ease; }
+input[type="checkbox"]:hover, input[type="radio"]:hover { transform: scale(1.08); }
+
+/* --- Giảm chuyển động cho người dùng yêu cầu giảm hiệu ứng --- */
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; scroll-behavior: auto !important; }
+}
 </style>
 </head>
 <body class="h-screen flex flex-col overflow-hidden" style="background: var(--bg-app); color: var(--ink);">
