@@ -109,9 +109,9 @@ input[type="range"].accent-rose { accent-color: var(--rose); }
 
 <!-- i18n ENGINE SCRIPT -->
 <script>
-    let i18nManifest = { default: "vi-VN", supported: [{code: "vi-VN", name: "Tiếng Việt"}] };
+    let i18nManifest = { default: "vi", supported: [{code: "vi", name: "Tiếng Việt"}] };
     let i18nData = {};
-    let currentLang = localStorage.getItem("app_lang") || "vi-VN";
+    let currentLang = localStorage.getItem("app_lang") || "vi";
 
     async function initI18n() {
         try {
@@ -130,7 +130,7 @@ input[type="range"].accent-rose { accent-color: var(--rose); }
             }
 
             // Tải file ngôn ngữ
-            const langRes = await fetch(`https://abcsnoob.github.io/chat/locales/${currentLang}.json`);
+            const langRes = await fetch(`https://abcsnoob.github.io/chat/locale/${currentLang}.json`);
             if (!langRes.ok) throw new Error("Translation file not found");
             i18nData = await langRes.json();
 
