@@ -707,7 +707,7 @@ async function branchConversation(menuId) {
     await localforage.setItem(`sessions_list_${currentUsername}`, sessionsList); await localforage.setItem(`chat_messages_${currentUsername}_${newSessionId}`, branchedHistory);
     currentSessionId = newSessionId; currentChatHistory = branchedHistory; renderSessionsSidebar(); renderAllMessages(); showToast(t('toast.branched'), "info"); if (window.innerWidth < 768) toggleSidebar();
 }
-function reportLegalIssue(menuId) { document.getElementById(menuId)?.classList.add("hidden"); const text = (msgActionTextStore[menuId] && msgActionTextStore[menuId].text) || ""; const subject = encodeURIComponent("Report - Abc's Noob AI"); const body = encodeURIComponent(`Content:\n${text.substring(0, 3000)}`); window.open(`mailto:support@abcsnoob.ai?subject=${subject}&body=${body}`, "_blank"); showToast(t('toast.report_opened'), "info"); }
+function reportLegalIssue(menuId) { document.getElementById(menuId)?.classList.add("hidden"); const text = (msgActionTextStore[menuId] && msgActionTextStore[menuId].text) || ""; const subject = encodeURIComponent("Report Legal Issue - Abc's Noob AI"); const body = encodeURIComponent(`Content:\n${text.substring(0, 3000)}`); window.open(`mailto:abcsspprt@gmail.com?subject=${subject}&body=${body}`, "_blank"); showToast(t('toast.report_opened'), "info"); }
 function viewAnswerDetails(menuId) { document.getElementById(menuId)?.classList.add("hidden"); const text = (msgActionTextStore[menuId] && msgActionTextStore[menuId].text) || ""; showToast(t('toast.details_info', {word: text.trim().split(/\s+/).filter(Boolean).length, char: text.length}), "info"); }
 
 function appendMessage(sender, text, modelName = "", tokens = 0, save = true, thoughtText = "", imgs = null, yts = null, idx = null) {
