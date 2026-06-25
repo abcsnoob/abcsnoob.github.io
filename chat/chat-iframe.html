@@ -635,7 +635,7 @@ function renderImagePreviewBar() {
     const bar = document.getElementById("image-preview-bar");
     if (pendingImages.length === 0) { bar.classList.add("hidden"); bar.classList.remove("flex"); bar.innerHTML = ""; return; }
     bar.classList.remove("hidden"); bar.classList.add("flex");
-    bar.innerHTML = pendingImages.map((img, idx) => `<div class="attach-thumb" title="${img.fileName}"><img src="${img.previewUrl}"><div class="attach-remove" onclick="removePendingImage(${idx})"><span class="material-symbols-rounded notranslate" style="font-size:11px;">close</span></div></div>`).join("");
+    bar.innerHTML = pendingImages.map((img, idx) => `<div class="attach-thumb" title="${img.fileName}"><img src="${img.previewUrl || `data:${img.mimeType};base64,${img.data}`}"><div class="attach-remove" onclick="removePendingImage(${idx})"><span class="material-symbols-rounded notranslate" style="font-size:11px;">close</span></div></div>`).join("");
 }
 function clearPendingImages() { pendingImages.forEach(img => { if (img.previewUrl) URL.revokeObjectURL(img.previewUrl); }); pendingImages = []; renderImagePreviewBar(); }
 
@@ -885,7 +885,7 @@ function resetChatToDefaultGreeting() { document.getElementById("chat-messages")
 
 function renderAttachmentsHtml(imgs, yts) {
     let html = "";
-    if (imgs?.length) { html += `<div class="flex flex-wrap gap-2 mb-2 justify-end">${imgs.map(img => `<img src="${img.previewUrl || `data:${img.mimeType};base64,${img.data}`}" class="msg-attached-image">`).join('')}</div>`; }
+    if (imgs?.length) { html += `<div class="flex flex-wrap gap-2 mb-2 justify-end">${imgs.map(img => `<img src="${img.data ? `data:${img.mimeType};base64,${img.data}` : (img.previewUrl || '')}" class="msg-attached-image" loading="lazy" alt="attachment">`).join('')}</div>`; }
     if (yts?.length) { html += `<div class="flex flex-wrap gap-2 mb-2 justify-end">${yts.map(url => `<div class="yt-chip"><span class="material-symbols-rounded notranslate" style="font-size:14px;color:#e05757;">smart_display</span><span>${url}</span></div>`).join('')}</div>`; }
     return html;
 }
@@ -932,7 +932,7 @@ async function handleChatSubmit(event) {
     if (!prompt && !pendingImages.length && !detectedYoutubeUrls.length) return;
     if (isListening) stopSpeechToText();
     const sys = document.getElementById("cfg-system").value.trim(); const temp = parseFloat(document.getElementById("cfg-temperature").value);
-    const iReq = pendingImages.map(img => ({ data: img.data, mimeType: img.mimeType })); const iDisp = pendingImages.map(img => ({ data: img.data, mimeType: img.mimeType, previewUrl: img.previewUrl })); const yReq = [...detectedYoutubeUrls];
+    const iReq = pendingImages.map(img => ({ data: img.data, mimeType: img.mimeType })); const iDisp = pendingImages.map(img => ({ data: img.data, mimeType: img.mimeType })); const yReq = [...detectedYoutubeUrls];
     
     if (!currentSessionId) { currentSessionId = "sess_" + Date.now(); sessionsList.unshift({ id: currentSessionId, title: `Chat (${(prompt||"").substring(0,15)})`, timestamp: Date.now() }); await localforage.setItem(`sessions_list_${currentUsername}`, sessionsList); }
     
