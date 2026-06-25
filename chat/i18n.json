@@ -2,6 +2,7 @@
   "default": "vi",
   "supported": [
     { "code": "vi", "name": "Tiếng Việt" },
-    { "code": "en", "name": "English" }
+    { "code": "en", "name": "English" },
+    { "code": "sv", "name": "Svenska" }
   ]
 }
