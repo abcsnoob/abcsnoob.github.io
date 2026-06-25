@@ -109,9 +109,9 @@ input[type="range"].accent-rose { accent-color: var(--rose); }
 
 <!-- i18n ENGINE SCRIPT -->
 <script>
-    let i18nManifest = { default: "vi", supported: [{code: "vi", name: "Tiếng Việt"}] };
+    let i18nManifest = { default: "vi-VN", supported: [{code: "vi-VN", name: "Tiếng Việt"}] };
     let i18nData = {};
-    let currentLang = localStorage.getItem("app_lang") || "vi";
+    let currentLang = localStorage.getItem("app_lang") || "vi-VN";
 
     async function initI18n() {
         try {
