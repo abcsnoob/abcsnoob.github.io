@@ -16,20 +16,20 @@
   },
   "sidebar": {
     "new_chat": "New chat",
-    "search": "Search conversations",
+    "search": "Search chats",
     "recent": "Recent",
-    "empty": "No chat history yet",
+    "empty": "No chat history",
     "token_per_hour": "t/h"
   },
   "chat": {
     "upgrade": "Upgrade",
     "settings": "Settings",
     "sys_instruct": "System instructions",
-    "sys_instruct_ph": "Example: Respond concisely, use English...",
+    "sys_instruct_ph": "E.g., Be concise, use English...",
     "temperature": "Creativity",
     "logout": "Secure logout",
     "language": "Language",
-    "disclaimer": "Information can change very quickly. Please verify answers with official sources.",
+    "disclaimer": "Information can change rapidly. Please verify answers using official sources.",
     "input_ph": "Ask Abc's Noob AI...",
     "upload_img": "Upload image",
     "paste_yt": "Paste YouTube link",
@@ -37,11 +37,11 @@
     "model_auto_desc": "Fastest response",
     "think_level": "Thinking level",
     "think_std": "Standard",
-    "think_std_desc": "Best suited for most questions",
+    "think_std_desc": "Best for most questions",
     "think_ext": "Extended",
     "think_ext_desc": "Solves complex problems",
     "bot_disclaimer": "Abc's Noob AI is an AI and may make mistakes.",
-    "default_greeting": "Any new ideas you'd like to explore?"
+    "default_greeting": "Do you have any new ideas you'd like to explore?"
   },
   "ai": {
     "connecting": "Establishing connection...",
@@ -49,7 +49,7 @@
     "thinking": "Thinking...",
     "thought_process": "Thought process",
     "typing": "Drafting response...",
-    "searched_web": "Searched the Internet"
+    "searched_web": "Searched the web"
   },
   "menu": {
     "branch": "Branch to new chat",
@@ -57,25 +57,25 @@
     "details": "View response details"
   },
   "toast": {
-    "search_soon": "Conversation search is coming soon.",
+    "search_soon": "Chat search is coming soon.",
     "upgrade_soon": "You are on the free plan. Upgrade packages are coming soon!",
     "voice_soon": "Voice functionality is coming soon.",
-    "copy_fail": "Unable to copy to clipboard.",
-    "copy_code_error": "Error copying code block.",
+    "copy_fail": "Could not copy to clipboard.",
+    "copy_code_error": "Error copying code snippet.",
     "img_max": "You can attach a maximum of {max} images per message.",
-    "img_invalid": "File is not a valid image.",
+    "img_invalid": "Not a valid image file.",
     "img_size": "Image exceeds {size}MB.",
     "yt_paste": "Paste the YouTube link into the input box, and the system will detect it automatically.",
-    "reg_success": "Registration successful! Please login.",
+    "reg_success": "Registration successful! Please log in.",
     "login_success": "Login successful!",
-    "info_fail": "Unable to load information.",
-    "del_confirm": "Permanently delete this conversation?",
-    "chat_deleted": "Conversation deleted.",
-    "branch_fail_empty": "Cannot branch: missing message content.",
-    "branch_fail_notfound": "Message not found to branch from.",
-    "branched": "Branched to new conversation.",
-    "report_opened": "Legal issue report form opened.",
+    "info_fail": "Could not load information.",
+    "del_confirm": "Permanently delete this chat?",
+    "chat_deleted": "Chat deleted.",
+    "branch_fail_empty": "Cannot branch: message content is empty.",
+    "branch_fail_notfound": "Could not find the message to branch from.",
+    "branched": "Branched to a new chat.",
+    "report_opened": "Opened legal issue report form.",
     "details_info": "Response: ~{word} words, {char} characters.",
-    "logout_msg": "Logged out successfully."
+    "logout_msg": "Logged out of account."
   }
 }
