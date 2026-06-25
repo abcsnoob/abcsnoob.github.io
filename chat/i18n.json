@@ -1,7 +1,7 @@
 {
-  "default": "vi-VN",
+  "default": "vi",
   "supported": [
-    { "code": "vi-VN", "name": "Tiếng Việt (Việt Nam)" },
-    { "code": "en-US", "name": "English (United States)" }
+    { "code": "vi", "name": "Tiếng Việt" },
+    { "code": "en", "name": "English" }
   ]
 }
