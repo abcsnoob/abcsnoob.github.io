@@ -208,6 +208,21 @@ details[open] summary ~ * { animation: softFadeIn 0.35s cubic-bezier(0.16, 1, 0.
 .plus-menu-item { display:flex; align-items:center; gap: 0.65rem; padding: 0.6rem 0.85rem; border-radius: 0.7rem; cursor:pointer; font-size: 0.82rem; font-weight: 500; color: var(--ink); }
 .plus-menu-item:hover { background: rgba(254,254,254,0.05); }
 
+/* Menu 3-chấm trên mỗi tin nhắn AI: rẽ nhánh / báo cáo / xem chi tiết */
+.msg-action-btn { width: 1.85rem; height: 1.85rem; border-radius: 9999px; display:flex; align-items:center; justify-content:center; color: var(--dust-dim); cursor:pointer; flex-shrink:0; opacity:0; transition: all 0.18s ease; }
+.group:hover .msg-action-btn, .msg-action-btn.menu-open { opacity:1; }
+.msg-action-btn:hover { background: var(--bg-panel-raised); color: var(--ink); }
+.msg-action-menu { position:absolute; z-index:20; width: 17rem; }
+.msg-action-menu-item { display:flex; align-items:center; gap: 0.7rem; padding: 0.65rem 0.9rem; border-radius: 0.7rem; cursor:pointer; font-size: 0.8rem; font-weight: 500; color: var(--ink); }
+.msg-action-menu-item:hover { background: rgba(254,254,254,0.05); }
+.msg-action-menu-item i { width: 1rem; text-align:center; color: var(--dust); }
+.msg-action-menu-item.danger i, .msg-action-menu-item.danger span { color: #e69a9a; }
+.msg-action-divider { height:1px; background: var(--border-soft); margin: 0.25rem 0.4rem; }
+
+/* Banner cảnh báo độ chính xác (đặt trên ô soạn tin) */
+.ai-disclaimer-bar { display:flex; align-items:center; gap:0.55rem; padding: 0.55rem 0.9rem; border-radius: 0.85rem; background: var(--bg-panel-raised); border: 1px solid var(--border-soft); font-size: 11px; color: var(--dust-dim); }
+.ai-disclaimer-bar i { color: var(--rose); font-size: 12px; flex-shrink:0; }
+
 /* user message pill */
 .user-bubble { background: linear-gradient(135deg, var(--rose) 0%, var(--rose-dim) 100%); color: #1f1213; }
 
@@ -404,6 +419,17 @@ input[type="range"].accent-rose { accent-color: var(--rose); }
             </div>
         </header>
 
+        <!-- BANNER CẢNH BÁO ĐỘ CHÍNH XÁC: hiển thị ngay dưới header, có thể đóng -->
+        <div id="ai-accuracy-disclaimer" class="px-4 pt-3 shrink-0">
+            <div class="max-w-3xl mx-auto ai-disclaimer-bar">
+                <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
+                <span class="flex-1">Thông tin có thể thay đổi rất nhanh. Hãy xác minh câu trả lời bằng các nguồn chính thức.</span>
+                <button type="button" onclick="document.getElementById('ai-accuracy-disclaimer').classList.add('hidden')" aria-label="Đóng thông báo" class="icon-btn shrink-0" style="width:1.5rem;height:1.5rem;">
+                    <i class="fa-solid fa-xmark text-[10px]" aria-hidden="true"></i>
+                </button>
+            </div>
+        </div>
+
         <!-- VÙNG HIỂN THỊ TIN NHẮN -->
         <div id="chat-messages" class="flex-1 overflow-y-auto px-4 py-6 space-y-5" role="log" aria-label="Nội dung hội thoại"></div>
 
@@ -530,26 +556,70 @@ marked.setOptions({
 });
 
 // THÊM: Custom lại hàm render Code của Marked để tự chèn thanh Header và nút Copy
+//
+// SỬA LỖI MẤT CODE Ở CÁC PART > 0:
+// Nguyên nhân gốc: code gốc (chưa escape HTML) được nhúng thẳng vào thuộc tính
+// data-clipboard-text="...". Khi code chứa dấu <, >, &, hoặc dấu " không nằm
+// trong các trường hợp đã .replace(), thuộc tính HTML bị vỡ cấu trúc giữa
+// đường, khiến trình duyệt parse sai phần HTML phía sau (các đoạn code/markdown
+// render sau đó bị "nuốt mất" hoặc hiển thị lệch). Một escape thiếu (&, <, >)
+// trong một thuộc tính HTML là đủ để phá toàn bộ phần còn lại của DOM.
+//
+// Giải pháp: không nhúng code thô vào attribute HTML nữa. Encode toàn bộ code
+// gốc sang Base64 (an toàn 100% với HTML, không cần escape ký tự đặc biệt) và
+// giải mã lại bằng JS ngay tại thời điểm bấm "Sao chép". UTF-8 được xử lý đúng
+// qua TextEncoder + chuỗi nhị phân trước khi btoa().
+function utf8ToBase64(str) {
+    const bytes = new TextEncoder().encode(str);
+    let binary = '';
+    for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+    return btoa(binary);
+}
+function base64ToUtf8(b64) {
+    const binary = atob(b64);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+    return new TextDecoder().decode(bytes);
+}
+function escapeHtml(str) {
+    return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
 const renderer = new marked.Renderer();
 renderer.code = function(code, infostring, escaped) {
-    const lang = infostring || 'code';
-    // Chống lỗi hiển thị ký tự đặc biệt khi render HTML dạng chuỗi
-    const validCode = escaped ? code : code.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-    const highlighted = m_highlight(validCode, lang); // Gọi hàm highlight bảo vệ
+    const lang = (infostring || 'code').trim().split(/\s+/)[0] || 'code';
+    // Luôn highlight trên code gốc (chưa escape) — hljs tự escape khi xuất HTML.
+    const highlighted = m_highlight(code, lang); // Gọi hàm highlight bảo vệ
+    // Code thô được mã hoá Base64 để nhúng an toàn vào attribute, tránh phá vỡ HTML.
+    const codeB64 = utf8ToBase64(code);
 
     return `
         <div class="code-block-wrapper">
             <div class="code-block-header">
-                <span>${lang.toUpperCase()}</span>
-                <span class="copy-code-btn" data-clipboard-text="${code.replace(/"/g, '&quot;')}">
+                <span>${escapeHtml(lang.toUpperCase())}</span>
+                <span class="copy-code-btn" data-code-b64="${codeB64}" onclick="copyCodeBlock(this)">
                     <i class="fa-regular fa-copy"></i> Sao chép
                 </span>
             </div>
-            <pre><code class="hljs language-${lang}">${highlighted}</code></pre>
+            <pre><code class="hljs language-${escapeHtml(lang)}">${highlighted}</code></pre>
         </div>
     `;
 };
 marked.use({ renderer });
+
+// Copy nội dung code gốc (giải mã từ Base64) vào clipboard khi bấm nút "Sao chép"
+function copyCodeBlock(btnEl) {
+    try {
+        const code = base64ToUtf8(btnEl.getAttribute("data-code-b64") || "");
+        navigator.clipboard.writeText(code).then(() => {
+            const original = btnEl.innerHTML;
+            btnEl.innerHTML = `<i class="fa-solid fa-check"></i> Đã sao chép`;
+            setTimeout(() => { btnEl.innerHTML = original; }, 1500);
+        }).catch(() => showToast("Không thể sao chép vào clipboard.", "error"));
+    } catch (e) {
+        showToast("Lỗi khi sao chép đoạn code.", "error");
+    }
+}
 
 // Hàm bổ trợ phòng trường hợp highlight lỗi
 function m_highlight(code, lang) {
@@ -584,6 +654,8 @@ function closeAllMenus(except) {
     ["settings-menu", "plus-menu", "model-menu", "thinking-submenu"].forEach(id => {
         if (id !== except) document.getElementById(id).classList.add("hidden");
     });
+    document.querySelectorAll(".msg-action-menu").forEach(m => m.classList.add("hidden"));
+    document.querySelectorAll(".msg-action-btn.menu-open").forEach(b => b.classList.remove("menu-open"));
 }
 function toggleSettingsMenu() {
     const menu = document.getElementById("settings-menu");
@@ -609,8 +681,8 @@ function showThinkingSubmenu(open) {
 }
 
 document.addEventListener("click", (e) => {
-    const isInsideMenu = e.target.closest("#settings-menu, #plus-menu, #model-menu, #thinking-submenu");
-    const isMenuTrigger = e.target.closest("[onclick*='toggleSettingsMenu'], [onclick*='togglePlusMenu'], [onclick*='toggleModelMenu']");
+    const isInsideMenu = e.target.closest("#settings-menu, #plus-menu, #model-menu, #thinking-submenu, .msg-action-menu");
+    const isMenuTrigger = e.target.closest("[onclick*='toggleSettingsMenu'], [onclick*='togglePlusMenu'], [onclick*='toggleModelMenu'], .msg-action-btn");
     if (!isInsideMenu && !isMenuTrigger) closeAllMenus(null);
 });
 
@@ -928,8 +1000,8 @@ function renderAllMessages() {
     const container = document.getElementById("chat-messages");
     container.innerHTML = "";
     if (currentChatHistory.length === 0) { resetChatToDefaultGreeting(); return; }
-    currentChatHistory.forEach(msg => {
-        appendMessage(msg.sender, msg.text, msg.modelName, msg.tokens, false, msg.thoughtText, msg.attachedImages, msg.attachedYoutubeUrls);
+    currentChatHistory.forEach((msg, idx) => {
+        appendMessage(msg.sender, msg.text, msg.modelName, msg.tokens, false, msg.thoughtText, msg.attachedImages, msg.attachedYoutubeUrls, idx);
     });
 }
 
@@ -964,7 +1036,113 @@ function renderAttachmentsHtml(attachedImages, attachedYoutubeUrls) {
     return html;
 }
 
-function appendMessage(sender, text, modelName = "", tokens = 0, saveToDb = true, thoughtText = "", attachedImages = null, attachedYoutubeUrls = null) {
+// ============================================================
+// MENU 3-CHẤM TRÊN TIN NHẮN AI: Rẽ nhánh / Báo cáo pháp lý / Xem chi tiết
+// ============================================================
+
+// Lưu tạm nội dung + vị trí từng tin nhắn AI theo menuId để các action (rẽ
+// nhánh, xem chi tiết) lấy lại đúng dữ liệu mà không cần escape text vào HTML
+// attribute, và không phải dò tìm bằng cách so khớp nội dung (có thể trùng).
+const msgActionTextStore = {};
+
+function renderMsgActionMenuHtml(menuId, aiText, historyIndex) {
+    msgActionTextStore[menuId] = { text: aiText || "", historyIndex: (typeof historyIndex === "number" ? historyIndex : null) };
+    return `
+        <div id="${menuId}" class="hidden msg-action-menu dropdown-panel p-1.5 bottom-9 left-0" role="menu" aria-label="Tuỳ chọn tin nhắn">
+            <div class="msg-action-menu-item transition-soft" role="menuitem" onclick="branchConversation('${menuId}')">
+                <i class="fa-solid fa-code-branch" aria-hidden="true"></i><span>Rẽ nhánh sang cuộc trò chuyện mới</span>
+            </div>
+            <div class="msg-action-divider"></div>
+            <div class="msg-action-menu-item danger transition-soft" role="menuitem" onclick="reportLegalIssue('${menuId}')">
+                <i class="fa-solid fa-flag" aria-hidden="true"></i><span>Báo cáo vấn đề pháp lý</span>
+            </div>
+            <div class="msg-action-menu-item transition-soft" role="menuitem" onclick="viewAnswerDetails('${menuId}')">
+                <i class="fa-solid fa-circle-info" aria-hidden="true"></i><span>Xem chi tiết về câu trả lời</span>
+            </div>
+        </div>
+    `;
+}
+
+function toggleMsgActionMenu(event, menuId) {
+    event.stopPropagation();
+    const menu = document.getElementById(menuId);
+    if (!menu) return;
+    const willOpen = menu.classList.contains("hidden");
+    // Đóng tất cả menu hành động tin nhắn khác đang mở trước khi mở menu này
+    document.querySelectorAll(".msg-action-menu").forEach(m => { if (m.id !== menuId) m.classList.add("hidden"); });
+    document.querySelectorAll(".msg-action-btn.menu-open").forEach(b => b.classList.remove("menu-open"));
+    menu.classList.toggle("hidden", !willOpen);
+    if (willOpen) event.currentTarget.classList.add("menu-open");
+}
+
+// Đóng menu hành động tin nhắn khi click ra ngoài: đã được xử lý chung trong
+// listener click toàn cục (closeAllMenus đã được cập nhật để đóng cả msg-action-menu).
+
+// "Rẽ nhánh sang cuộc trò chuyện mới": tạo một session mới, copy toàn bộ lịch sử
+// chat tính đến (và bao gồm) tin nhắn AI được chọn, rồi chuyển sang session đó.
+async function branchConversation(menuId) {
+    document.getElementById(menuId)?.classList.add("hidden");
+    const entry = msgActionTextStore[menuId];
+    if (!entry) { showToast("Không thể rẽ nhánh: thiếu nội dung tin nhắn.", "error"); return; }
+
+    // Ưu tiên cắt theo historyIndex chính xác (tránh nhầm khi nhiều tin nhắn
+    // có nội dung trùng nhau); nếu không có index (vd. bubble vừa stream xong
+    // và chưa kịp gắn index), fallback so khớp theo nội dung từ cuối lên.
+    let cutIndex = (typeof entry.historyIndex === "number") ? entry.historyIndex : -1;
+    if (cutIndex === -1 || currentChatHistory[cutIndex]?.text !== entry.text) {
+        cutIndex = -1;
+        for (let i = currentChatHistory.length - 1; i >= 0; i--) {
+            if (currentChatHistory[i].sender === "ai" && currentChatHistory[i].text === entry.text) { cutIndex = i; break; }
+        }
+    }
+    if (cutIndex === -1) { showToast("Không tìm thấy tin nhắn để rẽ nhánh.", "error"); return; }
+
+    const branchedHistory = currentChatHistory.slice(0, cutIndex + 1);
+    const newSessionId = "sess_" + Date.now();
+    const sourceTitle = sessionsList.find(s => s.id === currentSessionId)?.title || "Cuộc trò chuyện";
+    sessionsList.unshift({ id: newSessionId, title: `${sourceTitle} (nhánh mới)`, timestamp: Date.now() });
+    await localforage.setItem(`sessions_list_${currentUsername}`, sessionsList);
+    await localforage.setItem(`chat_messages_${currentUsername}_${newSessionId}`, branchedHistory);
+
+    currentSessionId = newSessionId;
+    currentChatHistory = branchedHistory;
+    renderSessionsSidebar();
+    renderAllMessages();
+    showToast("Đã rẽ nhánh sang cuộc trò chuyện mới.", "info");
+    if (window.innerWidth < 768) toggleSidebar();
+}
+
+// "Báo cáo vấn đề pháp lý": mở form báo cáo (mailto) kèm sẵn nội dung câu trả lời
+// để người dùng gửi cho bộ phận phụ trách, không tự động gửi đi bất cứ thứ gì.
+function reportLegalIssue(menuId) {
+    document.getElementById(menuId)?.classList.add("hidden");
+    const text = (msgActionTextStore[menuId] && msgActionTextStore[menuId].text) || "";
+    const subject = encodeURIComponent("Báo cáo vấn đề pháp lý - Abc's Noob AI");
+    const bodyLines = [
+        "Vui lòng mô tả vấn đề pháp lý bạn gặp phải với câu trả lời dưới đây:",
+        "",
+        "--- Mô tả vấn đề của bạn ---",
+        "",
+        "",
+        "--- Nội dung câu trả lời được báo cáo ---",
+        text.substring(0, 3000)
+    ];
+    const body = encodeURIComponent(bodyLines.join("\n"));
+    window.open(`mailto:support@abcsnoob.ai?subject=${subject}&body=${body}`, "_blank");
+    showToast("Đã mở form báo cáo vấn đề pháp lý.", "info");
+}
+
+// "Xem chi tiết về câu trả lời": hiển thị thông tin model, độ dài, thời điểm
+// tạo phản hồi trong một modal/toast đơn giản để người dùng tra cứu nhanh.
+function viewAnswerDetails(menuId) {
+    document.getElementById(menuId)?.classList.add("hidden");
+    const text = (msgActionTextStore[menuId] && msgActionTextStore[menuId].text) || "";
+    const wordCount = text.trim().split(/\s+/).filter(Boolean).length;
+    const charCount = text.length;
+    showToast(`Câu trả lời: ~${wordCount} từ, ${charCount} ký tự. Thông tin có thể đã lỗi thời — hãy xác minh với nguồn chính thức.`, "info");
+}
+
+function appendMessage(sender, text, modelName = "", tokens = 0, saveToDb = true, thoughtText = "", attachedImages = null, attachedYoutubeUrls = null, historyIndex = null) {
     const container = document.getElementById("chat-messages");
     if (container.querySelector(".h-full")) container.innerHTML = "";
 
@@ -990,26 +1168,35 @@ function appendMessage(sender, text, modelName = "", tokens = 0, saveToDb = true
             const parsedThoughtHtml = DOMPurify.sanitize(marked.parse(thoughtText));
             thoughtHtml = `
                 <div class="mb-2.5 w-full">
-                    <details class="rounded-2xl group transition-soft" style="background: var(--bg-panel-raised); border:1px solid var(--border-soft);">
+                    <details class="rounded-2xl group/think transition-soft" style="background: var(--bg-panel-raised); border:1px solid var(--border-soft);">
                         <summary class="cursor-pointer px-4 py-2.5 text-[11px] font-bold flex items-center gap-2 select-none" style="color: var(--dust);">
                             <i class="fa-solid fa-brain" style="color: var(--rose);" aria-hidden="true"></i>
                             <span>Quá trình suy nghĩ</span>
-                            <i class="fa-solid fa-chevron-down ml-auto transition-transform group-open:rotate-180 text-[10px]" aria-hidden="true"></i>
+                            <i class="fa-solid fa-chevron-down ml-auto transition-transform group-open/think:rotate-180 text-[10px]" aria-hidden="true"></i>
                         </summary>
                         <div class="px-4 pb-4 text-xs border-t mt-1 pt-3.5 break-words markdown-content thought-markdown" style="border-color: var(--border-soft);">${parsedThoughtHtml}</div>
                     </details>
                 </div>
             `;
         }
+        const msgActionId = "msg-action-" + Math.random().toString(36).slice(2, 10);
         wrapper.innerHTML = `
-            <div class="flex items-start gap-3 max-w-2xl mr-auto w-full">
+            <div class="flex items-start gap-3 max-w-2xl mr-auto w-full group">
                 <div class="w-7 h-7 brand-blob shrink-0 mt-0.5" style="background: linear-gradient(135deg, var(--rose), var(--mint));" aria-hidden="true"></div>
                 <div class="space-y-1.5 flex-1 min-w-0">
                     ${thoughtHtml}
                     <div class="text-sm leading-relaxed markdown-content" style="color: var(--ink);">${parsedHtml}</div>
-                    <div class="flex items-center gap-1.5 text-[9px] font-bold pl-0.5 font-mono" aria-label="Siêu dữ liệu phản hồi">
-                        <span class="px-1.5 py-0.5 rounded" style="background: var(--bg-panel-raised); color: var(--rose);">${modelName}</span>
-                        <span class="px-1.5 py-0.5 rounded" style="background: var(--bg-panel-raised); color: var(--mint);">+${tokens} tokens</span>
+                    <div class="flex items-center gap-1.5 pl-0.5">
+                        <div class="flex items-center gap-1.5 text-[9px] font-bold font-mono" aria-label="Siêu dữ liệu phản hồi">
+                            <span class="px-1.5 py-0.5 rounded" style="background: var(--bg-panel-raised); color: var(--rose);">${modelName}</span>
+                            <span class="px-1.5 py-0.5 rounded" style="background: var(--bg-panel-raised); color: var(--mint);">+${tokens} tokens</span>
+                        </div>
+                        <div class="relative">
+                            <button type="button" class="msg-action-btn" aria-label="Tuỳ chọn tin nhắn" onclick="toggleMsgActionMenu(event, '${msgActionId}')">
+                                <i class="fa-solid fa-ellipsis text-[12px]" aria-hidden="true"></i>
+                            </button>
+                            ${renderMsgActionMenuHtml(msgActionId, text, historyIndex)}
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1127,25 +1314,33 @@ async function handleChatSubmit(event) {
 
     const bubbleId = "ai-bubble-" + Date.now();
     const wrapper = document.createElement("div");
-    wrapper.className = "flex items-start gap-3 max-w-2xl mr-auto w-full opacity-0 animate-message";
+    wrapper.className = "flex items-start gap-3 max-w-2xl mr-auto w-full opacity-0 animate-message group";
     wrapper.id = bubbleId;
 wrapper.innerHTML = `
     <div id="${bubbleId}-logo" class="w-7 h-7 brand-blob animate-logo-spin shrink-0 mt-0.5" style="background: linear-gradient(135deg, var(--rose), var(--mint));" aria-hidden="true"></div>
     <div class="space-y-1.5 flex-1 min-w-0">
         <div id="${bubbleId}-thought-container" class="hidden mb-2.5 w-full">
-            <details class="rounded-2xl group transition-soft" style="background: var(--bg-panel-raised); border:1px solid var(--border-soft);" open>
+            <details class="rounded-2xl group/think transition-soft" style="background: var(--bg-panel-raised); border:1px solid var(--border-soft);" open>
                 <summary class="cursor-pointer px-4 py-2.5 text-[11px] font-bold flex items-center gap-2 select-none" style="color: var(--dust);">
                     <i id="${bubbleId}-thought-icon" class="fa-solid fa-brain animate-pulse" style="color: var(--rose);"></i>
                     <span id="${bubbleId}-thought-status">Đang suy nghĩ...</span>
-                    <i class="fa-solid fa-chevron-down ml-auto transition-transform group-open:rotate-180 text-[10px]" aria-hidden="true"></i>
+                    <i class="fa-solid fa-chevron-down ml-auto transition-transform group-open/think:rotate-180 text-[10px]" aria-hidden="true"></i>
                 </summary>
                 <div id="${bubbleId}-thought-content" class="px-4 pb-4 text-xs border-t mt-1 pt-3.5 break-words markdown-content thought-markdown" style="border-color: var(--border-soft);"></div>
             </details>
         </div>
         <div id="${bubbleId}-content" class="text-sm leading-relaxed markdown-content" style="color: var(--ink);"></div>
-        <div id="${bubbleId}-meta" class="flex items-center gap-1.5 text-[9px] font-bold pl-0.5 hidden font-mono">
-            <span id="${bubbleId}-model" class="px-1.5 py-0.5 rounded" style="background: var(--bg-panel-raised); color: var(--rose);"></span>
-            <span id="${bubbleId}-tokens" class="px-1.5 py-0.5 rounded" style="background: var(--bg-panel-raised); color: var(--mint);"></span>
+        <div class="flex items-center gap-1.5 pl-0.5">
+            <div id="${bubbleId}-meta" class="flex items-center gap-1.5 text-[9px] font-bold font-mono hidden">
+                <span id="${bubbleId}-model" class="px-1.5 py-0.5 rounded" style="background: var(--bg-panel-raised); color: var(--rose);"></span>
+                <span id="${bubbleId}-tokens" class="px-1.5 py-0.5 rounded" style="background: var(--bg-panel-raised); color: var(--mint);"></span>
+            </div>
+            <div id="${bubbleId}-actions" class="relative hidden">
+                <button type="button" class="msg-action-btn" aria-label="Tuỳ chọn tin nhắn" onclick="toggleMsgActionMenu(event, '${bubbleId}-actionmenu')">
+                    <i class="fa-solid fa-ellipsis text-[12px]" aria-hidden="true"></i>
+                </button>
+                <div id="${bubbleId}-actionmenu-slot"></div>
+            </div>
         </div>
     </div>
 `;
@@ -1182,15 +1377,9 @@ isTypingMain = false;
 const cur = document.getElementById(`${bubbleId}-cursor`);
 if (cur) cur.remove();
 
-// THÊM VÀO ĐÂY: Kích hoạt tính năng Copy Code nhanh
-const clipboard = new ClipboardJS('.copy-code-btn');
-clipboard.on('success', function(e) {
-    // Hiệu ứng đổi chữ "Sao chép" -> "Đã chép!" trong 2 giây giống ChatGPT
-    const originalHTML = e.trigger.innerHTML;
-    e.trigger.innerHTML = `<i class="fa-solid fa-check" style="color: var(--mint);"></i> <span style="color: var(--mint);">Đã chép!</span>`;
-    setTimeout(() => { e.trigger.innerHTML = originalHTML; }, 2000);
-    e.clearSelection();
-});
+// Nút "Sao chép" trong code-block dùng copyCodeBlock(this) qua onclick trực tiếp
+// (xem renderer.code) — không cần khởi tạo lại ClipboardJS ở đây mỗi lần typing
+// xong, vì cách cũ tích luỹ nhiều listener trùng lặp trên toàn trang theo thời gian.
         }
     }
 
@@ -1288,6 +1477,14 @@ clipboard.on('success', function(e) {
                     document.getElementById(`${bubbleId}-model`).textContent = currentModel;
                     document.getElementById(`${bubbleId}-tokens`).textContent = `+${parsed.tokens_consumed} tokens`;
                     document.getElementById(`${bubbleId}-meta`).classList.remove("hidden");
+                    const actionsWrap = document.getElementById(`${bubbleId}-actions`);
+                    if (actionsWrap) {
+                        actionsWrap.classList.remove("hidden");
+                        const menuId = `${bubbleId}-actionmenu`;
+                        // historyIndex = vị trí mà tin nhắn AI này SẼ có trong
+                        // currentChatHistory ngay sau lệnh push() dưới đây.
+                        document.getElementById(`${bubbleId}-actionmenu-slot`).innerHTML = renderMsgActionMenuHtml(menuId, targetText, currentChatHistory.length);
+                    }
                     currentChatHistory.push({ sender: "ai", text: targetText, modelName: currentModel, tokens: parsed.tokens_consumed, thoughtText: rawThoughtText });
                     localforage.setItem(`chat_messages_${currentUsername}_${currentSessionId}`, currentChatHistory);
                     fetchUserProfile();
