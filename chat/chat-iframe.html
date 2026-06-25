@@ -586,7 +586,20 @@ function escapeHtml(str) {
 }
 
 const renderer = new marked.Renderer();
-renderer.code = function(code, infostring, escaped) {
+renderer.code = function(arg1, arg2, arg3) {
+    // marked v13+ gọi renderer.code(token) với token = { text, lang, escaped, ... }
+    // marked v12 và cũ hơn gọi renderer.code(code, infostring, escaped) — 3 tham số riêng.
+    // Phân biệt 2 kiểu gọi: nếu tham số đầu là object có .text thì là token mới.
+    let code, infostring;
+    if (arg1 && typeof arg1 === 'object' && 'text' in arg1) {
+        code = arg1.text;
+        infostring = arg1.lang;
+    } else {
+        code = arg1;
+        infostring = arg2;
+    }
+    code = (code === undefined || code === null) ? '' : String(code);
+
     const lang = (infostring || 'code').trim().split(/\s+/)[0] || 'code';
     // Luôn highlight trên code gốc (chưa escape) — hljs tự escape khi xuất HTML.
     const highlighted = m_highlight(code, lang); // Gọi hàm highlight bảo vệ
