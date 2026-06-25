@@ -7,7 +7,6 @@
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
@@ -66,9 +65,6 @@ details[open] summary ~ * { animation: softFadeIn 0.35s cubic-bezier(0.16, 1, 0.
 .nav-item { display:flex; align-items:center; gap:0.65rem; padding: 0.55rem 0.8rem; border-radius: 0.85rem; font-size: 0.83rem; font-weight: 500; color: var(--dust); cursor:pointer; }
 .nav-item:hover { background: var(--bg-panel-raised); color: var(--ink); }
 .nav-item.primary { background: var(--bg-panel-raised); color: var(--ink); font-weight:600; }
-.session-item { display:flex; align-items:center; justify-content:space-between; padding: 0.5rem 0.7rem; border-radius: 0.75rem; font-size: 0.78rem; font-weight:500; color: var(--dust-dim); cursor:pointer; }
-.session-item:hover { background: var(--bg-panel-raised); color: var(--ink); }
-.session-item.active { background: rgba(205,122,123,0.12); color: var(--rose); }
 .composer-shell { background: var(--bg-input); border: 1px solid var(--border); border-radius: 1.75rem; }
 .composer-shell:focus-within { border-color: var(--rose-dim); box-shadow: 0 0 0 3px rgba(205,122,123,0.12); }
 .model-pill { display:flex; align-items:center; gap:0.4rem; padding: 0.4rem 0.7rem; border-radius:9999px; background: var(--bg-panel-raised); border: 1px solid var(--border); font-size:0.76rem; font-weight:600; color: var(--ink); cursor:pointer; }
@@ -99,6 +95,38 @@ details[open] summary ~ * { animation: softFadeIn 0.35s cubic-bezier(0.16, 1, 0.
 .icon-btn { width: 2.2rem; height: 2.2rem; border-radius: 9999px; display:flex; align-items:center; justify-content:center; color: var(--dust); }
 .icon-btn:hover { background: var(--bg-panel-raised); color: var(--ink); }
 input[type="range"].accent-rose { accent-color: var(--rose); }
+
+/* Material Symbols base sizing */
+.material-symbols-rounded { font-variation-settings: 'FILL' 0, 'wght' 500, 'GRAD' 0, 'opsz' 24; font-size: 20px; line-height: 1; vertical-align: middle; user-select: none; }
+.msym-fill { font-variation-settings: 'FILL' 1, 'wght' 500, 'GRAD' 0, 'opsz' 24; }
+
+/* Search Modal */
+.search-overlay { position: fixed; inset: 0; z-index: 40; background: rgba(10,8,9,0.7); backdrop-filter: blur(3px); display:flex; align-items:flex-start; justify-content:center; padding-top: 8vh; }
+.search-modal { width: 100%; max-width: 30rem; max-height: 70vh; display:flex; flex-direction:column; background: var(--bg-panel); border: 1px solid var(--border-soft); border-radius: 1.25rem; box-shadow: 0 24px 60px -12px rgba(0,0,0,0.6); overflow:hidden; }
+.search-input-row { display:flex; align-items:center; gap:0.6rem; padding: 0.85rem 1rem; border-bottom: 1px solid var(--border-soft); }
+.search-results { flex:1; overflow-y:auto; padding: 0.5rem; }
+.search-result-item { display:flex; flex-direction:column; gap:0.15rem; padding: 0.65rem 0.85rem; border-radius: 0.85rem; cursor:pointer; }
+.search-result-item:hover { background: var(--bg-panel-raised); }
+.search-result-title { font-size: 0.8rem; font-weight: 600; color: var(--ink); display:flex; align-items:center; gap:0.5rem; }
+.search-result-snippet { font-size: 0.72rem; color: var(--dust-dim); padding-left: 1.6rem; line-clamp: 2; -webkit-line-clamp: 2; display: -webkit-box; -webkit-box-orient: vertical; overflow: hidden; }
+.search-result-snippet mark { background: rgba(205,122,123,0.28); color: var(--ink); border-radius: 3px; padding: 0 1px; }
+.search-result-title mark { background: rgba(205,122,123,0.28); color: var(--ink); border-radius: 3px; padding: 0 1px; }
+
+/* History grouping */
+.history-group-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--dust-dim); padding: 0.5rem 0.5rem 0.25rem; }
+.session-item-row { display:flex; align-items:center; padding: 0.5rem 0.6rem; border-radius: 0.75rem; }
+.session-item-row:hover { background: var(--bg-panel-raised); }
+.session-item-row.active { background: rgba(205,122,123,0.12); }
+.session-item-row.active .session-item-title { color: var(--rose); }
+.session-item-title { font-size: 0.78rem; font-weight: 500; color: var(--dust-dim); }
+.session-item-row.active .session-item-title, .session-item-row:hover .session-item-title { color: var(--ink); }
+.session-del-btn { opacity:0; transition: opacity 0.15s ease; }
+.session-item-row:hover .session-del-btn { opacity:1; }
+
+/* Speech to text mic button */
+#mic-btn.mic-listening { background: rgba(205,122,123,0.16); color: var(--rose); }
+@keyframes micPulseRing { 0% { box-shadow: 0 0 0 0 rgba(205,122,123,0.45); } 100% { box-shadow: 0 0 0 9px rgba(205,122,123,0); } }
+#mic-btn.mic-listening { animation: micPulseRing 1.5s ease-out infinite; }
 </style>
 </head>
 <body class="h-screen flex flex-col overflow-hidden" style="background: var(--bg-app); color: var(--ink);">
@@ -148,6 +176,29 @@ input[type="range"].accent-rose { accent-color: var(--rose); }
         }
     }
 
+    // Fallback nội bộ cho các chuỗi mới (search, lịch sử, voice) — dùng khi file ngôn ngữ từ xa chưa có
+    const builtinFallback = {
+        vi: {
+            'sidebar.search_hint': 'Nhập để tìm trong các cuộc trò chuyện...',
+            'sidebar.searching': 'Đang tìm kiếm...',
+            'sidebar.no_results': 'Không tìm thấy kết quả nào.',
+            'sidebar.delete_tooltip': 'Xoá cuộc trò chuyện',
+            'sidebar.group_today': 'Hôm nay',
+            'sidebar.group_yesterday': 'Hôm qua',
+            'sidebar.group_week': '7 ngày trước',
+            'sidebar.group_month': '30 ngày trước',
+            'sidebar.group_older': 'Cũ hơn',
+            'toast.mic_listening': 'Đang nghe... nói gì đi nào',
+            'toast.mic_unsupported': 'Trình duyệt này không hỗ trợ nhận diện giọng nói.',
+            'toast.mic_denied': 'Vui lòng cho phép quyền truy cập micro.',
+            'toast.mic_error': 'Có lỗi xảy ra khi ghi âm.',
+        }
+    };
+    function fallbackT(key) {
+        const dict = builtinFallback[currentLang] || builtinFallback.vi;
+        return dict[key];
+    }
+
     // Hàm lấy chuỗi dịch thuật an toàn
     function t(key, vars = {}) {
         let keys = key.split('.');
@@ -156,7 +207,7 @@ input[type="range"].accent-rose { accent-color: var(--rose); }
             if (text === undefined) break;
             text = text[k];
         }
-        if (typeof text !== 'string') return key; // Fallback trả về key nếu không tìm thấy
+        if (typeof text !== 'string') { const fb = fallbackT(key); text = (fb !== undefined) ? fb : key; }
         
         for (let v in vars) {
             text = text.replace(new RegExp(`{${v}}`, 'g'), vars[v]);
@@ -202,19 +253,31 @@ input[type="range"].accent-rose { accent-color: var(--rose); }
 <!-- LOADING TOÀN MÀN HÌNH -->
 <div id="main-loading" class="fixed inset-0 z-50 flex flex-col items-center justify-center transition-soft" style="background: rgba(18,14,16,0.96);">
     <div class="w-16 h-16 mb-4 brand-blob flex items-center justify-center" style="background: linear-gradient(135deg, var(--rose), var(--mint));">
-        <i class="fa-solid fa-feather-pointed text-xl" style="color:#1a1416;"></i>
+        <span class="material-symbols-rounded notranslate msym-fill text-xl" style="color:#1a1416;">eco</span>
     </div>
     <p id="main-loading-text" class="font-display text-xs uppercase tracking-widest" style="color: var(--dust);" data-i18n="loading">Đang tải...</p>
 </div>
 
 <div id="toast-container" class="fixed top-4 right-4 z-50 flex flex-col gap-2 pointer-events-none"></div>
 
+<!-- SEARCH MODAL -->
+<div id="search-overlay" class="search-overlay hidden" onclick="if(event.target===this) closeSearchModal()">
+    <div class="search-modal" onclick="event.stopPropagation()">
+        <div class="search-input-row">
+            <span class="material-symbols-rounded notranslate" style="color: var(--dust-dim); font-size:18px;">search</span>
+            <input id="search-input" type="text" autocomplete="off" class="flex-1 bg-transparent text-sm focus:outline-none" style="color: var(--ink);" data-i18n-ph="sidebar.search" oninput="handleSearchInput(event)">
+            <button type="button" onclick="closeSearchModal()" class="icon-btn transition-soft" style="width:1.8rem;height:1.8rem;"><span class="material-symbols-rounded notranslate" style="font-size:16px;">close</span></button>
+        </div>
+        <div id="search-results" class="search-results"></div>
+    </div>
+</div>
+
 <!-- MÀN HÌNH ĐĂNG NHẬP -->
 <div id="auth-screen" class="min-h-screen flex items-center justify-center p-4 hidden" style="background: var(--bg-app);">
     <div class="w-full max-w-md rounded-3xl p-8 relative" style="background: var(--bg-panel); border:1px solid var(--border-soft);">
         <div class="text-center mb-8">
             <div class="inline-flex items-center justify-center w-16 h-16 brand-blob mb-4" style="background: linear-gradient(135deg, var(--rose), var(--mint));">
-                <i class="fa-solid fa-feather-pointed text-2xl" style="color:#1a1416;"></i>
+                <span class="material-symbols-rounded notranslate msym-fill text-2xl" style="color:#1a1416;">eco</span>
             </div>
             <h2 id="auth-title" class="font-display text-3xl font-bold tracking-tight" style="color: var(--ink);" data-i18n="auth.login_title">Đăng nhập</h2>
             <p class="text-sm mt-2" style="color: var(--dust-dim);" data-i18n="auth.subtitle">Abc's Noob AI — trợ lý của riêng bạn</p>
@@ -224,14 +287,14 @@ input[type="range"].accent-rose { accent-color: var(--rose); }
             <div>
                 <label for="auth-username" class="block text-xs font-semibold uppercase tracking-wider mb-2" style="color: var(--dust);" data-i18n="auth.username">Tên tài khoản</label>
                 <div class="relative">
-                    <span class="absolute inset-y-0 left-0 flex items-center pl-3" style="color: var(--dust-dim);"><i class="fa-solid fa-user"></i></span>
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3" style="color: var(--dust-dim);"><span class="material-symbols-rounded notranslate" style="font-size:18px;">person</span></span>
                     <input id="auth-username" type="text" required autocomplete="username" class="w-full pl-10 pr-4 py-3 rounded-xl text-sm focus:outline-none transition-soft" style="background: var(--bg-input); border:1px solid var(--border); color: var(--ink);" data-i18n-ph="auth.username_ph">
                 </div>
             </div>
             <div>
                 <label class="block text-xs font-semibold uppercase tracking-wider mb-2" style="color: var(--dust);" data-i18n="auth.password">Mật khẩu</label>
                 <div class="relative">
-                    <span class="absolute inset-y-0 left-0 flex items-center pl-3" style="color: var(--dust-dim);"><i class="fa-solid fa-lock"></i></span>
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3" style="color: var(--dust-dim);"><span class="material-symbols-rounded notranslate" style="font-size:18px;">lock</span></span>
                     <input id="auth-password" type="password" required autocomplete="current-password" class="w-full pl-10 pr-10 py-3 rounded-xl text-sm focus:outline-none transition-soft" style="background: var(--bg-input); border:1px solid var(--border); color: var(--ink);" placeholder="••••••••">
                     <button type="button" onclick="togglePasswordVisibility()" class="absolute inset-y-0 right-0 flex items-center pr-3" style="color: var(--dust-dim);">
                         <span id="password-toggle-icon" class="material-symbols-rounded notranslate">visibility</span>
@@ -272,13 +335,12 @@ input[type="range"].accent-rose { accent-color: var(--rose); }
                 <div class="nav-item primary transition-soft" onclick="startNewSession()">
                     <span class="material-symbols-rounded notranslate">edit_square</span> <span data-i18n="sidebar.new_chat">Cuộc trò chuyện mới</span>
                 </div>
-                <div class="nav-item transition-soft" onclick="showToast(t('toast.search_soon'), 'info')">
+                <div class="nav-item transition-soft" onclick="openSearchModal()">
                     <span class="material-symbols-rounded notranslate">search</span> <span data-i18n="sidebar.search">Tìm kiếm...</span>
                 </div>
             </div>
 
-            <div class="flex-1 flex flex-col overflow-hidden min-h-0 mt-4 px-3">
-                <h3 class="text-[11px] font-bold uppercase tracking-wider mb-1.5 px-1 shrink-0" style="color: var(--dust-dim);" data-i18n="sidebar.recent">Gần đây</h3>
+            <div class="flex-1 flex flex-col overflow-hidden min-h-0 mt-3 px-3">
                 <div id="sessions-list-container" class="flex-1 overflow-y-auto space-y-0.5 pr-1"></div>
             </div>
         </div>
@@ -309,7 +371,7 @@ input[type="range"].accent-rose { accent-color: var(--rose); }
             </div>
 
             <div class="flex items-center gap-2 shrink-0 relative">
-                <button type="button" class="px-4 py-1.5 rounded-full text-xs font-bold transition-soft flex items-center gap-1" style="background: linear-gradient(135deg, var(--rose), var(--mint)); color:#1a1416;" onclick="showToast(t('toast.upgrade_soon'), 'info')">
+                <button type="button" class="px-4 py-1.5 rounded-full text-xs font-bold transition-soft flex items-center gap-1" style="background: linear-gradient(135deg, var(--rose), var(--mint)); color:#1a1416;" onclick="window.open('http://upgrade.abcsnoob.workers.dev', '_blank')">
                     <span class="material-symbols-rounded notranslate">upgrade</span><span data-i18n="chat.upgrade">Nâng cấp</span>
                 </button>
                 <button type="button" onclick="toggleSettingsMenu()" class="icon-btn transition-soft"><span class="material-symbols-rounded notranslate">more_vert</span></button>
@@ -318,7 +380,7 @@ input[type="range"].accent-rose { accent-color: var(--rose); }
                 <div id="settings-menu" class="hidden absolute top-12 right-0 w-80 dropdown-panel p-4 space-y-4">
                     <div class="flex items-center justify-between">
                         <span class="font-display font-semibold text-sm" style="color: var(--ink);" data-i18n="chat.settings">Cài đặt</span>
-                        <button type="button" onclick="toggleSettingsMenu()" class="icon-btn"><i class="fa-solid fa-xmark text-xs"></i></button>
+                        <button type="button" onclick="toggleSettingsMenu()" class="icon-btn"><span class="material-symbols-rounded notranslate" style="font-size:16px;">close</span></button>
                     </div>
 
                     <div class="flex items-center gap-2.5 p-2.5 rounded-xl" style="background: var(--bg-input);">
@@ -356,7 +418,7 @@ input[type="range"].accent-rose { accent-color: var(--rose); }
                     </div>
 
                     <button type="button" onclick="logout()" class="w-full py-2 rounded-xl text-xs font-semibold transition-soft flex items-center justify-center gap-1.5" style="background: var(--bg-input); border:1px solid var(--border); color: #e69a9a;">
-                        <i class="fa-solid fa-right-from-bracket"></i> <span data-i18n="chat.logout">Đăng xuất an toàn</span>
+                        <span class="material-symbols-rounded notranslate" style="font-size:16px;">logout</span> <span data-i18n="chat.logout">Đăng xuất an toàn</span>
                     </button>
                 </div>
             </div>
@@ -364,9 +426,9 @@ input[type="range"].accent-rose { accent-color: var(--rose); }
 
         <div id="ai-accuracy-disclaimer" class="px-4 pt-3 shrink-0">
             <div class="max-w-3xl mx-auto ai-disclaimer-bar">
-                <i class="fa-solid fa-circle-info"></i>
+                <span class="material-symbols-rounded notranslate" style="font-size:16px;">info</span>
                 <span class="flex-1" data-i18n="chat.disclaimer">Thông tin có thể thay đổi rất nhanh...</span>
-                <button type="button" onclick="document.getElementById('ai-accuracy-disclaimer').classList.add('hidden')" class="icon-btn shrink-0" style="width:1.5rem;height:1.5rem;"><i class="fa-solid fa-xmark text-[10px]"></i></button>
+                <button type="button" onclick="document.getElementById('ai-accuracy-disclaimer').classList.add('hidden')" class="icon-btn shrink-0" style="width:1.5rem;height:1.5rem;"><span class="material-symbols-rounded notranslate" style="font-size:13px;">close</span></button>
             </div>
         </div>
 
@@ -396,36 +458,36 @@ input[type="range"].accent-rose { accent-color: var(--rose); }
                                     <span class="material-symbols-rounded notranslate">image</span> <span data-i18n="chat.upload_img">Tải ảnh lên</span>
                                 </div>
                                 <div class="plus-menu-item transition-soft" onclick="promptYoutubeLink()">
-                                    <i class="fa-brands fa-youtube" style="color: #e05757;"></i> <span data-i18n="chat.paste_yt">Dán liên kết YouTube</span>
+                                    <span class="material-symbols-rounded notranslate" style="color: #e05757;">smart_display</span> <span data-i18n="chat.paste_yt">Dán liên kết YouTube</span>
                                 </div>
                             </div>
 
                             <div class="relative">
                                 <button type="button" onclick="toggleModelMenu()" class="model-pill transition-soft">
-                                    <span id="model-pill-label">Auto</span> <i class="fa-solid fa-chevron-down text-[9px]"></i>
+                                    <span id="model-pill-label">Auto</span> <span class="material-symbols-rounded notranslate" style="font-size:14px;">expand_more</span>
                                 </button>
 
                                 <div id="model-menu" class="hidden absolute bottom-12 left-0 w-72 dropdown-panel p-1.5 flex">
                                     <div class="flex-1 py-0.5">
                                         <div class="model-option transition-soft" data-model="auto" onclick="selectModelOption(this)">
                                             <div><div class="opt-title" data-i18n="chat.model_auto">Auto</div><div class="opt-desc" data-i18n="chat.model_auto_desc">Câu trả lời nhanh nhất</div></div>
-                                            <i class="fa-solid fa-check text-xs hidden check-icon" style="color: var(--mint);"></i>
+                                            <span class="material-symbols-rounded notranslate hidden check-icon" style="font-size:16px; color: var(--mint);">check</span>
                                         </div>
                                         <div class="my-1.5" style="border-top:1px solid var(--border);"></div>
                                         <div class="thinking-row transition-soft" onmouseenter="showThinkingSubmenu(true)" onclick="showThinkingSubmenu(true)">
                                             <div><div class="opt-title" data-i18n="chat.think_level">Cấp độ tư duy</div><div class="opt-desc" id="thinking-current-label">Mở rộng</div></div>
-                                            <i class="fa-solid fa-chevron-right text-[10px]" style="color: var(--dust-dim);"></i>
+                                            <span class="material-symbols-rounded notranslate" style="font-size:15px; color: var(--dust-dim);">chevron_right</span>
                                         </div>
                                     </div>
 
                                     <div id="thinking-submenu" class="hidden absolute bottom-0 left-full ml-1.5 w-60 dropdown-panel p-1.5">
                                         <div class="thinking-row transition-soft" data-level="low" onclick="selectThinkingOption(this)">
                                             <div><div class="opt-title" data-i18n="chat.think_std">Tiêu chuẩn</div><div class="opt-desc" data-i18n="chat.think_std_desc">Phù hợp nhất</div></div>
-                                            <i class="fa-solid fa-check text-xs hidden check-icon" style="color: var(--mint);"></i>
+                                            <span class="material-symbols-rounded notranslate hidden check-icon" style="font-size:16px; color: var(--mint);">check</span>
                                         </div>
                                         <div class="thinking-row transition-soft" data-level="high" onclick="selectThinkingOption(this)">
                                             <div><div class="opt-title" data-i18n="chat.think_ext">Mở rộng</div><div class="opt-desc" data-i18n="chat.think_ext_desc">Giải quyết vấn đề phức tạp</div></div>
-                                            <i class="fa-solid fa-check text-xs check-icon" style="color: var(--mint);"></i>
+                                            <span class="material-symbols-rounded notranslate check-icon" style="font-size:16px; color: var(--mint);">check</span>
                                         </div>
                                     </div>
                                 </div>
@@ -433,11 +495,11 @@ input[type="range"].accent-rose { accent-color: var(--rose); }
                         </div>
 
                         <div class="flex items-center gap-2">
-                            <button id="mic-btn" type="button" class="icon-btn transition-soft" onclick="showToast(t('toast.voice_soon'), 'info')">
-                                <i class="fa-solid fa-microphone text-xs"></i>
+                            <button id="mic-btn" type="button" class="icon-btn transition-soft" onclick="toggleSpeechToText()">
+                                <span id="mic-btn-icon" class="material-symbols-rounded notranslate" style="font-size:16px;">mic</span>
                             </button>
                             <button id="chat-send-btn" type="submit" class="w-9 h-9 rounded-full flex items-center justify-center transition-soft active:scale-95 disabled:opacity-40" style="background: var(--rose); color:#1a1416;">
-                                <i id="chat-btn-icon" class="fa-solid fa-arrow-up text-xs"></i>
+                                <span id="chat-btn-icon" class="material-symbols-rounded notranslate msym-fill" style="font-size:16px;">arrow_upward</span>
                             </button>
                         </div>
                     </div>
@@ -501,7 +563,7 @@ renderer.code = function(arg1, arg2) {
             <div class="code-block-header">
                 <span>${escapeHtml(lang.toUpperCase())}</span>
                 <span class="copy-code-btn" data-code-b64="${codeB64}" onclick="copyCodeBlock(this)">
-                    <i class="fa-regular fa-copy"></i> Copy
+                    <span class="material-symbols-rounded notranslate" style="font-size:13px;">content_copy</span> Copy
                 </span>
             </div>
             <pre><code class="hljs language-${escapeHtml(lang)}">${highlighted}</code></pre>
@@ -515,7 +577,7 @@ function copyCodeBlock(btnEl) {
         const code = base64ToUtf8(btnEl.getAttribute("data-code-b64") || "");
         navigator.clipboard.writeText(code).then(() => {
             const original = btnEl.innerHTML;
-            btnEl.innerHTML = `<i class="fa-solid fa-check"></i> Copied`;
+            btnEl.innerHTML = `<span class="material-symbols-rounded notranslate" style="font-size:13px;">check</span> Copied`;
             setTimeout(() => { btnEl.innerHTML = original; }, 1500);
         }).catch(() => showToast(t("toast.copy_fail"), "error"));
     } catch (e) { showToast(t("toast.copy_code_error"), "error"); }
@@ -573,7 +635,7 @@ function renderImagePreviewBar() {
     const bar = document.getElementById("image-preview-bar");
     if (pendingImages.length === 0) { bar.classList.add("hidden"); bar.classList.remove("flex"); bar.innerHTML = ""; return; }
     bar.classList.remove("hidden"); bar.classList.add("flex");
-    bar.innerHTML = pendingImages.map((img, idx) => `<div class="attach-thumb" title="${img.fileName}"><img src="${img.previewUrl}"><div class="attach-remove" onclick="removePendingImage(${idx})"><i class="fa-solid fa-xmark"></i></div></div>`).join("");
+    bar.innerHTML = pendingImages.map((img, idx) => `<div class="attach-thumb" title="${img.fileName}"><img src="${img.previewUrl}"><div class="attach-remove" onclick="removePendingImage(${idx})"><span class="material-symbols-rounded notranslate" style="font-size:11px;">close</span></div></div>`).join("");
 }
 function clearPendingImages() { pendingImages.forEach(img => { if (img.previewUrl) URL.revokeObjectURL(img.previewUrl); }); pendingImages = []; renderImagePreviewBar(); }
 
@@ -587,7 +649,70 @@ function renderYoutubeDetectedBar() {
     const bar = document.getElementById("youtube-detected-bar");
     if (detectedYoutubeUrls.length === 0) { bar.classList.add("hidden"); bar.classList.remove("flex"); bar.innerHTML = ""; return; }
     bar.classList.remove("hidden"); bar.classList.add("flex");
-    bar.innerHTML = detectedYoutubeUrls.map(url => `<div class="yt-chip"><i class="fa-brands fa-youtube" style="color:#e05757;"></i><span>${url}</span></div>`).join("");
+    bar.innerHTML = detectedYoutubeUrls.map(url => `<div class="yt-chip"><span class="material-symbols-rounded notranslate" style="font-size:14px;color:#e05757;">smart_display</span><span>${url}</span></div>`).join("");
+}
+
+/* ---------------- SPEECH TO TEXT (Mic Button) ---------------- */
+const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition || null;
+let speechRecognizer = null;
+let isListening = false;
+let speechBaseValue = "";
+
+function getSpeechLang() {
+    const map = { vi: "vi-VN", en: "en-US" };
+    return map[currentLang] || "vi-VN";
+}
+
+function toggleSpeechToText() {
+    if (!SpeechRecognitionAPI) { showToast(t("toast.mic_unsupported"), "error"); return; }
+    if (isListening) { stopSpeechToText(); return; }
+    startSpeechToText();
+}
+
+function startSpeechToText() {
+    try {
+        speechRecognizer = new SpeechRecognitionAPI();
+        speechRecognizer.lang = getSpeechLang();
+        speechRecognizer.continuous = true;
+        speechRecognizer.interimResults = true;
+
+        const inputEl = document.getElementById("chat-input");
+        speechBaseValue = inputEl.value ? (inputEl.value.trim() + " ") : "";
+
+        speechRecognizer.onstart = () => {
+            isListening = true;
+            const btn = document.getElementById("mic-btn"); const icon = document.getElementById("mic-btn-icon");
+            btn.classList.add("mic-listening"); icon.textContent = "stop_circle"; icon.classList.add("msym-fill");
+            showToast(t("toast.mic_listening"), "info");
+        };
+
+        speechRecognizer.onresult = (event) => {
+            let finalT = "", interimT = "";
+            for (let i = 0; i < event.results.length; i++) {
+                const transcript = event.results[i][0].transcript;
+                if (event.results[i].isFinal) finalT += transcript; else interimT += transcript;
+            }
+            inputEl.value = speechBaseValue + finalT + interimT;
+            handleChatInputChange({ target: inputEl });
+        };
+
+        speechRecognizer.onerror = (event) => {
+            if (event.error === "not-allowed" || event.error === "permission-denied") showToast(t("toast.mic_denied"), "error");
+            else if (event.error !== "no-speech" && event.error !== "aborted") showToast(t("toast.mic_error"), "error");
+        };
+
+        speechRecognizer.onend = () => { resetMicButtonUI(); };
+
+        speechRecognizer.start();
+    } catch (err) { showToast(t("toast.mic_error"), "error"); resetMicButtonUI(); }
+}
+
+function stopSpeechToText() { if (speechRecognizer) { try { speechRecognizer.stop(); } catch (e) {} } resetMicButtonUI(); }
+function resetMicButtonUI() {
+    isListening = false;
+    const btn = document.getElementById("mic-btn"); const icon = document.getElementById("mic-btn-icon");
+    if (btn) btn.classList.remove("mic-listening");
+    if (icon) { icon.textContent = "mic"; icon.classList.remove("msym-fill"); }
 }
 
 function checkApplicationState() {
@@ -600,11 +725,11 @@ function checkApplicationState() {
 function showToast(message, type = "info") {
     const container = document.getElementById("toast-container");
     const toast = document.createElement("div");
-    const colorMap = { success: { bg: "rgba(158,219,171,0.12)", border: "var(--mint)", text: "var(--mint)", icon: "fa-circle-check" }, error: { bg: "rgba(205,122,123,0.14)", border: "var(--rose)", text: "#f0a9a9", icon: "fa-circle-exclamation" }, info: { bg: "var(--bg-panel-raised)", border: "var(--border)", text: "var(--dust)", icon: "fa-circle-info" } };
+    const colorMap = { success: { bg: "rgba(158,219,171,0.12)", border: "var(--mint)", text: "var(--mint)", icon: "check_circle" }, error: { bg: "rgba(205,122,123,0.14)", border: "var(--rose)", text: "#f0a9a9", icon: "error" }, info: { bg: "var(--bg-panel-raised)", border: "var(--border)", text: "var(--dust)", icon: "info" } };
     const c = colorMap[type] || colorMap.info;
     toast.className = "p-3.5 rounded-2xl text-xs font-semibold shadow-2xl transition-soft transform translate-y-2 opacity-0 flex items-center gap-2.5 pointer-events-auto min-w-[240px] max-w-sm";
     toast.style.background = c.bg; toast.style.border = `1px solid ${c.border}`; toast.style.color = c.text;
-    toast.innerHTML = `<i class="fa-solid ${c.icon}"></i><span>${message}</span>`;
+    toast.innerHTML = `<span class="material-symbols-rounded notranslate msym-fill" style="font-size:18px;">${c.icon}</span><span>${message}</span>`;
     container.appendChild(toast);
     setTimeout(() => toast.classList.remove("translate-y-2", "opacity-0"), 10);
     setTimeout(() => { toast.classList.add("opacity-0"); setTimeout(() => toast.remove(), 300); }, 4000);
@@ -659,18 +784,33 @@ async function initUserSessions() {
     if (sessionsList.length > 0) { await switchSession(sessionsList[0].id); } else { startNewSession(); }
 }
 
+function getHistoryGroupLabel(ts) {
+    const now = new Date(); const d = new Date(ts);
+    const startOfDay = dt => new Date(dt.getFullYear(), dt.getMonth(), dt.getDate()).getTime();
+    const diffDays = Math.round((startOfDay(now) - startOfDay(d)) / 86400000);
+    if (diffDays <= 0) return t('sidebar.group_today');
+    if (diffDays === 1) return t('sidebar.group_yesterday');
+    if (diffDays <= 7) return t('sidebar.group_week');
+    if (diffDays <= 30) return t('sidebar.group_month');
+    return t('sidebar.group_older');
+}
+
 function renderSessionsSidebar() {
     const container = document.getElementById("sessions-list-container"); container.innerHTML = "";
-    if (sessionsList.length === 0) { container.innerHTML = `<div class="text-[11px] italic p-2 text-center" style="color: var(--dust-dim);">${t('sidebar.empty')}</div>`; return; }
-    sessionsList.forEach(session => {
-        const item = document.createElement("div"); item.className = `session-item transition-soft ${session.id === currentSessionId ? 'active' : ''}`;
+    if (sessionsList.length === 0) { container.innerHTML = `<div class="text-[11px] italic p-3 text-center" style="color: var(--dust-dim);">${t('sidebar.empty')}</div>`; return; }
+    const sorted = [...sessionsList].sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+    let lastGroup = null;
+    sorted.forEach(session => {
+        const group = getHistoryGroupLabel(session.timestamp || Date.now());
+        if (group !== lastGroup) { const h = document.createElement("div"); h.className = "history-group-label"; h.textContent = group; container.appendChild(h); lastGroup = group; }
+        const item = document.createElement("div"); item.className = `session-item-row transition-soft ${session.id === currentSessionId ? 'active' : ''}`;
         item.setAttribute("onclick", `switchSession('${session.id}')`);
-        item.innerHTML = `<div class="flex items-center gap-2 truncate flex-1 pr-1"><i class="fa-regular fa-comment shrink-0"></i><span class="truncate">${session.title}</span></div><button type="button" onclick="deleteSession(event, '${session.id}')" class="opacity-0 group-hover:opacity-100 hover:opacity-100 p-1 transition-soft shrink-0" style="color: var(--dust-dim);"><i class="fa-regular fa-trash-can text-[11px]"></i></button>`;
+        item.innerHTML = `<div class="flex items-center gap-2 truncate flex-1 pr-1 cursor-pointer"><span class="material-symbols-rounded notranslate shrink-0" style="font-size:15px; color: var(--dust-dim);">chat_bubble</span><span class="truncate session-item-title">${escapeHtml(session.title || '')}</span></div><button type="button" onclick="deleteSession(event, '${session.id}')" class="session-del-btn icon-btn shrink-0" style="width:1.6rem;height:1.6rem;" title="${t('sidebar.delete_tooltip') || ''}"><span class="material-symbols-rounded notranslate" style="font-size:14px;">delete</span></button>`;
         container.appendChild(item);
     });
 }
 
-async function switchSession(id) { currentSessionId = id; renderSessionsSidebar(); const saved = await localforage.getItem(`chat_messages_${currentUsername}_${id}`); currentChatHistory = Array.isArray(saved) ? saved : []; renderAllMessages(); }
+async function switchSession(id) { currentSessionId = id; renderSessionsSidebar(); const saved = await localforage.getItem(`chat_messages_${currentUsername}_${id}`); currentChatHistory = Array.isArray(saved) ? saved : []; renderAllMessages(); if (window.innerWidth < 768) toggleSidebar(); }
 function startNewSession() { currentSessionId = null; currentChatHistory = []; renderSessionsSidebar(); resetChatToDefaultGreeting(); clearPendingImages(); if (window.innerWidth < 768) toggleSidebar(); }
 async function deleteSession(event, id) {
     event.stopPropagation(); if (!confirm(t("toast.del_confirm"))) return;
@@ -678,20 +818,82 @@ async function deleteSession(event, id) {
     showToast(t("toast.chat_deleted"), "info"); if (currentSessionId === id) { if (sessionsList.length > 0) await switchSession(sessionsList[0].id); else startNewSession(); } else renderSessionsSidebar();
 }
 
+/* ---------------- SEARCH ---------------- */
+let searchDebounceTimer = null;
+function openSearchModal() {
+    closeAllMenus(null);
+    const overlay = document.getElementById("search-overlay");
+    overlay.classList.remove("hidden");
+    const input = document.getElementById("search-input");
+    input.value = ""; renderSearchEmptyState();
+    setTimeout(() => input.focus(), 50);
+    document.addEventListener("keydown", searchEscHandler);
+}
+function closeSearchModal() {
+    document.getElementById("search-overlay").classList.add("hidden");
+    document.removeEventListener("keydown", searchEscHandler);
+}
+function searchEscHandler(e) { if (e.key === "Escape") closeSearchModal(); }
+function renderSearchEmptyState() {
+    document.getElementById("search-results").innerHTML = `<div class="text-[11px] italic p-4 text-center" style="color: var(--dust-dim);">${t('sidebar.search_hint')}</div>`;
+}
+function handleSearchInput(event) {
+    const q = event.target.value.trim();
+    clearTimeout(searchDebounceTimer);
+    if (!q) { renderSearchEmptyState(); return; }
+    searchDebounceTimer = setTimeout(() => runSearch(q), 200);
+}
+function highlightMatch(text, q) {
+    const safe = escapeHtml(text);
+    try { const re = new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'ig'); return safe.replace(re, m => `<mark>${m}</mark>`); } catch { return safe; }
+}
+async function runSearch(q) {
+    const resultsEl = document.getElementById("search-results");
+    resultsEl.innerHTML = `<div class="text-[11px] italic p-4 text-center" style="color: var(--dust-dim);">${t('sidebar.searching')}</div>`;
+    const lowerQ = q.toLowerCase();
+    const matches = [];
+    for (const session of sessionsList) {
+        const titleHit = (session.title || "").toLowerCase().includes(lowerQ);
+        let snippet = null, snippetSender = null;
+        try {
+            const msgs = await localforage.getItem(`chat_messages_${currentUsername}_${session.id}`);
+            if (Array.isArray(msgs)) {
+                for (const m of msgs) {
+                    if ((m.text || "").toLowerCase().includes(lowerQ)) {
+                        const idx = m.text.toLowerCase().indexOf(lowerQ);
+                        const start = Math.max(0, idx - 30);
+                        snippet = (start > 0 ? "…" : "") + m.text.substring(start, idx + lowerQ.length + 50) + (idx + lowerQ.length + 50 < m.text.length ? "…" : "");
+                        snippetSender = m.sender; break;
+                    }
+                }
+            }
+        } catch (e) {}
+        if (titleHit || snippet) matches.push({ session, snippet, snippetSender, titleHit });
+    }
+    matches.sort((a, b) => (b.session.timestamp || 0) - (a.session.timestamp || 0));
+    if (matches.length === 0) { resultsEl.innerHTML = `<div class="text-[11px] italic p-4 text-center" style="color: var(--dust-dim);">${t('sidebar.no_results')}</div>`; return; }
+    resultsEl.innerHTML = matches.map(({ session, snippet, snippetSender }) => `
+        <div class="search-result-item" onclick="selectSearchResult('${session.id}')">
+            <div class="search-result-title"><span class="material-symbols-rounded notranslate" style="font-size:14px; color: var(--dust-dim);">chat_bubble</span>${highlightMatch(session.title || '', q)}</div>
+            ${snippet ? `<div class="search-result-snippet">${snippetSender === 'user' ? '' : '🤖 '}${highlightMatch(snippet, q)}</div>` : ''}
+        </div>`).join("");
+}
+async function selectSearchResult(sessionId) { closeSearchModal(); await switchSession(sessionId); }
+
 function renderAllMessages() { const c = document.getElementById("chat-messages"); c.innerHTML = ""; if (currentChatHistory.length === 0) { resetChatToDefaultGreeting(); return; } currentChatHistory.forEach((msg, idx) => { appendMessage(msg.sender, msg.text, msg.modelName, msg.tokens, false, msg.thoughtText, msg.attachedImages, msg.attachedYoutubeUrls, idx); }); }
 function resetChatToDefaultGreeting() { document.getElementById("chat-messages").innerHTML = `<div class="h-full flex items-center justify-center"><p class="font-display text-2xl sm:text-3xl font-semibold text-center max-w-lg px-4" style="color: var(--dust);">${t("chat.default_greeting")}</p></div>`; }
 
 function renderAttachmentsHtml(imgs, yts) {
     let html = "";
     if (imgs?.length) { html += `<div class="flex flex-wrap gap-2 mb-2 justify-end">${imgs.map(img => `<img src="${img.previewUrl || `data:${img.mimeType};base64,${img.data}`}" class="msg-attached-image">`).join('')}</div>`; }
-    if (yts?.length) { html += `<div class="flex flex-wrap gap-2 mb-2 justify-end">${yts.map(url => `<div class="yt-chip"><i class="fa-brands fa-youtube" style="color:#e05757;"></i><span>${url}</span></div>`).join('')}</div>`; }
+    if (yts?.length) { html += `<div class="flex flex-wrap gap-2 mb-2 justify-end">${yts.map(url => `<div class="yt-chip"><span class="material-symbols-rounded notranslate" style="font-size:14px;color:#e05757;">smart_display</span><span>${url}</span></div>`).join('')}</div>`; }
     return html;
 }
 
 const msgActionTextStore = {};
 function renderMsgActionMenuHtml(menuId, text, index) {
     msgActionTextStore[menuId] = { text: text || "", historyIndex: index };
-    return `<div id="${menuId}" class="hidden msg-action-menu dropdown-panel p-1.5 bottom-9 left-0"><div class="msg-action-menu-item transition-soft" onclick="branchConversation('${menuId}')"><i class="fa-solid fa-code-branch"></i><span>${t('menu.branch')}</span></div><div class="msg-action-divider"></div><div class="msg-action-menu-item danger transition-soft" onclick="reportLegalIssue('${menuId}')"><i class="fa-solid fa-flag"></i><span>${t('menu.report')}</span></div><div class="msg-action-menu-item transition-soft" onclick="viewAnswerDetails('${menuId}')"><i class="fa-solid fa-circle-info"></i><span>${t('menu.details')}</span></div></div>`;
+    return `<div id="${menuId}" class="hidden msg-action-menu dropdown-panel p-1.5 bottom-9 left-0"><div class="msg-action-menu-item transition-soft" onclick="branchConversation('${menuId}')"><span class="material-symbols-rounded notranslate" style="font-size:16px;">call_split</span><span>${t('menu.branch')}</span></div><div class="msg-action-divider"></div><div class="msg-action-menu-item danger transition-soft" onclick="reportLegalIssue('${menuId}')"><span class="material-symbols-rounded notranslate" style="font-size:16px;">flag</span><span>${t('menu.report')}</span></div><div class="msg-action-menu-item transition-soft" onclick="viewAnswerDetails('${menuId}')"><span class="material-symbols-rounded notranslate" style="font-size:16px;">info</span><span>${t('menu.details')}</span></div></div>`;
 }
 function toggleMsgActionMenu(event, menuId) { event.stopPropagation(); const menu = document.getElementById(menuId); if (!menu) return; const willOpen = menu.classList.contains("hidden"); document.querySelectorAll(".msg-action-menu").forEach(m => { if (m.id !== menuId) m.classList.add("hidden"); }); document.querySelectorAll(".msg-action-btn.menu-open").forEach(b => b.classList.remove("menu-open")); menu.classList.toggle("hidden", !willOpen); if (willOpen) event.currentTarget.classList.add("menu-open"); }
 
@@ -717,9 +919,9 @@ function appendMessage(sender, text, modelName = "", tokens = 0, save = true, th
     if (sender === "user") {
         w.innerHTML = `<div class="flex items-start max-w-2xl ml-auto justify-end w-full"><div class="space-y-1 text-right max-w-full">${renderAttachmentsHtml(imgs, yts)}<div class="user-bubble px-4 py-2.5 rounded-3xl text-sm leading-relaxed text-left markdown-content shadow-sm" style="border-bottom-right-radius: 0.4rem;">${parsed}</div></div></div>`;
     } else if (sender === "ai") {
-        let th = ""; if (thoughtText) { th = `<div class="mb-2.5 w-full"><details class="rounded-2xl group/think transition-soft" style="background: var(--bg-panel-raised); border:1px solid var(--border-soft);"><summary class="cursor-pointer px-4 py-2.5 text-[11px] font-bold flex items-center gap-2 select-none" style="color: var(--dust);"><i class="fa-solid fa-brain" style="color: var(--rose);"></i><span>${t('ai.thought_process')}</span><i class="fa-solid fa-chevron-down ml-auto transition-transform group-open/think:rotate-180 text-[10px]"></i></summary><div class="px-4 pb-4 text-xs border-t mt-1 pt-3.5 break-words markdown-content thought-markdown" style="border-color: var(--border-soft);">${DOMPurify.sanitize(marked.parse(thoughtText))}</div></details></div>`; }
+        let th = ""; if (thoughtText) { th = `<div class="mb-2.5 w-full"><details class="rounded-2xl group/think transition-soft" style="background: var(--bg-panel-raised); border:1px solid var(--border-soft);"><summary class="cursor-pointer px-4 py-2.5 text-[11px] font-bold flex items-center gap-2 select-none" style="color: var(--dust);"><span class="material-symbols-rounded notranslate" style="font-size:15px; color: var(--rose);">psychology</span><span>${t('ai.thought_process')}</span><span class="material-symbols-rounded notranslate ml-auto transition-transform group-open/think:rotate-180" style="font-size:14px;">expand_more</span></summary><div class="px-4 pb-4 text-xs border-t mt-1 pt-3.5 break-words markdown-content thought-markdown" style="border-color: var(--border-soft);">${DOMPurify.sanitize(marked.parse(thoughtText))}</div></details></div>`; }
         const mId = "msg-act-" + Math.random().toString(36).slice(2, 10);
-        w.innerHTML = `<div class="flex items-start gap-3 max-w-2xl mr-auto w-full group"><div class="w-7 h-7 brand-blob shrink-0 mt-0.5" style="background: linear-gradient(135deg, var(--rose), var(--mint));"></div><div class="space-y-1.5 flex-1 min-w-0">${th}<div class="text-sm leading-relaxed markdown-content" style="color: var(--ink);">${parsed}</div><div class="flex items-center gap-1.5 pl-0.5"><div class="flex items-center gap-1.5 text-[9px] font-bold font-mono"><span class="px-1.5 py-0.5 rounded" style="background: var(--bg-panel-raised); color: var(--rose);">${modelName}</span><span class="px-1.5 py-0.5 rounded" style="background: var(--bg-panel-raised); color: var(--mint);">+${tokens} tokens</span></div><div class="relative"><button type="button" class="msg-action-btn" onclick="toggleMsgActionMenu(event, '${mId}')"><i class="fa-solid fa-ellipsis text-[12px]"></i></button>${renderMsgActionMenuHtml(mId, text, idx)}</div></div></div></div>`;
+        w.innerHTML = `<div class="flex items-start gap-3 max-w-2xl mr-auto w-full group"><div class="w-7 h-7 brand-blob shrink-0 mt-0.5" style="background: linear-gradient(135deg, var(--rose), var(--mint));"></div><div class="space-y-1.5 flex-1 min-w-0">${th}<div class="text-sm leading-relaxed markdown-content" style="color: var(--ink);">${parsed}</div><div class="flex items-center gap-1.5 pl-0.5"><div class="flex items-center gap-1.5 text-[9px] font-bold font-mono"><span class="px-1.5 py-0.5 rounded" style="background: var(--bg-panel-raised); color: var(--rose);">${modelName}</span><span class="px-1.5 py-0.5 rounded" style="background: var(--bg-panel-raised); color: var(--mint);">+${tokens} tokens</span></div><div class="relative"><button type="button" class="msg-action-btn" onclick="toggleMsgActionMenu(event, '${mId}')"><span class="material-symbols-rounded notranslate" style="font-size:15px;">more_horiz</span></button>${renderMsgActionMenuHtml(mId, text, idx)}</div></div></div></div>`;
     }
     c.appendChild(w); triggerLatexRender(w); c.scrollTop = c.scrollHeight;
     if (save && currentSessionId && (sender === "user" || sender === "ai")) { currentChatHistory.push({ sender, text, modelName, tokens, thoughtText, attachedImages: imgs, attachedYoutubeUrls: yts }); localforage.setItem(`chat_messages_${currentUsername}_${currentSessionId}`, currentChatHistory); }
@@ -728,6 +930,7 @@ function appendMessage(sender, text, modelName = "", tokens = 0, save = true, th
 async function handleChatSubmit(event) {
     event.preventDefault(); const inputEl = document.getElementById("chat-input"); const prompt = inputEl.value.trim();
     if (!prompt && !pendingImages.length && !detectedYoutubeUrls.length) return;
+    if (isListening) stopSpeechToText();
     const sys = document.getElementById("cfg-system").value.trim(); const temp = parseFloat(document.getElementById("cfg-temperature").value);
     const iReq = pendingImages.map(img => ({ data: img.data, mimeType: img.mimeType })); const iDisp = pendingImages.map(img => ({ data: img.data, mimeType: img.mimeType, previewUrl: img.previewUrl })); const yReq = [...detectedYoutubeUrls];
     
@@ -737,12 +940,12 @@ async function handleChatSubmit(event) {
     inputEl.value = ""; inputEl.style.height = "auto"; pendingImages = []; renderImagePreviewBar(); detectedYoutubeUrls = []; renderYoutubeDetectedBar();
     
     const loading = document.getElementById("ai-loading-indicator"); const btn = document.getElementById("chat-send-btn"); const icon = document.getElementById("chat-btn-icon");
-    loading.classList.remove("hidden"); document.getElementById("ai-loading-status-text").innerText = yReq.length ? t('ai.connecting_yt') : t('ai.connecting'); btn.disabled = true; icon.className = "fa-solid fa-circle-notch animate-spin text-xs";
+    loading.classList.remove("hidden"); document.getElementById("ai-loading-status-text").innerText = yReq.length ? t('ai.connecting_yt') : t('ai.connecting'); btn.disabled = true; icon.className = "material-symbols-rounded notranslate animate-spin"; icon.style.fontSize = "16px"; icon.textContent = "progress_activity";
     const cEl = document.getElementById("chat-messages"); cEl.scrollTop = cEl.scrollHeight;
     
     const hist = currentChatHistory.filter(m => m.sender === "user" || m.sender === "ai").map(m => ({ role: m.sender === "user" ? "user" : "model", content: m.text }));
     const bId = "ai-bub-" + Date.now(); const w = document.createElement("div"); w.className = "flex items-start gap-3 max-w-2xl mr-auto w-full opacity-0 animate-message group"; w.id = bId;
-    w.innerHTML = `<div id="${bId}-logo" class="w-7 h-7 brand-blob animate-logo-spin shrink-0 mt-0.5" style="background: linear-gradient(135deg, var(--rose), var(--mint));"></div><div class="space-y-1.5 flex-1 min-w-0"><div id="${bId}-th-c" class="hidden mb-2.5 w-full"><details class="rounded-2xl group/think transition-soft" style="background: var(--bg-panel-raised); border:1px solid var(--border-soft);" open><summary class="cursor-pointer px-4 py-2.5 text-[11px] font-bold flex items-center gap-2" style="color: var(--dust);"><i id="${bId}-th-i" class="fa-solid fa-brain animate-pulse" style="color: var(--rose);"></i><span id="${bId}-th-s">${t('ai.thinking')}</span><i class="fa-solid fa-chevron-down ml-auto transition-transform group-open/think:rotate-180 text-[10px]"></i></summary><div id="${bId}-th-txt" class="px-4 pb-4 text-xs border-t mt-1 pt-3.5 break-words markdown-content thought-markdown" style="border-color: var(--border-soft);"></div></details></div><div id="${bId}-txt" class="text-sm leading-relaxed markdown-content" style="color: var(--ink);"></div><div class="flex items-center gap-1.5 pl-0.5"><div id="${bId}-meta" class="flex items-center gap-1.5 text-[9px] font-bold font-mono hidden"><span id="${bId}-m" class="px-1.5 py-0.5 rounded" style="background: var(--bg-panel-raised); color: var(--rose);"></span><span id="${bId}-t" class="px-1.5 py-0.5 rounded" style="background: var(--bg-panel-raised); color: var(--mint);"></span></div><div id="${bId}-act" class="relative hidden"><button type="button" class="msg-action-btn" onclick="toggleMsgActionMenu(event, '${bId}-menu')"><i class="fa-solid fa-ellipsis text-[12px]"></i></button><div id="${bId}-menu-slot"></div></div></div></div>`;
+    w.innerHTML = `<div id="${bId}-logo" class="w-7 h-7 brand-blob animate-logo-spin shrink-0 mt-0.5" style="background: linear-gradient(135deg, var(--rose), var(--mint));"></div><div class="space-y-1.5 flex-1 min-w-0"><div id="${bId}-th-c" class="hidden mb-2.5 w-full"><details class="rounded-2xl group/think transition-soft" style="background: var(--bg-panel-raised); border:1px solid var(--border-soft);" open><summary class="cursor-pointer px-4 py-2.5 text-[11px] font-bold flex items-center gap-2" style="color: var(--dust);"><span id="${bId}-th-i" class="material-symbols-rounded notranslate animate-pulse" style="font-size:15px; color: var(--rose);">psychology</span><span id="${bId}-th-s">${t('ai.thinking')}</span><span class="material-symbols-rounded notranslate ml-auto transition-transform group-open/think:rotate-180" style="font-size:14px;">expand_more</span></summary><div id="${bId}-th-txt" class="px-4 pb-4 text-xs border-t mt-1 pt-3.5 break-words markdown-content thought-markdown" style="border-color: var(--border-soft);"></div></details></div><div id="${bId}-txt" class="text-sm leading-relaxed markdown-content" style="color: var(--ink);"></div><div class="flex items-center gap-1.5 pl-0.5"><div id="${bId}-meta" class="flex items-center gap-1.5 text-[9px] font-bold font-mono hidden"><span id="${bId}-m" class="px-1.5 py-0.5 rounded" style="background: var(--bg-panel-raised); color: var(--rose);"></span><span id="${bId}-t" class="px-1.5 py-0.5 rounded" style="background: var(--bg-panel-raised); color: var(--mint);"></span></div><div id="${bId}-act" class="relative hidden"><button type="button" class="msg-action-btn" onclick="toggleMsgActionMenu(event, '${bId}-menu')"><span class="material-symbols-rounded notranslate" style="font-size:15px;">more_horiz</span></button><div id="${bId}-menu-slot"></div></div></div></div>`;
     cEl.appendChild(w);
 
     const txtEl = document.getElementById(`${bId}-txt`); const thEl = document.getElementById(`${bId}-th-txt`);
@@ -775,10 +978,10 @@ async function handleChatSubmit(event) {
             }
         }
     } catch (err) { document.getElementById(`${bId}-logo`)?.classList.remove("animate-logo-spin"); showToast(err.message, "error"); if(!raw && !rTh) { w.remove(); } document.getElementById(`${bId}-cur`)?.remove(); } 
-    finally { loading.classList.add("hidden"); btn.disabled = false; icon.className = "fa-solid fa-arrow-up text-xs"; cEl.scrollTop = cEl.scrollHeight; }
+    finally { loading.classList.add("hidden"); btn.disabled = false; icon.className = "material-symbols-rounded notranslate msym-fill"; icon.style.fontSize = "16px"; icon.textContent = "arrow_upward"; cEl.scrollTop = cEl.scrollHeight; }
 }
 
-function appendGrounding(m, id) { if (!m?.groundingChunks) return; const c = document.getElementById(`${id}-txt`).parentElement; const d = document.createElement("div"); d.className = "mt-2"; const l = m.groundingChunks.filter(x=>x.web).map(x=>`<li><a href="${x.web.uri}" target="_blank" style="color: var(--rose);" class="hover:underline break-all">${x.web.title||x.web.uri}</a></li>`).join(''); d.innerHTML = `<details class="rounded-xl overflow-hidden" style="background: var(--bg-panel-raised); border:1px solid var(--border-soft);"><summary class="cursor-pointer px-3 py-2 text-[10px] font-bold flex items-center gap-2 select-none" style="color: var(--rose);"><i class="fa-solid fa-globe"></i><span>${t('ai.searched_web')}</span></summary><ul class="px-4 pb-3 text-xs space-y-1 list-disc" style="color: var(--dust);">${l}</ul></details>`; c.appendChild(d); }
+function appendGrounding(m, id) { if (!m?.groundingChunks) return; const c = document.getElementById(`${id}-txt`).parentElement; const d = document.createElement("div"); d.className = "mt-2"; const l = m.groundingChunks.filter(x=>x.web).map(x=>`<li><a href="${x.web.uri}" target="_blank" style="color: var(--rose);" class="hover:underline break-all">${x.web.title||x.web.uri}</a></li>`).join(''); d.innerHTML = `<details class="rounded-xl overflow-hidden" style="background: var(--bg-panel-raised); border:1px solid var(--border-soft);"><summary class="cursor-pointer px-3 py-2 text-[10px] font-bold flex items-center gap-2 select-none" style="color: var(--rose);"><span class="material-symbols-rounded notranslate" style="font-size:14px;">public</span><span>${t('ai.searched_web')}</span></summary><ul class="px-4 pb-3 text-xs space-y-1 list-disc" style="color: var(--dust);">${l}</ul></details>`; c.appendChild(d); }
 
 function logout() { closeAllMenus(null); document.getElementById("main-loading-text").innerText = t('loading'); document.getElementById("main-loading").classList.remove("hidden"); setTimeout(() => { appToken = ""; currentUsername = ""; currentSessionId = null; sessionsList = []; currentChatHistory = []; localStorage.removeItem("chat_token"); clearPendingImages(); document.getElementById("auth-username").value = ""; document.getElementById("auth-password").value = ""; document.getElementById("chat-messages").innerHTML = ""; document.getElementById("main-loading").classList.add("hidden"); checkApplicationState(); showToast(t('toast.logout_msg'), "info"); }, 500); }
 
@@ -786,6 +989,7 @@ window.addEventListener("DOMContentLoaded", () => {
     // Khởi tạo i18n trước, sau đó nó sẽ gọi checkApplicationState()
     initI18n(); 
     initModelAndThinkingUI();
+    if (!SpeechRecognitionAPI) { const micBtn = document.getElementById("mic-btn"); if (micBtn) { micBtn.style.opacity = "0.35"; micBtn.title = "Không hỗ trợ trên trình duyệt này"; } }
     document.getElementById("chat-input")?.addEventListener("keydown", function(e) { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); document.getElementById("chat-form").dispatchEvent(new Event("submit", { cancelable: true })); } });
 });
 </script>
