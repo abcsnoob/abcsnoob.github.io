@@ -1,0 +1,81 @@
+{
+  "loading": "Loading...",
+  "auth": {
+    "login_title": "Login",
+    "register_title": "Register",
+    "subtitle": "Abc's Noob AI — your own assistant",
+    "username": "Username",
+    "username_ph": "Enter username...",
+    "password": "Password",
+    "btn_login": "Confirm Login",
+    "btn_register": "Proceed with Registration",
+    "no_account": "Don't have an account?",
+    "has_account": "Already have an account?",
+    "register_now": "Register now",
+    "login_now": "Login"
+  },
+  "sidebar": {
+    "new_chat": "New chat",
+    "search": "Search in chats",
+    "recent": "Recent",
+    "empty": "No chat history",
+    "token_per_hour": "t/h"
+  },
+  "chat": {
+    "upgrade": "Upgrade",
+    "settings": "Settings",
+    "sys_instruct": "System instructions",
+    "sys_instruct_ph": "Example: Respond briefly, use English...",
+    "temperature": "Creativity (Temperature)",
+    "logout": "Secure logout",
+    "language": "Language",
+    "disclaimer": "Information can change quickly. Please verify answers with official sources.",
+    "input_ph": "Ask Abc's Noob AI...",
+    "upload_img": "Upload image",
+    "paste_yt": "Paste YouTube link",
+    "model_auto": "Auto",
+    "model_auto_desc": "Fastest response",
+    "think_level": "Thinking level",
+    "think_std": "Standard",
+    "think_std_desc": "Best for most questions",
+    "think_ext": "Extended",
+    "think_ext_desc": "Solve complex problems",
+    "bot_disclaimer": "Abc's Noob AI is an AI and can make mistakes.",
+    "default_greeting": "Do you have any new ideas to explore?"
+  },
+  "ai": {
+    "connecting": "Establishing connection...",
+    "connecting_yt": "Connecting to YouTube...",
+    "thinking": "Thinking...",
+    "thought_process": "Thought process",
+    "typing": "Typing response...",
+    "searched_web": "Searched the web"
+  },
+  "menu": {
+    "branch": "Branch to a new chat",
+    "report": "Report legal issue",
+    "details": "View answer details"
+  },
+  "toast": {
+    "search_soon": "Chat search is coming soon.",
+    "upgrade_soon": "You are using the free version. Upgrade plans are coming soon!",
+    "voice_soon": "Voice feature is coming soon.",
+    "copy_fail": "Failed to copy to clipboard.",
+    "copy_code_error": "Error copying code snippet.",
+    "img_max": "You can only attach a maximum of {max} images per message.",
+    "img_invalid": "The file is not a valid image.",
+    "img_size": "Image exceeds {size}MB.",
+    "yt_paste": "Paste the YouTube link into the input box, the system will automatically detect it.",
+    "reg_success": "Registration successful! Please login.",
+    "login_success": "Login successful!",
+    "info_fail": "Failed to load information.",
+    "del_confirm": "Permanently delete this chat?",
+    "chat_deleted": "Chat deleted.",
+    "branch_fail_empty": "Cannot branch: missing message content.",
+    "branch_fail_notfound": "Message to branch from not found.",
+    "branched": "Branched to a new chat.",
+    "report_opened": "Legal issue report form opened.",
+    "details_info": "Answer: ~{word} words, {char} characters.",
+    "logout_msg": "Logged out of account."
+  }
+}
