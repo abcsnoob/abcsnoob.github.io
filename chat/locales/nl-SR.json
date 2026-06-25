@@ -1,0 +1,81 @@
+﻿{
+  "loading": "Laden...",
+  "auth": {
+    "login_title": "Inloggen",
+    "register_title": "Registreren",
+    "subtitle": "Abc's Noob AI — jouw persoonlijke assistent",
+    "username": "Gebruikersnaam",
+    "username_ph": "Voer gebruikersnaam in...",
+    "password": "Wachtwoord",
+    "btn_login": "Bevestig inloggen",
+    "btn_register": "Ga verder met registreren",
+    "no_account": "Nog geen account?",
+    "has_account": "Heb je al een account?",
+    "register_now": "Registreer nu",
+    "login_now": "Inloggen"
+  },
+  "sidebar": {
+    "new_chat": "Nieuwe chat",
+    "search": "Zoek in chats",
+    "recent": "Recent",
+    "empty": "Geen chathistorie",
+    "token_per_hour": "t/u"
+  },
+  "chat": {
+    "upgrade": "Upgrade",
+    "settings": "Instellingen",
+    "sys_instruct": "Systeeminstructies",
+    "sys_instruct_ph": "Bijv.: Antwoord kort, gebruik Nederlands...",
+    "temperature": "Creativiteit",
+    "logout": "Veilig uitloggen",
+    "language": "Taal",
+    "disclaimer": "Informatie kan snel veranderen. Controleer antwoorden via officiële bronnen.",
+    "input_ph": "Vraag het aan Abc's Noob AI...",
+    "upload_img": "Afbeelding uploaden",
+    "paste_yt": "Plak YouTube-link",
+    "model_auto": "Auto",
+    "model_auto_desc": "Snelste antwoord",
+    "think_level": "Denkniveau",
+    "think_std": "Standaard",
+    "think_std_desc": "Meest geschikt voor de meeste vragen",
+    "think_ext": "Uitgebreid",
+    "think_ext_desc": "Voor complexe probleemoplossing",
+    "bot_disclaimer": "Abc's Noob AI is een AI en kan fouten maken.",
+    "default_greeting": "Heb je nieuwe ideeën die je wilt verkennen?"
+  },
+  "ai": {
+    "connecting": "Verbinding maken...",
+    "connecting_yt": "Verbinden met YouTube...",
+    "thinking": "Denken...",
+    "thought_process": "Denkproces",
+    "typing": "Antwoord formuleren...",
+    "searched_web": "Doorzocht op internet"
+  },
+  "menu": {
+    "branch": "Vertakken naar nieuwe chat",
+    "report": "Meld juridisch probleem",
+    "details": "Bekijk antwoorddetails"
+  },
+  "toast": {
+    "search_soon": "Chat-zoeken binnenkort beschikbaar.",
+    "upgrade_soon": "Je gebruikt de gratis versie. Upgrades komen binnenkort!",
+    "voice_soon": "Spraakfunctie komt binnenkort.",
+    "copy_fail": "Kon niet kopiëren naar klembord.",
+    "copy_code_error": "Fout bij kopiëren van codeblok.",
+    "img_max": "Je kunt maximaal {max} afbeeldingen per bericht toevoegen.",
+    "img_invalid": "Bestand is geen geldige afbeelding.",
+    "img_size": "Afbeelding is groter dan {size}MB.",
+    "yt_paste": "Plak de YouTube-link in het invoervak, het systeem herkent dit automatisch.",
+    "reg_success": "Registratie geslaagd! Log in.",
+    "login_success": "Inloggen geslaagd!",
+    "info_fail": "Kon informatie niet laden.",
+    "del_confirm": "Chat permanent verwijderen?",
+    "chat_deleted": "Chat verwijderd.",
+    "branch_fail_empty": "Kon niet vertakken: berichtinhoud ontbreekt.",
+    "branch_fail_notfound": "Bericht niet gevonden voor vertakking.",
+    "branched": "Vertakt naar een nieuwe chat.",
+    "report_opened": "Juridisch meldingsformulier geopend.",
+    "details_info": "Antwoord: ~{word} woorden, {char} tekens.",
+    "logout_msg": "Uitgelogd van account."
+  }
+}

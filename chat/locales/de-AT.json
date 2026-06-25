@@ -1,0 +1,81 @@
+﻿{
+  "loading": "Laden...",
+  "auth": {
+    "login_title": "Anmelden",
+    "register_title": "Registrieren",
+    "subtitle": "Abc's Noob AI — Ihr persönlicher Assistent",
+    "username": "Benutzername",
+    "username_ph": "Benutzernamen eingeben...",
+    "password": "Passwort",
+    "btn_login": "Anmeldung bestätigen",
+    "btn_register": "Registrierung fortsetzen",
+    "no_account": "Noch kein Konto?",
+    "has_account": "Bereits ein Konto?",
+    "register_now": "Jetzt registrieren",
+    "login_now": "Anmelden"
+  },
+  "sidebar": {
+    "new_chat": "Neuer Chat",
+    "search": "Chats durchsuchen",
+    "recent": "Kürzlich",
+    "empty": "Kein Chatverlauf",
+    "token_per_hour": "t/h"
+  },
+  "chat": {
+    "upgrade": "Upgrade",
+    "settings": "Einstellungen",
+    "sys_instruct": "Systemanweisungen",
+    "sys_instruct_ph": "Z.B.: Kurz und prägnant antworten...",
+    "temperature": "Kreativität",
+    "logout": "Sicher abmelden",
+    "language": "Sprache",
+    "disclaimer": "Informationen können sich schnell ändern. Bitte prüfen Sie die Antworten mit offiziellen Quellen.",
+    "input_ph": "Frage Abc's Noob AI...",
+    "upload_img": "Bild hochladen",
+    "paste_yt": "YouTube-Link einfügen",
+    "model_auto": "Auto",
+    "model_auto_desc": "Schnellste Antwort",
+    "think_level": "Denk-Ebene",
+    "think_std": "Standard",
+    "think_std_desc": "Am besten für die meisten Fragen",
+    "think_ext": "Erweitert",
+    "think_ext_desc": "Für komplexe Problemlösungen",
+    "bot_disclaimer": "Abc's Noob AI ist eine KI und kann Fehler machen.",
+    "default_greeting": "Hast du neue Ideen, die du erkunden möchtest?"
+  },
+  "ai": {
+    "connecting": "Verbindung wird hergestellt...",
+    "connecting_yt": "Mit YouTube verbinden...",
+    "thinking": "Denken...",
+    "thought_process": "Denkprozess",
+    "typing": "Antwort wird geschrieben...",
+    "searched_web": "Im Internet gesucht"
+  },
+  "menu": {
+    "branch": "In einen neuen Chat abzweigen",
+    "report": "Rechtliches Problem melden",
+    "details": "Antwortdetails anzeigen"
+  },
+  "toast": {
+    "search_soon": "Chat-Suche bald verfügbar.",
+    "upgrade_soon": "Du nutzt die kostenlose Version. Upgrade-Pläne kommen bald!",
+    "voice_soon": "Sprachfunktion bald verfügbar.",
+    "copy_fail": "Konnte nicht in die Zwischenablage kopiert werden.",
+    "copy_code_error": "Fehler beim Kopieren des Code-Blocks.",
+    "img_max": "Du kannst maximal {max} Bilder pro Nachricht anhängen.",
+    "img_invalid": "Die Datei ist kein gültiges Bild.",
+    "img_size": "Bild überschreitet {size} MB.",
+    "yt_paste": "YouTube-Link einfügen, das System erkennt ihn automatisch.",
+    "reg_success": "Registrierung erfolgreich! Bitte anmelden.",
+    "login_success": "Anmeldung erfolgreich!",
+    "info_fail": "Informationen konnten nicht geladen werden.",
+    "del_confirm": "Diesen Chat dauerhaft löschen?",
+    "chat_deleted": "Chat gelöscht.",
+    "branch_fail_empty": "Abzweigung fehlgeschlagen: Nachrichteninhalt fehlt.",
+    "branch_fail_notfound": "Nachricht zum Abzweigen nicht gefunden.",
+    "branched": "In einen neuen Chat abgezweigt.",
+    "report_opened": "Formular für rechtliche Probleme geöffnet.",
+    "details_info": "Antwort: ~{word} Wörter, {char} Zeichen.",
+    "logout_msg": "Konto abgemeldet."
+  }
+}

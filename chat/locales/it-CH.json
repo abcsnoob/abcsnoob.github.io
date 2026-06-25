@@ -1,0 +1,81 @@
+﻿{
+  "loading": "Caricamento...",
+  "auth": {
+    "login_title": "Accedi",
+    "register_title": "Registrati",
+    "subtitle": "Abc's Noob AI — il tuo assistente personale",
+    "username": "Nome utente",
+    "username_ph": "Inserisci nome utente...",
+    "password": "Password",
+    "btn_login": "Conferma accesso",
+    "btn_register": "Procedi con la registrazione",
+    "no_account": "Non hai un account?",
+    "has_account": "Hai già un account?",
+    "register_now": "Registrati ora",
+    "login_now": "Accedi"
+  },
+  "sidebar": {
+    "new_chat": "Nuova chat",
+    "search": "Cerca nelle chat",
+    "recent": "Recenti",
+    "empty": "Nessuna cronologia chat",
+    "token_per_hour": "t/h"
+  },
+  "chat": {
+    "upgrade": "Aggiorna",
+    "settings": "Impostazioni",
+    "sys_instruct": "Istruzioni di sistema",
+    "sys_instruct_ph": "Es: Rispondi in modo conciso, usa l'italiano...",
+    "temperature": "Creatività",
+    "logout": "Logout sicuro",
+    "language": "Lingua",
+    "disclaimer": "Le informazioni possono cambiare rapidamente. Verifica le risposte tramite fonti ufficiali.",
+    "input_ph": "Chiedi ad Abc's Noob AI...",
+    "upload_img": "Carica immagine",
+    "paste_yt": "Incolla link YouTube",
+    "model_auto": "Auto",
+    "model_auto_desc": "Risposta più veloce",
+    "think_level": "Livello di ragionamento",
+    "think_std": "Standard",
+    "think_std_desc": "Ideale per la maggior parte delle domande",
+    "think_ext": "Esteso",
+    "think_ext_desc": "Per risoluzione problemi complessi",
+    "bot_disclaimer": "Abc's Noob AI è un'IA e potrebbe commettere errori.",
+    "default_greeting": "Hai nuove idee che vorresti esplorare?"
+  },
+  "ai": {
+    "connecting": "Connessione in corso...",
+    "connecting_yt": "Connessione a YouTube...",
+    "thinking": "Pensando...",
+    "thought_process": "Processo di pensiero",
+    "typing": "Scrivendo la risposta...",
+    "searched_web": "Ricerca effettuata su Internet"
+  },
+  "menu": {
+    "branch": "Ramifica in una nuova chat",
+    "report": "Segnala problema legale",
+    "details": "Vedi dettagli risposta"
+  },
+  "toast": {
+    "search_soon": "Ricerca chat disponibile a breve.",
+    "upgrade_soon": "Stai usando la versione gratuita. Piani di upgrade in arrivo!",
+    "voice_soon": "Funzionalità vocale in arrivo.",
+    "copy_fail": "Impossibile copiare negli appunti.",
+    "copy_code_error": "Errore durante la copia del blocco di codice.",
+    "img_max": "Puoi allegare massimo {max} immagini per messaggio.",
+    "img_invalid": "Il file non è un'immagine valida.",
+    "img_size": "L'immagine supera {size}MB.",
+    "yt_paste": "Incolla il link YouTube nel campo di input, il sistema lo rileverà automaticamente.",
+    "reg_success": "Registrazione riuscita! Effettua il login.",
+    "login_success": "Accesso riuscito!",
+    "info_fail": "Impossibile caricare le informazioni.",
+    "del_confirm": "Eliminare definitivamente questa chat?",
+    "chat_deleted": "Chat eliminata.",
+    "branch_fail_empty": "Impossibile ramificare: contenuto del messaggio mancante.",
+    "branch_fail_notfound": "Messaggio non trovato per la ramificazione.",
+    "branched": "Ramificato in una nuova chat.",
+    "report_opened": "Modulo di segnalazione legale aperto.",
+    "details_info": "Risposta: ~{word} parole, {char} caratteri.",
+    "logout_msg": "Account disconnesso."
+  }
+}

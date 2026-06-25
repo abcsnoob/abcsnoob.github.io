@@ -1,0 +1,81 @@
+﻿{
+  "loading": "Chargement...",
+  "auth": {
+    "login_title": "Connexion",
+    "register_title": "Inscription",
+    "subtitle": "Abc's Noob AI — votre assistant personnel",
+    "username": "Nom d'utilisateur",
+    "username_ph": "Entrez votre nom d'utilisateur...",
+    "password": "Mot de passe",
+    "btn_login": "Confirmer la connexion",
+    "btn_register": "Procéder à l'inscription",
+    "no_account": "Pas encore de compte ?",
+    "has_account": "Déjà un compte ?",
+    "register_now": "S'inscrire maintenant",
+    "login_now": "Se connecter"
+  },
+  "sidebar": {
+    "new_chat": "Nouvelle discussion",
+    "search": "Rechercher dans les discussions",
+    "recent": "Récent",
+    "empty": "Aucun historique de discussion",
+    "token_per_hour": "t/h"
+  },
+  "chat": {
+    "upgrade": "Mise à niveau",
+    "settings": "Paramètres",
+    "sys_instruct": "Instructions système",
+    "sys_instruct_ph": "Ex : Répondez brièvement, utilisez le français...",
+    "temperature": "Créativité",
+    "logout": "Déconnexion sécurisée",
+    "language": "Langue",
+    "disclaimer": "Les informations peuvent changer rapidement. Veuillez vérifier les réponses auprès de sources officielles.",
+    "input_ph": "Demandez à Abc's Noob AI...",
+    "upload_img": "Téléverser une image",
+    "paste_yt": "Coller le lien YouTube",
+    "model_auto": "Auto",
+    "model_auto_desc": "Réponse la plus rapide",
+    "think_level": "Niveau de réflexion",
+    "think_std": "Standard",
+    "think_std_desc": "Idéal pour la plupart des questions",
+    "think_ext": "Étendu",
+    "think_ext_desc": "Pour la résolution de problèmes complexes",
+    "bot_disclaimer": "Abc's Noob AI est une IA et peut faire des erreurs.",
+    "default_greeting": "Avez-vous de nouvelles idées à explorer ?"
+  },
+  "ai": {
+    "connecting": "Établissement de la connexion...",
+    "connecting_yt": "Connexion à YouTube...",
+    "thinking": "Réflexion...",
+    "thought_process": "Processus de réflexion",
+    "typing": "Rédaction de la réponse...",
+    "searched_web": "Recherche effectuée sur Internet"
+  },
+  "menu": {
+    "branch": "Diviser en une nouvelle discussion",
+    "report": "Signaler un problème juridique",
+    "details": "Voir les détails de la réponse"
+  },
+  "toast": {
+    "search_soon": "La recherche dans les discussions arrive bientôt.",
+    "upgrade_soon": "Vous utilisez la version gratuite. Des plans de mise à niveau arrivent bientôt !",
+    "voice_soon": "La fonctionnalité vocale arrive bientôt.",
+    "copy_fail": "Impossible de copier dans le presse-papiers.",
+    "copy_code_error": "Erreur lors de la copie du bloc de code.",
+    "img_max": "Vous ne pouvez joindre qu'un maximum de {max} images par message.",
+    "img_invalid": "Le fichier n'est pas une image valide.",
+    "img_size": "L'image dépasse {size} Mo.",
+    "yt_paste": "Collez le lien YouTube dans la zone de saisie, le système le détectera automatiquement.",
+    "reg_success": "Inscription réussie ! Veuillez vous connecter.",
+    "login_success": "Connexion réussie !",
+    "info_fail": "Impossible de charger les informations.",
+    "del_confirm": "Supprimer définitivement cette discussion ?",
+    "chat_deleted": "Discussion supprimée.",
+    "branch_fail_empty": "Impossible de diviser : contenu du message manquant.",
+    "branch_fail_notfound": "Message introuvable pour la division.",
+    "branched": "Discussion divisée avec succès.",
+    "report_opened": "Formulaire de signalement juridique ouvert.",
+    "details_info": "Réponse : ~{word} mots, {char} caractères.",
+    "logout_msg": "Déconnecté du compte."
+  }
+}
