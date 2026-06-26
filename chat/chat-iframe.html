@@ -1190,7 +1190,7 @@ async function handleChatSubmit(event) {
 
 function appendGrounding(m, id) { if (!m?.groundingChunks) return; const c = document.getElementById(`${id}-txt`).parentElement; const d = document.createElement("div"); d.className = "mt-2"; const l = m.groundingChunks.filter(x=>x.web).map(x=>`<li><a href="${x.web.uri}" target="_blank" style="color: var(--rose);" class="hover:underline break-all">${x.web.title||x.web.uri}</a></li>`).join(''); d.innerHTML = `<details class="rounded-xl overflow-hidden" style="background: var(--bg-panel-raised); border:1px solid var(--border-soft);"><summary class="cursor-pointer px-3 py-2 text-[10px] font-bold flex items-center gap-2 select-none" style="color: var(--rose);"><span class="material-symbols-rounded notranslate" style="font-size:14px;">public</span><span>${t('ai.searched_web')}</span></summary><ul class="px-4 pb-3 text-xs space-y-1 list-disc" style="color: var(--dust);">${l}</ul></details>`; c.appendChild(d); }
 
-const UPGRADE_URL = "https://authentication-ai.abcsnoob.workers.dev/"; // ⚠️ đổi đúng domain worker nâng cấp đã deploy
+const UPGRADE_URL = "https://authentication-ai.abcsnoob.workers.dev"; // ⚠️ đổi đúng domain worker nâng cấp đã deploy
 function openUpgradePage() {
     if (!appToken) { showToast(t('toast.info_fail'), "error"); return; }
     const url = `${UPGRADE_URL}/?token=${encodeURIComponent(appToken)}&target=https://abcsnoobaiupgrade.pages.dev/`;
