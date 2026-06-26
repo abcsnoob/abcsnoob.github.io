@@ -48,6 +48,25 @@ details[open] summary ~ * { animation: softFadeIn 0.35s cubic-bezier(0.16, 1, 0.
 @keyframes logoRotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 .animate-logo-spin { animation: blobMorph 9s ease-in-out infinite, logoRotate 2s linear infinite !important; }
 
+/* Xoay nút refresh khi ấn / khi đang tải lại profile */
+@keyframes refreshSpin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+.icon-refresh-spin { animation: refreshSpin 0.6s cubic-bezier(0.45, 0, 0.55, 1) 1; }
+
+/* ===== Sidebar: hiệu ứng trượt/thu mượt mà khi mở-đóng ===== */
+.sidebar-anim {
+    transition: transform 0.32s cubic-bezier(0.16, 1, 0.3, 1),
+                width 0.32s cubic-bezier(0.16, 1, 0.3, 1),
+                margin-left 0.32s cubic-bezier(0.16, 1, 0.3, 1),
+                opacity 0.28s ease;
+    will-change: transform, width;
+}
+/* Mobile: trượt sang trái ra ngoài màn hình khi đóng */
+.sidebar-anim.sidebar-closed { transform: translateX(-100%); }
+@media (min-width: 768px) {
+    /* Desktop: thu chiều rộng về 0 và đẩy ra ngoài lề thay vì translate (giữ layout flex mượt) */
+    .sidebar-anim.sidebar-closed { transform: translateX(0); width: 0; margin-left: -1px; opacity: 0; pointer-events: none; overflow: hidden; }
+}
+
 /* Markdown Styles */
 .code-block-wrapper { position: relative; margin: 0.8rem 0; border-radius: 0.85rem; overflow: hidden; border: 1px solid var(--border); background-color: #0a0809; }
 .code-block-header { display: flex; justify-content: space-between; align-items: center; padding: 0.45rem 1rem; background: #141012; border-bottom: 1px solid var(--border-soft); font-size: 11px; font-family: 'JetBrains Mono', monospace; color: var(--dust-dim); }
@@ -451,7 +470,7 @@ input[type="checkbox"]:hover, input[type="radio"]:hover { transform: scale(1.08)
     <div id="sidebar-overlay" class="fixed inset-0 bg-black/60 z-10 hidden md:hidden backdrop-blur-sm" onclick="toggleSidebar()"></div>
 
     <!-- SIDEBAR -->
-    <aside id="sidebar" class="w-72 flex flex-col justify-between hidden md:flex shrink-0 transition-soft z-20 fixed md:relative inset-y-0 left-0 h-full md:h-auto" style="background: var(--bg-panel); border-right: 1px solid var(--border-soft);">
+    <aside id="sidebar" class="w-72 flex flex-col justify-between shrink-0 sidebar-anim z-20 fixed md:relative inset-y-0 left-0 h-full md:h-auto" style="background: var(--bg-panel); border-right: 1px solid var(--border-soft);">
         <div class="flex flex-col flex-1 overflow-hidden">
             <div class="flex items-center justify-between px-4 pt-4 pb-2 shrink-0">
                 <div class="flex items-center gap-2">
@@ -501,7 +520,7 @@ input[type="checkbox"]:hover, input[type="radio"]:hover { transform: scale(1.08)
             </div>
 
             <div class="flex items-center gap-2 shrink-0 relative">
-                <button type="button" class="px-4 py-1.5 rounded-full text-xs font-bold transition-soft flex items-center gap-1" style="background: linear-gradient(135deg, var(--rose), var(--mint)); color:#1a1416;" onclick="window.open('http://upgrade.abcsnoob.workers.dev', '_blank')">
+                <button type="button" class="px-4 py-1.5 rounded-full text-xs font-bold transition-soft flex items-center gap-1" style="background: linear-gradient(135deg, var(--rose), var(--mint)); color:#1a1416;" onclick="openUpgradePage()">
                     <span class="material-symbols-rounded notranslate">upgrade</span><span data-i18n="chat.upgrade">Nâng cấp</span>
                 </button>
                 <button type="button" onclick="toggleSettingsMenu()" class="icon-btn transition-soft"><span class="material-symbols-rounded notranslate">more_vert</span></button>
@@ -523,7 +542,7 @@ input[type="checkbox"]:hover, input[type="radio"]:hover { transform: scale(1.08)
                                 <span id="user-profile-tokens-menu" style="color: var(--mint);">0</span> / <span id="user-profile-token-max-menu">12.000</span>
                             </p>
                         </div>
-                        <button type="button" onclick="fetchUserProfile()" class="icon-btn"><span class="material-symbols-rounded notranslate">restart_alt</span></button>
+                        <button type="button" onclick="handleRefreshProfileClick(this)" class="icon-btn"><span class="material-symbols-rounded notranslate" style="font-size:16px;">restart_alt</span></button>
                     </div>
 
                     <!-- THÊM: Chọn ngôn ngữ -->
@@ -865,8 +884,24 @@ function showToast(message, type = "info") {
     setTimeout(() => { toast.classList.add("opacity-0"); setTimeout(() => toast.remove(), 300); }, 4000);
 }
 
-function toggleSidebar() { const sidebar = document.getElementById("sidebar"); const overlay = document.getElementById("sidebar-overlay"); if (sidebar.classList.contains("flex")) { sidebar.classList.remove("flex"); sidebar.classList.add("hidden"); overlay.classList.add("hidden"); } else { sidebar.classList.remove("hidden"); sidebar.classList.add("flex"); if (window.innerWidth < 768) overlay.classList.remove("hidden"); } }
-window.addEventListener("resize", () => { if (window.innerWidth >= 768) { document.getElementById("sidebar").classList.replace("hidden", "flex"); document.getElementById("sidebar-overlay").classList.add("hidden"); } });
+let sidebarOpen = window.innerWidth >= 768; // mặc định mở trên desktop, đóng trên mobile
+function toggleSidebar() {
+    const sidebar = document.getElementById("sidebar");
+    const overlay = document.getElementById("sidebar-overlay");
+    sidebarOpen = !sidebarOpen;
+    sidebar.classList.toggle("sidebar-closed", !sidebarOpen);
+    if (window.innerWidth < 768) {
+        overlay.classList.toggle("hidden", !sidebarOpen);
+    } else {
+        overlay.classList.add("hidden");
+    }
+}
+window.addEventListener("resize", () => {
+    if (window.innerWidth >= 768) {
+        document.getElementById("sidebar-overlay").classList.add("hidden");
+        if (!sidebarOpen) { sidebarOpen = true; document.getElementById("sidebar").classList.remove("sidebar-closed"); }
+    }
+});
 
 function switchAuthMode(toRegister) {
     isRegisterMode = toRegister;
@@ -891,6 +926,21 @@ async function handleAuthSubmit(event) {
         if (isRegisterMode) { showToast(t("toast.reg_success"), "success"); switchAuthMode(false); }
         else { appToken = data.token; localStorage.setItem("chat_token", appToken); showToast(t("toast.login_success"), "success"); checkApplicationState(); }
     } catch (err) { showToast(err.message, "error"); } finally { spinner.classList.add("hidden"); btn.disabled = false; }
+}
+
+async function handleRefreshProfileClick(btn) {
+    const icon = btn.querySelector(".material-symbols-rounded");
+    if (!icon || btn.disabled) return;
+    btn.disabled = true;
+    icon.classList.remove("icon-refresh-spin");
+    // Buộc reflow để animation chạy lại được mỗi lần click
+    void icon.offsetWidth;
+    icon.classList.add("icon-refresh-spin");
+    try {
+        await fetchUserProfile();
+    } finally {
+        setTimeout(() => { icon.classList.remove("icon-refresh-spin"); btn.disabled = false; }, 600);
+    }
 }
 
 async function fetchUserProfile() {
@@ -1140,12 +1190,27 @@ async function handleChatSubmit(event) {
 
 function appendGrounding(m, id) { if (!m?.groundingChunks) return; const c = document.getElementById(`${id}-txt`).parentElement; const d = document.createElement("div"); d.className = "mt-2"; const l = m.groundingChunks.filter(x=>x.web).map(x=>`<li><a href="${x.web.uri}" target="_blank" style="color: var(--rose);" class="hover:underline break-all">${x.web.title||x.web.uri}</a></li>`).join(''); d.innerHTML = `<details class="rounded-xl overflow-hidden" style="background: var(--bg-panel-raised); border:1px solid var(--border-soft);"><summary class="cursor-pointer px-3 py-2 text-[10px] font-bold flex items-center gap-2 select-none" style="color: var(--rose);"><span class="material-symbols-rounded notranslate" style="font-size:14px;">public</span><span>${t('ai.searched_web')}</span></summary><ul class="px-4 pb-3 text-xs space-y-1 list-disc" style="color: var(--dust);">${l}</ul></details>`; c.appendChild(d); }
 
+const UPGRADE_URL = "https://upgrade.abcsnoob.workers.dev"; // ⚠️ đổi đúng domain worker nâng cấp đã deploy
+function openUpgradePage() {
+    if (!appToken) { showToast(t('toast.info_fail'), "error"); return; }
+    const url = `${UPGRADE_URL}/?token=${encodeURIComponent(appToken)}`;
+    const win = window.open(url, "_blank");
+    if (!win) showToast(t('toast.popup_blocked'), "error");
+}
+
 function logout() { closeAllMenus(null); document.getElementById("main-loading-text").innerText = t('loading'); document.getElementById("main-loading").classList.remove("hidden"); setTimeout(() => { appToken = ""; currentUsername = ""; currentSessionId = null; sessionsList = []; currentChatHistory = []; localStorage.removeItem("chat_token"); clearPendingImages(); document.getElementById("auth-username").value = ""; document.getElementById("auth-password").value = ""; document.getElementById("chat-messages").innerHTML = ""; document.getElementById("main-loading").classList.add("hidden"); checkApplicationState(); showToast(t('toast.logout_msg'), "info"); }, 500); }
 
 window.addEventListener("DOMContentLoaded", () => {
     // Khởi tạo i18n trước, sau đó nó sẽ gọi checkApplicationState()
     initI18n(); 
     initModelAndThinkingUI();
+    // Đặt trạng thái sidebar ban đầu (đóng trên mobile, mở trên desktop) — không animate lần đầu
+    const sidebarEl = document.getElementById("sidebar");
+    if (sidebarEl) {
+        sidebarEl.style.transition = "none";
+        sidebarEl.classList.toggle("sidebar-closed", !sidebarOpen);
+        requestAnimationFrame(() => { sidebarEl.style.transition = ""; });
+    }
     if (!SpeechRecognitionAPI) { const micBtn = document.getElementById("mic-btn"); if (micBtn) { micBtn.style.opacity = "0.35"; micBtn.title = "Không hỗ trợ trên trình duyệt này"; } }
     document.getElementById("chat-input")?.addEventListener("keydown", function(e) { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); document.getElementById("chat-form").dispatchEvent(new Event("submit", { cancelable: true })); } });
 });
