@@ -1,0 +1,906 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Discord Chat Viewer</title>
+    <!-- Google Material Icons -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <style>
+        body { 
+            font-family: 'Roboto', 'Whitney', 'Helvetica Neue', Helvetica, Arial, sans-serif; 
+            background-color: #1e1f22; 
+            color: #dbdee1;
+            margin: 0;
+            padding: 20px; 
+        }
+        .container { 
+            max-width: 550px; 
+            margin: auto; 
+            background: #313338; 
+            padding: 24px; 
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+        h2 {
+            color: #f2f3f5;
+            margin-top: 0;
+            font-weight: 500;
+            border-bottom: 1px solid #3f4147;
+            padding-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        /* THANH ĐIỀU KHIỂN & CHỌN FILE */
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .file-input-wrapper {
+            position: relative;
+        }
+        input[type="file"] { 
+            background: #2b2d31;
+            padding: 10px 14px;
+            border-radius: 8px;
+            border: 1px solid #3f4147;
+            color: #b5bac1;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 0.9rem;
+        }
+        input[type="file"]:hover {
+            border-color: #5865f2;
+            background: #35373c;
+        }
+        .status-badge {
+            font-size: 0.85rem;
+            color: #f2f3f5;
+            background-color: #232428;
+            padding: 6px 12px;
+            border-radius: 16px;
+            font-weight: 500;
+        }
+
+        /* THANH TÌM KIẾM CHUẨN MATERIAL */
+        .search-box-container {
+            position: relative;
+            flex-grow: 1;
+            max-width: 400px;
+            display: flex;
+            align-items: center;
+        }
+        .search-input {
+            width: 100%;
+            background-color: #1e1f22;
+            border: 1px solid #3f4147;
+            border-radius: 8px;
+            padding: 10px 40px 10px 16px;
+            color: #f2f3f5;
+            font-size: 0.9rem;
+            outline: none;
+            transition: all 0.2s ease;
+        }
+        .search-input:focus {
+            border-color: #5865f2;
+            box-shadow: 0 0 0 2px rgba(88, 101, 242, 0.2);
+        }
+        /* Spinner tìm kiếm nằm gọn góc phải ô Search */
+        .search-spinner {
+            display: none;
+            position: absolute;
+            right: 12px;
+            width: 20px;
+            height: 20px;
+        }
+        .search-spinner svg {
+            animation: rotate 2s linear infinite;
+            width: 100%;
+            height: 100%;
+        }
+        .search-spinner circle {
+            stroke: #5865f2;
+            stroke-linecap: round;
+            animation: dash 1.5s ease-in-out infinite;
+        }
+
+        /* KHUNG CHAT & TIẾN TRÌNH RENDER */
+        .message-container {
+            display: flex;
+            flex-direction: column;
+            margin: 8px 0;
+            padding: 8px 16px;
+            border-radius: 8px;
+            position: relative;
+            transition: background-color 0.15s ease;
+        }
+        .message-container:hover {
+            background-color: #2e3035;
+        }
+        
+        /* Highlight khi nhảy tới tin nhắn được yêu cầu qua URL (?position=id) */
+        .message-container.highlight-active {
+            animation: highlight-pulse 2s ease-in-out 2;
+        }
+        @keyframes highlight-pulse {
+            0% { background-color: transparent; }
+            50% { background-color: rgba(88, 101, 242, 0.25); }
+            100% { background-color: transparent; }
+        }
+        
+        /* Giao diện Reply */
+        .reply-wrapper {
+            display: flex;
+            align-items: center;
+            margin-left: 16px;
+            margin-bottom: 6px;
+            font-size: 0.85rem;
+            color: #b5bac1;
+            position: relative;
+        }
+        .reply-wrapper::before {
+            content: "";
+            position: absolute;
+            left: -18px;
+            top: 50%;
+            width: 12px;
+            height: 10px;
+            border-left: 2px solid #4e5058;
+            border-top: 2px solid #4e5058;
+            border-top-left-radius: 6px;
+        }
+        .reply-avatar {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            margin-right: 6px;
+        }
+        .reply-author {
+            font-weight: 600;
+            color: #e3e5e8;
+            margin-right: 6px;
+        }
+        .reply-content {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 80%;
+        }
+
+        /* Chi tiết tin nhắn */
+        .message-wrapper {
+            display: flex;
+        }
+        .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin-right: 16px;
+            object-fit: cover;
+            background-color: #5865f2;
+        }
+        .message-body {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+        }
+        .message-header {
+            display: flex;
+            align-items: baseline;
+            margin-bottom: 4px;
+        }
+        .author { 
+            font-weight: 600; 
+            color: #f2f3f5; 
+            font-size: 1rem;
+            margin-right: 8px;
+            cursor: pointer;
+        }
+        .author:hover {
+            text-decoration: underline;
+        }
+        .timestamp {
+            font-size: 0.75rem;
+            color: #949ba4;
+        }
+        .content { 
+            color: #dbdee1; 
+            font-size: 0.9375rem;
+            line-height: 1.4rem;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        /* KHU VỰC ẢNH ĐÍNH KÈM VÀ BIỂU TƯỢNG CẢM XÚC */
+        .attachment-container {
+            margin-top: 6px;
+            max-width: 100%;
+        }
+        .attachment-img, .url-image {
+            max-width: 100%;
+            max-height: 300px;
+            border-radius: 4px;
+            object-fit: contain;
+        }
+        .emoji {
+            width: 22px;
+            height: 22px;
+            vertical-align: bottom;
+            margin: 0 2px;
+        }
+
+        /* KHU VỰC NÚT TÁC VỤ KHI HOVER TIN NHẮN */
+        .message-actions-bar {
+            display: none;
+            position: absolute;
+            right: 16px;
+            top: -12px;
+            background-color: #313338;
+            border: 1px solid #3f4147;
+            border-radius: 4px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            z-index: 10;
+            overflow: hidden;
+        }
+        .message-container:hover .message-actions-bar {
+            display: flex;
+        }
+        .action-btn {
+            background: none;
+            border: none;
+            border-right: 1px solid #3f4147;
+            padding: 4px 10px;
+            font-size: 0.75rem;
+            color: #b5bac1;
+            cursor: pointer;
+            text-decoration: none;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            transition: background-color 0.15s ease, color 0.15s ease;
+        }
+        .action-btn:last-child {
+            border-right: none;
+        }
+        .action-btn:hover {
+            background-color: #35373c;
+            color: #ffffff;
+        }
+
+        /* Ping & Link */
+        .mention {
+            background: rgba(88, 101, 242, 0.3);
+            color: #c9cdfb;
+            font-weight: 500;
+            padding: 0 4px;
+            border-radius: 3px;
+        }
+        .auto-link {
+            color: #00a8fc;
+            text-decoration: none;
+        }
+        .auto-link:hover {
+            text-decoration: underline;
+        }
+
+        /* REACTION CHIP */
+        .reactions-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 8px;
+            align-items: center;
+        }
+        .reaction-chip {
+            display: inline-flex;
+            align-items: center;
+            background: #2b2d31;
+            border: 1px solid transparent;
+            padding: 4px 10px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            color: #f2f3f5;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+        .reaction-chip:hover {
+            background: #35373c;
+            border-color: #4e5058;
+        }
+        .reaction-emoji {
+            width: 18px;
+            height: 18px;
+            margin-right: 6px;
+            object-fit: contain;
+        }
+        .reaction-count {
+            font-weight: 600;
+            color: #dbdee1;
+        }
+        
+        /* Nút thêm reaction nhanh ☺ */
+        .add-reaction-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: #2b2d31;
+            border-radius: 8px;
+            width: 32px;
+            height: 30px;
+            color: #b5bac1;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            font-size: 1.1rem;
+            user-select: none;
+        }
+        .add-reaction-btn:hover {
+            background: #35373c;
+            color: #ffffff;
+        }
+
+        /* MATERIAL DESIGN SPINNER (LOADING CHUẨN SVG) */
+        .spinner-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+            gap: 16px;
+        }
+        .material-spinner-svg {
+            animation: rotate 2s linear infinite;
+            width: 50px;
+            height: 50px;
+        }
+        .material-spinner-svg circle {
+            stroke: #5865f2;
+            stroke-linecap: round;
+            animation: dash 1.5s ease-in-out infinite;
+        }
+
+        @keyframes rotate {
+            100% { transform: rotate(360deg); }
+        }
+        @keyframes dash {
+            0% {
+                stroke-dasharray: 1, 150;
+                stroke-dashoffset: 0;
+            }
+            50% {
+                stroke-dasharray: 90, 150;
+                stroke-dashoffset: -35;
+            }
+            100% {
+                stroke-dasharray: 90, 150;
+                stroke-dashoffset: -124;
+            }
+        }
+
+        /* KHU VỰC CHỜ TẢI THÊM (INFINITE SCROLL LOAD) */
+        .loading-sentinel {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            color: #949ba4;
+            font-size: 0.9rem;
+            gap: 8px;
+        }
+        .sentinel-spinner {
+            display: none;
+            width: 28px;
+            height: 28px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h2><span class="material-icons" style="color: #5865f2;">forum</span> Nhật ký trò chuyện</h2>
+    
+    <div class="controls">
+        <div class="file-input-wrapper">
+            <input type="file" id="fileInput" accept=".json">
+        </div>
+        
+        <!-- Ô Tìm kiếm thông minh -->
+        <div class="search-box-container">
+            <input type="text" id="searchInput" class="search-input" placeholder="Tìm tin nhắn hoặc người gửi...">
+            <div id="searchSpinner" class="search-spinner">
+                <svg viewBox="0 0 50 50">
+                    <circle cx="25" cy="25" r="20" fill="none" stroke-width="5"></circle>
+                </svg>
+            </div>
+        </div>
+
+        <span id="statusBadge" class="status-badge" style="display: none;">Đã tải 0 tin nhắn</span>
+    </div>
+
+    <!-- Vùng loader chính khi mở trang -->
+    <div id="loaderArea" style="display: none;">
+        <div class="spinner-wrapper">
+            <svg class="material-spinner-svg" viewBox="0 0 50 50">
+                <circle cx="25" cy="25" r="20" fill="none" stroke-width="5"></circle>
+            </svg>
+            <div id="loaderText" style="color: #949ba4; font-size: 0.95rem;">Đang xử lý dữ liệu...</div>
+        </div>
+    </div>
+
+    <div id="chatContainer"></div>
+    
+    <!-- Sentinel tích hợp Material Spinner để cuộn tải thêm -->
+    <div id="loadingSentinel" class="loading-sentinel" style="display: none;">
+        <div id="sentinelSpinner" class="sentinel-spinner">
+            <svg class="material-spinner-svg" viewBox="0 0 50 50" style="width: 100%; height: 100%;">
+                <circle cx="25" cy="25" r="20" fill="none" stroke-width="5"></circle>
+            </svg>
+        </div>
+        <span id="sentinelText">Đang cuộn để tải thêm...</span>
+    </div>
+</div>
+
+<script>
+    const GUILD_ID = "@me"; 
+    const MIN_ACTION_DELAY = 2567; // Mọi hành động tốn tối thiểu 2.567 giây
+    let currentLoadedFileName = ""; // Lưu trữ tên file hiện tại
+
+    // --- KHỜI TẠO BIẾN DÙNG CHO DOM TRIMMING / SEARCH ---
+    let allMessagesData = [];       
+    let filteredMessagesData = [];  
+    let renderedCount = 0;          
+    const CHUNK_SIZE = 100;         
+    let searchTimeout = null;
+    let isScrollLoading = false;    
+
+    // 1. Tự động nhận diện URL
+    function parseUrls(text, imageContainerCallback) {
+        if (!text) return "";
+        const urlRegex = /(https?:\/\/[^\s]+)/g;
+        return text.replace(urlRegex, (url) => {
+            const cleanUrl = url.split('?')[0];
+            const isImageUrl = /\.(png|jpe?g|gif|webp|bmp)$/i.test(cleanUrl);
+            if (isImageUrl) {
+                imageContainerCallback(url);
+            }
+            return `<a href="${url}" target="_blank" class="auto-link">${url}</a>`;
+        });
+    }
+
+    // 2. Xử lý Ping (<@ID>)
+    function parseMentions(text, mentionsList) {
+        if (!text) return "";
+        return text.replace(/<@!?([0-9]+)>/g, (match, userId) => {
+            const user = mentionsList ? mentionsList.find(m => m.id === userId) : null;
+            if (user) {
+                const displayName = user.global_name || user.username;
+                return `<span class="mention">@${displayName}</span>`;
+            }
+            return `<span class="mention">@${userId}</span>`;
+        });
+    }
+
+    // 3. Xử lý Custom Emoji (<:name:id>)
+    function parseEmoji(text) {
+        if (!text) return "";
+        return text.replace(/<:([a-zA-Z0-9_]+):([0-9]+)>/g, (match, name, id) => {
+            const url = `https://cdn.discordapp.com/emojis/${id}.webp?size=48`;
+            return `<img src="${url}" alt="${name}" title=":${name}:" class="emoji">`;
+        });
+    }
+
+    // 4. Lấy link Avatar
+    function getAvatarUrl(author) {
+        if (!author) return `https://cdn.discordapp.com/embed/avatars/0.png`;
+        if (author.avatar) {
+            const ext = author.avatar.startsWith('a_') ? 'gif' : 'png';
+            return `https://cdn.discordapp.com/avatars/${author.id}/${author.avatar}.${ext}?size=128`;
+        }
+        const defaultAvatarIndex = (BigInt(author.id || 0) >> 22n) % 6n;
+        return `https://cdn.discordapp.com/embed/avatars/${defaultAvatarIndex}.png`;
+    }
+
+    // 5. Định dạng thời gian
+    function formatTime(isoString) {
+        try {
+            const date = new Date(isoString);
+            return date.toLocaleString('vi-VN', { 
+                day: '2-digit', month: '2-digit', year: 'numeric', 
+                hour: '2-digit', minute: '2-digit' 
+            });
+        } catch (e) {
+            return isoString;
+        }
+    }
+
+    // --- SAO CHÉP ĐƯỜNG DẪN URL ĐẦY ĐỦ TẤT CẢ CÁC THAM SỐ LỌC ---
+    function copyAsUrl(messageId) {
+        const baseUrl = window.location.origin + window.location.pathname;
+        const params = new URLSearchParams(window.location.search);
+        
+        // 1. Luôn cập nhật hoặc giữ nguyên thuộc tính file
+        if (currentLoadedFileName) {
+            params.set('file', currentLoadedFileName);
+        } else {
+            params.delete('file');
+        }
+        
+        // 2. Thiết lập chính xác vị trí ID tin nhắn đích
+        params.set('position', messageId);
+        
+        // 3. Đồng bộ hóa bộ lọc tìm kiếm hiện tại từ input vào URL
+        const currentSearchVal = document.getElementById('searchInput').value.trim();
+        if (currentSearchVal) {
+            params.set('query', currentSearchVal);
+        } else {
+            params.delete('query');
+        }
+        
+        const finalUrl = `${baseUrl}?${params.toString()}`;
+        
+        navigator.clipboard.writeText(finalUrl).then(() => {
+            alert("Đã sao chép liên kết định vị tin nhắn kèm các bộ lọc hiện tại!");
+        }).catch(err => {
+            console.error("Lỗi sao chép:", err);
+        });
+    }
+
+    // --- BẬT/TẮT LOADING SPINNER TOÀN TRANG ---
+    function showLoader(text) {
+        document.getElementById('loaderText').textContent = text;
+        document.getElementById('loaderArea').style.display = 'block';
+    }
+    
+    function hideLoader() {
+        document.getElementById('loaderArea').style.display = 'none';
+    }
+
+    // --- KHỜI CHẠY DANH SÁCH CHAT (Chờ tối thiểu 2.567 giây) ---
+    function initializeChat(messages) {
+        showLoader("Đang dựng cấu trúc hội thoại...");
+        
+        setTimeout(() => {
+            allMessagesData = Array.isArray(messages) ? messages : [messages];
+            
+            // Đọc và áp dụng trước các bộ lọc URL (query & sender) nếu có
+            applyUrlFilters();
+            
+            resetRenderState();
+            hideLoader();
+
+            // Thực hiện định vị cuộn trang nếu có ?position=id
+            handlePositionNavigation();
+        }, MIN_ACTION_DELAY);
+    }
+
+    // --- ÁP DỤNG CÁC BỘ LỌC TỪ URL (?query= & ?sender=) ---
+    function applyUrlFilters() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const queryParam = urlParams.get('query');
+        const senderParam = urlParams.get('sender');
+
+        filteredMessagesData = [...allMessagesData];
+
+        // Lọc theo query trước
+        if (queryParam) {
+            const cleanQuery = queryParam.toLowerCase().trim();
+            document.getElementById('searchInput').value = queryParam;
+            filteredMessagesData = filteredMessagesData.filter(msg => {
+                const contentMatch = msg.content && msg.content.toLowerCase().includes(cleanQuery);
+                const authorName = msg.author ? (msg.author.global_name || msg.author.username || "").toLowerCase() : "";
+                return contentMatch || authorName.includes(cleanQuery);
+            });
+        }
+
+        // Lọc theo sender (Tên hiển thị, Username hoặc ID người gửi)
+        if (senderParam) {
+            const cleanSender = senderParam.toLowerCase().trim();
+            filteredMessagesData = filteredMessagesData.filter(msg => {
+                if (!msg.author) return false;
+                const author = msg.author;
+                const authorId = (author.id || "").toLowerCase();
+                const username = (author.username || "").toLowerCase();
+                const globalName = (author.global_name || "").toLowerCase();
+                
+                return authorId === cleanSender || username === cleanSender || globalName === cleanSender;
+            });
+        }
+    }
+
+    // --- TÌM VÀ ĐỊNH VỊ ĐẾN ID TIN NHẮN YÊU CẦU (?position=id) ---
+    function handlePositionNavigation() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const targetId = urlParams.get('position');
+        if (!targetId) return;
+
+        // Tìm vị trí phần tử tin nhắn trong danh sách lọc
+        const targetIndex = filteredMessagesData.findIndex(msg => msg.id === targetId);
+        if (targetIndex === -1) {
+            console.warn("Không tìm thấy tin nhắn có ID tương ứng trong tập dữ liệu hiển thị.");
+            return;
+        }
+
+        // Nếu tin nhắn nằm ngoài vùng hiển thị chunk đầu tiên, bắt buộc kéo giãn render thêm dữ liệu
+        if (targetIndex >= renderedCount) {
+            renderedCount = targetIndex + 1;
+            document.getElementById('chatContainer').innerHTML = '';
+            renderChunk(renderedCount); // Render gộp một lượt đủ chứa tin nhắn đó
+            updateSentinelState();
+        }
+
+        // Thực hiện scroll mượt và tạo hiệu ứng nhấp nháy highlight tin nhắn sau khi dựng DOM
+        setTimeout(() => {
+            const targetEl = document.getElementById(`msg-${targetId}`);
+            if (targetEl) {
+                targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                targetEl.classList.add('highlight-active');
+                
+                // Tự động gỡ bỏ class hoạt ảnh sau khi nhấp nháy xong
+                setTimeout(() => {
+                    targetEl.classList.remove('highlight-active');
+                }, 4000);
+            }
+        }, 100);
+    }
+
+    // --- RESET TRẠNG THÁI RENDERING ---
+    function resetRenderState() {
+        renderedCount = 0;
+        document.getElementById('chatContainer').innerHTML = '';
+        
+        const badge = document.getElementById('statusBadge');
+        badge.textContent = `Hiển thị: ${filteredMessagesData.length} / ${allMessagesData.length}`;
+        badge.style.display = 'inline-block';
+        
+        renderChunk();
+        updateSentinelState();
+    }
+
+    // Cập nhật trạng thái hiển thị của thanh loading dưới đáy trang
+    function updateSentinelState() {
+        const sentinel = document.getElementById('loadingSentinel');
+        const spinner = document.getElementById('sentinelSpinner');
+        const text = document.getElementById('sentinelText');
+
+        if (renderedCount < filteredMessagesData.length) {
+            sentinel.style.display = 'flex';
+            spinner.style.display = 'none';
+            text.textContent = "Cuộn xuống để tải thêm tin nhắn...";
+        } else {
+            sentinel.style.display = 'flex';
+            spinner.style.display = 'none';
+            text.textContent = "Đã hiển thị toàn bộ kết quả.";
+        }
+    }
+
+    // --- THỰC HIỆN VẼ TIN NHẮN THEO ĐỢT (CHUNK) ---
+    function renderChunk(customSize = CHUNK_SIZE) {
+        const container = document.getElementById('chatContainer');
+        const nextBatch = filteredMessagesData.slice(renderedCount, renderedCount + customSize);
+        const fragment = document.createDocumentFragment();
+
+        nextBatch.forEach(msg => {
+            if (!msg.author) return; // Bảo vệ trang nếu tin nhắn thiếu tác giả
+            
+            const msgContainer = document.createElement('div');
+            msgContainer.className = 'message-container';
+            msgContainer.id = `msg-${msg.id}`;
+
+            // --- A. REPLY ---
+            let replyHtml = '';
+            if (msg.referenced_message && msg.referenced_message.author) {
+                const rep = msg.referenced_message;
+                const repAvatar = getAvatarUrl(rep.author);
+                const repAuthorName = rep.author.global_name || rep.author.username || "Unknown User";
+                const cleanRepContent = parseEmoji(rep.content || "Không có văn bản...");
+                
+                replyHtml = `
+                    <div class="reply-wrapper">
+                        <img src="${repAvatar}" class="reply-avatar" alt="rep-avatar">
+                        <span class="reply-author">${repAuthorName}</span>
+                        <span class="reply-content">${cleanRepContent}</span>
+                    </div>`;
+            }
+
+            // --- B. CHÍNH ---
+            const avatarUrl = getAvatarUrl(msg.author);
+            let detectedImages = [];
+            const registerImage = (url) => { detectedImages.push(url); };
+
+            let processedContent = parseMentions(msg.content, msg.mentions);
+            processedContent = parseUrls(processedContent, registerImage);
+            processedContent = parseEmoji(processedContent);
+
+            // --- C. ĐÍNH KÈM (Attachments) ---
+            let attachmentsHtml = '';
+            if (msg.attachments && msg.attachments.length > 0) {
+                msg.attachments.forEach(att => {
+                    if (att.content_type && att.content_type.startsWith('image/')) {
+                        attachmentsHtml += `
+                            <div class="attachment-container">
+                                <a href="${att.url}" target="_blank">
+                                    <img src="${att.proxy_url || att.url}" alt="${att.filename}" class="attachment-img">
+                                </a>
+                            </div>`;
+                    } else {
+                        attachmentsHtml += `
+                            <div class="attachment-container">
+                                <a href="${att.url}" target="_blank" style="color: #00a8fc; text-decoration: none;">📎 Tải tập tin: ${att.filename}</a>
+                            </div>`;
+                    }
+                });
+            }
+
+            // --- D. ẢNH ĐƯỢC CHUYỂN ĐỔI TỪ URL ---
+            let urlImagesHtml = '';
+            if (detectedImages.length > 0) {
+                detectedImages.forEach(imgUrl => {
+                    urlImagesHtml += `
+                        <div class="attachment-container">
+                            <a href="${imgUrl}" target="_blank">
+                                <img src="${imgUrl}" class="url-image" alt="Embedded Image">
+                            </a>
+                        </div>`;
+                });
+            }
+
+            // --- E. REACTION ---
+            let reactionsHtml = '';
+            reactionsHtml = '<div class="reactions-container">';
+            if (msg.reactions && msg.reactions.length > 0) {
+                msg.reactions.forEach(react => {
+                    if (!react.emoji) return;
+                    let emojiImg = '';
+                    if (react.emoji.id) {
+                        const ext = react.emoji.animated ? 'gif' : 'webp';
+                        const emojiUrl = `https://cdn.discordapp.com/emojis/${react.emoji.id}.${ext}?size=32`;
+                        emojiImg = `<img class="reaction-emoji" src="${emojiUrl}" alt="${react.emoji.name}">`;
+                    } else {
+                        emojiImg = `<span style="margin-right: 6px; font-size: 1.1rem;">${react.emoji.name}</span>`;
+                    }
+                    reactionsHtml += `
+                        <div class="reaction-chip" title="Emoji: ${react.emoji.name}">
+                            ${emojiImg}
+                            <span class="reaction-count">${react.count}</span>
+                        </div>`;
+                });
+            }
+            reactionsHtml += `<div class="add-reaction-btn" title="Add Reaction">☺</div>`;
+            reactionsHtml += '</div>';
+
+            // --- F. DEEP LINK DISCORD ---
+            const discordDeepLink = `https://discord.com/channels/${GUILD_ID}/${msg.channel_id}/${msg.id}`;
+
+            msgContainer.innerHTML = `
+                ${replyHtml}
+                <div class="message-actions-bar">
+                    <button class="action-btn" onclick="copyAsUrl('${msg.id}')">
+                        <span class="material-icons" style="font-size: 12px;">link</span>Copy as URL
+                    </button>
+                    <a href="${discordDeepLink}" target="_blank" class="action-btn">Open in Discord</a>
+                </div>
+                <div class="message-wrapper">
+                    <img src="${avatarUrl}" class="avatar" alt="avatar">
+                    <div class="message-body">
+                        <div class="message-header">
+                            <span class="author">${msg.author.global_name || msg.author.username}</span>
+                            <span class="timestamp">${formatTime(msg.timestamp)}</span>
+                        </div>
+                        <div class="content">${processedContent}</div>
+                        ${attachmentsHtml}
+                        ${urlImagesHtml}
+                        ${reactionsHtml}
+                    </div>
+                </div>
+            `;
+            fragment.appendChild(msgContainer);
+        });
+
+        container.appendChild(fragment);
+        renderedCount += nextBatch.length;
+    }
+
+    // --- SỰ KIỆN TÌM KIẾM CÓ SPINNER CHỜ TỐI THIỂU 2.567 GIÂY ---
+    document.getElementById('searchInput').addEventListener('input', function(e) {
+        const query = e.target.value.toLowerCase().trim();
+        const spinner = document.getElementById('searchSpinner');
+        
+        spinner.style.display = 'block';
+        clearTimeout(searchTimeout);
+
+        searchTimeout = setTimeout(() => {
+            if (query === "") {
+                filteredMessagesData = [...allMessagesData];
+            } else {
+                filteredMessagesData = allMessagesData.filter(msg => {
+                    const contentMatch = msg.content && msg.content.toLowerCase().includes(query);
+                    const authorName = msg.author ? (msg.author.global_name || msg.author.username || "").toLowerCase() : "";
+                    const authorMatch = authorName.includes(query);
+                    return contentMatch || authorMatch;
+                });
+            }
+            
+            resetRenderState();
+            spinner.style.display = 'none'; 
+        }, MIN_ACTION_DELAY);
+    });
+
+    // --- SỰ KIỆN CUỘN XUỐNG TẢI THÊM TIN NHẮN TỐN ĐÚNG 2.567 GIÂY ---
+    window.addEventListener('scroll', () => {
+        if (isScrollLoading || renderedCount >= filteredMessagesData.length) return;
+
+        if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 300) {
+            isScrollLoading = true;
+
+            const spinner = document.getElementById('sentinelSpinner');
+            const text = document.getElementById('sentinelText');
+            spinner.style.display = 'block';
+            text.textContent = "Đang tải thêm tin nhắn...";
+
+            setTimeout(() => {
+                renderChunk();
+                isScrollLoading = false;
+                updateSentinelState();
+            }, MIN_ACTION_DELAY);
+        }
+    });
+
+    // --- SỰ KIỆN CHỌN FILE THỦ CÔNG (Chờ tối thiểu 2.567 giây) ---
+    document.getElementById('fileInput').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        
+        currentLoadedFileName = file.name;
+        showLoader("Đang đọc dữ liệu tệp tin...");
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const data = JSON.parse(e.target.result);
+                initializeChat(data);
+            } catch (err) {
+                hideLoader();
+                alert("Lỗi phân tích file JSON: " + err.message);
+            }
+        };
+        reader.readAsText(file);
+    });
+
+    // --- TỰ ĐỘNG TẢI THAM SỐ ?file=sth.json (Chờ tối thiểu 2.567 giây) ---
+    window.addEventListener('DOMContentLoaded', () => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const fileName = urlParams.get('file');
+
+        if (fileName) {
+            currentLoadedFileName = fileName;
+            showLoader(`Đang tải tập tin: ${fileName}...`);
+
+            const fetchData = fetch(fileName).then(response => {
+                if (!response.ok) {
+                    throw new Error(`Lỗi (${response.status}) - Không tìm thấy tập tin.`);
+                }
+                return response.json();
+            });
+
+            const delay = new Promise(resolve => setTimeout(resolve, MIN_ACTION_DELAY));
+
+            Promise.all([fetchData, delay])
+                .then(([data]) => {
+                    initializeChat(data);
+                })
+                .catch(err => {
+                    hideLoader();
+                    const sentinel = document.getElementById('loadingSentinel');
+                    sentinel.textContent = `Lỗi tải tự động: ${err.message}`;
+                    sentinel.style.display = 'block';
+                    console.error(err);
+                });
+        }
+    });
+</script>
+</body>
+</html>
