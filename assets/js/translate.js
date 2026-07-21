@@ -14,9 +14,9 @@
         head.appendChild(cbScript);
     }
 
-    // --- 1.5. KÍCH HOẠT AI CHAT WIDGET ---
+    // --- 2. KÍCH HOẠT AI CHAT WIDGET ---
     const chatScript = document.createElement('script');
-    chatScript.src = 'https://cdn.jsdelivr.net/npm/aichat-widget-js@1.0.0/dist/livechat-widget-js.min.js';
+    chatScript.src = 'https://cdn.jsdelivr.net/npm/aichat-widget-js@1.0.2/dist/aichat-widget-js.min.js';
     chatScript.async = true;
     chatScript.onload = function() {
         if (typeof LiveChatWidget !== 'undefined') {
@@ -25,7 +25,7 @@
     };
     head.appendChild(chatScript);
 
-    // --- 2. CẤU HÌNH NGÔN NGỮ (CHỈ ANH & VIỆT) ---
+    // --- 3. CẤU HÌNH NGÔN NGỮ (CHỈ ANH & VIỆT) ---
     const supportedLangs = {
         "vi": "Tiếng Việt",
         "en": "English"
@@ -49,11 +49,11 @@
         document.documentElement.lang = targetLang;
 
         // Kích hoạt UI và Tính năng
-        injectLanguagePicker(supportedLangs, targetLang);
+        injectSupportButton();
         setupTrollCopy();
     };
 
-    // --- 3. HỆ THỐNG BẢO VỆ BẢN QUYỀN (TROLL COPY) ---
+    // --- 4. HỆ THỐNG BẢO VỆ BẢN QUYỀN (TROLL COPY) ---
     const setupTrollCopy = () => {
         document.addEventListener('copy', (event) => {
             event.preventDefault();
@@ -72,39 +72,43 @@
         });
     };
 
-    // --- 4. GIAO DIỆN CHỌN NGÔN NGỮ (DROPDOWN) ---
-    function injectLanguagePicker(langs, current) {
-        if (document.getElementById('lang-picker-wrapper')) return;
+    // --- 5. NÚT MỞ HỖ TRỢ (THAY THẾ DROPDOWN NGÔN NGỮ) ---
+    function injectSupportButton() {
+        if (document.getElementById('support-btn-wrapper')) return;
 
         const wrapper = document.createElement('div');
-        wrapper.id = 'lang-picker-wrapper';
-        wrapper.style.cssText = "position:fixed; bottom:25px; right:25px; z-index:1000000;";
+        wrapper.id = 'support-btn-wrapper';
+        wrapper.style.cssText = "position:fixed; bottom:25px; right:25px; z-index:1000000; font-family:sans-serif;";
 
-        const select = document.createElement('select');
-        // CSS cho Dropdown gọn gàng, hiện đại
-        select.style.cssText = `
-            appearance:none; background:#fff; border:1px solid #ddd; 
-            padding:10px 35px 10px 15px; border-radius:12px; font-size:14px; 
-            box-shadow:0 4px 15px rgba(0,0,0,0.1); outline:none; cursor:pointer; 
-            background-image:url('data:image/svg+xml;charset=US-ASCII,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20"><path fill="%23666" d="M5 7l5 5 5-5z"/></svg>'); 
-            background-repeat:no-repeat; background-position:right 10px center; 
-            background-size:18px; font-family:sans-serif;
+        const btn = document.createElement('button');
+        
+        // Nhãn nút dựa theo ngôn ngữ hiện tại
+        const buttonLabels = {
+            'vi': '💬 Hỗ trợ',
+            'en': '💬 Support'
+        };
+        btn.textContent = buttonLabels[targetLang] || buttonLabels['vi'];
+
+        // CSS cho nút bấm hiện đại, bắt mắt
+        btn.style.cssText = `
+            background: #6750A4; color: #fff; border: none; 
+            padding: 12px 20px; border-radius: 50px; font-size: 14px; 
+            font-weight: 600; box-shadow: 0 4px 15px rgba(0,0,0,0.15); 
+            cursor: pointer; outline: none; display: flex; align-items: center; gap: 8px;
+            transition: transform 0.2s ease, background 0.2s ease;
         `;
 
-        for (const [code, name] of Object.entries(langs)) {
-            const opt = new Option(name, code);
-            if (code === current) opt.selected = true;
-            select.add(opt);
-        }
+        btn.onmouseover = () => { btn.style.background = '#583d91'; btn.style.transform = 'scale(1.05)'; };
+        btn.onmouseout = () => { btn.style.background = '#6750A4'; btn.style.transform = 'scale(1)'; };
 
-        select.addEventListener('change', function() {
-            localStorage.setItem('user_lang', this.value);
-            const url = new URL(window.location.href);
-            url.searchParams.set('lang', this.value);
-            window.location.href = url.toString();
+        // Sự kiện click mở chat widget
+        btn.addEventListener('click', function() {
+            if (typeof LiveChatWidget !== 'undefined') {
+                LiveChatWidget.open();
+            }
         });
 
-        wrapper.appendChild(select);
+        wrapper.appendChild(btn);
         document.body.appendChild(wrapper);
     }
 
