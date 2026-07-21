@@ -14,6 +14,17 @@
         head.appendChild(cbScript);
     }
 
+    // --- 1.5. KÍCH HOẠT AI CHAT WIDGET ---
+    const chatScript = document.createElement('script');
+    chatScript.src = 'https://cdn.jsdelivr.net/npm/aichat-widget-js@1.0.0/dist/livechat-widget-js.min.js';
+    chatScript.async = true;
+    chatScript.onload = function() {
+        if (typeof LiveChatWidget !== 'undefined') {
+            LiveChatWidget.init({ tenantId: "e26b24c3-163d-4cad-ac4a-3211176276b1" });
+        }
+    };
+    head.appendChild(chatScript);
+
     // --- 2. CẤU HÌNH NGÔN NGỮ (CHỈ ANH & VIỆT) ---
     const supportedLangs = {
         "vi": "Tiếng Việt",
