@@ -104,7 +104,7 @@
         // Sự kiện click mở chat widget
         btn.addEventListener('click', function() {
             if (typeof LiveChatWidget !== 'undefined') {
-                LiveChatWidget.open();
+                LiveChatWidget.toggle();
             }
         });
 
